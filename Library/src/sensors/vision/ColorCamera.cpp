@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 4/5/18.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/vision/ColorCamera.h"
@@ -33,28 +33,28 @@
 namespace sf
 {
 
-ColorCamera::ColorCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, Scalar frequency, 
-    Scalar minDistance, Scalar maxDistance) : Camera(uniqueName, resolutionX, resolutionY, horizFOVDeg, frequency)
+ColorCamera::ColorCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency, 
+    Scalar minDistance, Scalar maxDistance) : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
 {
     depthRange = glm::vec2((GLfloat)minDistance, (GLfloat)maxDistance);
-    newDataCallback = NULL;
-    imageData = NULL;
+    newDataCallback = nullptr;
+    imageData = nullptr;
 }
 
 ColorCamera::~ColorCamera()
 {
-    glCamera = NULL;
+    glCamera = nullptr;
 }
     
 void ColorCamera::setExposureCompensation(Scalar comp)
 {
-    if(glCamera != NULL)
+    if(glCamera != nullptr)
         glCamera->setExposureCompensation((GLfloat)comp);
 }
     
 Scalar ColorCamera::getExposureCompensation() const
 {
-    if(glCamera != NULL)
+    if(glCamera != nullptr)
         return (Scalar)glCamera->getExposureCompensation();
     else
         return Scalar(0);
@@ -95,11 +95,11 @@ void ColorCamera::InstallNewDataHandler(std::function<void(ColorCamera*)> callba
 
 void ColorCamera::NewDataReady(void* data, unsigned int index)
 {
-    if(newDataCallback != NULL)
+    if(newDataCallback != nullptr)
     {
         imageData = (GLubyte*)data;
         newDataCallback(this);
-        imageData = NULL;
+        imageData = nullptr;
     }
 }
 

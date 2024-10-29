@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 08/01/2019.
-//  Copyright (c) 2019-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2024 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_ServoMotor__
@@ -83,6 +83,12 @@ namespace sf
          */
         void setDesiredVelocity(Scalar vel);
         
+        //! A method to set the maximum velocity of the servo.
+        /*!
+         \param vel the maximum allowed servo velocity [rad/s]
+        */
+        void setMaxVelocity(Scalar vel);
+
         //! A method to set the maximum torque applied by the servo.
         /*!
          \param tau the max torque [Nm]
@@ -108,9 +114,12 @@ namespace sf
         ActuatorType getType() const;
         
     private:
+        void WatchdogTimeout() override;
+
         ServoControlMode mode;
         Scalar pSetpoint;
         Scalar vSetpoint;
+        Scalar vLimit;
         Scalar Kp;
         Scalar Kv;
         Scalar tauMax;

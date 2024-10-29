@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/11/2018.
-//  Copyright(c) 2018-2022 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/FeatherstoneRobot.h"
@@ -31,6 +31,7 @@
 #include "entities/FeatherstoneEntity.h"
 #include "actuators/LinkActuator.h"
 #include "actuators/JointActuator.h"
+#include "actuators/SuctionCup.h"
 #include "sensors/scalar/LinkSensor.h"
 #include "sensors/scalar/JointSensor.h"
 #include "sensors/VisionSensor.h"
@@ -209,9 +210,7 @@ void FeatherstoneRobot::BuildKinematicStructure()
         
                 if(jointsData[i].damping > Scalar(0))
                 {
-                    dynamics->AddJointMotor(dynamics->getNumOfJoints()-1, jointsData[i].damping);
-                    dynamics->MotorPositionSetpoint(dynamics->getNumOfJoints()-1, Scalar(0), Scalar(0));
-                    dynamics->MotorVelocitySetpoint(dynamics->getNumOfJoints()-1, Scalar(0), Scalar(1));
+                    dynamics->setJointDamping(dynamics->getNumOfJoints()-1, 0.0, jointsData[i].damping);
                 }
             }
                 break;
@@ -220,12 +219,10 @@ void FeatherstoneRobot::BuildKinematicStructure()
             {
                 dynamics->AddPrismaticJoint(jointsData[i].name, parentId, childId, linkTrans.getBasis() * jointsData[i].axis);
                 dynamics->AddJointLimit(dynamics->getNumOfJoints()-1, jointsData[i].posLim.first, jointsData[i].posLim.second);
-        
+
                 if(jointsData[i].damping > Scalar(0))
                 {
-                    dynamics->AddJointMotor(dynamics->getNumOfJoints()-1, jointsData[i].damping);
-                    dynamics->MotorPositionSetpoint(dynamics->getNumOfJoints()-1, Scalar(0), Scalar(0));
-                    dynamics->MotorVelocitySetpoint(dynamics->getNumOfJoints()-1, Scalar(0), Scalar(1));
+                    dynamics->setJointDamping(dynamics->getNumOfJoints()-1, 0.0, jointsData[i].damping);
                 }
             }
                 break;
@@ -243,6 +240,11 @@ void FeatherstoneRobot::AddToSimulation(SimulationManager* sm, const Transform& 
 
     Robot::AddToSimulation(sm, origin);
     sm->AddFeatherstoneEntity(dynamics, origin);
+}
+
+void FeatherstoneRobot::Respawn(SimulationManager* sm, const Transform& origin)
+{
+    dynamics->Respawn(origin);
 }
 
 void FeatherstoneRobot::AddJointSensor(JointSensor* s, const std::string& monitoredJointName)
@@ -267,6 +269,25 @@ void FeatherstoneRobot::AddJointActuator(JointActuator* a, const std::string& ac
     }
     else
         cCritical("Joint '%s' doesn't exist. Actuator '%s' cannot be attached!", actuatedJointName.c_str(), a->getName().c_str());
+}
+
+void FeatherstoneRobot::AddLinkActuator(LinkActuator* a, const std::string& actuatedLinkName, const Transform& origin)
+{
+    int linkId = getLinkIndex(actuatedLinkName);
+    if(linkId < -1)
+    {
+        cCritical("Link '%s' doesn't exist. Actuator '%s' cannot be attached!", actuatedLinkName.c_str(), a->getName().c_str());
+        return;
+    }
+    if(a->getType() == ActuatorType::SUCTION_CUP) // Special case
+    {
+        static_cast<SuctionCup*>(a)->AttachToLink(getDynamics(), linkId);
+    }
+    else
+    {
+        a->AttachToSolid(getLink(actuatedLinkName), origin);
+    }
+    actuators.push_back(a);
 }
 
 }

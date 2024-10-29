@@ -73,27 +73,11 @@ namespace sf
          */
         FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, FeatherstoneEntity* feB, int linkIdA, int linkIdB, const Vector3& pivot);
 
-         //! A method used to add joint to the simulation.
-        /*!
-         \param sm a pointer to the simulation manager
-         */
-        void AddToSimulation(SimulationManager* sm);
-
-        //! A method used to remove joint from the simulation.
-        /*!
-         \param sm a pointer to the simulation manager
-         */
-        void RemoveFromSimulation(SimulationManager* sm);
-
         //! A method implementing the rendering of the joint.
         std::vector<Renderable> Render();
         
         //! A method returning the type of the joint.
         JointType getType() const;
-
-    private:
-        SolidEntity* jSolidA;
-        SolidEntity* jSolidB;
     };
 }
     

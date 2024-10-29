@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 17/07/19.
-//  Copyright (c) 2019-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/ScenarioParser.h"
@@ -72,16 +72,21 @@
 #include "actuators/Servo.h"
 #include "actuators/Propeller.h"
 #include "actuators/Rudder.h"
+#include "actuators/SimpleThruster.h"
+#include "actuators/ActuatorDynamics.h"
 #include "actuators/Thruster.h"
+#include "actuators/Motor.h"
 #include "actuators/VariableBuoyancy.h"
 #include "actuators/SuctionCup.h"
 #include "comms/AcousticModem.h"
 #include "comms/USBLSimple.h"
 #include "comms/USBLReal.h"
+#include "comms/Vlc.h"
 #include "joints/FixedJoint.h"
 #include "graphics/OpenGLDataStructs.h"
 #include "utils/SystemUtil.hpp"
 #include "tinyexpr.h"
+#include <sstream>
 
 namespace sf
 {
@@ -144,90 +149,14 @@ bool ScenarioParser::Parse(std::string filename)
     }
 
     //Include other scenario files
-    XMLElement* element = root->FirstChildElement("include");
-    while(element != nullptr)
+    if(!IncludeFiles(root))
     {
-        //Get file path
-        const char* path = nullptr;
-        if(element->QueryStringAttribute("file", &path) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Include not properly defined!");
-            return false;
-        }
-        
-        //Read optional arguments
-        std::map<std::string, std::string> args;	
-		XMLElement* argElement = element->FirstChildElement("arg");
-		while(argElement != nullptr)
-        {
-			const char* name = argElement->Attribute("name");
-			const char* value = argElement->Attribute("value");
-			
-			if(value == nullptr || name == nullptr)
-			{
-			    log.Print(MessageType::ERROR, "Include file argument not properly defined!");
-				return false;
-			}
-
-			args.insert(std::make_pair(std::string(name), std::string(value)));
-			argElement = argElement->NextSiblingElement("arg");
-		}
-
-        //Load file
-        std::string includedPath = GetFullPath(std::string(path));
-        XMLDocument includedDoc;
-        result = includedDoc.LoadFile(includedPath.c_str());
-        if(result != XML_SUCCESS)
-        {
-            switch(result)
-            {
-                case XMLError::XML_ERROR_FILE_NOT_FOUND:
-                {
-                    cInfo("Scenario parser: Included file not found!");
-                    log.Print(MessageType::ERROR, "Included file '%s' not found!", includedPath.c_str());
-                }
-                    break;
-
-                default:
-                {
-                    cInfo("Scenario parser: Syntax error in included file!");
-                    log.Print(MessageType::ERROR, "Syntax error in included file '%s'!", includedPath.c_str());
-                }
-                    break;
-            }
-            return false;
-        }
-        cInfo("Scenario parser: Including file '%s'", includedPath.c_str());
-        log.Print(MessageType::INFO, "Including file '%s'", includedPath.c_str());
-        
-        root->DeleteChild(element); //Delete "include" element
-        
-        XMLNode* includedRoot = includedDoc.FirstChildElement("scenario");
-        if(includedRoot == nullptr)
-        {
-            log.Print(MessageType::ERROR, "Root node not found in included file '%s'!", includedPath.c_str());
-            return false;
-        }
-        
-        if(!PreProcess(includedRoot, args))
-        {
-            log.Print(MessageType::ERROR, "Pre-processing of included file '%s' failed!", includedPath.c_str());
-            return false;
-        }
-        
-        for(const XMLNode* child = includedRoot->FirstChild(); child != nullptr; child = child->NextSibling())
-        {
-            if(!CopyNode(root, child))
-            {
-                log.Print(MessageType::ERROR, "Could not copy included XML elements!");
-                return false;
-            }
-        }
-        element = root->FirstChildElement("include");
+        log.Print(MessageType::ERROR, "Including files failed!");
+        return false;
     }
 
     //Load solver settings
-    element = root->FirstChildElement("solver");
+    XMLElement* element = root->FirstChildElement("solver");
     if(element != nullptr)
         ParseSolver(element);
     
@@ -393,6 +322,99 @@ bool ScenarioParser::Parse(std::string filename)
                 delete comm;
                 return false;
             }
+            
+         StaticEntity* link=nullptr;
+            Vector3 xyz = Vector3(0.0,0.0,0.0);
+            Vector3 rpy = Vector3(-1.57, 0.0,0.0);
+            Transform T = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz);
+            Transform origin_cyl = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz);
+            link=new Obstacle("Vlc", 0.03, 0.126, origin_cyl, "Steel", "Neutral");
+            
+            sm->AddStaticEntity(link, origin);
+            
+             if(comm->getType()==CommType::VLC){
+		Vector3 rpy = Vector3(-1.57,0.0,0.0);
+		Vector3 xyz2 = origin.getOrigin()+Vector3(-0.013, 0.016, -0.02);
+		Transform origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               dynamic_cast<Vlc*>(comm)->getLights()[0]->AttachToWorld(origin2);
+               sm->AddActuator(dynamic_cast<Vlc*>(comm)->getLights()[0]);
+               
+		xyz2 = origin.getOrigin()+Vector3(-0.01, 0.016, -0.015);
+		origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               dynamic_cast<Vlc*>(comm)->getLights()[1]->AttachToWorld(origin2);
+               sm->AddActuator(dynamic_cast<Vlc*>(comm)->getLights()[1]);
+               
+               
+               xyz2 = origin.getOrigin()+Vector3(-0.007, 0.016, -0.01);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               dynamic_cast<Vlc*>(comm)->getLights()[2]->AttachToWorld(origin2);
+               sm->AddActuator(dynamic_cast<Vlc*>(comm)->getLights()[2]);
+               
+               xyz2 = origin.getOrigin()+Vector3(0.013, 0.016, -0.02);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               dynamic_cast<Vlc*>(comm)->getLights()[3]->AttachToWorld(origin2);
+               sm->AddActuator(dynamic_cast<Vlc*>(comm)->getLights()[3]);
+               
+               xyz2 = origin.getOrigin()+Vector3(0.01, 0.016, -0.015);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               dynamic_cast<Vlc*>(comm)->getLights()[4]->AttachToWorld(origin2);
+               sm->AddActuator(dynamic_cast<Vlc*>(comm)->getLights()[4]);
+               
+               xyz2 = origin.getOrigin()+Vector3(0.007, 0.016, -0.01);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               dynamic_cast<Vlc*>(comm)->getLights()[5]->AttachToWorld(origin2);
+               sm->AddActuator(dynamic_cast<Vlc*>(comm)->getLights()[5]);
+               
+               xyz2 = origin.getOrigin()+Vector3(-0.02, 0.016, 0.01);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               dynamic_cast<Vlc*>(comm)->getLights()[6]->AttachToWorld(origin2);
+               sm->AddActuator(dynamic_cast<Vlc*>(comm)->getLights()[6]);
+               
+               xyz2 = origin.getOrigin()+Vector3(-0.015, 0.016, 0.0075);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               dynamic_cast<Vlc*>(comm)->getLights()[7]->AttachToWorld(origin2);
+               sm->AddActuator(dynamic_cast<Vlc*>(comm)->getLights()[7]);
+
+               xyz2 = origin.getOrigin()+Vector3(-0.01, 0.016, 0.005);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               dynamic_cast<Vlc*>(comm)->getLights()[8]->AttachToWorld(origin2);
+               sm->AddActuator(dynamic_cast<Vlc*>(comm)->getLights()[8]);
+               
+               
+               xyz2 = origin.getOrigin()+Vector3(0.02, 0.016, 0.01);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               dynamic_cast<Vlc*>(comm)->getLights()[9]->AttachToWorld(origin2);
+               sm->AddActuator(dynamic_cast<Vlc*>(comm)->getLights()[9]);
+
+               xyz2 = origin.getOrigin()+Vector3(0.015, 0.016, 0.0075);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               dynamic_cast<Vlc*>(comm)->getLights()[10]->AttachToWorld(origin2);
+               sm->AddActuator(dynamic_cast<Vlc*>(comm)->getLights()[10]);
+               
+               xyz2 = origin.getOrigin()+Vector3(0.01, 0.016, 0.005);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               dynamic_cast<Vlc*>(comm)->getLights()[11]->AttachToWorld(origin2);
+               sm->AddActuator(dynamic_cast<Vlc*>(comm)->getLights()[11]);
+               
+               xyz2 = origin.getOrigin()+Vector3(0.0, 0.016, 0.02);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               dynamic_cast<Vlc*>(comm)->getLights()[12]->AttachToWorld(origin2);
+               sm->AddActuator(dynamic_cast<Vlc*>(comm)->getLights()[12]);
+               
+               xyz2 = origin.getOrigin()+Vector3(0.0, 0.016, 0.015);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               dynamic_cast<Vlc*>(comm)->getLights()[13]->AttachToWorld(origin2);
+               sm->AddActuator(dynamic_cast<Vlc*>(comm)->getLights()[13]);
+               
+               xyz2 = origin.getOrigin()+Vector3(0.0, 0.016, 0.01);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               dynamic_cast<Vlc*>(comm)->getLights()[14]->AttachToWorld(origin2);
+               sm->AddActuator(dynamic_cast<Vlc*>(comm)->getLights()[14]);
+               
+               
+               
+               
+            }            
             comm->AttachToWorld(origin);
             sm->AddComm(comm);
         }
@@ -545,6 +567,92 @@ bool ScenarioParser::EvaluateMath(XMLNode* node)
     return true;
 }
 
+bool ScenarioParser::IncludeFiles(XMLNode* node)
+{
+    XMLElement* element = node->FirstChildElement("include");
+    while(element != nullptr)
+    {
+        //Get file path
+        const char* path = nullptr;
+        if(element->QueryStringAttribute("file", &path) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Include not properly defined!");
+            return false;
+        }
+        
+        //Read optional arguments
+        std::map<std::string, std::string> args;	
+		XMLElement* argElement = element->FirstChildElement("arg");
+		while(argElement != nullptr)
+        {
+			const char* name = argElement->Attribute("name");
+			const char* value = argElement->Attribute("value");
+			
+			if(value == nullptr || name == nullptr)
+			{
+			    log.Print(MessageType::ERROR, "Include file argument not properly defined!");
+				return false;
+			}
+
+			args.insert(std::make_pair(std::string(name), std::string(value)));
+			argElement = argElement->NextSiblingElement("arg");
+		}
+
+        //Load file
+        std::string includedPath = GetFullPath(std::string(path));
+        XMLDocument includedDoc;
+        XMLError result = includedDoc.LoadFile(includedPath.c_str());
+        if(result != XML_SUCCESS)
+        {
+            switch(result)
+            {
+                case XMLError::XML_ERROR_FILE_NOT_FOUND:
+                {
+                    cInfo("Scenario parser: Included file not found!");
+                    log.Print(MessageType::ERROR, "Included file '%s' not found!", includedPath.c_str());
+                }
+                    break;
+
+                default:
+                {
+                    cInfo("Scenario parser: Syntax error in included file!");
+                    log.Print(MessageType::ERROR, "Syntax error in included file '%s'!", includedPath.c_str());
+                }
+                    break;
+            }
+            return false;
+        }
+        cInfo("Scenario parser: Including file '%s'", includedPath.c_str());
+        log.Print(MessageType::INFO, "Including file '%s'", includedPath.c_str());
+        
+        node->DeleteChild(element); //Delete "include" element
+        
+        XMLNode* includedRoot = includedDoc.FirstChildElement("scenario");
+        if(includedRoot == nullptr)
+        {
+            log.Print(MessageType::ERROR, "Root node not found in included file '%s'!", includedPath.c_str());
+            return false;
+        }
+        
+        if(!PreProcess(includedRoot, args))
+        {
+            log.Print(MessageType::ERROR, "Pre-processing of included file '%s' failed!", includedPath.c_str());
+            return false;
+        }
+        
+        for(const XMLNode* child = includedRoot->FirstChild(); child != nullptr; child = child->NextSibling())
+        {
+            if(!CopyNode(node, child))
+            {
+                log.Print(MessageType::ERROR, "Could not copy included XML elements!");
+                return false;
+            }
+        }
+        element = node->FirstChildElement("include");
+    }
+    return true;
+}
+
 bool ScenarioParser::ParseSolver(XMLElement* element)
 {
     XMLElement* item;
@@ -571,9 +679,13 @@ bool ScenarioParser::ParseSolver(XMLElement* element)
         item->QueryAttribute("linear", &linSleep);
         item->QueryAttribute("angular", &angSleep);
     }
-
     sm->setSolverParams(erp, stopErp, erp2, globalDamping, globalFriction, linSleep, angSleep);
     
+    unsigned int presc;
+    if((item = element->FirstChildElement("fluid_dynamics")) != nullptr
+        && item->QueryAttribute("prescaler", &presc) == XML_SUCCESS)
+            sm->setFluidDynamicsPrescaler(presc);
+
     return true;
 }
 
@@ -1958,7 +2070,7 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
         robot = new FeatherstoneRobot(robotName, fixed);
     else if(algorithm == "general")
         robot = new GeneralRobot(robotName, fixed);
-
+            
     //---- Links ----
     //Base link
     SolidEntity* baseLink = nullptr;
@@ -2090,6 +2202,71 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
                 return false;
             }
             robot->AddComm(comm, robotName + "/" + std::string(linkName), origin);
+if(comm->getType()==CommType::VLC){
+		Vector3 rpy = Vector3(-1.57,0.0,0.0);
+		Vector3 xyz2 = Vector3(-0.013, 0.016, -0.02);
+		Transform origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((Vlc*)comm)->getLights()[0], robotName + "/" + std::string(linkName), origin2);
+		xyz2 = Vector3(-0.01, 0.016, -0.015);
+		origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((Vlc*)comm)->getLights()[1], robotName + "/" + std::string(linkName), origin2);
+               
+               
+               xyz2 = Vector3(-0.007, 0.016, -0.01);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((Vlc*)comm)->getLights()[2], robotName + "/" + std::string(linkName), origin2);
+               
+               xyz2 = Vector3(0.013, 0.016, -0.02);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((Vlc*)comm)->getLights()[3], robotName + "/" + std::string(linkName), origin2);
+               
+               xyz2 = Vector3(0.01, 0.016, -0.015);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((Vlc*)comm)->getLights()[4], robotName + "/" + std::string(linkName), origin2);
+               
+               xyz2 = Vector3(0.007, 0.016, -0.01);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((Vlc*)comm)->getLights()[5], robotName + "/" + std::string(linkName), origin2);
+               
+               xyz2 = Vector3(-0.02, 0.016, 0.01);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((Vlc*)comm)->getLights()[6], robotName + "/" + std::string(linkName), origin2);
+               
+               xyz2 = Vector3(-0.015, 0.016, 0.0075);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((Vlc*)comm)->getLights()[7], robotName + "/" + std::string(linkName), origin2);
+
+               xyz2 = Vector3(-0.01, 0.016, 0.005);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((Vlc*)comm)->getLights()[8], robotName + "/" + std::string(linkName), origin2);
+               
+               
+               xyz2 = Vector3(0.02, 0.016, 0.01);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((Vlc*)comm)->getLights()[9], robotName + "/" + std::string(linkName), origin2);
+
+               xyz2 = Vector3(0.015, 0.016, 0.0075);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((Vlc*)comm)->getLights()[10], robotName + "/" + std::string(linkName), origin2);
+               
+               xyz2 = Vector3(0.01, 0.016, 0.005);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((Vlc*)comm)->getLights()[11], robotName + "/" + std::string(linkName), origin2);
+               
+               
+               xyz2 = Vector3(0.0, 0.016, 0.02);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((Vlc*)comm)->getLights()[12], robotName + "/" + std::string(linkName), origin2);
+               
+               xyz2 = Vector3(0.0, 0.016, 0.015);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((Vlc*)comm)->getLights()[13], robotName + "/" + std::string(linkName), origin2);
+               
+               xyz2 = Vector3(0.0, 0.016, 0.01);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((Vlc*)comm)->getLights()[14], robotName + "/" + std::string(linkName), origin2);
+               }
+               
         }
         item = item->NextSiblingElement("comm");
     }
@@ -2205,12 +2382,21 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
     Actuator* act = ParseActuator(element, robot->getName());
     if(act == nullptr)
         return false;
-
-    //Attach
+    
+    //Watchdog
     XMLElement* item;
+    Scalar timeout(-1);
+    if((item = element->FirstChildElement("watchdog")) != nullptr
+        && item->QueryAttribute("timeout", &timeout) == XML_SUCCESS)
+        {
+            act->setWatchdog(timeout);
+        }
+   
+    //Attach
     switch(act->getType())
     {
         //Joint actuators
+        case ActuatorType::MOTOR:
         case ActuatorType::SERVO:
         {
             const char* jointName = nullptr;
@@ -2228,6 +2414,7 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
 
         //Link actuators
         case ActuatorType::PUSH:
+        case ActuatorType::SIMPLE_THRUSTER:
         case ActuatorType::THRUSTER:
         case ActuatorType::PROPELLER:
         case ActuatorType::RUDDER:
@@ -2437,10 +2624,15 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         return nullptr;
     }
     std::string typeStr(type);
-    
+ 
     //---- Specific ----
     XMLElement* item;
-    if(typeStr == "servo")
+    if(typeStr == "motor")
+    {
+        Motor* mtr = new Motor(actuatorName);
+        return mtr;
+    }
+    else if(typeStr == "servo")
     {
         Scalar kp, kv, maxTau;
         if((item = element->FirstChildElement("controller")) == nullptr 
@@ -2451,6 +2643,9 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             log.Print(MessageType::ERROR, "Controller definition for actuator '%s' missing!", actuatorName.c_str());
             return nullptr;
         }
+        Scalar maxVel(-1); // No limit
+        item->QueryAttribute("max_velocity", &maxVel); // Optional
+
         Scalar initialPos(0);
         if((item = element->FirstChildElement("initial")) != nullptr)
             item->QueryAttribute("position", &initialPos);
@@ -2458,9 +2653,10 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         Servo* srv = new Servo(actuatorName, kp, kv, maxTau);
         srv->setControlMode(ServoControlMode::POSITION);
         srv->setDesiredPosition(initialPos);
+        srv->setMaxVelocity(maxVel);
         return srv;
     }
-    else if(typeStr == "simple_thruster" || typeStr == "push")
+    else if(typeStr == "push")
     {
         Push* push; 
         if((item = element->FirstChildElement("specs")) != nullptr)
@@ -2468,7 +2664,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             bool inverted = false;
             item->QueryAttribute("inverted", &inverted);
             
-            push = new Push(actuatorName, inverted, typeStr == "simple_thruster");
+            push = new Push(actuatorName, inverted);
 
             double lower, upper;
             if(item->QueryAttribute("lower_limit", &lower) == XML_SUCCESS 
@@ -2478,10 +2674,397 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             }
         }
         else
-            push = new Push(actuatorName, false, typeStr == "simple_thruster");
+            push = new Push(actuatorName, false);
         return push;
     }
-    else if(typeStr == "thruster" || typeStr == "propeller")
+    else if (typeStr == "thruster")
+    {
+        const char* propFile = nullptr;
+        const char* mat = nullptr;
+        const char* look = nullptr;
+        Scalar propScale;
+        Scalar diameter;
+        bool rightHand;
+
+        if ((item = element->FirstChildElement("propeller")) == nullptr 
+            || item->QueryAttribute("right", &rightHand) != XML_SUCCESS
+            || item->QueryAttribute("diameter", &diameter) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Propeller definition of actuator '%s' missing!", actuatorName.c_str());
+            return nullptr;
+        }
+        XMLElement *item2;
+        if ((item2 = item->FirstChildElement("mesh")) == nullptr ||
+            item2->QueryStringAttribute("filename", &propFile) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Propeller mesh path of actuator '%s' missing!", actuatorName.c_str());
+            return nullptr;
+        }
+        if (item2->QueryAttribute("scale", &propScale) != XML_SUCCESS)
+            propScale = Scalar(1);
+        if ((item2 = item->FirstChildElement("material")) == nullptr ||
+            item2->QueryStringAttribute("name", &mat) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Propeller material of actuator '%s' missing!", actuatorName.c_str());
+            return nullptr;
+        }
+        std::string lookStr = "";
+        if ((item2 = item->FirstChildElement("look")) != nullptr)
+        {
+            item2->QueryStringAttribute("name", &look);
+            lookStr = std::string(look);
+        }
+
+        BodyPhysicsSettings phy;
+        phy.collisions = false;
+        phy.buoyancy = false;
+        phy.mode = BodyPhysicsMode::SUBMERGED;
+        Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), 
+            propScale, I4(), std::string(mat), lookStr, -1, GeometryApproxType::CYLINDER);
+
+        Scalar maxSetpoint;
+        bool inverted = false;
+        bool normalized = false;
+
+        if ((item = element->FirstChildElement("specs")) != nullptr)
+        {
+            if (item->QueryAttribute("max_setpoint", &maxSetpoint) != XML_SUCCESS)
+            {
+                log.Print(MessageType::ERROR, "Max setpoint value of actuator '%s' missing!", actuatorName.c_str());
+                delete prop;
+                return nullptr;
+            }
+            item->QueryAttribute("inverted_setpoint", &inverted);
+            item->QueryAttribute("normalized_setpoint", &normalized);
+        }
+        else 
+        {
+            log.Print(MessageType::ERROR, "Specs of actuator '%s' missing!", actuatorName.c_str());
+            delete prop;
+            return nullptr;
+        }
+
+        if ((item = element->FirstChildElement("rotor_dynamics")) == nullptr)
+        {
+            log.Print(MessageType::ERROR, "Rotor dynamics of actuator '%s' missing!", actuatorName.c_str());
+            delete prop;
+            return nullptr;
+        }
+
+        // Rotor model
+        std::shared_ptr<RotorDynamics> rotorModel;
+
+        const char* rotorDynType = nullptr;
+        std::string rotorDynTypeStr = "";
+
+        if (item->QueryStringAttribute("type", &rotorDynType) == XML_SUCCESS)
+        {
+            rotorDynTypeStr = std::string(rotorDynType);
+        }
+        else
+        {
+            log.Print(MessageType::ERROR, "Rotor dynamics type for actuator '%s' missing!", actuatorName.c_str());
+            delete prop;
+            return nullptr;
+        }
+
+        if (rotorDynTypeStr == "zero_order")
+        {
+            rotorModel = std::make_shared<ZeroOrder>();
+        }
+        else if (rotorDynTypeStr == "first_order")
+        {
+            Scalar timeConstant;
+            if ((item2 = item->FirstChildElement("time_constant")) != nullptr 
+                 && item2->QueryAttribute("value", &timeConstant) == XML_SUCCESS)
+            {
+                rotorModel = std::make_shared<FirstOrder>(timeConstant);
+            }
+            else
+            {
+                log.Print(MessageType::ERROR, "Time constant of First Order rotor dynamics model of actuator '%s' missing!",
+                    actuatorName.c_str());
+                delete prop;
+                return nullptr;
+            }
+        }
+        else if (rotorDynTypeStr == "yoerger")
+        {
+            Scalar alpha, beta;
+            if ((item2 = item->FirstChildElement("alpha")) != nullptr && //
+                 item2->QueryAttribute("value", &alpha) == XML_SUCCESS && //
+                 (item2 = item->FirstChildElement("beta")) != nullptr && //
+                 item2->QueryAttribute("value", &beta) == XML_SUCCESS)
+            {
+                rotorModel = std::make_shared<Yoerger>(alpha, beta);
+            }
+            else
+            {
+                log.Print(MessageType::ERROR, "Alpha or Beta of Yoerger rotor dynamics model in actuator '%s' missing!",
+                        actuatorName.c_str());
+                delete prop;
+                return nullptr;
+            }
+        }
+        // Bessa modoel
+        else if (rotorDynTypeStr == "bessa")
+        {
+            Scalar jmsp, kv1, kv2, kt, rm;
+
+            if ((item2 = item->FirstChildElement("jmsp")) != nullptr 
+                && item2->QueryAttribute("value", &jmsp)== XML_SUCCESS
+                && (item2 = item->FirstChildElement("kv1")) != nullptr
+                && item2->QueryAttribute("value", &kv1)== XML_SUCCESS
+                && (item2 = item->FirstChildElement("kv2")) != nullptr
+                && item2->QueryAttribute("value", &kv2)== XML_SUCCESS
+                && (item2 = item->FirstChildElement("kt")) != nullptr
+                && item2->QueryAttribute("value", &kt)== XML_SUCCESS
+                && (item2 = item->FirstChildElement("rm")) != nullptr
+                && item2->QueryAttribute("value", &rm)== XML_SUCCESS)
+            {
+                rotorModel = std::make_shared<Bessa>(jmsp, kv1, kv2, kt, rm);
+            }
+            else
+            {
+                log.Print(MessageType::ERROR, "Bessa rotor dynamics model parameters in actuator '%s' missing!", actuatorName.c_str());
+                delete prop;
+                return nullptr;
+            }
+        }
+        // Mechanical model with PI controller
+        else if (rotorDynTypeStr == "mechanical_pi")
+        {
+            Scalar J = prop->getInertia().getX() + prop->getAddedInertia().getX();
+            if((item2 = item->FirstChildElement("rotor_inertia")) != nullptr)
+            {
+                item2->QueryAttribute("value", &J);
+            }
+            else
+            {
+                log.Print(MessageType::INFO, "Actuator '%s': using calculated rotor inertia = %1.5lf and added inertia = %1.5lf.", 
+                    actuatorName.c_str(), prop->getInertia().getX(), prop->getAddedInertia().getX());
+            }
+
+            Scalar kp, ki, iLim; // PI settings
+            if ((item2 = item->FirstChildElement("kp")) != nullptr 
+                && item2->QueryAttribute("value", &kp) == XML_SUCCESS
+                && (item2 = item->FirstChildElement("ki")) != nullptr
+                && item2->QueryAttribute("value", &ki) == XML_SUCCESS
+                && (item2 = item->FirstChildElement("ilimit")) != nullptr
+                && item2->QueryAttribute("value", &iLim) == XML_SUCCESS)
+            {
+                rotorModel = std::make_shared<MechanicalPI>(J, kp, ki, iLim);
+            }
+            else
+            {
+                log.Print(MessageType::ERROR, "Mechanical rotor dynamics model parameters in actuator '%s' missing!", actuatorName.c_str());
+                delete prop;
+                return nullptr;
+            }
+        }
+        else
+        {
+            log.Print(MessageType::ERROR, "Unknown rotor dynamics model type in actuator '%s'!", actuatorName.c_str());
+            delete prop;
+            return nullptr;
+        }
+
+        // Thrust Model
+        std::shared_ptr<ThrustModel> thrustModel;
+
+        if ((item = element->FirstChildElement("thrust_model")) == nullptr)
+        {
+            log.Print(MessageType::ERROR, "Thrust model of actuator '%s' missing!", actuatorName.c_str());
+            delete prop;
+            return nullptr;
+        }
+
+        const char* thrustModelType = nullptr;
+        std::string thrustModelTypeStr = "";
+
+        if (item->QueryStringAttribute("type", &thrustModelType) == XML_SUCCESS)
+        {
+            thrustModelTypeStr = std::string(thrustModelType);
+        }
+        else
+        {
+            log.Print(MessageType::ERROR, "Thrust model type of actuator '%s' missing!", actuatorName.c_str());
+            delete prop;
+            return nullptr;
+        }
+
+        // Quadratic
+        if (thrustModelTypeStr == "quadratic")
+        {
+            Scalar kt;
+            // Get params
+            if ((item2 = item->FirstChildElement("thrust_coeff")) != nullptr
+                && item2->QueryAttribute("value", &kt) == XML_SUCCESS)
+            {
+                thrustModel = std::make_shared<QuadraticThrust>(kt);
+            }
+            else
+            { 
+                log.Print(MessageType::ERROR, "Quadratic thrust model rotor_constant of actuator '%s' missing!",
+                        actuatorName.c_str());
+                delete prop;
+                return nullptr;
+            }
+
+        }
+        // Deadband
+        else if (thrustModelTypeStr == "deadband")
+        {
+            Scalar ktn, ktp, dl, du;
+            // get params
+            if ((item2 = item->FirstChildElement("thrust_coeff")) != nullptr 
+                 && item2->QueryAttribute("reverse", &ktn) == XML_SUCCESS 
+                 && item2->QueryAttribute("forward", &ktp) == XML_SUCCESS
+                 && (item2 = item->FirstChildElement("deadband")) != nullptr
+                 && item2->QueryAttribute("lower", &dl) == XML_SUCCESS
+                 && item2->QueryAttribute("upper", &du) == XML_SUCCESS)
+            {
+                thrustModel = std::make_shared<DeadbandThrust>(ktn, ktp, dl, du);
+            }
+            else
+            {    
+                log.Print(MessageType::ERROR, "Deadband thrust model parameters in actuator '%s' missing!",
+                    actuatorName.c_str());
+                delete prop;
+                return nullptr;
+            }
+
+        }
+        // Linear Interpolation
+        else if (thrustModelTypeStr == "linear_interpolation")
+        {
+            std::vector<Scalar> input, output;
+            // get params
+            const char* cinput;
+            const char* coutput;
+            if ((item2 = item->FirstChildElement("input")) != nullptr
+                && item2->QueryStringAttribute("value", &cinput) == XML_SUCCESS
+                && (item2 = item->FirstChildElement("output")) != nullptr
+                && item2->QueryStringAttribute("value", &coutput) == XML_SUCCESS)
+            {
+                
+                // Lambda function to convert a space-separated string to a vector of Scalars
+                // @TODO: Add as standard in the library?
+                auto stringToVector = [](const std::string& str) -> std::vector<Scalar> 
+                {
+                    std::vector<Scalar> result;
+                    std::stringstream ss(str);
+                    Scalar temp;
+                    while (ss >> temp)
+                    {
+                        result.push_back(temp);
+                    }
+                    return result;
+                };
+
+                input = stringToVector(std::string(cinput));
+                output = stringToVector(std::string(coutput));
+                
+                thrustModel = std::make_shared<InterpolatedThrust>(input, output);
+            }
+            else
+            {
+                log.Print(MessageType::ERROR, "Linear interpolation of actuator '%s' missing!", actuatorName.c_str());
+                delete prop;
+                return nullptr;
+            }
+        }
+        // Fluid dynamics based model
+        else if (thrustModelTypeStr == "fluid_dynamics")
+        {
+            Scalar ktp, ktn, kq;
+            if ((item2 = item->FirstChildElement("thrust_coeff")) != nullptr
+                && item2->QueryAttribute("forward", &ktp) == XML_SUCCESS
+                && item2->QueryAttribute("reverse", &ktn) == XML_SUCCESS
+                && (item2 = item->FirstChildElement("torque_coeff")) != nullptr
+                && item2->QueryAttribute("value", &kq) == XML_SUCCESS)
+            {
+                thrustModel = std::make_shared<FDThrust>(diameter, ktp, ktn, kq, rightHand, sm->getOcean()->getLiquid().density);
+            }
+            else
+            {
+                log.Print(MessageType::ERROR, "Fluid dynamics model parameters in actuator '%s' missing!", actuatorName.c_str());
+                delete prop;
+                return nullptr;
+            }
+        }
+        else
+        {
+            log.Print(MessageType::ERROR, "Unknown thrust model type in actuator '%s'!", actuatorName.c_str());
+            delete prop;
+            return nullptr;
+        }
+
+        Thruster* th = new Thruster(actuatorName, prop, rotorModel, thrustModel, diameter, rightHand, maxSetpoint, inverted, normalized);
+        return th;
+    }
+    else if(typeStr == "simple_thruster")
+    {
+        const char* propFile = nullptr;
+        const char* mat = nullptr;
+        const char* look = nullptr;
+        Scalar propScale;
+        bool rightHand;
+        
+        if((item = element->FirstChildElement("propeller")) == nullptr || item->QueryAttribute("right", &rightHand) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Propeller definition of actuator '%s' missing!", actuatorName.c_str());
+            return nullptr;
+        }
+        XMLElement* item2;
+        if((item2 = item->FirstChildElement("mesh")) == nullptr || item2->QueryStringAttribute("filename", &propFile) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Propeller mesh path of actuator '%s' missing!", actuatorName.c_str());
+            return nullptr;
+        }
+        if(item2->QueryAttribute("scale", &propScale) != XML_SUCCESS)
+            propScale = Scalar(1);
+        if((item2 = item->FirstChildElement("material")) == nullptr || item2->QueryStringAttribute("name", &mat) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Propeller material of actuator '%s' missing!", actuatorName.c_str());
+            return nullptr;
+        }
+        std::string lookStr = "";
+        if((item2 = item->FirstChildElement("look")) != nullptr)
+        {
+            item2->QueryStringAttribute("name", &look);
+            lookStr = std::string(look);
+        }
+
+        BodyPhysicsSettings phy;
+        phy.collisions = false;
+        phy.buoyancy = false;
+        
+        phy.mode = BodyPhysicsMode::SUBMERGED;
+        Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), lookStr);
+        
+        if((item = element->FirstChildElement("specs")) != nullptr)
+        {
+            bool inverted = false;
+            item->QueryAttribute("inverted", &inverted); //Optional
+
+            SimpleThruster* th = new SimpleThruster(actuatorName, prop, rightHand, inverted);
+
+            Scalar lower, upper;
+            if(item->QueryAttribute("lower_thrust_limit", &lower) == XML_SUCCESS 
+                && item->QueryAttribute("upper_thrust_limit", &upper) == XML_SUCCESS)
+            {
+                th->setThrustLimits(lower, upper);
+            }
+            return th;
+        }
+        else
+        {
+            SimpleThruster* th = new SimpleThruster(actuatorName, prop, rightHand);
+            return th;
+        }
+    }
+    else if(typeStr == "propeller")
     {
         const char* propFile = nullptr;
         const char* mat = nullptr;
@@ -2529,21 +3112,10 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         BodyPhysicsSettings phy;
         phy.collisions = false;
         phy.buoyancy = false;
-        
-        if(typeStr == "thruster")
-        {
-            phy.mode = BodyPhysicsMode::SUBMERGED;
-            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), lookStr);
-            Thruster* th = new Thruster(actuatorName, prop, diameter, std::make_pair(cThrust, cThrustBack), cTorque, maxRpm, rightHand, inverted);
-            return th;
-        }
-        else //propeller
-        {
-            phy.mode = BodyPhysicsMode::AERODYNAMIC;
-            Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), lookStr);
-            Propeller* p = new Propeller(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
-            return p;
-        }
+        phy.mode = BodyPhysicsMode::AERODYNAMIC;
+        Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), lookStr);
+        Propeller* p = new Propeller(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
+        return p;
     }
     else if(typeStr == "rudder")
     {
@@ -2552,7 +3124,8 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         const char* look = nullptr;
 
         Scalar area, dragCoeff, liftCoeff, maxAngle, rudderScale;
-        Scalar stallAngle = 0.25*M_PI;
+        Scalar stallAngle = Scalar(0.25*M_PI);
+        Scalar maxAngularRate = Scalar(0);
         bool inverted = false;
         
         if((item = element->FirstChildElement("specs")) == nullptr 
@@ -2566,6 +3139,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         }
         item->QueryAttribute("inverted", &inverted); //Optional
         item->QueryAttribute("stall_angle", &stallAngle); //Optional
+        item->QueryAttribute("max_angular_rate", &maxAngularRate); //Optional
 
         if((item = element->FirstChildElement("visual")) == nullptr)
         {
@@ -2605,7 +3179,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         phy.buoyancy = false;
 
         Polyhedron* rudder = new Polyhedron(actuatorName + "/Rudder", phy, GetFullPath(std::string(rudderFile)), rudderScale, graOrigin, std::string(mat), lookStr);
-        Rudder* r = new Rudder(actuatorName, rudder, area, liftCoeff, dragCoeff, stallAngle, maxAngle, inverted);
+        Rudder* r = new Rudder(actuatorName, rudder, area, liftCoeff, dragCoeff, stallAngle, maxAngle, inverted, maxAngularRate);
         return r;
     }
     else if(typeStr == "vbs")
@@ -3678,7 +4252,10 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
         sens = msis;
     }
     else
+    {
+        log.Print(MessageType::ERROR, "Sensor type '%s' not supported!", typeStr.c_str());
         return nullptr;
+    }
 
     //---- Visuals ----
     const char* visFile = nullptr;
@@ -3884,6 +4461,41 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
         }
         return comm;
     }
+    
+    else if(typeStr == "vlc")
+    {
+        std::cout<<"found Vlc"<<std::endl;
+        Scalar comm_speed;
+        Scalar range;
+        Scalar minVerticalFOVDeg;
+        Scalar maxVerticalFOVDeg;
+        unsigned int cId = 0;
+        bool occlusion = true;
+        
+        if((item = element->FirstChildElement("specs")) == nullptr
+            || item->QueryAttribute("comm_speed", &comm_speed) != XML_SUCCESS
+            || item->QueryAttribute("minVFov", &minVerticalFOVDeg) != XML_SUCCESS
+            || item->QueryAttribute("maxVFov", &maxVerticalFOVDeg) != XML_SUCCESS)
+
+        {
+            log.Print(MessageType::ERROR, "Specs of communication device '%s' not properly defined!", commName.c_str());
+            return nullptr;
+        }
+
+
+        std::cout<<"Connecting Vlc"<<std::endl;
+        comm = new Vlc(commName, devId, range, minVerticalFOVDeg, maxVerticalFOVDeg,  comm_speed);
+        for(int i=0;i<15;i++){
+            Light* light = new Light(namePrefix+"/VlcX", 0.0005,15, Color::RGB(0, 0, 1), 25000);
+            ((Vlc*)comm)->addLight(light);
+        }
+        //comm->Connect(cId);
+        std::cout<<"Connected Vlc"<<std::endl;
+
+        return comm;
+    }
+    
+    
     else if(typeStr == "usbl2")
     {
         Scalar minFovDeg;

@@ -62,12 +62,18 @@ namespace sf
 		 */
         void Simulate(GLfloat dt);
          
+        //! A method that resets the quad tree.
+        /*!
+         \param cam a pointer to the active camera
+         */
+        void ResetSurface(OpenGLCamera* cam);
+        
         //! A method that updates the wave mesh.
         /*!
          \param cam a pointer to the active camera
          */
         void UpdateSurface(OpenGLCamera* cam);
-        
+
         //! A method that draws the surface of the ocean.
         /*!
          \param cam a pointer to the active camera

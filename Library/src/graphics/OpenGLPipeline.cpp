@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/03/2014.
-//  Copyright(c) 2014-2020 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2014-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLPipeline.h"
@@ -79,7 +79,7 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Display FBO initialization failed!");
     OpenGLState::BindFramebuffer(0);
-    lastSimTime = Scalar(0);
+    lastSimTime = Scalar(-1);
 }
 
 OpenGLPipeline::~OpenGLPipeline()
@@ -342,7 +342,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     //Choose rendering mode
     unsigned int renderMode = 0; //Defaults to rendering without ocean
     Ocean* ocean = sim->getOcean();
-    if(ocean != NULL)
+    if(ocean != nullptr)
     {
         ocean->getOpenGLOcean()->Simulate(dt);
         renderMode = rSettings.ocean > RenderQuality::DISABLED && ocean->isRenderable() ? 1 : 0;
@@ -374,26 +374,30 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     for(int i=content->getViewsCount()-1; i >= 0; --i)
     {
         OpenGLView* view = content->getView(i);
+        
+        if(!view->isEnabled()) // Skip disabled views
+            continue;
+      
         if(view->needsUpdate())
         {
-            if(view->isContinuous())
+            if(view->isContinuous()) // Has to be always updated independent from number of views in the queue
             {
                 viewsQueue.push_front(i);
                 ++updateCount;
             }
-            else
+            else // Will be updated now or in the following frames
             {
                 viewsQueue.push_back(i);
                 viewsNoUpdate.push_back(i);
             }
         }
-        else
+        else // Does not need update
         {
             viewsNoUpdate.push_back(i);
         }
     }
-    
-    if(viewsQueue.size() > content->getViewsCount())
+
+    if(viewsQueue.size() > content->getViewsCount()) // Safety condition to avoid runaway
     {
         updateCount = viewsQueue.size();
         viewsNoUpdate.clear();
@@ -403,15 +407,15 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         ++updateCount;
         viewsNoUpdate.erase(std::find(viewsNoUpdate.begin(), viewsNoUpdate.end(), viewsQueue[updateCount-1]));
     }
-   
+
     //Loop through all views -> trackballs, cameras, depth cameras...
     for(unsigned int i=0; i<updateCount; ++i)
-    {
+    {  
         OpenGLState::EnableDepthTest();
         OpenGLState::EnableCullFace();
         OpenGLState::DisableBlend();
         OpenGLView* view = content->getView(viewsQueue[i]);
-            
+    
         if(view->getType() == ViewType::DEPTH_CAMERA)
         {
             OpenGLDepthCamera* camera = static_cast<OpenGLDepthCamera*>(view);
@@ -624,7 +628,10 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     }
     //Draw views that are displayed but not updated
     for(size_t i=0; i<viewsNoUpdate.size(); ++i)
-        content->getView(viewsNoUpdate[i])->DrawLDR(screenFBO, false);
+    {
+        OpenGLView* view = content->getView(viewsNoUpdate[i]);
+        view->DrawLDR(screenFBO, false);
+    }
     //Remove views drawn in this frame
     viewsQueue.erase(viewsQueue.begin(), viewsQueue.begin() + updateCount);
 }

@@ -93,7 +93,13 @@ namespace sf
          \param origin a pose of the body CG in the world frame
          */
         void AddToSimulation(SimulationManager* sm, const Transform& origin);
-        
+
+        //! A method removing the body from the simulation manager.
+        /*!
+         \param sm a pointer to the simulation manager
+         */
+        void RemoveFromSimulation(SimulationManager* sm);
+
         //! A pure virtual method building a collision shape for the body.
         virtual btCollisionShape* BuildCollisionShape() = 0;
         
@@ -398,7 +404,7 @@ namespace sf
         void ComputeEllipsoidalApprox();
         
         Scalar LambKFactor(Scalar r1, Scalar r2);
-        virtual void BuildRigidBody();
+        virtual void BuildRigidBody(btDynamicsWorld* world);
         void BuildMultibodyLinkCollider(btMultiBody* mb, unsigned int child, btMultiBodyDynamicsWorld* world);
         
         //Body

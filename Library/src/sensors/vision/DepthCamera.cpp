@@ -33,8 +33,8 @@
 namespace sf
 {
 
-DepthCamera::DepthCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizontalFOVDeg, Scalar minDepth, Scalar maxDepth, Scalar frequency)
-    : Camera(uniqueName, resolutionX, resolutionY, horizontalFOVDeg, frequency)
+DepthCamera::DepthCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar minDepth, Scalar maxDepth, Scalar frequency)
+    : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
 {
     depthRange.x = minDepth < Scalar(0.01) ? 0.01f : (GLfloat)minDepth;
     depthRange.y = maxDepth > Scalar(0.01) ? (GLfloat)maxDepth : 1.f;

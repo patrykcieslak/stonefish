@@ -196,13 +196,13 @@ void Robot::AddVisionSensor(VisionSensor* s, const std::string& attachmentLinkNa
 void Robot::AddLinkActuator(LinkActuator* a, const std::string& actuatedLinkName, const Transform& origin)
 {
     SolidEntity* link = getLink(actuatedLinkName);
-    if(link != nullptr)
+    if(link == nullptr)
     {
-        a->AttachToSolid(link, origin);
-        actuators.push_back(a);
-    }
-    else
         cCritical("Link '%s' doesn't exist. Actuator '%s' cannot be attached!", actuatedLinkName.c_str(), a->getName().c_str());
+        return;
+    }
+    a->AttachToSolid(link, origin);
+    actuators.push_back(a);
 }
 
 void Robot::AddComm(Comm* c, const std::string& attachmentLinkName, const Transform& origin)
@@ -225,6 +225,10 @@ void Robot::AddToSimulation(SimulationManager* sm, const Transform& origin)
         sm->AddActuator(actuators[i]);
     for(size_t i=0; i<comms.size(); ++i)
         sm->AddComm(comms[i]);
+}
+
+void Robot::Respawn(SimulationManager* sm, const Transform& origin)
+{
 }
 
 }

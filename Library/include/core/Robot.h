@@ -138,7 +138,7 @@ namespace sf
          \param actuatedLinkName a name of the link which is to be actuated
          \param origin a transformation from the link origin to the actuator frame
          */
-        void AddLinkActuator(LinkActuator* a, const std::string& actuatedLinkName, const Transform& origin);
+        virtual void AddLinkActuator(LinkActuator* a, const std::string& actuatedLinkName, const Transform& origin);
         
         //! A method used to attach an actuator to a specified joint of the robot.
         /*!
@@ -164,6 +164,13 @@ namespace sf
          */
         virtual void AddToSimulation(SimulationManager* sm, const Transform& origin);
         
+        //! A method respawning the robot in the simulation world.
+        /*!
+         \param sm a pointer to a simulation manager
+         \param origin a trasformation from the world origin to the robot origin
+         */
+        virtual void Respawn(SimulationManager* sm, const Transform& origin);
+
         //! A method returning a pointer to the actuator with a given name.
         /*!
          \param name the name of the actuator

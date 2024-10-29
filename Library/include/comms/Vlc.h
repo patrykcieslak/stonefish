@@ -16,27 +16,25 @@
 */
 
 //
-//  Light.h
+//  Vlc.h
 //  Stonefish
-//
-//  Created by Patryk Cieslak on 4/7/17.
-//  Copyright (c) 2017-2024 Patryk Cieslak. All rights reserved.
-//
 
-#ifndef __Stonefish_Light__
-#define __Stonefish_Light__
+#ifndef __Stonefish_Vlc__
+#define __Stonefish_Vlc__
 
-#include "actuators/LinkActuator.h"
+#include "actuators/Light.h"
+#include "comms/Comm.h"
 #include "graphics/OpenGLDataStructs.h"
+#include <map>
 
 namespace sf
 {
-    class OpenGLLight;
+    class Light;
 	class StaticEntity;
     class AnimatedEntity;
     
     //! A class representing a light of two common types: omni and spot.
-    class Light : public LinkActuator
+    class Vlc : public Comm
     {
     public:
         //! A constructor of an omni light.
@@ -46,8 +44,9 @@ namespace sf
          \param color a color of the light
          \param lum the luminous power of the light [lm]
          */
-        Light(std::string uniqueName, Scalar radius, Color color, Scalar lum);
+        Vlc(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar range, Scalar comm_speed);
         
+        void SendMessage(std::string data, const CommDataFrame::DataType& data_mission);
         //! A constructor of a spot light.
         /*!
          \param uniqueName a name of the light
@@ -56,66 +55,72 @@ namespace sf
          \param color a color of the light
          \param lum the luminous power of the light [lm]
          */
-        Light(std::string uniqueName, Scalar radius, Scalar coneAngleDeg, Color color, Scalar lum);
         
 		//! A method used to attach the comm device to the world origin.
         /*!
          \param origin the place where the comm should be attached in the world frame
          */
-        void AttachToWorld(const Transform& origin);
-        
-        //! A method used to attach the light to a static body.
-        /*!
-         \param body a pointer to the static body
-         \param origin the place where the light should be attached in the body origin frame
-         */
-        void AttachToStatic(StaticEntity* body, const Transform& origin);
-		
-        //! A method used to attach the light to an animated body.
-        /*!
-         \param body a pointer to the animated body
-         \param origin the place where the light should be attached in the body origin frame
-         */
-        void AttachToAnimated(AnimatedEntity* body, const Transform& origin);
-
-        //! A method used to attach the actuator to a specified rigid body.
-        /*!
-         \param solid a pointer to a rigid body
-         \param origin a transformation from the body origin to the actuator origin
-         */
-        void AttachToSolid(SolidEntity* body, const Transform& origin);
-        
-        //! A method which updates the pose of the light
         /*!
          \param dt a time step of the simulation
          */
-        void Update(Scalar dt);
-        
-        //! A method that updates light position.
-        void UpdateTransform();
+        virtual void InternalUpdate(Scalar dt);
         
         //! A method implementing the rendering of the light dummy.
         std::vector<Renderable> Render();
         
-		//! A method returning actuator frame in the world frame.
-		Transform getActuatorFrame() const;
-		
         //! A method returning the type of the actuator.
-        ActuatorType getType() const;
+        CommType getType() const;
         
-        OpenGLLight* getGLLight();
+        std::vector<Light*> getLights();
+        
+        void SwitchOff();
+        
+        void SwitchOn();
+        
+        bool isActive();
+        
+        void enable(bool t);
+        
+        Scalar getRange();
+        
+        void setRange(Scalar r);
+        
+        Scalar getCommSpeed();
+        
+        void setCommSpeed(Scalar r);
+        
+        void addLight(Light* l);
+        
+        bool getOcclusionTest() const;
+        CommDataFrame* getData();
+        void setWaterType(Scalar t);
+       
+        
+        
+    protected:
+    
+        virtual void ProcessMessages();
+        static Vlc* getNode(uint64_t deviceId);
         
     private:
-        void InitGraphics();
         
-        //attach -> SolidEntity
-		StaticEntity* attach2;
-        AnimatedEntity* attach3;
-        Color c;
-		Scalar R;
+	Scalar R;
         Scalar Fi;
         Scalar coneAngle;
-        OpenGLLight* glLight;
+        std::vector<Light*> lights;
+        Scalar minFov2, maxFov2;
+        bool active;
+        Scalar range; 
+        Scalar comm_speed;
+        static std::vector<uint64_t> getNodeIds();
+        static bool mutualContact(uint64_t device1Id, uint64_t device2Id);
+        bool isReceptionPossible(Vector3 dir, Scalar distance);
+        bool occlusion;
+        static std::map<uint64_t, Vlc*> nodes;
+        CommDataFrame* data;
+        Scalar water_type;
+        
+        
     };
 }
 

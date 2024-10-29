@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 15/09/2015.
-//  Copyright (c) 2015-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2015-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Motor.h"
@@ -34,6 +34,7 @@ namespace sf
 Motor::Motor(std::string uniqueName) : JointActuator(uniqueName)
 {
     torque = Scalar(0);
+    setTorqueLimits(1, -1); // No limits
 }
 
 ActuatorType Motor::getType() const
@@ -41,9 +42,20 @@ ActuatorType Motor::getType() const
     return ActuatorType::MOTOR;
 }
 
+void Motor::setTorqueLimits(Scalar lower, Scalar upper)
+{
+    limits.first = lower;
+    limits.second = upper;
+}
+
 void Motor::setIntensity(Scalar tau)
 {
     torque = tau;
+    if(limits.second > limits.first) // Limitted
+        torque = tau < limits.first ? limits.first : (tau > limits.second ? limits.second : tau);
+    else
+        torque = tau;
+    ResetWatchdog();
 }
 
 Scalar Motor::getTorque() const
@@ -95,10 +107,17 @@ Scalar Motor::getAngularVelocity() const
 
 void Motor::Update(Scalar dt)
 {
+    Actuator::Update(dt);
+
     if(j != nullptr && j->getType() == JointType::REVOLUTE)
         ((RevoluteJoint*)j)->ApplyTorque(torque);
     else if(fe != nullptr)
         fe->DriveJoint(jId, torque);
+}
+
+void Motor::WatchdogTimeout()
+{
+    setIntensity(Scalar(0));
 }
 
 }

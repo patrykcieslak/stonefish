@@ -40,7 +40,7 @@ Sample::Sample(unsigned short nDimensions, Scalar* values, bool invalid, uint64_
     if(invalid)
         timestamp = Scalar(-1);
     else
-        timestamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
+        timestamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true);
 }
 
 Sample::Sample(const Sample& other, uint64_t index)

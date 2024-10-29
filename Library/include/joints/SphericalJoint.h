@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 2/3/13.
-//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_SphericalJoint__
@@ -31,6 +31,7 @@
 namespace sf
 {
     class SolidEntity;
+    class FeatherstoneEntity;
     
     //! A class representing a spherical joint.
     class SphericalJoint : public Joint
@@ -46,6 +47,16 @@ namespace sf
          */
         SphericalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, bool collideLinked = true);
         
+        //! A constructor to create a spherical joint between a solid body and a link of a multibody.
+        /*!
+         \param uniqueName a name for the joint
+         \param solid a pointer to the solid body
+         \param fe a pointer to the multibody
+         \param linkId an index of the link of the multibody
+         \param pivot a connection point
+         */
+        SphericalJoint(std::string uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId, const Vector3& pivot, bool collideLinked = true);
+
         //! A method used to apply torque to the joint.
         /*!
          \param T a torque vector to be applied to the joint [Nm]

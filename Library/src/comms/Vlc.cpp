@@ -16,77 +16,88 @@
 */
 
 //
-//  AcousticModem.cpp
+//  Light.cpp
 //  Stonefish
 //
-//  Created by Patryk Cieślak on 26/02/2020.
-//  Copyright (c) 2020-2021 Patryk Cieslak. All rights reserved.
+//  Created by Patryk Cieslak on 4/7/17.
+//  Copyright (c) 2017-2023 Patryk Cieslak. All rights reserved.
 //
 
-#include "comms/AcousticModem.h"
+#include "comms/Vlc.h"
+#include "graphics/OpenGLLight.h"
 
-#include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
+#include "core/GraphicalSimulationApp.h"
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
-#include "graphics/OpenGLPipeline.h"
+
 
 namespace sf
 {
- 
 //Static
-std::map<uint64_t, AcousticModem*> AcousticModem::nodes; 
+std::map<uint64_t, Vlc*> Vlc::nodes; 
 
-void AcousticModem::addNode(AcousticModem* node)
-{
-    if(node->getDeviceId() == 0)
-    {
-        cError("Modem device ID=0 not allowed!");
-        return;
-    }
-        
-    if(nodes.find(node->getDeviceId()) != nodes.end())
-        cError("Modem node with ID=%d already exists!", node->getDeviceId());
-    else
-        nodes[node->getDeviceId()] = node;
+// Helper function to compute size of data_mission
+size_t getDataMissionSize(const CommDataFrame::DataType& data_mission) {
+    return std::visit([](auto&& value) -> size_t {
+        using T = std::decay_t<decltype(value)>;
+        if constexpr (std::is_same_v<T, int> || std::is_same_v<T, float> || std::is_same_v<T, double>) {
+            return sizeof(T);
+        } else if constexpr (std::is_same_v<T, std::string>) {
+            return value.size();
+        } else if constexpr (std::is_same_v<T, std::vector<uint8_t>> || std::is_same_v<T, std::vector<float>> || std::is_same_v<T, std::vector<double>>) {
+            return value.size() * sizeof(typename T::value_type);
+        } else if constexpr (std::is_same_v<T, PointCloud>) {
+            return value.points.size() * sizeof(double);
+        }
+        return 0;
+    }, data_mission);
 }
 
-void AcousticModem::removeNode(uint64_t deviceId)
-{
-    if(deviceId == 0)
-        return;
-        
-    std::map<uint64_t, AcousticModem*>::iterator it = nodes.find(deviceId);
-    if(it != nodes.end())
-        nodes.erase(it);
-}
-
-AcousticModem* AcousticModem::getNode(uint64_t deviceId)
-{
-    if(deviceId == 0)
-        return nullptr;
+Vlc::Vlc(std::string uniqueName, uint64_t deviceId, Scalar r, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg,  Scalar cs): Comm(uniqueName, deviceId) {
+    if(!SimulationApp::getApp()->hasGraphics())
+        cCritical("Not possible to use lights in console simulation! Use graphical simulation if possible.");
     
-    try
-    {
-        return nodes.at(deviceId);
-    }
-    catch(const std::out_of_range& oor)
-    {
-        return nullptr;
-    }
-} 
-
-std::vector<uint64_t> AcousticModem::getNodeIds()
-{
-    std::vector<uint64_t> ids;
-    for(auto it=nodes.begin(); it != nodes.end(); ++it)
-        ids.push_back(it->first);
-    return ids;
+    R=0.0005;
+    //Fi = lum < Scalar(0) ? Scalar(0) : lum;
+    range=r;
+    comm_speed=cs;
+    active=false;
+    data=NULL;
+    water_type=0.0;
 }
 
-bool AcousticModem::mutualContact(uint64_t device1Id, uint64_t device2Id)
+    
+CommType Vlc::getType() const
 {
-    AcousticModem* node1 = getNode(device1Id);
-    AcousticModem* node2 = getNode(device2Id);
+    return CommType::VLC;
+}
+
+
+void Vlc::SwitchOff(){
+     for(int i=0;i<15;i++){
+         lights[i]->getGLLight()->SwitchOff();
+     }
+}
+
+void Vlc::SwitchOn(){
+     for(int i=0;i<15;i++){
+         lights[i]->getGLLight()->SwitchOn();
+     }
+}
+
+bool Vlc::isActive(){
+     return active;
+}
+        
+
+void Vlc::enable(bool t){
+     active=t;
+}
+
+bool Vlc::mutualContact(uint64_t device1Id, uint64_t device2Id)
+{
+    Vlc* node1 = getNode(device1Id);
+    Vlc* node2 = getNode(device2Id);
     
     if(node1 == nullptr || node2 == nullptr)
         return false;
@@ -111,27 +122,142 @@ bool AcousticModem::mutualContact(uint64_t device1Id, uint64_t device2Id)
         return true;
 }
 
-//Member 
-AcousticModem::AcousticModem(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange)
-                                : Comm(uniqueName, deviceId)
+Vlc* Vlc::getNode(uint64_t deviceId)
 {
-    btClamp(maxVerticalFOVDeg, Scalar(0), Scalar(360));
-    btClamp(minVerticalFOVDeg, Scalar(0), maxVerticalFOVDeg);
-    minFov2 = btRadians(minVerticalFOVDeg/Scalar(2));
-    maxFov2 = btRadians(maxVerticalFOVDeg/Scalar(2));
-    range = operatingRange <= Scalar(0) ? Scalar(1000) : operatingRange;
-    position = V0();
-    frame = std::string("");
-    occlusion = true;
-    addNode(this);
+    if(deviceId == 0)
+        return nullptr;
+    
+    try
+    {
+        return nodes.at(deviceId);
+    }
+    catch(const std::out_of_range& oor)
+    {
+        return nullptr;
+    }
+} 
+
+std::vector<uint64_t> Vlc::getNodeIds()
+{
+    std::vector<uint64_t> ids;
+    for(auto it=nodes.begin(); it != nodes.end(); ++it)
+        ids.push_back(it->first);
+    return ids;
 }
 
-AcousticModem::~AcousticModem()
+void Vlc::InternalUpdate(Scalar dt)
 {
-    removeNode(this->getDeviceId());
+    
+    //Send first message from the tx buffer
+    if(txBuffer.size() > 0)
+    {
+        CommDataFrame* msg = (CommDataFrame*)txBuffer[0];
+        if(mutualContact(msg->source, msg->destination)){
+            Vlc* dest = getNode(msg->destination);
+            dest->MessageReceived(msg);
+        }
+        else
+            delete msg;
+            
+        txBuffer.pop_front();
+    }
 }
 
-bool AcousticModem::isReceptionPossible(Vector3 worldDir, Scalar distance)
+
+void Vlc::SendMessage(std::string data, const CommDataFrame::DataType& data_mission)
+{
+    float waterQuality = 0; // Assume this returns a value between 0 and 1
+
+    // Compute size of the data_mission and check against allowed size based on water quality
+    size_t dataSize = getDataMissionSize(data_mission);
+    size_t maxSizeAllowed = static_cast<size_t>(1000 * (1.0f - waterQuality)); // Example: max size decreases as waterQuality increases
+
+    if (dataSize > maxSizeAllowed) {
+        //std::cout << "Message dropped due to excessive data_mission size based on water quality.\n";
+        return;
+    }
+
+    // Message might be dropped or truncated based on water quality
+    if (waterQuality > 0.8f) {
+        if (rand() / (float)RAND_MAX < waterQuality) {
+            //std::cout << "Message dropped due to poor water quality.\n";
+            return;
+        }
+    } else if (waterQuality > 0.5f) {
+        float truncationFactor = 1.0f - waterQuality; // The worse the quality, the smaller the message
+        size_t truncateLength = static_cast<size_t>(data.size() * truncationFactor);
+
+        // Truncate message
+        data = data.substr(0, truncateLength);
+        //std::cout << "Message truncated due to water quality.\n";
+    }
+
+    if(getConnectedId() < 0)
+        return;
+    else if(getConnectedId() == 0)
+    {
+        std::vector<uint64_t> nodeIds = getNodeIds();
+        for(size_t i=0; i<nodeIds.size(); ++i)
+        {
+            if(nodeIds[i] != getDeviceId() && mutualContact(getDeviceId(), nodeIds[i]))
+            {
+                CommDataFrame* msg = new CommDataFrame();
+                msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true);
+                msg->seq = txSeq++;
+                msg->source = getDeviceId();
+                msg->destination = nodeIds[i];
+                msg->data = data;
+                msg->data_mission = data_mission;
+                txBuffer.push_back(msg);
+            }
+        }
+    }
+    else
+    {
+        if(!mutualContact(getDeviceId(), getConnectedId()))
+            return;
+        
+        CommDataFrame* msg = new CommDataFrame();
+        msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true);
+        msg->seq = txSeq++;
+        msg->source = getDeviceId();
+        msg->destination = getConnectedId();
+        msg->data = data;
+        msg->data_mission = data_mission;
+        txBuffer.push_back(msg);
+    }
+}
+
+void Vlc::ProcessMessages()
+{
+    CommDataFrame* msg;
+    while((msg = (CommDataFrame*)ReadMessage()) != nullptr)
+    {
+        //Different responses to messages should be implemented here
+        if(msg->data != "ACK")
+        {
+            //timestamp and sequence don't change
+            msg->destination = msg->source;
+            msg->source = getDeviceId();
+            msg->data = "ACK";
+            data=msg;
+            txBuffer.push_back(msg);
+        }
+        else
+        {
+            delete msg;
+        }
+    }
+    
+}
+
+bool Vlc::getOcclusionTest() const
+{
+    return occlusion;
+}
+
+
+bool Vlc::isReceptionPossible(Vector3 worldDir, Scalar distance)
 {
     //Check if modems are close enough
     if(distance > range) return false;
@@ -144,140 +270,8 @@ bool AcousticModem::isReceptionPossible(Vector3 worldDir, Scalar distance)
         vAngle = atan2(d, -dir.getZ());
     return btFabs(vAngle) >= minFov2 && btFabs(vAngle) <= maxFov2;
 }
-
-void AcousticModem::setOcclusionTest(bool enabled)
-{
-    occlusion = enabled;
-}
-
-bool AcousticModem::getOcclusionTest() const
-{
-    return occlusion;
-}
-
-void AcousticModem::getPosition(Vector3& pos, std::string& referenceFrame)
-{
-    pos = position;
-    referenceFrame = frame;
-}
-
-CommType AcousticModem::getType() const
-{
-    return CommType::ACOUSTIC;
-}
-
-void AcousticModem::SendMessage(std::string data)
-{    
-    if(getConnectedId() < 0)
-        return;
-    else if(getConnectedId() == 0)
-    {
-        std::vector<uint64_t> nodeIds = getNodeIds();
-        for(size_t i=0; i<nodeIds.size(); ++i)
-            if(nodeIds[i] != getDeviceId() && mutualContact(getDeviceId(), nodeIds[i]))
-            {
-                AcousticDataFrame* msg = new AcousticDataFrame();
-                msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true);
-                msg->seq = txSeq++;
-                msg->source = getDeviceId();
-                msg->destination = nodeIds[i];
-                msg->data = data;
-                msg->txPosition = getDeviceFrame().getOrigin();
-                msg->travelled = Scalar(0);
-                txBuffer.push_back(msg);
-            }
-    }
-    else
-    {
-        if(!mutualContact(getDeviceId(), getConnectedId()))
-            return;
-        
-        AcousticDataFrame* msg = new AcousticDataFrame();
-        msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true);
-        msg->seq = txSeq++;
-        msg->source = getDeviceId();
-        msg->destination = getConnectedId();
-        msg->data = data;
-        msg->txPosition = getDeviceFrame().getOrigin();
-        msg->travelled = Scalar(0);
-        txBuffer.push_back(msg);
-    }
-}
-
-void AcousticModem::ProcessMessages()
-{
-    AcousticDataFrame* msg;
-    while((msg = (AcousticDataFrame*)ReadMessage()) != nullptr)
-    {
-        //Different responses to messages should be implemented here
-        if(msg->data != "ACK")
-        {
-            //timestamp and sequence don't change
-            msg->destination = msg->source;
-            msg->source = getDeviceId();
-            msg->data = "ACK";
-            msg->txPosition = getDeviceFrame().getOrigin();
-            txBuffer.push_back(msg);
-        }
-        else
-        {
-            delete msg;
-        }
-    }
-}
-
-void AcousticModem::InternalUpdate(Scalar dt)
-{
-    //Propagate messages already sent
-    std::map<AcousticDataFrame*, Vector3>::iterator mIt;
-    for(mIt = propagating.begin(); mIt != propagating.end(); )
-    {
-        AcousticModem* dest = getNode(mIt->first->destination);
-        Vector3 dO = dest->getDeviceFrame().getOrigin();
-        Vector3 sO = mIt->second;
-        Vector3 dir = dO - sO;
-        Scalar d = dir.length();
-        
-        if(d <= SOUND_VELOCITY_WATER*dt) //Message reached?
-        {
-            mIt->first->travelled += d;
-            dest->MessageReceived(mIt->first);
-            mIt = propagating.erase(mIt);
-        }
-        else //Advance pulse
-        {
-            dir /= d; //Normalize direction
-            d = SOUND_VELOCITY_WATER * dt;
-            mIt->second += dir * d;
-            mIt->first->travelled += d;
-            ++mIt;
-        }
-    }
     
-    //Send first message from the tx buffer
-    if(txBuffer.size() > 0)
-    {
-        AcousticDataFrame* msg = (AcousticDataFrame*)txBuffer[0];
-        if(mutualContact(msg->source, msg->destination))
-            propagating[msg] = msg->txPosition;
-        else
-            delete msg;
-            
-        txBuffer.pop_front();
-    }
-}
-
-void AcousticModem::UpdatePosition(Vector3 pos, bool absolute, std::string referenceFrame)
-{
-    position = pos;
-    if(absolute)
-        frame = std::string("");
-    else 
-        frame = referenceFrame;
-    newDataAvailable = true;
-}
-
-std::vector<Renderable> AcousticModem::Render()
+std::vector<Renderable> Vlc::Render()
 {
     std::vector<Renderable> items(0);
     
@@ -365,7 +359,7 @@ std::vector<Renderable> AcousticModem::Render()
     }
     else if(getConnectedId() > 0)
     {
-        AcousticModem* cNode = getNode(getConnectedId());
+        Vlc* cNode = getNode(getConnectedId());
         if(cNode != nullptr)
         {
             item.points.push_back(glVectorFromVector(getDeviceFrame().getOrigin()));
@@ -378,7 +372,7 @@ std::vector<Renderable> AcousticModem::Render()
 #ifdef DEBUG
     item.type = RenderableType::SENSOR_POINTS;
     item.model = glm::mat4(1.f);
-    std::map<AcousticDataFrame*, Vector3>::iterator mIt;
+    std::map<CommDataFrame*, Vector3>::iterator mIt;
     for(mIt = propagating.begin(); mIt != propagating.end(); ++mIt)
     {
         Vector3 mPos = mIt->second;
@@ -388,6 +382,39 @@ std::vector<Renderable> AcousticModem::Render()
 #endif
 
     return items;
+}
+
+std::vector<Light*> Vlc::getLights(){
+    return lights;
+}
+
+void Vlc::addLight(Light* l){
+    return lights.push_back(l);
+}
+
+
+Scalar Vlc::getRange(){
+       return range;
+}
+        
+void Vlc::setRange(Scalar r){
+     range=r;
+}
+        
+Scalar Vlc::getCommSpeed(){
+       return comm_speed;
+}
+        
+void Vlc::setCommSpeed(Scalar cs){
+     comm_speed=cs;
+}
+
+CommDataFrame* Vlc::getData(){
+     return data;
+}
+
+void Vlc::setWaterType(Scalar t){
+     water_type=t;
 }
 
 }

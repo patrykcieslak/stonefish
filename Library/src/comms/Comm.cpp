@@ -114,7 +114,7 @@ void Comm::SendMessage(std::string data)
         msg->seq = txSeq++;
         msg->source = id;
         msg->destination = cId;
-        msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime();
+        msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true);
         msg->data = data;
         txBuffer.push_back(msg);
     }

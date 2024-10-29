@@ -20,13 +20,15 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 13/02/2023.
-//  Copyright (c) 2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2023-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/SuctionCup.h"
 
 #include "core/SimulationManager.h"
+#include "entities/FeatherstoneEntity.h"
 #include "joints/SpringJoint.h"
+#include "joints/SphericalJoint.h"
 
 namespace sf
 {
@@ -34,7 +36,9 @@ namespace sf
 SuctionCup::SuctionCup(std::string uniqueName) : LinkActuator(uniqueName)
 {
     pump = false;
-    spring = nullptr;
+    joint = nullptr;
+    attachFe = nullptr;
+    attachLinkId = 0;
 }
 
 SuctionCup::~SuctionCup()
@@ -59,9 +63,13 @@ bool SuctionCup::getPump() const
 void SuctionCup::AttachToSolid(SolidEntity* body, const Transform& origin)
 {
     LinkActuator::AttachToSolid(body, origin);
-    if(attach != nullptr)
-    {
-    }
+}
+
+void SuctionCup::AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId)
+{
+    LinkActuator::AttachToSolid(multibody->getLink(linkId+1).solid, I4());
+    attachFe = multibody;
+    attachLinkId = linkId;
 }
 
 void SuctionCup::Update(Scalar dt)
@@ -70,7 +78,7 @@ void SuctionCup::Update(Scalar dt)
 
 void SuctionCup::Engage(SimulationManager* sm)
 {
-    if(attach != nullptr && spring == nullptr && pump)
+    if(attach != nullptr && joint == nullptr && pump)
     {
         btDispatcher* dispatcher = sm->getDynamicsWorld()->getDispatcher();
         int numManifolds = dispatcher->getNumManifolds();
@@ -87,31 +95,49 @@ void SuctionCup::Engage(SimulationManager* sm)
             
             if(entA == attach && entB->getType() == EntityType::SOLID)
             {
-                Transform springFrame = ((SolidEntity*)entA)->getCG2CTransform();
-                springFrame.setOrigin(contactManifold->getContactPoint(0).getPositionWorldOnA());
-                spring = new SpringJoint(getName() + "/Spring", (SolidEntity*)entA, (SolidEntity*)entB, springFrame, 
+                Transform jointFrame = ((SolidEntity*)entA)->getCG2CTransform();
+                jointFrame.setOrigin(contactManifold->getContactPoint(0).getPositionWorldOnA());
+                if(attachFe != nullptr)
+                {
+                    joint = new SphericalJoint(getName() + "/P2P", (SolidEntity*)entB, attachFe, attachLinkId, jointFrame.getOrigin(), false);
+                    joint->getSolidB()->getRigidBody()->setDamping(0.0, 0.5);
+                }
+                else
+                {
+                    joint = new SpringJoint(getName() + "/Spring", (SolidEntity*)entA, (SolidEntity*)entB, jointFrame, 
                                             Vector3(10,10,10), Vector3(10,10,10), Vector3(0.5,0.5,0.5), Vector3(0.5,0.5,0.5));
+                }
             }
             else if(entB == attach && entA->getType() == EntityType::SOLID)
             {
-                Transform springFrame = ((SolidEntity*)entB)->getCG2CTransform();
-                springFrame.setOrigin(contactManifold->getContactPoint(0).getPositionWorldOnB());
-                spring = new SpringJoint(getName() + "/Spring", (SolidEntity*)entB, (SolidEntity*)entA, springFrame,
+                Transform jointFrame = ((SolidEntity*)entB)->getCG2CTransform();
+                jointFrame.setOrigin(contactManifold->getContactPoint(0).getPositionWorldOnB());
+                if(attachFe != nullptr)
+                {
+                    joint = new SphericalJoint(getName() + "/P2P", (SolidEntity*)entA, attachFe, attachLinkId, jointFrame.getOrigin(), false);
+                    joint->getSolidB()->getRigidBody()->setDamping(0.0, 0.5);
+                }
+                else
+                {
+                    joint = new SpringJoint(getName() + "/Spring", (SolidEntity*)entB, (SolidEntity*)entA, jointFrame,
                                             Vector3(10,10,10), Vector3(10,10,10), Vector3(0.5,0.5,0.5), Vector3(0.5,0.5,0.5));
+                }
             }
 
-            if(spring != nullptr)
+            if(joint != nullptr)
             {
                 contactManifold->clearManifold();
-                sm->AddJoint(spring);
+                sm->AddJoint(joint);
                 break;
             }
         }
     }
-    else if(spring != nullptr && !pump)
+    else if(joint != nullptr && !pump)
     {
-        sm->RemoveJoint(spring);
-        spring = nullptr;
+        if(joint->isMultibodyJoint())
+            joint->getSolidB()->getRigidBody()->setDamping(0.0, 0.0);
+        sm->RemoveJoint(joint);
+        joint = nullptr;
     }
 }
     
