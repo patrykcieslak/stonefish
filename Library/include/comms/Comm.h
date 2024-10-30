@@ -29,24 +29,39 @@
 #include <SDL2/SDL_mutex.h>
 #include <deque>
 #include "StonefishCommon.h"
+#include <variant>
 
 namespace sf
 {
     //! An enum defining types of comms.
-    enum class CommType {RADIO, ACOUSTIC, USBL, VLC};
+    enum class CommType {RADIO, ACOUSTIC, USBL, VLC, OPTIC};
     
     struct Renderable;
     class Entity;
     class StaticEntity;
     class MovingEntity;
     
+struct Point {
+    float x, y, z;
+    float intensity;
+};
+
+struct PointCloud {
+    std::vector<Point> points;
+    std::string frame_id;
+    double timestamp;
+};
+    
     struct CommDataFrame
     {
+        using DataType = std::variant<int, float, double, std::string, std::vector<uint8_t>, std::vector<float>, std::vector<double>, PointCloud>;
+        
         Scalar timeStamp;
         uint64_t seq;
         uint64_t source;
         uint64_t destination;
         std::string data;
+        DataType data_mission;
     };
     
     //! An abstract class representing a communication device.
