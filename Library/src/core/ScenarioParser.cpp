@@ -4433,6 +4433,40 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
         }
         return comm;
     }
+    
+    else if(typeStr == "vlc")
+    {
+        std::cout<<"found VLC"<<std::endl;
+        Scalar comm_speed;
+        Scalar range;
+        Scalar minVerticalFOVDeg;
+        Scalar maxVerticalFOVDeg;
+        unsigned int cId = 0;
+        bool occlusion = true;
+        
+        if((item = element->FirstChildElement("specs")) == nullptr
+            || item->QueryAttribute("comm_speed", &comm_speed) != XML_SUCCESS
+            || item->QueryAttribute("minVFov", &minVerticalFOVDeg) != XML_SUCCESS
+            || item->QueryAttribute("maxVFov", &maxVerticalFOVDeg) != XML_SUCCESS
+            || item->QueryAttribute("range", &range) != XML_SUCCESS)
+
+        {
+            log.Print(MessageType::ERROR, "Specs of communication device '%s' not properly defined!", commName.c_str());
+            return nullptr;
+        }
+
+
+        std::cout<<"Connecting VLC"<<std::endl;
+        comm = new Luma(commName, devId, range, minVerticalFOVDeg, maxVerticalFOVDeg,  comm_speed);
+        for(int i=0;i<15;i++){
+            Light* light = new Light(namePrefix+"/LUMAX", 0.0005,15, Color::RGB(0, 0, 1), 25000);
+            ((Luma*)comm)->addLight(light);
+        }
+        //comm->Connect(cId);
+        std::cout<<"Connected VLC"<<std::endl;
+
+        return comm;
+    }
     else 
     {
         log.Print(MessageType::ERROR, "Unknown type of communication device '%s'!", commName.c_str());
