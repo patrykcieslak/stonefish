@@ -4457,10 +4457,10 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
 
 
         std::cout<<"Connecting VLC"<<std::endl;
-        comm = new Luma(commName, devId, range, minVerticalFOVDeg, maxVerticalFOVDeg,  comm_speed);
+        comm = new VLC(commName, devId, range, minVerticalFOVDeg, maxVerticalFOVDeg,  comm_speed);
         for(int i=0;i<15;i++){
-            Light* light = new Light(namePrefix+"/LUMAX", 0.0005,15, Color::RGB(0, 0, 1), 25000);
-            ((Luma*)comm)->addLight(light);
+            Light* light = new Light(namePrefix+"/VLCX", 0.0005,15, Color::RGB(0, 0, 1), 25000);
+            ((VLC*)comm)->addLight(light);
         }
         //comm->Connect(cId);
         std::cout<<"Connected VLC"<<std::endl;
