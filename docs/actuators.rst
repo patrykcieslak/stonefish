@@ -140,7 +140,7 @@ A propeller is an actuator working in atmosphere, representing an airplane prope
 .. code-block:: cpp
 
     #include <Stonefish/actuators/Propeller.h>
-    sf::Polyhedron* propMesh = new sf::Polyhedron("PropMesh", sf::BodyPhysicsType::AERODYNAMIC, sf::GetDataPath() + "propeller.obj", 1.0, sf::I4(), "Steel", "Red");
+    sf::Polyhedron* propMesh = new sf::Polyhedron("PropMesh", sf::BodyPhysicsMode::AERODYNAMIC, sf::GetDataPath() + "propeller.obj", 1.0, sf::I4(), "Steel", "Red");
     sf::Propeller* propeller = new sf::Propeller("Prop", propMesh, 0.5, 0.45, 0.02, 1000, true, false);
     robot->AddLinkActuator(propeller, "Link1", sf::I4()); 
 
@@ -165,7 +165,7 @@ A simple thruster is an extension of the *push* actuator that functions only und
 .. code-block:: cpp
 
     #include <Stonefish/actuators/SimpleThruster.h>
-    sf::Polyhedron* propMesh = new sf::Polyhedron("PropMesh", sf::BodyPhysicsType::SUBMERGED, sf::GetDataPath() + "propeller.obj", 1.0, sf::I4(), "Steel", "Red");
+    sf::Polyhedron* propMesh = new sf::Polyhedron("PropMesh", sf::BodyPhysicsMode::SUBMERGED, sf::GetDataPath() + "propeller.obj", 1.0, sf::I4(), "Steel", "Red");
     sf::SimpleThruster* thruster = new sf::SimpleThruster("SimpleThruster", propMesh, true, false);
     robot->AddLinkActuator(thruster, "Link1", sf::I4()); 
 
@@ -333,7 +333,7 @@ An example of a full thruster definition utilising the XML syntax and the C++ co
 .. code-block:: cpp
 
     #include <Stonefish/actuators/Thruster.h>
-    sf::Polyhedron* prop = new sf::Polyhedron("PropMesh", sf::BodyPhysicsType::SUBMERGED, sf::GetDataPath() + "propeller.obj", 1.0, sf::I4(), "Steel", "Red");
+    sf::Polyhedron* prop = new sf::Polyhedron("PropMesh", sf::BodyPhysicsMode::SUBMERGED, sf::GetDataPath() + "propeller.obj", 1.0, sf::I4(), "Steel", "Red");
     std::shared_ptr<sf::MechanicalPI> rotorDynamics;
     rotorDynamics = std::make_shared<sf::MechanicalPI>(1.0, 10.0, 5.0, 5.0);
     std::shared_ptr<sf::FDThrust> thrustModel;

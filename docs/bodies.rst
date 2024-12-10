@@ -24,7 +24,7 @@ The following diagram presents the coordinate frames defined for a dynamic body.
 Physics mode
 ^^^^^^^^^^^^
 
-Dynamic bodies are affected by different forces, depending on the type of environment, the position of the body with respect to the ocean surface (if it is enabled) and the selected body physics mode. The last one was introduced as an optimization to help determine which forces have to be computed for a specific body and thus how the body should be prepared for the simulation. The physics mode of each dynamic body ``sf::BodyPhysicsType`` has to be selected from one of the following options:
+Dynamic bodies are affected by different forces, depending on the type of environment, the position of the body with respect to the ocean surface (if it is enabled) and the selected body physics mode. The last one was introduced as an optimization to help determine which forces have to be computed for a specific body and thus how the body should be prepared for the simulation. The physics mode of each dynamic body ``sf::BodyPhysicsMode`` has to be selected from one of the following options:
 
 -  ``SURFACE`` - no aerodynamic or hydrodynamic forces computed
 

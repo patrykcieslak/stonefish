@@ -88,9 +88,9 @@ Below, an example of defining a complete robot is presented, first using the XML
 .. code-block:: cpp
 
     //1. Defining links
-    sf::Sphere* base = new sf::Sphere("Base", 0.2, sf::I4(), "Steel", sf::BodyPhysicsType::SURFACE, "Green");
-    sf::Box* link1 = new sf::Box("Link1", sf::Vector3(0.1, 0.02, 0.5), sf::Transform(sf::Quaternion(M_PI_2, 0.0, 0.0), sf::Vector3(0.0, 0.0, -0.2)), "Steel", sf::BodyPhysicsType::SURFACE, "Green");
-    sf::Box* link2 = new sf::Box("Link2", sf::Vector3(0.1, 0.02, 0.5), sf::Transform(sf::Quaternion(M_PI_2, 0.0, 0.0), sf::Vector3(0.0, 0.0, -0.2)), "Steel", sf::BodyPhysicsType::SURFACE, "Green");
+    sf::Sphere* base = new sf::Sphere("Base", 0.2, sf::I4(), "Steel", sf::BodyPhysicsMode::SURFACE, "Green");
+    sf::Box* link1 = new sf::Box("Link1", sf::Vector3(0.1, 0.02, 0.5), sf::Transform(sf::Quaternion(M_PI_2, 0.0, 0.0), sf::Vector3(0.0, 0.0, -0.2)), "Steel", sf::BodyPhysicsMode::SURFACE, "Green");
+    sf::Box* link2 = new sf::Box("Link2", sf::Vector3(0.1, 0.02, 0.5), sf::Transform(sf::Quaternion(M_PI_2, 0.0, 0.0), sf::Vector3(0.0, 0.0, -0.2)), "Steel", sf::BodyPhysicsMode::SURFACE, "Green");
 
     std::vector<sf::SolidEntity*> links;
     links.push_back(link1);
