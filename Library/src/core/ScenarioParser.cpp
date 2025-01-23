@@ -3821,7 +3821,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
         }
         sens = mult;
     }
-    
+
     else if(typeStr == "lasermems")
     {
         int history;

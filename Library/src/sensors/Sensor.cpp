@@ -59,7 +59,7 @@ Sensor::~Sensor()
     SDL_DestroyMutex(updateMutex);
 }
 
-std::string Sensor::getName()
+std::string Sensor::getName() const
 {
     return name;
 }
@@ -74,12 +74,12 @@ void Sensor::setUpdateFrequency(Scalar f)
     freq = f;
 }
 
-Scalar Sensor::getUpdateFrequency()
+Scalar Sensor::getUpdateFrequency() const
 {
     return freq;
 }
 
-bool Sensor::isNewDataAvailable()
+bool Sensor::isNewDataAvailable() const
 {
     return newDataAvailable;
 }
@@ -89,7 +89,7 @@ void Sensor::setRenderable(bool render)
     renderable = render;
 }
 
-bool Sensor::isRenderable()
+bool Sensor::isRenderable() const
 {
     return renderable;
 }

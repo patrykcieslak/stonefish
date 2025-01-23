@@ -184,7 +184,7 @@ void LaserMEMS::setNoise(Scalar rangeStdDev)
         channels[i].setStdDev(rangeStdDev);
 }
 
-ScalarSensorType LaserMEMS::getScalarSensorType()
+ScalarSensorType LaserMEMS::getScalarSensorType() const
 {
     return ScalarSensorType::LASERMEMS;
 }

@@ -39,6 +39,7 @@ namespace sf
     class Robot;
     class Entity;
     class SolidEntity;
+    class Battery;
     class Sensor;
     class Actuator;
     class Light;
