@@ -42,6 +42,7 @@ Robot::Robot(std::string uniqueName, bool fixedBase)
 {
     name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     fixed = fixedBase;
+    battery=new Battery(0,0);
 }
 
 Robot::~Robot()
@@ -129,6 +130,17 @@ SolidEntity* Robot::getBaseLink()
 {
     return links[0];
 }
+
+Battery* Robot::getBattery(){
+
+       return battery;
+}
+
+void Robot::setBattery(Battery* b){
+
+       battery=b;
+}
+
 
 void Robot::DefineRevoluteJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar,Scalar> positionLimits, Scalar damping)
 {

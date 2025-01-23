@@ -26,6 +26,7 @@
 #include "core/ScenarioParser.h"
 #include "core/SimulationManager.h"
 #include "core/NED.h"
+#include "core/Battery.h"
 #include "core/FeatherstoneRobot.h"
 #include "core/GeneralRobot.h"
 #include "entities/statics/Obstacle.h"
@@ -87,6 +88,7 @@
 #include "utils/SystemUtil.hpp"
 #include "tinyexpr.h"
 #include <sstream>
+#include <iostream>
 
 namespace sf
 {
@@ -1931,6 +1933,42 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
     return true;
 }
 
+
+bool ScenarioParser::ParseBattery(XMLElement* element, Battery* battery) {
+    Scalar maxCapacity = Scalar(0);  // Default value for maxCapacity
+    Scalar voltage = Scalar(0);      // Default value for voltage
+    XMLElement* item = element->FirstChildElement("battery");
+
+    // Check if the <battery> element exists
+    if (item == nullptr) {
+        std::cout << "No <battery> element found!" << std::endl;
+        return false;  // Return false if the <battery> element is not found
+    } else {
+        std::cout << "<battery> element found!" << std::endl;
+    }
+
+    // Try to parse maxCapacity and voltage attributes
+    if (item->QueryAttribute("maxCapacity", &maxCapacity) != XML_SUCCESS) {
+        std::cout << "Failed to parse maxCapacity attribute!" << std::endl;
+        return false;  // Return false if maxCapacity is not found or can't be parsed
+    }
+
+    if (item->QueryAttribute("voltage", &voltage) != XML_SUCCESS) {
+        std::cout << "Failed to parse voltage attribute!" << std::endl;
+        return false;  // Return false if voltage is not found or can't be parsed
+    }
+
+    // If parsing succeeded, print the values
+    std::cout << "Parsed values -> maxCapacity: " << maxCapacity << " voltage: " << voltage << std::endl;
+
+    // Set the battery values
+    battery->setVoltage(voltage);
+    battery->setMaxCapacity(maxCapacity);
+
+    return true;  // Return true after successful parsing
+}
+
+
 bool ScenarioParser::ParseRobot(XMLElement* element)
 {
     //---- Basic ----
@@ -1978,6 +2016,21 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
         robot = new FeatherstoneRobot(robotName, fixed);
     else if(algorithm == "general")
         robot = new GeneralRobot(robotName, fixed);
+
+    //---- Battery ----
+    
+    XMLElement* item2;
+    Battery* battery = new Battery(0, 0); // Dynamically allocate memory
+    if (!ParseBattery(element, battery)) {
+        log.Print(MessageType::ERROR, "Failed to parse battery");
+    }
+    
+    std::cout<<"V:"<<battery->getVoltage()<<" MC:"<<battery->getCapacity()<<std::endl;
+    robot->setBattery(battery); // Transfer ownership to the robot
+    std::cout<<"V:"<<robot->getBattery()->getVoltage()<<" MC:"<<robot->getBattery()->getCapacity()<<std::endl;
+    std::cout<<"energy_remaining:"<<robot->getBattery()->getEnergyRemaining()<<std::endl;
+    
+
             
     //---- Links ----
     //Base link

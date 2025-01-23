@@ -42,12 +42,14 @@ Sensor::Sensor(std::string uniqueName, Scalar frequency)
     name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     setUpdateFrequency(frequency);
     eleapsedTime = Scalar(0);
-    enabled = true;
     renderable = true;
     newDataAvailable = false;
     updateMutex = SDL_CreateMutex();
     lookId = -1;
     graObjectId = -1;
+    watt=0;
+    voltage=0;
+    duty_cycle=0;
 }
 
 Sensor::~Sensor()
@@ -57,29 +59,9 @@ Sensor::~Sensor()
     SDL_DestroyMutex(updateMutex);
 }
 
-std::string Sensor::getName() const
+std::string Sensor::getName()
 {
     return name;
-}
-
-Scalar Sensor::getUpdateFrequency() const
-{
-    return freq;
-}
-
-bool Sensor::isNewDataAvailable() const
-{
-    return newDataAvailable;
-}
-
-bool Sensor::isRenderable() const
-{
-    return renderable;
-}
-
-bool Sensor::isEnabled() const
-{
-    return enabled;
 }
 
 void Sensor::MarkDataOld()
@@ -92,14 +74,24 @@ void Sensor::setUpdateFrequency(Scalar f)
     freq = f;
 }
 
-void Sensor::setEnabled(bool en)
+Scalar Sensor::getUpdateFrequency()
 {
-    enabled = en;
+    return freq;
+}
+
+bool Sensor::isNewDataAvailable()
+{
+    return newDataAvailable;
 }
 
 void Sensor::setRenderable(bool render)
 {
     renderable = render;
+}
+
+bool Sensor::isRenderable()
+{
+    return renderable;
 }
 
 void Sensor::setVisual(const std::string& meshFilename, Scalar scale, const std::string& look)
@@ -124,9 +116,6 @@ void Sensor::Reset()
 
 void Sensor::Update(Scalar dt)
 {
-    if(!enabled)
-        return;
-        
     SDL_LockMutex(updateMutex);
     
     if(freq <= Scalar(0)) // Every simulation tick
@@ -164,6 +153,35 @@ std::vector<Renderable> Sensor::Render()
         items.push_back(item);
     }
     return items;
+}
+
+void Sensor::setName(std::string n){
+     name=n;
+}
+
+Scalar Sensor::getPower(){
+       return watt;
+}
+        
+Scalar Sensor::getVoltage(){
+       return voltage;
+}
+        
+Scalar Sensor::getDutyCycle(){
+       return duty_cycle;
+}
+        
+
+void Sensor::setWatt(Scalar w){
+     watt=w;
+}
+
+void Sensor::setVoltage(Scalar v){
+     voltage=v;
+}
+
+void Sensor::setDutyCycle(Scalar dt_c){
+     duty_cycle=dt_c;
 }
     
 }

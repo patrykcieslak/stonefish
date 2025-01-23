@@ -1,0 +1,7 @@
+/home/michele/libs/for_ICAPS/stonefish/build/CMakeFiles/Stonefish.dir
+/home/michele/libs/for_ICAPS/stonefish/build/CMakeFiles/edit_cache.dir
+/home/michele/libs/for_ICAPS/stonefish/build/CMakeFiles/rebuild_cache.dir
+/home/michele/libs/for_ICAPS/stonefish/build/CMakeFiles/list_install_components.dir
+/home/michele/libs/for_ICAPS/stonefish/build/CMakeFiles/install.dir
+/home/michele/libs/for_ICAPS/stonefish/build/CMakeFiles/install/local.dir
+/home/michele/libs/for_ICAPS/stonefish/build/CMakeFiles/install/strip.dir

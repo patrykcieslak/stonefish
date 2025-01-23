@@ -1,0 +1,6 @@
+Name: Stonefish
+Description: Advanced marine and terrestial robotics simulation library
+Requires: freetype2 sdl2
+Version: 1.3.0
+Libs: -L/usr/local/ /usr/lib/x86_64-linux-gnu/libfreetype.so;/usr/lib/x86_64-linux-gnu/libOpenGL.so;/usr/lib/x86_64-linux-gnu/libGLX.so;/usr/lib/x86_64-linux-gnu/libGLU.so;-L/usr/lib/x86_64-linux-gnu  -lSDL2;/usr/lib/gcc/x86_64-linux-gnu/11/libgomp.so;/usr/lib/x86_64-linux-gnu/libpthread.a -lStonefish
+Cflags: -I/usr/local/include -I/usr/local/ -DBT_EULER_DEFAULT_ZYX -DBT_USE_DOUBLE_PRECISION
