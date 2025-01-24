@@ -26,6 +26,7 @@
 #include "core/ScenarioParser.h"
 #include "core/SimulationManager.h"
 #include "core/NED.h"
+#include "core/Battery.h"
 #include "core/FeatherstoneRobot.h"
 #include "core/GeneralRobot.h"
 #include "entities/statics/Obstacle.h"
@@ -60,6 +61,7 @@
 #include "sensors/scalar/ForceTorque.h"
 #include "sensors/scalar/Profiler.h"
 #include "sensors/scalar/Multibeam.h"
+#include "sensors/scalar/LaserMEMS.h"
 #include "sensors/vision/ColorCamera.h"
 #include "sensors/vision/DepthCamera.h"
 #include "sensors/vision/Multibeam2.h"
@@ -81,11 +83,13 @@
 #include "comms/AcousticModem.h"
 #include "comms/USBLSimple.h"
 #include "comms/USBLReal.h"
+#include "comms/VLC.h"
 #include "joints/FixedJoint.h"
 #include "graphics/OpenGLDataStructs.h"
 #include "utils/SystemUtil.hpp"
 #include "tinyexpr.h"
 #include <sstream>
+#include <iostream>
 
 namespace sf
 {
@@ -321,6 +325,7 @@ bool ScenarioParser::Parse(std::string filename)
                 delete comm;
                 return false;
             }
+            
             comm->AttachToWorld(origin);
             sm->AddComm(comm);
         }
@@ -1929,6 +1934,42 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
     return true;
 }
 
+
+bool ScenarioParser::ParseBattery(XMLElement* element, Battery* battery) {
+    Scalar maxCapacity = Scalar(0);  // Default value for maxCapacity
+    Scalar voltage = Scalar(0);      // Default value for voltage
+    XMLElement* item = element->FirstChildElement("battery");
+
+    // Check if the <battery> element exists
+    if (item == nullptr) {
+        std::cout << "No <battery> element found!" << std::endl;
+        return false;  // Return false if the <battery> element is not found
+    } else {
+        std::cout << "<battery> element found!" << std::endl;
+    }
+
+    // Try to parse maxCapacity and voltage attributes
+    if (item->QueryAttribute("maxCapacity", &maxCapacity) != XML_SUCCESS) {
+        std::cout << "Failed to parse maxCapacity attribute!" << std::endl;
+        return false;  // Return false if maxCapacity is not found or can't be parsed
+    }
+
+    if (item->QueryAttribute("voltage", &voltage) != XML_SUCCESS) {
+        std::cout << "Failed to parse voltage attribute!" << std::endl;
+        return false;  // Return false if voltage is not found or can't be parsed
+    }
+
+    // If parsing succeeded, print the values
+    std::cout << "Parsed values -> maxCapacity: " << maxCapacity << " voltage: " << voltage << std::endl;
+
+    // Set the battery values
+    battery->setVoltage(voltage);
+    battery->setMaxCapacity(maxCapacity);
+
+    return true;  // Return true after successful parsing
+}
+
+
 bool ScenarioParser::ParseRobot(XMLElement* element)
 {
     //---- Basic ----
@@ -1976,6 +2017,21 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
         robot = new FeatherstoneRobot(robotName, fixed);
     else if(algorithm == "general")
         robot = new GeneralRobot(robotName, fixed);
+
+    //---- Battery ----
+    
+    XMLElement* item2;
+    Battery* battery = new Battery(0, 0); // Dynamically allocate memory
+    if (!ParseBattery(element, battery)) {
+        log.Print(MessageType::ERROR, "Failed to parse battery");
+    }
+    
+    std::cout<<"V:"<<battery->getVoltage()<<" MC:"<<battery->getCapacity()<<std::endl;
+    robot->setBattery(battery); // Transfer ownership to the robot
+    std::cout<<"V:"<<robot->getBattery()->getVoltage()<<" MC:"<<robot->getBattery()->getCapacity()<<std::endl;
+    std::cout<<"energy_remaining:"<<robot->getBattery()->getEnergyRemaining()<<std::endl;
+    
+
             
     //---- Links ----
     //Base link
@@ -2108,6 +2164,72 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
                 return false;
             }
             robot->AddComm(comm, robotName + "/" + std::string(linkName), origin);
+            if(comm->getType()==CommType::VLC){
+		Vector3 rpy = Vector3(-1.57,0.0,0.0);
+		Vector3 xyz2 = Vector3(-0.013, 0.016, -0.02);
+		Transform origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((VLC*)comm)->getLights()[0], robotName + "/" + std::string(linkName), origin2);
+		xyz2 = Vector3(-0.01, 0.016, -0.015);
+		origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((VLC*)comm)->getLights()[1], robotName + "/" + std::string(linkName), origin2);
+               
+               
+               xyz2 = Vector3(-0.007, 0.016, -0.01);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((VLC*)comm)->getLights()[2], robotName + "/" + std::string(linkName), origin2);
+               
+               xyz2 = Vector3(0.013, 0.016, -0.02);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((VLC*)comm)->getLights()[3], robotName + "/" + std::string(linkName), origin2);
+               
+               xyz2 = Vector3(0.01, 0.016, -0.015);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((VLC*)comm)->getLights()[4], robotName + "/" + std::string(linkName), origin2);
+               
+               xyz2 = Vector3(0.007, 0.016, -0.01);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((VLC*)comm)->getLights()[5], robotName + "/" + std::string(linkName), origin2);
+               
+               xyz2 = Vector3(-0.02, 0.016, 0.01);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((VLC*)comm)->getLights()[6], robotName + "/" + std::string(linkName), origin2);
+               
+               xyz2 = Vector3(-0.015, 0.016, 0.0075);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((VLC*)comm)->getLights()[7], robotName + "/" + std::string(linkName), origin2);
+
+               xyz2 = Vector3(-0.01, 0.016, 0.005);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((VLC*)comm)->getLights()[8], robotName + "/" + std::string(linkName), origin2);
+               
+               
+               xyz2 = Vector3(0.02, 0.016, 0.01);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((VLC*)comm)->getLights()[9], robotName + "/" + std::string(linkName), origin2);
+
+               xyz2 = Vector3(0.015, 0.016, 0.0075);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((VLC*)comm)->getLights()[10], robotName + "/" + std::string(linkName), origin2);
+               
+               xyz2 = Vector3(0.01, 0.016, 0.005);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((VLC*)comm)->getLights()[11], robotName + "/" + std::string(linkName), origin2);
+               
+               
+               xyz2 = Vector3(0.0, 0.016, 0.02);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((VLC*)comm)->getLights()[12], robotName + "/" + std::string(linkName), origin2);
+               
+               xyz2 = Vector3(0.0, 0.016, 0.015);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((VLC*)comm)->getLights()[13], robotName + "/" + std::string(linkName), origin2);
+               
+               xyz2 = Vector3(0.0, 0.016, 0.01);
+               origin2 = Transform(Quaternion(rpy.z(), rpy.y(), rpy.x()), xyz2);
+               robot->AddLinkActuator(((VLC*)comm)->getLights()[14], robotName + "/" + std::string(linkName), origin2);
+               
+               }
+               
         }
         item = item->NextSiblingElement("comm");
     }
@@ -3699,6 +3821,51 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
         }
         sens = mult;
     }
+
+    else if(typeStr == "lasermems")
+    {
+        int history;
+        Scalar fovH;
+        Scalar fovV;
+        int numL;
+        int numP;
+        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+            history = -1;
+        if((item = element->FirstChildElement("specs")) == nullptr || item->QueryAttribute("fovH", &fovH) != XML_SUCCESS || item->QueryAttribute("numL", &numL) != XML_SUCCESS  || item->QueryAttribute("numP", &numP) != XML_SUCCESS  || item->QueryAttribute("fovV", &fovV) != XML_SUCCESS)
+            return nullptr;
+            
+        //std::cout<<"numL "<< numL << " " << numP << std::endl;
+        LaserMEMS* laser = new LaserMEMS(sensorName, numL, numP,fovH, fovV, rate, history);
+        
+        //Optional range definition
+        if((item = element->FirstChildElement("range")) != nullptr)    
+        {
+            Scalar distMin(0);
+            Scalar distMax(BT_LARGE_FLOAT);
+            int c = 0;
+
+            if(item->QueryAttribute("distance_min", &distMin) == XML_SUCCESS)
+                ++c;
+            if(item->QueryAttribute("distance_max", &distMax) == XML_SUCCESS)
+                ++c;
+            
+            if(c == 0)
+                log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+            else
+                laser->setRange(distMin, distMax);
+        }
+        //Optional noise definition
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            Scalar distance;
+            if(item->QueryAttribute("distance", &distance) == XML_SUCCESS)
+                laser->setNoise(distance);
+            else
+                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+        }
+        sens = laser;
+    }
+    
     else if(typeStr == "torque")
     {
         int history;
@@ -4363,6 +4530,40 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
             else
                 ((USBLReal*)comm)->setNoise(timeDev, svDev, phaseDev, blError, depthDev);
         }
+        return comm;
+    }
+    
+    else if(typeStr == "vlc")
+    {
+        std::cout<<"found VLC"<<std::endl;
+        Scalar comm_speed;
+        Scalar range;
+        Scalar minVerticalFOVDeg;
+        Scalar maxVerticalFOVDeg;
+        unsigned int cId = 0;
+        bool occlusion = true;
+        
+        if((item = element->FirstChildElement("specs")) == nullptr
+            || item->QueryAttribute("comm_speed", &comm_speed) != XML_SUCCESS
+            || item->QueryAttribute("minVFov", &minVerticalFOVDeg) != XML_SUCCESS
+            || item->QueryAttribute("maxVFov", &maxVerticalFOVDeg) != XML_SUCCESS
+            || item->QueryAttribute("range", &range) != XML_SUCCESS)
+
+        {
+            log.Print(MessageType::ERROR, "Specs of communication device '%s' not properly defined!", commName.c_str());
+            return nullptr;
+        }
+
+
+        std::cout<<"Connecting VLC"<<std::endl;
+        comm = new VLC(commName, devId, range, minVerticalFOVDeg, maxVerticalFOVDeg,  comm_speed);
+        for(int i=0;i<15;i++){
+            Light* light = new Light(namePrefix+"/VLCX", 0.0005,15, Color::RGB(0, 0, 1), 25000);
+            ((VLC*)comm)->addLight(light);
+        }
+        //comm->Connect(cId);
+        std::cout<<"Connected VLC"<<std::endl;
+
         return comm;
     }
     else 

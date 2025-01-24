@@ -68,6 +68,7 @@
 #include "actuators/SuctionCup.h"
 #include "sensors/Sensor.h"
 #include "comms/Comm.h"
+#include "comms/VLC.h"
 #include "sensors/Contact.h"
 #include "sensors/VisionSensor.h"
 
@@ -1627,8 +1628,13 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
         simManager->sensors[i]->Update(timeStep);
         
     //Loop through all comms -> update state and measurements
-    for(size_t i = 0; i < simManager->comms.size(); ++i)
+    for(size_t i = 0; i < simManager->comms.size(); ++i){
         simManager->comms[i]->Update(timeStep);
+        if(simManager->comms[i]->getType()==CommType::VLC){
+           dynamic_cast<VLC*>(simManager->comms[i])->setWaterType(simManager->getOcean()->getWaterType());
+        }
+        
+    }
     
     //Loop through contact manifolds -> update contacts
     if(simManager->getContact(0) != nullptr) // If at least one contact is defined

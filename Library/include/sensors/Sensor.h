@@ -65,7 +65,7 @@ namespace sf
         
         //! A method used to mark data as old.
         void MarkDataOld();
-
+        
         //! A method to check if new data is available.
         bool isNewDataAvailable() const;
         
@@ -75,27 +75,23 @@ namespace sf
          */
         void setUpdateFrequency(Scalar f);
 
-        //! A method returning the sensor's name.
-        std::string getName() const;
-
         //! A method returning the sampling rate of the sensor.
         Scalar getUpdateFrequency() const;
         
-        //! A method informing if the sensor is enabled.
-        bool isEnabled() const;
-
         //! A method informing if the sensor is renderable.
         bool isRenderable() const;
         
-        //! A method to set if the sensor is enabled.
-        void setEnabled(bool en);
-
         //! A method to set if the sensor is renderable.
         void setRenderable(bool render);
 
         //! A method to set the visual representation of the sensor.
         void setVisual(const std::string& meshFilename, Scalar scale, const std::string& look);
-                
+        
+        //! A method returning the sensor name.
+        std::string getName() const;
+        
+        void setName(std::string n);
+        
         //! A method performing an internal update of the sensor state.
         /*!
          \param dt the sampling time of the simulation [s]
@@ -107,6 +103,23 @@ namespace sf
 
         //! A method returning the sensor measurement frame.
         virtual Transform getSensorFrame() const = 0;
+
+        Scalar getPower();
+        
+        Scalar getVoltage();
+        
+        Scalar getDutyCycle();
+        
+        void setWatt(Scalar w);
+        
+        void setVoltage(Scalar v);
+        
+        void setDutyCycle(Scalar dt_c);
+        
+        void setEnabled(bool en);
+        
+        bool isEnabled() const;
+        
         
     protected:
         Scalar freq;
@@ -120,9 +133,12 @@ namespace sf
         Scalar eleapsedTime;
         bool newDataAvailable;
         bool renderable;
-        bool enabled;
         int lookId;
         int graObjectId;
+        bool enabled;
+        Scalar voltage;
+        Scalar watt; 
+        Scalar duty_cycle;
     };
 }
 

@@ -39,6 +39,7 @@ namespace sf
     class Robot;
     class Entity;
     class SolidEntity;
+    class Battery;
     class Sensor;
     class Actuator;
     class Light;
@@ -272,6 +273,8 @@ namespace sf
          \return pointer to the fixed joint
         */
         virtual FixedJoint* ParseGlue(XMLElement* element);
+        
+        virtual bool ParseBattery(XMLElement* element, Battery* battery);
         
         //! A method to get the full file path depending on the format of the passed string.
         /*!

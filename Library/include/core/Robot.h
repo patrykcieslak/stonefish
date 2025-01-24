@@ -29,6 +29,7 @@
 #include <utility>
 #include "StonefishCommon.h"
 #include "joints/Joint.h"
+#include "Battery.h"
 
 namespace sf
 {
@@ -239,6 +240,10 @@ namespace sf
         //! A method returning type of algorithm used for the robot.
         virtual RobotType getType() const = 0;
         
+        Battery* getBattery();
+        
+        void setBattery(Battery* b);
+        
     protected:
         struct JointData
         {
@@ -259,6 +264,7 @@ namespace sf
         std::vector<Actuator*> actuators;
         std::vector<Comm*> comms;
         std::string name;
+        Battery* battery;
         bool fixed;
     };
 }
