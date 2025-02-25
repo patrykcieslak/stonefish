@@ -27,6 +27,7 @@
 #define __Stonefish_Sample__
 
 #include "StonefishCommon.h"
+#include <cstdint>
 
 namespace sf
 {
