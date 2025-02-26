@@ -48,12 +48,15 @@ void main()
         ivec2 coord;
         coord.x = int(gl_GlobalInvocationID.x);
         coord.y = int(gl_GlobalInvocationID.y);
+        ivec2 colorCoord;
+        colorCoord.x = int(gl_GlobalInvocationID.x);
+        colorCoord.y = inDim.y - int(gl_GlobalInvocationID.y) - 1;
 
         // Read last logarithm luminance image
         float it = imageLoad(logLum, coord).r;
 
         // Compute logarithm luminance of current image
-        vec3 color = imageLoad(currColor, coord).rgb; 
+        vec3 color = imageLoad(currColor, colorCoord).rgb; 
         float itdt = log(LOG_EPS + dot(color, RGB_TO_LUM));
         imageStore(logLum, coord, vec4(itdt)); // Save computed logarithm luminance image
         

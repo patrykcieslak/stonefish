@@ -28,7 +28,7 @@ uniform isampler2D texEventTimes;
 void main() 
 {
     vec3 color = texture(texCamera, texcoord).rgb;
-    int eventTime = texture(texEventTimes, texcoord).x;
+    int eventTime = texture(texEventTimes, vec2(texcoord.x, 1.0-texcoord.y)).x;
     
     if(eventTime > 0)
         fragColor = vec3(0.0, 0.0, 1.0);
