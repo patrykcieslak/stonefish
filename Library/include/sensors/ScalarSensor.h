@@ -32,7 +32,7 @@
 namespace sf
 {
     //! An enum defining types of scalar sensors.
-    enum class ScalarSensorType {ACC, CURRENT, DVL, COMPASS, FT, GPS, GYRO, IMU, INS, MULTIBEAM, ODOM, PRESSURE, PROFILER, ENCODER, TORQUE, LASERMEMS, POSE};
+    enum class ScalarSensorType {ACC, CURRENT, DVL, COMPASS, FT, GPS, GYRO, IMU, INS, MULTIBEAM, ODOM, PRESSURE, PROFILER, ENCODER, TORQUE, POSE, LASERMEMS};
     
     //! An enum defining the type of quantity represented by the measurement.
     enum class QuantityType
@@ -105,7 +105,7 @@ namespace sf
         virtual void InternalUpdate(Scalar dt) = 0;
         
         //! A method returning the type of the sensor.
-        virtual SensorType getType() const = 0;
+        virtual SensorType getType() = 0;
         
         //! A method resetting the sensor.
         virtual void Reset();
@@ -161,7 +161,7 @@ namespace sf
         SensorChannel getSensorChannelDescription(unsigned int channel) const;
         
         //! A method returning the type of scalar sensor.
-        virtual ScalarSensorType getScalarSensorType() const = 0;
+        virtual ScalarSensorType getScalarSensorType() = 0;
 
         //! A method returning the sensor measurement frame.
         virtual Transform getSensorFrame() const = 0;

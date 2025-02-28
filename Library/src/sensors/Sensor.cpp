@@ -59,7 +59,7 @@ Sensor::~Sensor()
     SDL_DestroyMutex(updateMutex);
 }
 
-std::string Sensor::getName() const
+std::string Sensor::getName()
 {
     return name;
 }
@@ -74,12 +74,12 @@ void Sensor::setUpdateFrequency(Scalar f)
     freq = f;
 }
 
-Scalar Sensor::getUpdateFrequency() const
+Scalar Sensor::getUpdateFrequency()
 {
     return freq;
 }
 
-bool Sensor::isNewDataAvailable() const
+bool Sensor::isNewDataAvailable()
 {
     return newDataAvailable;
 }
@@ -89,23 +89,9 @@ void Sensor::setRenderable(bool render)
     renderable = render;
 }
 
-bool Sensor::isRenderable() const
+bool Sensor::isRenderable()
 {
     return renderable;
-}
-
-void Sensor::setVisual(const std::string& meshFilename, Scalar scale, const std::string& look)
-{
-    if(!SimulationApp::getApp()->hasGraphics())
-        return;
-
-    Mesh* mesh = OpenGLContent::LoadMesh(meshFilename, scale, false);
-    if(mesh == nullptr)
-        return;
-
-    graObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh);
-    lookId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
-    delete mesh;
 }
 
 void Sensor::Reset()
@@ -153,6 +139,20 @@ std::vector<Renderable> Sensor::Render()
         items.push_back(item);
     }
     return items;
+}
+
+void Sensor::setVisual(const std::string& meshFilename, Scalar scale, const std::string& look)
+{
+    if(!SimulationApp::getApp()->hasGraphics())
+        return;
+
+    Mesh* mesh = OpenGLContent::LoadMesh(meshFilename, scale, false);
+    if(mesh == nullptr)
+        return;
+
+    graObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh);
+    lookId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+    delete mesh;
 }
 
 void Sensor::setName(std::string n){

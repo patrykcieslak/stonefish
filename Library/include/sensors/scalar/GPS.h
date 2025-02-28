@@ -58,7 +58,7 @@ namespace sf
         Scalar getNoise() const;
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const;
+        ScalarSensorType getScalarSensorType();
         
     private:
         //Custom noise generation specific to GPS

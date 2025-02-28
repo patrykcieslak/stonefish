@@ -37,9 +37,9 @@ namespace sf
 {
     class SimulationManager;
     class Robot;
+    class Battery;
     class Entity;
     class SolidEntity;
-    class Battery;
     class Sensor;
     class Actuator;
     class Light;
@@ -274,15 +274,14 @@ namespace sf
         */
         virtual FixedJoint* ParseGlue(XMLElement* element);
         
-        virtual bool ParseBattery(XMLElement* element, Battery* battery);
-        
         //! A method to get the full file path depending on the format of the passed string.
         /*!
          \param path a file path candidate
          \return full file path
          */
         std::string GetFullPath(const std::string& path);
-
+        
+	virtual bool ParseBattery(XMLElement* element, Battery* battery);
         //! A method informing if the simulation is working in graphical mode.
         bool isGraphicalSim();
 

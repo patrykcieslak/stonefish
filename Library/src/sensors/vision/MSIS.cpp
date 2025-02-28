@@ -159,7 +159,7 @@ Scalar MSIS::getGain() const
     return gain;
 }
     
-VisionSensorType MSIS::getVisionSensorType() const
+VisionSensorType MSIS::getVisionSensorType() 
 {
     return VisionSensorType::MSIS;
 }

@@ -61,7 +61,7 @@ namespace sf
         void setNoise(Scalar pressureStdDev);
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const;
+        ScalarSensorType getScalarSensorType();
     };
 }
 

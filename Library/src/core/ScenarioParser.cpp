@@ -61,7 +61,6 @@
 #include "sensors/scalar/ForceTorque.h"
 #include "sensors/scalar/Profiler.h"
 #include "sensors/scalar/Multibeam.h"
-#include "sensors/scalar/LaserMEMS.h"
 #include "sensors/vision/ColorCamera.h"
 #include "sensors/vision/DepthCamera.h"
 #include "sensors/vision/Multibeam2.h"
@@ -89,7 +88,6 @@
 #include "utils/SystemUtil.hpp"
 #include "tinyexpr.h"
 #include <sstream>
-#include <iostream>
 
 namespace sf
 {
@@ -1487,6 +1485,42 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
     return true;
 }
 
+bool ScenarioParser::ParseBattery(XMLElement* element, Battery* battery) {
+    Scalar maxCapacity = Scalar(0);  // Default value for maxCapacity
+    Scalar voltage = Scalar(0);      // Default value for voltage
+    XMLElement* item = element->FirstChildElement("battery");
+
+    // Check if the <battery> element exists
+    if (item == nullptr) {
+        std::cout << "No <battery> element found!" << std::endl;
+        return false;  // Return false if the <battery> element is not found
+    } else {
+        std::cout << "<battery> element found!" << std::endl;
+    }
+
+    // Try to parse maxCapacity and voltage attributes
+    if (item->QueryAttribute("maxCapacity", &maxCapacity) != XML_SUCCESS) {
+        std::cout << "Failed to parse maxCapacity attribute!" << std::endl;
+        return false;  // Return false if maxCapacity is not found or can't be parsed
+    }
+
+    if (item->QueryAttribute("voltage", &voltage) != XML_SUCCESS) {
+        std::cout << "Failed to parse voltage attribute!" << std::endl;
+        return false;  // Return false if voltage is not found or can't be parsed
+    }
+
+    // If parsing succeeded, print the values
+    std::cout << "Parsed values -> maxCapacity: " << maxCapacity << " voltage: " << voltage << std::endl;
+
+    // Set the battery values
+    battery->setVoltage(voltage);
+    battery->setMaxCapacity(maxCapacity);
+
+    return true;  // Return true after successful parsing
+}
+
+
+
 bool ScenarioParser::ParseDynamic(XMLElement* element)
 {
     //---- Solid ----
@@ -1934,42 +1968,6 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
     return true;
 }
 
-
-bool ScenarioParser::ParseBattery(XMLElement* element, Battery* battery) {
-    Scalar maxCapacity = Scalar(0);  // Default value for maxCapacity
-    Scalar voltage = Scalar(0);      // Default value for voltage
-    XMLElement* item = element->FirstChildElement("battery");
-
-    // Check if the <battery> element exists
-    if (item == nullptr) {
-        std::cout << "No <battery> element found!" << std::endl;
-        return false;  // Return false if the <battery> element is not found
-    } else {
-        std::cout << "<battery> element found!" << std::endl;
-    }
-
-    // Try to parse maxCapacity and voltage attributes
-    if (item->QueryAttribute("maxCapacity", &maxCapacity) != XML_SUCCESS) {
-        std::cout << "Failed to parse maxCapacity attribute!" << std::endl;
-        return false;  // Return false if maxCapacity is not found or can't be parsed
-    }
-
-    if (item->QueryAttribute("voltage", &voltage) != XML_SUCCESS) {
-        std::cout << "Failed to parse voltage attribute!" << std::endl;
-        return false;  // Return false if voltage is not found or can't be parsed
-    }
-
-    // If parsing succeeded, print the values
-    std::cout << "Parsed values -> maxCapacity: " << maxCapacity << " voltage: " << voltage << std::endl;
-
-    // Set the battery values
-    battery->setVoltage(voltage);
-    battery->setMaxCapacity(maxCapacity);
-
-    return true;  // Return true after successful parsing
-}
-
-
 bool ScenarioParser::ParseRobot(XMLElement* element)
 {
     //---- Basic ----
@@ -2032,7 +2030,7 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
     std::cout<<"energy_remaining:"<<robot->getBattery()->getEnergyRemaining()<<std::endl;
     
 
-            
+
     //---- Links ----
     //Base link
     SolidEntity* baseLink = nullptr;
@@ -3821,51 +3819,6 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
         }
         sens = mult;
     }
-
-    else if(typeStr == "lasermems")
-    {
-        int history;
-        Scalar fovH;
-        Scalar fovV;
-        int numL;
-        int numP;
-        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
-            history = -1;
-        if((item = element->FirstChildElement("specs")) == nullptr || item->QueryAttribute("fovH", &fovH) != XML_SUCCESS || item->QueryAttribute("numL", &numL) != XML_SUCCESS  || item->QueryAttribute("numP", &numP) != XML_SUCCESS  || item->QueryAttribute("fovV", &fovV) != XML_SUCCESS)
-            return nullptr;
-            
-        //std::cout<<"numL "<< numL << " " << numP << std::endl;
-        LaserMEMS* laser = new LaserMEMS(sensorName, numL, numP,fovH, fovV, rate, history);
-        
-        //Optional range definition
-        if((item = element->FirstChildElement("range")) != nullptr)    
-        {
-            Scalar distMin(0);
-            Scalar distMax(BT_LARGE_FLOAT);
-            int c = 0;
-
-            if(item->QueryAttribute("distance_min", &distMin) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("distance_max", &distMax) == XML_SUCCESS)
-                ++c;
-            
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-            else
-                laser->setRange(distMin, distMax);
-        }
-        //Optional noise definition
-        if((item = element->FirstChildElement("noise")) != nullptr)    
-        {
-            Scalar distance;
-            if(item->QueryAttribute("distance", &distance) == XML_SUCCESS)
-                laser->setNoise(distance);
-            else
-                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-        }
-        sens = laser;
-    }
-    
     else if(typeStr == "torque")
     {
         int history;

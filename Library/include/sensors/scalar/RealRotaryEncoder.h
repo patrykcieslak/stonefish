@@ -52,7 +52,7 @@ namespace sf
         void Reset();
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const;
+        ScalarSensorType getScalarSensorType();
         
     private:
         unsigned int cpr_res;

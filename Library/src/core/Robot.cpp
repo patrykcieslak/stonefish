@@ -34,6 +34,13 @@
 #include "sensors/scalar/JointSensor.h"
 #include "sensors/VisionSensor.h"
 #include "comms/Comm.h"
+#include <btBulletDynamicsCommon.h>
+#include <BulletSoftBody/btSoftBodyHelpers.h>
+#include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
+#include <BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h>
+#include <iostream>
+#include "core/Battery.h"
+
 
 namespace sf
 {
@@ -58,8 +65,10 @@ std::string Robot::getName()
 
 SolidEntity* Robot::getLink(const std::string& name)
 {
-    for(size_t i=0; i<links.size(); ++i)
+    for(size_t i=0; i<links.size(); ++i){
+        //std::cout<<"LINK NAME: "<< links[i]->getName()<<std::endl;
         if(links[i]->getName() == name) return links[i];
+    }
     
     for(size_t i=0; i<detachedLinks.size(); ++i)
         if(detachedLinks[i]->getName() == name) return detachedLinks[i];
@@ -142,6 +151,8 @@ void Robot::setBattery(Battery* b){
 }
 
 
+
+
 void Robot::DefineRevoluteJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar,Scalar> positionLimits, Scalar damping)
 {
     JointData jd;
@@ -170,6 +181,21 @@ void Robot::DefinePrismaticJoint(std::string jointName, std::string parentName, 
     jointsData.push_back(jd);
 }
 
+void Robot::DefineSphericalJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar,Scalar> positionLimits, Scalar damping)
+{
+    JointData jd;
+    jd.jtype = JointType::SPHERICAL;
+    jd.name = jointName;
+    jd.parent = parentName;
+    jd.child = childName;
+    jd.origin = origin;
+    jd.axis = axis;
+    jd.posLim = positionLimits;
+    jd.damping = damping;
+    jointsData.push_back(jd);
+}
+
+
 void Robot::DefineFixedJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin)
 {
     JointData jd;
@@ -178,8 +204,14 @@ void Robot::DefineFixedJoint(std::string jointName, std::string parentName, std:
     jd.parent = parentName;
     jd.child = childName;
     jd.origin = origin;
+    Scalar x = origin.getOrigin()[0];
+    Scalar y = origin.getOrigin()[1];
+    Scalar z = origin.getOrigin()[2];
+    std::cout<<"origin: " << x <<" " << y  << "  " << "  " << z << "  "<< parentName << "  " << childName << std::endl;
     jointsData.push_back(jd);
 }
+
+
 
 void Robot::AddLinkSensor(LinkSensor* s, const std::string& monitoredLinkName, const Transform& origin)
 {
@@ -208,13 +240,13 @@ void Robot::AddVisionSensor(VisionSensor* s, const std::string& attachmentLinkNa
 void Robot::AddLinkActuator(LinkActuator* a, const std::string& actuatedLinkName, const Transform& origin)
 {
     SolidEntity* link = getLink(actuatedLinkName);
-    if(link == nullptr)
+    if(link != nullptr)
     {
-        cCritical("Link '%s' doesn't exist. Actuator '%s' cannot be attached!", actuatedLinkName.c_str(), a->getName().c_str());
-        return;
+        a->AttachToSolid(link, origin);
+        actuators.push_back(a);
     }
-    a->AttachToSolid(link, origin);
-    actuators.push_back(a);
+    else
+        cCritical("Link '%s' doesn't exist. Actuator '%s' cannot be attached!", actuatedLinkName.c_str(), a->getName().c_str());
 }
 
 void Robot::AddComm(Comm* c, const std::string& attachmentLinkName, const Transform& origin)
@@ -229,6 +261,7 @@ void Robot::AddComm(Comm* c, const std::string& attachmentLinkName, const Transf
         cCritical("Link '%s' doesn't exist. Communication device '%s' cannot be attached!", attachmentLinkName.c_str(), c->getName().c_str());
 }
 
+
 void Robot::AddToSimulation(SimulationManager* sm, const Transform& origin)
 {
     for(size_t i=0; i<sensors.size(); ++i)
@@ -241,6 +274,32 @@ void Robot::AddToSimulation(SimulationManager* sm, const Transform& origin)
 
 void Robot::Respawn(SimulationManager* sm, const Transform& origin)
 {
+}
+
+
+
+std::vector<Sensor*> Robot::getSensors(){
+     return sensors;
+}
+
+std::vector<Actuator*> Robot::getActuators(){
+     return actuators;
+}
+
+unsigned short Robot::getPort(){
+     return port;
+}
+       
+std::string Robot::getIPaddress(){
+     return ip_address;
+}
+        
+void Robot::setPort(unsigned short p){
+     port=p;
+}
+
+void Robot::setIPaddress(std::string ip){
+     ip_address=ip;
 }
 
 }

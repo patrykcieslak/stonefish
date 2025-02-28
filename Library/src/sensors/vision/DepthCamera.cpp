@@ -69,7 +69,7 @@ glm::vec2 DepthCamera::getDepthRange() const
     return depthRange;
 }
     
-VisionSensorType DepthCamera::getVisionSensorType() const
+VisionSensorType DepthCamera::getVisionSensorType()
 {
     return VisionSensorType::DEPTH_CAMERA;
 }

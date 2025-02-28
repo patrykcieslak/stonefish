@@ -58,7 +58,7 @@ namespace sf
         void setNoise(Scalar positionStdDev, Scalar velocityStdDev, Scalar angleStdDev, Scalar angularVelocityStdDev);
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const;
+        ScalarSensorType getScalarSensorType();
 
     private:
         //Custom noise generation

@@ -83,6 +83,21 @@ namespace sf
         void DefineRevoluteJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, 
                                  const Vector3& axis, std::pair<Scalar, Scalar> positionLimits = std::make_pair(Scalar(1), Scalar(-1)), Scalar damping = Scalar(-1));
         
+        //! A method used to define a spherical joint between two mechanical parts of the robot.
+        /*!
+         \param jointName a name for the joint
+         \param parentName a name of the parent link
+         \param childName a name of the child link
+         \param origin frame of the joint
+         \param axis an axis of the joint
+         \param positionLimits a pair of min and max limit of joint position (if min > max then joint has no limits)
+         \param damping joint motion damping (works when there is no actuator attached to the joint) 
+         */
+        void DefineSphericalJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, 
+                                 const Vector3& axis, std::pair<Scalar, Scalar> positionLimits = std::make_pair(Scalar(1), Scalar(-1)), Scalar damping = Scalar(-1));
+        
+
+
         //! A method used to define a prismatic joint between two mechanical parts of the robot.
         /*!
          \param jointName a name for the joint
@@ -139,7 +154,7 @@ namespace sf
          \param actuatedLinkName a name of the link which is to be actuated
          \param origin a transformation from the link origin to the actuator frame
          */
-        virtual void AddLinkActuator(LinkActuator* a, const std::string& actuatedLinkName, const Transform& origin);
+        void AddLinkActuator(LinkActuator* a, const std::string& actuatedLinkName, const Transform& origin);
         
         //! A method used to attach an actuator to a specified joint of the robot.
         /*!
@@ -157,6 +172,14 @@ namespace sf
          */
         void AddComm(Comm* c, const std::string& attachmentLinkName, const Transform& origin);
         
+        //VISUAL EFFECTS
+        //! A method used to attach a visual to a specified link of the robot.
+        /*!
+         \param v a pointer to a visual object
+         \param attachmentLinkName a name of the link to which the visual is attached
+         \param origin a transformation from the link origin to the visual frame
+         */
+
         //GENERAL
         //! A method adding the robot to the simulation world (includes consistency checking).
         /*!
@@ -213,7 +236,14 @@ namespace sf
          \return a pointer to the comm object
          */
         Comm* getComm(size_t index);
-        
+
+
+        //! A method returning a pointer to the visual by index.
+        /*!
+         \param index the id of the visual
+         \return a pointer to the visual object
+         */
+                
         //! A method returning a pointer to the base link solid.
         SolidEntity* getBaseLink();
         
@@ -244,6 +274,18 @@ namespace sf
         
         void setBattery(Battery* b);
         
+        unsigned short getPort();
+        
+        std::string getIPaddress();
+        
+        void setPort(unsigned short p);
+        
+        void setIPaddress(std::string ip);
+        
+        
+        std::vector<Sensor*> getSensors();
+        std::vector<Actuator*> getActuators();
+        
     protected:
         struct JointData
         {
@@ -264,8 +306,10 @@ namespace sf
         std::vector<Actuator*> actuators;
         std::vector<Comm*> comms;
         std::string name;
-        Battery* battery;
         bool fixed;
+        Battery* battery;
+        unsigned short port;
+        std::string ip_address;
     };
 }
 

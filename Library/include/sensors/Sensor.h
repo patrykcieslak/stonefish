@@ -67,7 +67,7 @@ namespace sf
         void MarkDataOld();
         
         //! A method to check if new data is available.
-        bool isNewDataAvailable() const;
+        bool isNewDataAvailable();
         
         //! A method to set the sampling rate of the sensor.
         /*!
@@ -76,10 +76,10 @@ namespace sf
         void setUpdateFrequency(Scalar f);
 
         //! A method returning the sampling rate of the sensor.
-        Scalar getUpdateFrequency() const;
+        Scalar getUpdateFrequency();
         
         //! A method informing if the sensor is renderable.
-        bool isRenderable() const;
+        bool isRenderable();
         
         //! A method to set if the sensor is renderable.
         void setRenderable(bool render);
@@ -88,7 +88,7 @@ namespace sf
         void setVisual(const std::string& meshFilename, Scalar scale, const std::string& look);
         
         //! A method returning the sensor name.
-        std::string getName() const;
+        std::string getName();
         
         void setName(std::string n);
         
@@ -99,7 +99,7 @@ namespace sf
         virtual void InternalUpdate(Scalar dt) = 0;
         
         //! A method returning the type of the sensor.
-        virtual SensorType getType() const = 0;
+        virtual SensorType getType() = 0;
 
         //! A method returning the sensor measurement frame.
         virtual Transform getSensorFrame() const = 0;
@@ -116,11 +116,7 @@ namespace sf
         
         void setDutyCycle(Scalar dt_c);
         
-        void setEnabled(bool en);
-        
-        bool isEnabled() const;
-        
-        
+                
     protected:
         Scalar freq;
         SDL_mutex* updateMutex;
@@ -135,7 +131,6 @@ namespace sf
         bool renderable;
         int lookId;
         int graObjectId;
-        bool enabled;
         Scalar voltage;
         Scalar watt; 
         Scalar duty_cycle;

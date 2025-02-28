@@ -65,7 +65,7 @@ void* ColorCamera::getImageDataPointer(unsigned int index)
     return imageData;
 }
 
-VisionSensorType ColorCamera::getVisionSensorType() const
+VisionSensorType ColorCamera::getVisionSensorType() 
 {
     return VisionSensorType::COLOR_CAMERA;
 }

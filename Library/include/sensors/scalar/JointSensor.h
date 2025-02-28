@@ -65,7 +65,7 @@ namespace sf
         virtual void AttachToJoint(Joint* joint);
         
         //! A method returning the type of the sensor.
-        SensorType getType() const;
+        SensorType getType();
         
         //! A method returning the current sensor frame in world.
         virtual Transform getSensorFrame() const;

@@ -85,7 +85,7 @@ void Odometry::setNoise(Scalar positionStdDev, Scalar velocityStdDev, Scalar ang
     ornNoise = std::normal_distribution<Scalar>(Scalar(0), ornStdDev);
 }
 
-ScalarSensorType Odometry::getScalarSensorType() const
+ScalarSensorType Odometry::getScalarSensorType()
 {
     return ScalarSensorType::ODOM;
 }
