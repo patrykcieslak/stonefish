@@ -122,6 +122,11 @@ VisionSensorType FLS::getVisionSensorType() const
     return VisionSensorType::FLS;
 }
 
+OpenGLView* FLS::getOpenGLView() const
+{
+    return glFLS;
+}
+
 void FLS::InitGraphics()
 {
     glFLS = new OpenGLFLS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 

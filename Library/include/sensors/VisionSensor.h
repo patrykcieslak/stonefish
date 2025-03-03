@@ -36,6 +36,7 @@ namespace sf
     class Entity;
     class StaticEntity;
     class MovingEntity;
+    class OpenGLView;
     
     //! An abstract class representing a vision sensor.
     class VisionSensor : public Sensor
@@ -101,6 +102,9 @@ namespace sf
         
         //! A method returning the type of the vision sensor.
         virtual VisionSensorType getVisionSensorType() const = 0;
+
+        //! A method returning a pointer to the underlaying OpenGLView object.
+        virtual OpenGLView* getOpenGLView() const = 0;
         
     protected:
         virtual void InitGraphics() = 0;

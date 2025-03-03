@@ -83,6 +83,14 @@ VisionSensorType Multibeam2::getVisionSensorType() const
 {
     return VisionSensorType::MULTIBEAM2;
 }
+
+OpenGLView* Multibeam2::getOpenGLView() const
+{
+    if(cameras.size() > 0)
+        return cameras[0].cam;
+    else
+        return nullptr;
+}
     
 void Multibeam2::InitGraphics()
 {

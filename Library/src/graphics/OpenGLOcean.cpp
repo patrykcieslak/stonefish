@@ -579,24 +579,35 @@ void OpenGLOcean::DrawBackground(OpenGLView* view)
     OpenGLState::UseProgram(0);
 }
 
+OpenGLOceanParticles* OpenGLOcean::AllocateParticles(OpenGLView* view)
+{
+    //Check if particles are already allocated for this view
+    if(oceanParticles.find(view) != oceanParticles.end())
+        return oceanParticles.at(view);
+
+    OpenGLOceanParticles* particles = new OpenGLOceanParticles(STD_OCEAN_PARTICLES_COUNT, STD_OCEAN_PARTICLES_RADIUS);
+    oceanParticles.insert(std::pair<OpenGLView*, OpenGLOceanParticles*>(view, particles));
+    return particles;
+}
+
+void OpenGLOcean::AssignParticles(OpenGLView* view, OpenGLOceanParticles* particles)
+{
+    oceanParticles[view] = particles;
+}
+
 void OpenGLOcean::DrawParticles(OpenGLView* view)
 {
     if(!particlesEnabled)
         return;
-
-    OpenGLOceanParticles* particles;
-    
+        
     try
     {
-        particles = oceanParticles.at(view);
+        oceanParticles.at(view)->Draw(view, this);
     }
     catch(const std::out_of_range& e)
     {
-        particles = new OpenGLOceanParticles(5000, 3.0);
-        oceanParticles.insert(std::pair<OpenGLView*, OpenGLOceanParticles*>(view, particles));
+        cWarning("Particles missing!");
     }
-
-    particles->Draw(view, this);
 }
 
 void OpenGLOcean::DrawVelocityField(OpenGLView* view, GLfloat velocityMax)

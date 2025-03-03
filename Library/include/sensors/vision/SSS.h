@@ -141,6 +141,9 @@ namespace sf
         //! A method returning the type of the vision sensor.
         VisionSensorType getVisionSensorType() const override;
         
+        //! A method returning a pointer to the underlaying OpenGLView object.
+        OpenGLView* getOpenGLView() const override;
+        
     private:
         void InitGraphics();
         

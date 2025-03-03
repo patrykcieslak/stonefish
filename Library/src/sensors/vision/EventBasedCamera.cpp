@@ -74,6 +74,11 @@ VisionSensorType EventBasedCamera::getVisionSensorType() const
 {
     return VisionSensorType::EVENT_BASED_CAMERA;
 }
+
+OpenGLView* EventBasedCamera::getOpenGLView() const
+{
+    return glCamera;
+}
     
 void EventBasedCamera::InitGraphics()
 {

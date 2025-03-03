@@ -20,12 +20,13 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 21/11/2018.
-//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/VisionSensor.h"
 
 #include "core/SimulationApp.h"
+#include "core/SimulationManager.h"
 #include "entities/StaticEntity.h"
 #include "entities/SolidEntity.h"
 
@@ -87,6 +88,8 @@ void VisionSensor::AttachToWorld(const Transform& origin)
     attach = nullptr;
     o2s = origin;
     InitGraphics();
+    if(SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
+            SimulationApp::getApp()->getSimulationManager()->getOcean()->getOpenGLOcean()->AllocateParticles(getOpenGLView());
 }
 
 void VisionSensor::AttachToStatic(StaticEntity* body, const Transform& origin)
@@ -96,6 +99,8 @@ void VisionSensor::AttachToStatic(StaticEntity* body, const Transform& origin)
         attach = body;
         o2s = origin;
         InitGraphics();
+        if(SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
+            SimulationApp::getApp()->getSimulationManager()->getOcean()->getOpenGLOcean()->AllocateParticles(getOpenGLView());
     }
 }
 
@@ -106,6 +111,8 @@ void VisionSensor::AttachToSolid(MovingEntity* body, const Transform& origin)
         attach = body;
         o2s = origin;
         InitGraphics();
+        if(SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
+            SimulationApp::getApp()->getSimulationManager()->getOcean()->getOpenGLOcean()->AssignParticles(getOpenGLView(), body->getOceanParticles());
     }
 }
 

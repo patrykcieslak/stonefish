@@ -42,6 +42,8 @@
 #define MIN_INTENSITY_THRESHOLD 1.0f //Minimum light intensity to be considered [cd]
 #define STD_NEAR_PLANE_DISTANCE 0.02f //Standard near plane distance of the cameras
 #define STD_FAR_PLANE_DISTANCE 100000.f //Standard far plane distance of the cameras
+#define STD_OCEAN_PARTICLES_COUNT 5000 //Standard number of ocean particles
+#define STD_OCEAN_PARTICLES_RADIUS 3.0 //Standard size of ocean particles system
 
 //Standard texture unit bindings (OpenGL 3.x >=48; OpenGL 4.x >=80)
 #define TEX_BASE                ((GLint)0)

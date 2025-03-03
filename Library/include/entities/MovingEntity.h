@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 15/07/20.
-//  Copyright(c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2025 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_MovingEntity__
@@ -32,6 +32,8 @@
 
 namespace sf
 {
+    class OpenGLOceanParticles;
+
     //! An abstract class representing a moving rigid body.
     class MovingEntity : public Entity
     {
@@ -127,6 +129,9 @@ namespace sf
         //! A method returning the index of the graphical object used in rendering.
         int getGraphicalObject() const;
 
+        //! A method returning the associated particles system.
+        OpenGLOceanParticles* getOceanParticles();
+
         //! A method returning the rigid body associated with the entity.
         btRigidBody* getRigidBody();
         
@@ -145,6 +150,7 @@ namespace sf
         int lookId;
         int graObjectId;
         DisplayMode dm;
+        OpenGLOceanParticles* particles;
         
     private:
     };

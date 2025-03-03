@@ -80,6 +80,11 @@ VisionSensorType OpticalFlowCamera::getVisionSensorType() const
     return VisionSensorType::OPTICAL_FLOW_CAMERA;
 }
 
+OpenGLView* OpticalFlowCamera::getOpenGLView() const
+{
+    return glCamera;
+}
+
 void OpticalFlowCamera::InitGraphics()
 {
     glCamera = new OpenGLOpticalFlowCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, depthRange, freq < Scalar(0));

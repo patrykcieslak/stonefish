@@ -157,6 +157,20 @@ namespace sf
         //! A method that updates ocean currents information.
         void UpdateOceanCurrentsData(const OceanCurrentsUBO& data);
 
+        //! A method to allocate a particle system for a view.
+        /*!
+         \param view a pointer to the view.
+         \return a pointer to the allocated particle system
+         */
+        OpenGLOceanParticles* AllocateParticles(OpenGLView* view);
+
+        //! A method to assign particle system to a view.
+        /*!
+         \param view a pointer to the view.
+         \param particles a pointer to the particle system
+         */
+        void AssignParticles(OpenGLView* view, OpenGLOceanParticles* particles);
+
         //! A method to set the type of ocean water.
         /*!
          \param t type of water

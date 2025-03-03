@@ -96,6 +96,11 @@ VisionSensorType ThermalCamera::getVisionSensorType() const
     return VisionSensorType::THERMAL_CAMERA;
 }
 
+OpenGLView* ThermalCamera::getOpenGLView() const
+{
+    return glCamera;
+}
+
 void ThermalCamera::InitGraphics()
 {
     glCamera = new OpenGLThermalCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, measurementRange, depthRange, freq < Scalar(0));
