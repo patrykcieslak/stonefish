@@ -47,6 +47,37 @@
 namespace sf
 {
 
+void onResize(int width, int height, SimulationManager* m) {
+
+    if (height == 0) return;  // Prevent division by zero
+
+    OpenGLTrackball* trackball = m->getTrackball();
+    if (trackball) {
+        // Set fixed near and far planes (make sure these values are reasonable for your scene)
+        float near = trackball->GetNearClip();
+        float far = trackball->GetFarClip();
+
+        // Calculate aspect ratio
+        float aspectRatio = (float)width / (float)height;
+
+        GLfloat fovx = trackball->GetFOVX(); 
+
+
+        GLfloat fovy = 2.f * atanf( tanf(fovx / 2.f) / aspectRatio ); 
+        glm::mat4 projection = glm::perspective(fovy, aspectRatio, STD_NEAR_PLANE_DISTANCE, STD_FAR_PLANE_DISTANCE);
+
+        trackball->setProjectionMatrix(projection);
+        
+        // Update the viewport and view transforms
+        trackball->SetViewport(width, height);
+        trackball->SetViewTransform();
+        trackball->SetProjection();
+        trackball->onResize(width, height);
+    }
+}
+
+
+
 GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dataDirPath, RenderSettings r, HelperSettings h, SimulationManager* sim)
 : SimulationApp(name, dataDirPath, sim)
 {
@@ -81,10 +112,19 @@ GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dat
     maxCounter = 0;
     rSettings = r;
     hSettings = h;
-    rSettings.windowW += rSettings.windowW % 2;
-    rSettings.windowH += rSettings.windowH % 2;
-    windowW = rSettings.windowW;
-    windowH = rSettings.windowH;
+if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+    printf("SDL Initialization failed: %s\n", SDL_GetError());
+}
+
+    SDL_DisplayMode DM;
+    SDL_GetCurrentDisplayMode(0, &DM);
+    int width_t = DM.w;
+    int height_t = DM.h;
+    printf("Screen resolution: %d x %d\n", width_t, height_t);
+    windowW = rSettings.windowW+rSettings.windowW%2;
+    windowH =  rSettings.windowH+rSettings.windowH%2;
+    rSettings.windowW = width_t+width_t % 2;
+    rSettings.windowH = height_t+height_t % 2;
 }
 
 GraphicalSimulationApp::~GraphicalSimulationApp()
@@ -231,14 +271,15 @@ void GraphicalSimulationApp::InitializeSDL()
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
-    
+
+    std::cout<<"WIN SIZE: " << windowW << "  "<< windowH << std::endl;
     //Create window
     window = SDL_CreateWindow(getName().c_str(),
                               SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED,
                               windowW,
                               windowH,
-                              SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN// | SDL_WINDOW_ALLOW_HIGHDPI
+                              SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
                               );
                               
     //Set window icon
@@ -332,10 +373,15 @@ void GraphicalSimulationApp::WindowEvent(SDL_Event* event)
     {
         case SDL_WINDOWEVENT_RESIZED:
             SDL_GetWindowSize(window, &w, &h);
-            gui->Resize(w, h);
+            GLint newWidth = w;
+            GLint newHeight = h;
+            gui->Resize(w, h); // Resizing the GUI if necessary
+            
             break;
+
     }
 }
+
 
 void GraphicalSimulationApp::KeyDown(SDL_Event *event)
 {
@@ -475,11 +521,7 @@ void GraphicalSimulationApp::LoopInternal()
     while(SDL_PollEvent(&event))
     {
         switch(event.type)
-        {
-            case SDL_WINDOWEVENT:
-                WindowEvent(&event);
-                break;
-            
+        {   
             case SDL_TEXTINPUT:
                 break;
                 
@@ -521,7 +563,20 @@ void GraphicalSimulationApp::LoopInternal()
                 MouseUp(&event);
             }
                 break;
-                
+            case SDL_WINDOWEVENT:
+            {
+            if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+            {
+                int newWidth = event.window.data1;
+                int newHeight = event.window.data2;
+                windowW=newWidth;
+                windowH=newHeight;
+                onResize(newWidth, newHeight,getSimulationManager());
+                gui->Resize(newWidth, newHeight);
+                //glPipeline->DrawDisplay();
+
+            }
+        }                
             case SDL_MOUSEMOTION:
             {
                 //GUI
@@ -953,6 +1008,44 @@ void GraphicalSimulationApp::DoHUD()
                 break;
         }
     }
+    
+    // Battery Panel 
+    float AISoffset = offset;
+    gui->DoPanel(10.f, offset, 160.f, 126.f);
+    offset += 5.f;
+    gui->DoLabel(15.f, offset, "ROBOTS STATUS");
+    offset += 15.f;
+    
+    newSelected = gui->DoComboBox(id, 15.f, offset, 150.f, options, selected, "Battery Level");
+       
+    offset += 51.f;
+    // batteryLevel is a variable representing the current battery level (between 0 and 100)
+    
+    
+    if(newSelected!=0){
+    double batteryLevel = getSimulationManager()->getRobot(newSelected-1)->getBattery()->getEnergyRemaining();
+    
+    
+    
+    
+    
+    // Calculate the width of the battery bar based on the battery level
+    double barWidth = (batteryLevel / 100.f) * 130.f; // Adjust 130.f to suit your panel width
+    // Draw the battery outline
+    gui->DrawRoundedRect(20.f, offset, 130.f, 20.f, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f)); // Black color
+    // Draw the filled battery level bar
+    gui->DrawRoundedRect(20.f, offset, barWidth, 20.f, glm::vec4(0.0f, 1.0f, 0.0f, 1.0f)); // Green color
+    // Write the percentage inside the battery bar
+    char batteryText[16];
+    sprintf(batteryText, "%.5f%%", batteryLevel); // Convert float to string
+    int numCharacters = strlen(batteryText);
+    float textWidth = numCharacters * 8.0f; // Adjust the constant value according to font size and style
+    if(barWidth<20)
+       barWidth=20;
+    gui->DoLabel(20.f + barWidth / 2 - textWidth / 2, offset + 3, batteryText); // Adjust position for centering
+    }
+    
+    
     
     //Bottom panel
     gui->DoPanel(-10, getWindowHeight()-30.f, getWindowWidth()+20, 30.f);

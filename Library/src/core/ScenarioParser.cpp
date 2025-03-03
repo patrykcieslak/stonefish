@@ -3194,24 +3194,40 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
     const char* name = nullptr;
     const char* type = nullptr;
     Scalar rate;
+    Scalar voltage;
+    Scalar watt;
+    Scalar duty_cycle;
     XMLElement* item;
     
     if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
-    {
-        log.Print(MessageType::ERROR, "Sensor name missing (namespace '%s')!", namePrefix.c_str());
-        return nullptr;
-    }
+	    {
+		        log.Print(MessageType::ERROR, "Sensor name missing (namespace '%s')!", namePrefix.c_str());
+		            return nullptr;
+		        }
     std::string sensorName = std::string(name);
     if(namePrefix != "")
-        sensorName = namePrefix + "/" + sensorName;
+	        sensorName = namePrefix + "/" + sensorName;
     
     if(element->QueryStringAttribute("type", &type) != XML_SUCCESS)
-    {
-        log.Print(MessageType::ERROR, "Type of sensor '%s' missing!", sensorName.c_str());
-        return nullptr;
-    }
+	    {
+		        log.Print(MessageType::ERROR, "Type of sensor '%s' missing!", sensorName.c_str());
+		            return nullptr;
+		        }
     if(element->QueryAttribute("rate", &rate) != XML_SUCCESS)
-        rate = Scalar(-1);
+	        rate = Scalar(-1);
+    
+    if(element->QueryAttribute("voltage", &voltage) != XML_SUCCESS)
+	       voltage = Scalar(1);
+       
+    if(element->QueryAttribute("watt", &watt) != XML_SUCCESS)
+	        watt = Scalar(1);
+        
+    if(element->QueryAttribute("duty_cycle", &duty_cycle) != XML_SUCCESS)
+	        duty_cycle = Scalar(100);
+        
+    std::cout<<"Sensor W:"<<watt<<" V:"<<voltage<<" duty_cycle:"<<duty_cycle<<std::endl;    
+        
+	
     std::string typeStr(type);
 
     //---- Specific ----
@@ -4237,6 +4253,12 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             lookStr = std::string(look);
 
         sens->setVisual(GetFullPath(std::string(visFile)), scale, lookStr);
+    }
+
+    if(typeStr!="odometry"){
+       sens->setVoltage(voltage);
+       sens->setWatt(watt);
+       sens->setDutyCycle(duty_cycle);
     }
     return sens;
 }

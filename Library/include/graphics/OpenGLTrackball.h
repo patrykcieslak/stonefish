@@ -126,6 +126,8 @@ namespace sf
         
         //! A method that informs if the camera needs update.
         bool needsUpdate();
+
+        void SetViewport(int width, int height);
         
     private:
         GLfloat calculateZ(GLfloat x, GLfloat y);

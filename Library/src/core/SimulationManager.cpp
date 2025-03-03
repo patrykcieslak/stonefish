@@ -1635,7 +1635,13 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
         }
         
     }
-    
+ 
+    //Loop through all robots battery
+    for(size_t i = 0; i < simManager->robots.size(); ++i){
+       simManager->robots[i]->getBattery()->consume(simManager->robots[i]->getSensors(),timeStep);
+    }      
+   
+    std::cout<<"ROBOT Battery check"<<std::flush; 
     //Loop through contact manifolds -> update contacts
     if(simManager->getContact(0) != nullptr) // If at least one contact is defined
     {

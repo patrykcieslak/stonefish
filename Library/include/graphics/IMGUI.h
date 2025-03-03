@@ -262,7 +262,8 @@ namespace sf
          \param title a pointer to the XY plot title
          */
         bool DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sensX, unsigned short dimX, ScalarSensor* sensY, unsigned short dimY, const std::string& title);
-        
+        void DrawRoundedRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec4 color = glm::vec4(1));
+ 
     private:
         Uid getHot();
         Uid getActive();
@@ -280,7 +281,6 @@ namespace sf
         void DrawPlainText(GLfloat x, GLfloat y, glm::vec4 color, const std::string& text, GLfloat scale = 1.f);
         GLfloat PlainTextLength(const std::string& text);
         glm::vec2 PlainTextDimensions(const std::string& text);
-        void DrawRoundedRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec4 color = glm::vec4(1));
         void DrawRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec4 color = glm::vec4(1));
         void DrawArrow(GLfloat x, GLfloat y, GLfloat h, bool up, glm::vec4 color = glm::vec4(1));
         
