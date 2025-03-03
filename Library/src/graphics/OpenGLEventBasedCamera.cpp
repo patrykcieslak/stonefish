@@ -223,9 +223,7 @@ void OpenGLEventBasedCamera::ComputeOutput(double dt)
     {
         // Reset event counter
         GLuint zero = 0;
-        GLuint eventCount;
         glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, renderEventCounter);
-        glGetBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &eventCount);
         glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &zero);
         glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
 
@@ -250,8 +248,6 @@ void OpenGLEventBasedCamera::ComputeOutput(double dt)
         glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT);
         glDispatchCompute((GLuint)ceilf(viewportWidth/16.f), (GLuint)ceilf(viewportHeight/16.f), 1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_ATOMIC_COUNTER_BARRIER_BIT);
-
-        printf("Number of events: %d\n", eventCount);
     }
     else
     {

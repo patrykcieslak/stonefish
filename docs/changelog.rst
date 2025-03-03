@@ -4,6 +4,15 @@ Changelog
 
 The changelog of the library code is presented below. **Breaking changes** were marked with *italics*.
 
+1.5
+===
+
+-  Implemented an event-based camera
+-  Implemented an optical flow sensor
+-  Implemented a thermal camera
+-  Added a test of all camera types
+-  Updated marine snow rendering to use the same particle system for vision sensors attached to the same body
+
 1.4
 ===
 

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 09/02/2024.
-//  Copyright (c) 2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "CameraTestManager.h"
@@ -129,10 +129,16 @@ void CameraTestManager::BuildScenario()
     ofCam->AttachToSolid(camFrame, sf::Transform(sf::Quaternion(-M_PI_2, 0.0, M_PI_2), sf::Vector3(0,0,0)));
     AddSensor(ofCam);
 
-    sf::EventBasedCamera* evbCam = new sf::EventBasedCamera("EventBasedCamera", 400, 300, sf::Scalar(90.0), 0.1f, 0.1f, 1000);
+    sf::EventBasedCamera* evbCam = new sf::EventBasedCamera("EventBasedCamera", 400, 300, sf::Scalar(90.0), 0.1f, 0.1f, 1000, 30.0);
     evbCam->setNoise(0.03, 0.03);
     evbCam->setDisplayOnScreen(true, 600, 300, 1.0);
     evbCam->AttachToSolid(camFrame, sf::Transform(sf::Quaternion(-M_PI_2, 0.0, M_PI_2), sf::Vector3(0,0,0)));
+#ifdef DEBUG
+    evbCam->InstallNewDataHandler([this](sf::EventBasedCamera* cam)
+    {
+        std::cout << "EBC last event count: " << cam->getLastEventCount() << std::endl;
+    });
+#endif
     AddSensor(evbCam);
 #endif
 }
