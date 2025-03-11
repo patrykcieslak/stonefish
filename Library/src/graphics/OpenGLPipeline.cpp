@@ -379,30 +379,37 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 
     //Update the queue of views needing update
     unsigned int updateCount = 0;
-    std::vector<unsigned int> viewsNoUpdate;
-    for(int i=content->getViewsCount()-1; i >= 0; --i)
+    std::vector<unsigned int> viewsNoUpdate; //View that are not needing update but have to be displayed
+    for(int i=content->getViewsCount()-1; i >= 0; --i) //Go through views in reverse order
     {
         OpenGLView* view = content->getView(i);
         
-        if(!view->isEnabled()) // Skip disabled views
+        if(!view->isEnabled()) //Skip disabled views
             continue;
       
         if(view->needsUpdate())
         {
-            if(view->isContinuous()) // Has to be always updated independent from number of views in the queue
+            if(view->isContinuous()) //Has to always get updated independent from the number of views in the queue
             {
-                viewsQueue.push_front(i);
-                ++updateCount;
+                if(std::find(viewsQueue.begin(), viewsQueue.end(), i) == viewsQueue.end()) //Not already in the queue
+                {
+                    viewsQueue.push_front(i);
+                    ++updateCount;
+                }
             }
             else // Will be updated now or in the following frames
             {
-                viewsQueue.push_back(i);
-                viewsNoUpdate.push_back(i);
+                if(std::find(viewsQueue.begin(), viewsQueue.end(), i) == viewsQueue.end()) //Not already in the queue
+                {
+                    viewsQueue.push_back(i);
+                    viewsNoUpdate.push_back(i);
+                }
             }
         }
         else // Does not need update
         {
-            viewsNoUpdate.push_back(i);
+            if(std::find(viewsNoUpdate.begin(), viewsNoUpdate.end(), i) == viewsNoUpdate.end()) //Not already in the queue
+                viewsNoUpdate.push_back(i);
         }
     }
 
@@ -414,7 +421,9 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     else if(updateCount < (unsigned int)viewsQueue.size())
     {
         ++updateCount;
-        viewsNoUpdate.erase(std::find(viewsNoUpdate.begin(), viewsNoUpdate.end(), viewsQueue[updateCount-1]));
+        auto it = std::find(viewsNoUpdate.begin(), viewsNoUpdate.end(), viewsQueue[updateCount-1]);
+        if(it != viewsNoUpdate.end())
+            viewsNoUpdate.erase(std::find(viewsNoUpdate.begin(), viewsNoUpdate.end(), viewsQueue[updateCount-1]));
     }
 
     //Loop through all views -> trackballs, cameras, depth cameras...
