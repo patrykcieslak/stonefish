@@ -37,6 +37,7 @@ namespace sf
 {
     class SimulationManager;
     class Robot;
+    class Battery;
     class Entity;
     class SolidEntity;
     class Sensor;
@@ -279,7 +280,8 @@ namespace sf
          \return full file path
          */
         std::string GetFullPath(const std::string& path);
-
+        
+	virtual bool ParseBattery(XMLElement* element, Battery* battery);
         //! A method informing if the simulation is working in graphical mode.
         bool isGraphicalSim();
 

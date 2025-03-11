@@ -177,6 +177,8 @@ namespace sf
          */
         void ShowAmbientOcclusion(glm::vec4 rect);
         
+        void setProjectionMatrix(const glm::mat4& projection);        
+       
         //! A method that returns the projection matrix.
         glm::mat4 GetProjectionMatrix() const;
         
@@ -258,6 +260,8 @@ namespace sf
         
         //! A static method to destroy shaders.
         static void Destroy();
+
+        void onResize(int width, int height);
         
     protected:
         //Buffers

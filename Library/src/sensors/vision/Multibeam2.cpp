@@ -79,7 +79,7 @@ Scalar Multibeam2::getVerticalFOV() const
     return fovV;
 }
 
-VisionSensorType Multibeam2::getVisionSensorType() const
+VisionSensorType Multibeam2::getVisionSensorType()
 {
     return VisionSensorType::MULTIBEAM2;
 }

@@ -71,7 +71,7 @@ namespace sf
         void setRelativeSensorFrame(const Transform& origin);
 
         //! A method returning the type of the sensor.
-        SensorType getType() const;
+        SensorType getType();
 
         //! A method returning the current sensor frame in world.
         virtual Transform getSensorFrame() const;

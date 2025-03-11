@@ -61,7 +61,7 @@ namespace sf
         void setNoise(Vector3 linearAccelerationStdDev);
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const;
+        ScalarSensorType getScalarSensorType();
     };
 }
 

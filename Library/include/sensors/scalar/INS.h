@@ -96,7 +96,7 @@ namespace sf
         std::vector<Renderable> Render();
 
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const;
+        ScalarSensorType getScalarSensorType();
 
         private:
             Scalar latitude, longitude, altitude;

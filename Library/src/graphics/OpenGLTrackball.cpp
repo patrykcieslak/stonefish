@@ -20,18 +20,17 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/29/13.
-//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLTrackball.h"
 
 #include "core/GraphicalSimulationApp.h"
-#include "core/SimulationManager.h"
 #include "entities/SolidEntity.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLState.h"
-#include "graphics/OpenGLRealOcean.h"
+#include <iostream>
 
 namespace sf
 {
@@ -181,7 +180,8 @@ glm::mat4 OpenGLTrackball::GetViewMatrix() const
 
 void OpenGLTrackball::Rotate(glm::quat rot)
 {
-    rotation = glm::rotation(up,  glm::vec3(0,0,1.f)) * rot;
+    rotation = rotation * rot;
+    UpdateTransform();
 }
 
 void OpenGLTrackball::MoveCenter(glm::vec3 step)
@@ -192,11 +192,6 @@ void OpenGLTrackball::MoveCenter(glm::vec3 step)
 void OpenGLTrackball::GlueToMoving(MovingEntity* ent)
 {
     holdingEntity = ent;
-
-    //Clear ocean quadtree to avoid holes in the ocean rendering because of the sudden jump of camera origin
-    Ocean* ocean = ((GraphicalSimulationApp*)SimulationApp::getApp())->getSimulationManager()->getOcean();
-    if(ocean != nullptr && ocean->hasWaves())
-        ((OpenGLRealOcean*)ocean->getOpenGLOcean())->ResetSurface(this);
 }
 
 void OpenGLTrackball::DrawSelection(const std::vector<Renderable>& r, GLuint destinationFBO)
@@ -226,6 +221,7 @@ void OpenGLTrackball::DrawSelection(const std::vector<Renderable>& r, GLuint des
     outlineShader[0]->SetUniform("texStencil", TEX_POSTPROCESS1);
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, getColorTexture(0));
     SetRenderBuffers(1, false, false);
+    
     outlineShader[0]->SetUniform("uvOffset", glm::vec2(1.f/(GLfloat)viewportWidth, 1.f/(GLfloat)viewportHeight)*1.5f);
     content->DrawSAQ();
 
@@ -262,5 +258,15 @@ void OpenGLTrackball::DrawSelection(const std::vector<Renderable>& r, GLuint des
     content->DrawTexturedSAQ(getColorTexture(1));
     OpenGLState::DisableBlend();
 }
+
+void OpenGLCamera::setProjectionMatrix(const glm::mat4& newProjection) {
+    projection = newProjection;
+}
+
+void OpenGLTrackball::SetViewport(int width, int height) {
+    viewportWidth = width;
+    viewportHeight = height;
+}
+
 
 }

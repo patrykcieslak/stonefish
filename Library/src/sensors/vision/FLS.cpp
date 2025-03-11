@@ -117,7 +117,7 @@ Scalar FLS::getGain() const
     return gain;
 }
     
-VisionSensorType FLS::getVisionSensorType() const
+VisionSensorType FLS::getVisionSensorType()
 {
     return VisionSensorType::FLS;
 }

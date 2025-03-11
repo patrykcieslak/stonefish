@@ -126,12 +126,12 @@ namespace sf
          \param VP the view-projection matrix
          */
         static void ExtractFrustumFromVP(glm::vec4 frustum[6], const glm::mat4& VP);
-        
+        GLint viewportWidth;
+        GLint viewportHeight; 
+               
     protected:
         GLint originX;
         GLint originY;
-        GLint viewportWidth;
-        GLint viewportHeight;
         GLuint renderFBO;
         bool enabled;
         bool continuous;

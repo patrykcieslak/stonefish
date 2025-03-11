@@ -103,6 +103,8 @@ namespace sf
         //! A method returning the type of the actuator.
         ActuatorType getType() const;
         
+        OpenGLLight* getGLLight();
+        
     private:
         void InitGraphics();
         

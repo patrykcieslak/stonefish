@@ -74,7 +74,7 @@ void Gyroscope::setNoise(Vector3 angularVelocityStdDev, Vector3 angularVelocityB
     bias = angularVelocityBias;
 }
 
-ScalarSensorType Gyroscope::getScalarSensorType() const
+ScalarSensorType Gyroscope::getScalarSensorType()
 {
     return ScalarSensorType::GYRO;
 }

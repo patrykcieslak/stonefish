@@ -67,7 +67,7 @@ namespace sf
         virtual void Reset();
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const;
+        ScalarSensorType getScalarSensorType();
         
     protected:
         Scalar GetRawAngle();

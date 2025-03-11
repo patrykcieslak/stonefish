@@ -51,7 +51,7 @@ void Compass::setNoise(Scalar headingStdDev)
     channels[0].setStdDev(btClamped(headingStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
 
-ScalarSensorType Compass::getScalarSensorType() const
+ScalarSensorType Compass::getScalarSensorType()
 {
     return ScalarSensorType::COMPASS;
 }

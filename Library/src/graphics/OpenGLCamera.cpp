@@ -119,14 +119,18 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
     //---- Tonemapping ----
     histogramBins = 256;
     histogramRange = glm::vec2(-1.f,11.f);
-    GLuint histogram[histogramBins];
+    #ifdef _MSC_VER
+       GLuint histogram[256];
+    #else
+       GLuint histogram[histogramBins];
+    #endif
     memset(histogram, 0, histogramBins * sizeof(GLuint));
     glGenBuffers(1, &histogramSSBO);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, histogramSSBO);
     glBufferData(GL_SHADER_STORAGE_BUFFER, histogramBins * sizeof(GLuint), histogram, GL_STATIC_DRAW);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     
-    GLfloat zero = 1.0f;
+    GLfloat zero = 0.f;
     exposureTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(1,1,0), 
                                                  GL_R32F, GL_RED, GL_FLOAT, &zero, FilteringMode::NEAREST, false);
     
@@ -728,11 +732,11 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
                                                                         0.1f, (GLfloat)(viewportWidth * viewportHeight)));    
             glDispatchCompute(1, 1, 1);
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+            
+			//Bind exposure texture
+            OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderColorTex[lastActiveRenderColorBuffer]);
+			OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, exposureTex);
 		}
-
-        //Bind color and exposure textures
-        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderColorTex[lastActiveRenderColorBuffer]);
-		OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, exposureTex);
 
         if(antiAliasing)
         {
@@ -740,7 +744,7 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
             GLenum renderBuffs[1] = {GL_COLOR_ATTACHMENT1};
             glDrawBuffers(1, renderBuffs);    
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-            OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+            OpenGLState::Viewport(0, 0, viewportWidth,viewportHeight);
             tonemappingShaders[2]->Use();
             tonemappingShaders[2]->SetUniform("texSource", TEX_POSTPROCESS1);
             tonemappingShaders[2]->SetUniform("texExposure", TEX_POSTPROCESS2);
@@ -753,7 +757,7 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
 
             //Drawing to screen with anti-aliasing
             OpenGLState::BindFramebuffer(destinationFBO);
-            OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+            OpenGLState::Viewport(0,0,viewportWidth,viewportHeight);
             glDrawBuffer(GL_COLOR_ATTACHMENT0);
             fxaaShader->Use();
             fxaaShader->SetUniform("texSource", TEX_POSTPROCESS1);
@@ -765,7 +769,7 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
         else
         {
             OpenGLState::BindFramebuffer(destinationFBO);
-            OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+            OpenGLState::Viewport(0, 0, viewportWidth,viewportHeight);
             glDrawBuffer(GL_COLOR_ATTACHMENT0);
             tonemappingShaders[2]->Use();
             tonemappingShaders[2]->SetUniform("texSource", TEX_POSTPROCESS1);
@@ -782,7 +786,7 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
 	else
 	{
 		OpenGLState::BindFramebuffer(destinationFBO);
-		OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+		OpenGLState::Viewport(0,0,viewportWidth,viewportHeight);
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
 		((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(renderColorTex[lastActiveRenderColorBuffer]);
 		OpenGLState::BindFramebuffer(0);
@@ -970,6 +974,180 @@ void OpenGLCamera::Destroy()
     if(fxaaShader != nullptr) delete fxaaShader;
     if(flipShader != nullptr) delete flipShader;
     if(ssrBlur != nullptr) delete ssrBlur;
+}
+
+
+void OpenGLCamera::onResize(int width, int height)
+{
+    // Prevent division by zero in case of invalid height
+    if (height == 0) return;
+
+    // Update OpenGL viewport to match new dimensions
+    glViewport(0, 0, width, height);
+
+    // Update the viewport dimensions in the camera (or any internal structures)
+    viewportWidth = width;
+    viewportHeight = height;
+
+    if(((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getRenderSettings().ao != RenderQuality::DISABLED)
+        aoFactor = 1;
+    if(((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getRenderSettings().aa != RenderQuality::DISABLED)
+        antiAliasing = true;
+    
+    //----Geometry rendering----
+    renderColorTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+                                                    GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
+    renderColorTex[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+                                                     GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
+    renderViewNormalTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+                                                         GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, NULL, FilteringMode::BILINEAR, false);                                                  
+    renderDepthStencilTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+                                                           GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL, FilteringMode::NEAREST, false);
+    std::vector<FBOTexture> fboTextures;
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderColorTex[0]));
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, renderViewNormalTex));
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, renderColorTex[1]));
+    fboTextures.push_back(FBOTexture(GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, renderDepthStencilTex));
+    renderFBO = OpenGLContent::GenerateFramebuffer(fboTextures);
+    OpenGLState::BindFramebuffer(renderFBO);
+    SetRenderBuffers(0, true, false);
+    OpenGLState::BindFramebuffer(0);
+
+    //----Postprocessing----
+    postprocessTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+                                                    GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
+    postprocessTex[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+                                                       GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, NULL, FilteringMode::BILINEAR, false);
+    postprocessStencilTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+                                                           GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL, FilteringMode::NEAREST, false);
+    fboTextures.clear();
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postprocessTex[0]));
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, postprocessTex[1]));
+    fboTextures.push_back(FBOTexture(GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, postprocessStencilTex));
+    postprocessFBO = OpenGLContent::GenerateFramebuffer(fboTextures);
+
+    quaterPostprocessTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth/2, viewportHeight/2, 0),
+                                                            GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
+    quaterPostprocessTex[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth/2, viewportHeight/2, 0),
+                                                            GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
+    fboTextures.clear();
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, quaterPostprocessTex[0]));
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, quaterPostprocessTex[1]));                                              
+    quaterPostprocessFBO = OpenGLContent::GenerateFramebuffer(fboTextures);
+
+    //Linear depth
+    linearDepthTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+                                                       GL_R32F, GL_RED, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
+    linearDepthTex[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+                                                       GL_R32F, GL_RED, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
+    fboTextures.clear();
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, linearDepthTex[0]));
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, linearDepthTex[1]));
+    linearDepthFBO = OpenGLContent::GenerateFramebuffer(fboTextures);
+
+    //---- Tonemapping ----
+    histogramBins = 256;
+    histogramRange = glm::vec2(-1.f,11.f);
+    #ifdef _MSC_VER
+       GLuint histogram[256];
+    #else
+       GLuint histogram[histogramBins];
+    #endif
+    memset(histogram, 0, histogramBins * sizeof(GLuint));
+    glGenBuffers(1, &histogramSSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, histogramSSBO);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, histogramBins * sizeof(GLuint), histogram, GL_STATIC_DRAW);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    
+    GLfloat zero = 0.f;
+    exposureTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(1,1,0), 
+                                                 GL_R32F, GL_RED, GL_FLOAT, &zero, FilteringMode::NEAREST, false);
+    
+    //----HBAO----
+    if(aoFactor > 0)
+    {
+        //Deinterleaved results
+        GLint swizzle[4] = {GL_RED,GL_GREEN,GL_ZERO,GL_ZERO};
+        
+        glGenTextures(1, &aoResultTex);
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, aoResultTex);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG16F, viewportWidth, viewportHeight);
+        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    
+        glGenTextures(1, &aoBlurTex);
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, aoBlurTex);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG16F, viewportWidth, viewportHeight);
+        glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        
+        fboTextures.clear();
+        fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, aoResultTex));
+        fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, aoBlurTex));
+        aoFinalFBO = OpenGLContent::GenerateFramebuffer(fboTextures);
+        
+        //Interleaved rendering
+        int quarterWidth  = ((viewportWidth+3)/4);
+        int quarterHeight = ((viewportHeight+3)/4);
+
+        glGenTextures(1, &aoDepthArrayTex);
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D_ARRAY, aoDepthArrayTex);
+        glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_R32F, quarterWidth, quarterHeight, HBAO_RANDOM_ELEMENTS);
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        
+        glGenTextures(1, &aoResultArrayTex);
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D_ARRAY, aoResultArrayTex);
+        glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RG16F, quarterWidth, quarterHeight, HBAO_RANDOM_ELEMENTS);
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        
+        OpenGLState::UnbindTexture(TEX_BASE);
+        
+        GLenum drawbuffers[NUM_MRT];
+        for(int layer = 0; layer < NUM_MRT; ++layer)
+            drawbuffers[layer] = GL_COLOR_ATTACHMENT0 + layer;
+
+        glGenFramebuffers(1, &aoDeinterleaveFBO);
+        OpenGLState::BindFramebuffer(aoDeinterleaveFBO);
+        glDrawBuffers(NUM_MRT, drawbuffers);
+        
+        glGenFramebuffers(1, &aoCalcFBO);
+        OpenGLState::BindFramebuffer(aoCalcFBO);
+        glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, aoResultArrayTex, 0);
+        OpenGLState::BindFramebuffer(0);
+        
+        glGenBuffers(1, &aoDataUBO);
+        glNamedBufferStorageEXT(aoDataUBO, sizeof(AOData), NULL, GL_DYNAMIC_STORAGE_BIT);
+        
+        //Generate random data
+        std::mt19937 rng((unsigned int)GetTimeInMicroseconds());
+        GLfloat numDir = 8; //Keep in sync with GLSL shader!!!
+        GLfloat rngMax = (GLfloat)rng.max() + 1.f; 
+        
+        for(unsigned int i=0; i<HBAO_RANDOM_ELEMENTS; ++i)
+        {
+            GLfloat rand1 = (GLfloat)rng()/rngMax; //random in [0,1)
+            GLfloat rand2 = (GLfloat)rng()/rngMax; //random in [0,1)
+
+            //Use random rotation angles in [0,2PI/NUM_DIRECTIONS)
+            GLfloat angle = 2.f * M_PI * rand1 / numDir;
+            aoData.jitters[i].x = cosf(angle);
+            aoData.jitters[i].y = sinf(angle);
+            aoData.jitters[i].z = rand2;
+            aoData.jitters[i].w = 0;
+            
+            aoData.float2Offsets[i] = glm::vec4((GLfloat)(i%4) + 0.5f, (GLfloat)(i/4) + 0.5f, 0.0, 0.0);
+        }
+   
+     }
+     
 }
 
 }

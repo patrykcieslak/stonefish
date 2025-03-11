@@ -139,7 +139,7 @@ namespace sf
         GLubyte* getDisplayDataPointer();
         
         //! A method returning the type of the vision sensor.
-        VisionSensorType getVisionSensorType() const;
+        VisionSensorType getVisionSensorType();
         
     private:
         void InitGraphics();

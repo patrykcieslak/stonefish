@@ -54,7 +54,7 @@ Transform LinkSensor::getSensorFrame() const
         return o2s;
 }
 
-SensorType LinkSensor::getType() const
+SensorType LinkSensor::getType()
 {
     return SensorType::LINK;
 }

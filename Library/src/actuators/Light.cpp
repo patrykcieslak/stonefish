@@ -43,7 +43,7 @@ Light::Light(std::string uniqueName, Scalar radius, Color color, Scalar lum)
     if(!SimulationApp::getApp()->hasGraphics())
         cCritical("Not possible to use lights in console simulation! Use graphical simulation if possible.");
     
-	R = radius < Scalar(0.01) ? Scalar(0.01) : radius;
+	R = radius;
     Fi = lum < Scalar(0) ? Scalar(0) : lum;
 }
 
@@ -152,7 +152,7 @@ void Light::UpdateTransform()
 std::vector<Renderable> Light::Render()
 {
     std::vector<Renderable> items(0);
-    
+    //glLight->SwitchOff();
     Renderable item;
     item.model = glMatrixFromTransform(getActuatorFrame());
     item.type = RenderableType::ACTUATOR_LINES;
@@ -199,6 +199,10 @@ std::vector<Renderable> Light::Render()
     items.push_back(item);
     
     return items;
+}
+
+OpenGLLight* Light::getGLLight(){
+    return glLight;
 }
 
 }

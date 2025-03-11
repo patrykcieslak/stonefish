@@ -116,7 +116,7 @@ Scalar SSS::getGain() const
     return gain;
 }
    
-VisionSensorType SSS::getVisionSensorType() const
+VisionSensorType SSS::getVisionSensorType()
 {
     return VisionSensorType::SSS;
 }

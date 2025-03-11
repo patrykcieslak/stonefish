@@ -116,7 +116,7 @@ void IMU::setNoise(Vector3 angleStdDev, Vector3 angularVelocityStdDev, Scalar ya
     yawDriftRate = yawAngleDrift;
 }
 
-ScalarSensorType IMU::getScalarSensorType() const
+ScalarSensorType IMU::getScalarSensorType()
 {
     return ScalarSensorType::IMU;
 }
