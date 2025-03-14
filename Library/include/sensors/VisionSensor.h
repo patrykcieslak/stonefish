@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 20/11/2018.
-//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2025 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_VisionSensor__
@@ -31,7 +31,8 @@
 namespace sf
 {
     //! An enum defining types of vision sensors.
-    enum class VisionSensorType {COLOR_CAMERA, DEPTH_CAMERA, THERMAL_CAMERA, EVENT_BASED_CAMERA, OPTICAL_FLOW_CAMERA, MULTIBEAM2, FLS, SSS, MSIS};
+    enum class VisionSensorType {COLOR_CAMERA, DEPTH_CAMERA, THERMAL_CAMERA, EVENT_BASED_CAMERA, 
+                                    OPTICAL_FLOW_CAMERA, SEGMENTATION_CAMERA, MULTIBEAM2, FLS, SSS, MSIS};
     
     class Entity;
     class StaticEntity;

@@ -38,6 +38,7 @@
 #include <sensors/vision/ThermalCamera.h>
 #include <sensors/vision/OpticalFlowCamera.h>
 #include <sensors/vision/EventBasedCamera.h>
+#include <sensors/vision/SegmentationCamera.h>
 
 CameraTestManager::CameraTestManager(sf::Scalar stepsPerSecond)
    : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE)
@@ -141,4 +142,8 @@ void CameraTestManager::BuildScenario()
 #endif
     AddSensor(evbCam);
 #endif
+    sf::SegmentationCamera* sCam = new sf::SegmentationCamera("SegmentationCamera", 400, 300, sf::Scalar(90.0));
+    sCam->setDisplayOnScreen(true, 200, 600, 1.0);
+    sCam->AttachToSolid(camFrame, sf::Transform(sf::Quaternion(-M_PI_2, 0.0, M_PI_2), sf::Vector3(0,0,0)));
+    AddSensor(sCam);
 }

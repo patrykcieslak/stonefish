@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 17/07/19.
-//  Copyright (c) 2019-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/ScenarioParser.h"
@@ -64,6 +64,7 @@
 #include "sensors/vision/DepthCamera.h"
 #include "sensors/vision/ThermalCamera.h"
 #include "sensors/vision/OpticalFlowCamera.h"
+#include "sensors/vision/SegmentationCamera.h"
 #include "sensors/vision/EventBasedCamera.h"
 #include "sensors/vision/Multibeam2.h"
 #include "sensors/vision/FLS.h"
@@ -627,6 +628,7 @@ bool ScenarioParser::ParseEnvironment(XMLElement* element)
         //Basic setup
         Scalar wavesHeight(0);
         Scalar waterDensity(1000);
+        Scalar waterTemperature(15.0);
         Scalar jerlov(0.2);
 
         if((item = ocean->FirstChildElement("waves")) != nullptr
@@ -640,11 +642,13 @@ bool ScenarioParser::ParseEnvironment(XMLElement* element)
         {
             item->QueryAttribute("density", &waterDensity);
             item->QueryAttribute("jerlov", &jerlov);
+            item->QueryAttribute("temperature", &waterTemperature);
         }
         
         std::string waterName = sm->getMaterialManager()->CreateFluid("Water", waterDensity, 1.308e-3, 1.55); 
         sm->EnableOcean(wavesHeight, sm->getMaterialManager()->getFluid(waterName));
         sm->getOcean()->setWaterType(jerlov);
+        sm->getOcean()->SetConditions(waterTemperature);
         
         //Particles
         bool particles = true;
@@ -696,6 +700,18 @@ bool ScenarioParser::ParseEnvironment(XMLElement* element)
                     atm->AddVelocityField(wind);
             }
             while((item = item->NextSiblingElement("wind")) != nullptr);
+        }
+
+        //Conditions
+        if((item = atmosphere->FirstChildElement("conditions")) != nullptr)
+        {
+            Scalar temp = 20.0;
+            Scalar press = 101300.0;
+            Scalar hum = 0.5;
+            item->QueryAttribute("temperature", &temp);
+            item->QueryAttribute("pressure", &press);
+            item->QueryAttribute("humidity", &hum);
+            sm->getAtmosphere()->SetConditions(temp, press, hum);
         }
     }
     return true;
@@ -791,10 +807,13 @@ bool ScenarioParser::ParseLooks(XMLElement* element)
         Scalar roughness;
         Scalar metalness;
         Scalar reflectivity;
+        std::pair<Scalar, Scalar> tempRange;
         const char* texture = nullptr;
         std::string textureStr = "";
         const char* normalMap = nullptr;
         std::string normalMapStr = "";
+        const char* tempMap = nullptr;
+        std::string tempMapStr = "";
         
         if(look->QueryStringAttribute("name", &name) != XML_SUCCESS)
         {
@@ -822,6 +841,19 @@ bool ScenarioParser::ParseLooks(XMLElement* element)
         if(look->QueryStringAttribute("normal_map", &normalMap) == XML_SUCCESS)
             normalMapStr = GetFullPath(std::string(normalMap));
         
+        if(look->QueryAttribute("temperature", &tempRange.first) == XML_SUCCESS)
+        {
+            tempRange.second = tempRange.first;
+            sm->CreateLook(lookName, color, roughness, metalness, reflectivity, textureStr, normalMapStr, "", tempRange);
+        }
+        else if(look->QueryStringAttribute("temperature_map", &tempMap) == XML_SUCCESS
+                && look->QueryAttribute("temperature_min", &tempRange.first) == XML_SUCCESS
+                && look->QueryAttribute("temperature_max", &tempRange.second) == XML_SUCCESS)
+        {
+            tempMapStr = GetFullPath(std::string(tempMap));
+            sm->CreateLook(lookName, color, roughness, metalness, reflectivity, textureStr, normalMapStr, tempMapStr, tempRange);
+        }
+        else
         sm->CreateLook(lookName, color, roughness, metalness, reflectivity, textureStr, normalMapStr);
         look = look->NextSiblingElement("look");
     }
@@ -3998,6 +4030,52 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
                 ofcam->setDisplaySettings(maxV);
         }
         sens = ofcam;
+    }
+    else if(typeStr == "segmentation")
+    {
+        if(!isGraphicalSim())
+        {
+            log.Print(MessageType::ERROR, "Segmentation cameras not supported in console mode!");
+            return nullptr;
+        }
+
+        int resX, resY;
+        Scalar hFov;
+        if((item = element->FirstChildElement("specs")) == nullptr 
+            || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
+            || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
+            || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Specs of segmentation camera '%s' not properly defined!", sensorName.c_str());
+            return nullptr;
+        }
+
+        SegmentationCamera* scam;
+
+        //Optional parameters
+        if((item = element->FirstChildElement("rendering")) != nullptr) 
+        {
+            Scalar minDist(STD_NEAR_PLANE_DISTANCE);
+            Scalar maxDist(STD_FAR_PLANE_DISTANCE);
+            int c = 0;
+
+            if(item->QueryAttribute("minimum_distance", &minDist) == XML_SUCCESS)
+                ++c;
+            if(item->QueryAttribute("maximum_distance", &maxDist) == XML_SUCCESS)
+                ++c;
+
+            if(c == 0)
+            {
+                log.Print(MessageType::WARNING, "Rendering options of segmentation camera '%s' not properly defined - using defaults.", sensorName.c_str());
+                scam = new SegmentationCamera(sensorName, resX, resY, hFov, rate);
+            }
+            else
+                scam = new SegmentationCamera(sensorName, resX, resY, hFov, rate, minDist, maxDist);
+        }
+        else
+            scam = new SegmentationCamera(sensorName, resX, resY, hFov, rate);
+
+        sens = scam;
     }
     else if(typeStr == "ebc" || typeStr == "eventbasedcamera")
     {

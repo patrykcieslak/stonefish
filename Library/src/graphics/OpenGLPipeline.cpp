@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/03/2014.
-//  Copyright(c) 2014-2024 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2014-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLPipeline.h"
@@ -37,6 +37,7 @@
 #include "graphics/OpenGLDepthCamera.h"
 #include "graphics/OpenGLThermalCamera.h"
 #include "graphics/OpenGLOpticalFlowCamera.h"
+#include "graphics/OpenGLSegmentationCamera.h"
 #include "graphics/OpenGLEventBasedCamera.h"
 #include "graphics/OpenGLSonar.h"
 #include "graphics/OpenGLAtmosphere.h"
@@ -64,6 +65,7 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     OpenGLDepthCamera::Init();
     OpenGLThermalCamera::Init();
     OpenGLOpticalFlowCamera::Init();
+    OpenGLSegmentationCamera::Init();
     OpenGLEventBasedCamera::Init();
     OpenGLSonar::Init();
     OpenGLOceanParticles::Init();
@@ -94,6 +96,7 @@ OpenGLPipeline::~OpenGLPipeline()
     OpenGLDepthCamera::Destroy();
     OpenGLThermalCamera::Destroy();
     OpenGLOpticalFlowCamera::Destroy();
+    OpenGLSegmentationCamera::Destroy();
     OpenGLEventBasedCamera::Destroy();
     OpenGLSonar::Destroy();
     OpenGLOceanParticles::Destroy();
@@ -525,6 +528,16 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             case ViewType::OPTICAL_FLOW_CAMERA:
             {
                 OpenGLOpticalFlowCamera* camera = static_cast<OpenGLOpticalFlowCamera*>(view);
+                //Draw objects and compute camera data
+                camera->ComputeOutput(drawingQueueCopy);
+                //Draw camera output
+                camera->DrawLDR(screenFBO, true);
+            }
+            break;
+
+            case ViewType::SEGMENTATION_CAMERA:
+            {
+                OpenGLSegmentationCamera* camera = static_cast<OpenGLSegmentationCamera*>(view);
                 //Draw objects and compute camera data
                 camera->ComputeOutput(drawingQueueCopy);
                 //Draw camera output

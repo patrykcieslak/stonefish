@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/05/18.
-//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2025 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLView__
@@ -31,7 +31,8 @@
 namespace sf
 {
     //! An enum defining types of views.
-    enum class ViewType {CAMERA, TRACKBALL, DEPTH_CAMERA, THERMAL_CAMERA, EVENT_BASED_CAMERA, OPTICAL_FLOW_CAMERA, SONAR};
+    enum class ViewType {CAMERA, TRACKBALL, DEPTH_CAMERA, THERMAL_CAMERA, 
+                            EVENT_BASED_CAMERA, OPTICAL_FLOW_CAMERA, SEGMENTATION_CAMERA, SONAR};
 
     #pragma pack(1)
     struct ViewUBO

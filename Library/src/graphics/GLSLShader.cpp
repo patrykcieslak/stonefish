@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 18/05/2014.
-//  Copyright (c) 2014-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/GLSLShader.h"
@@ -528,7 +528,7 @@ GLuint GLSLShader::LoadShader(GLenum shaderType, const std::string& filename, co
         glGetShaderiv(shader, GL_COMPILE_STATUS, shaderCompiled);
         if(*shaderCompiled == 0)
         {
-            cError("Failed to compile shader: %s", shaderSource);
+            cError("Failed to compile shader: %s", sourcePath.c_str());
             shader = 0;
         }
 #ifdef DEBUG	
