@@ -61,9 +61,9 @@ namespace sf
         
         //! A method that computes simulated event output.
         /*!
-         \param dt time that passed since last frame [s]
-        */
-        void ComputeOutput(double dt);
+         \param simTime the current simulation time [s]
+         */
+        void ComputeOutput(double simTime);
 
         //! A method to render the low dynamic range (final) image to the screen.
         /*!
@@ -137,7 +137,7 @@ namespace sf
         std::uniform_real_distribution<float> randDist;
         glm::vec2 C_;
         glm::vec2 sigmaC_;
-        uint32_t Tr_;
+        int32_t Tr_;
         uint32_t maxNumEvents;
         
         glm::mat4 cameraTransform;
@@ -150,6 +150,7 @@ namespace sf
         bool _needsUpdate;
         bool newData;
         bool initialized;
+        double lastSimTime;
 
         static GLSLShader** eventOutputShaders;
         static GLSLShader* eventVisualizeShader;

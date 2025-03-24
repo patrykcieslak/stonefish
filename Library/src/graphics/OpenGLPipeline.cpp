@@ -701,7 +701,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 
                 //Special case for event-based cameras
                 if(camera->getType() == ViewType::EVENT_BASED_CAMERA)
-                    static_cast<OpenGLEventBasedCamera*>(camera)->ComputeOutput(dt);
+                    static_cast<OpenGLEventBasedCamera*>(camera)->ComputeOutput(now);
 
                 //Drawing to the screen
                 camera->DrawLDR(screenFBO, true);

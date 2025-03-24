@@ -46,6 +46,7 @@ OpenGLEventBasedCamera::OpenGLEventBasedCamera(glm::vec3 eyePosition, glm::vec3 
     _needsUpdate = false;
     newData = false;
     initialized = false;
+    lastSimTime = -1.f;
     continuous = continuousUpdate;
     camera = nullptr;
     C_ = C;
@@ -217,7 +218,7 @@ glm::mat4 OpenGLEventBasedCamera::GetViewMatrix() const
     return cameraTransform;
 }
 
-void OpenGLEventBasedCamera::ComputeOutput(double dt)
+void OpenGLEventBasedCamera::ComputeOutput(double simTime)
 {
     if(initialized)
     {
@@ -240,7 +241,8 @@ void OpenGLEventBasedCamera::ComputeOutput(double dt)
         eventOutputShaders[1]->SetUniform("events", TEX_POSTPROCESS3);
         eventOutputShaders[1]->SetUniform("eventTimes", TEX_POSTPROCESS4);
         eventOutputShaders[1]->SetUniform("crossings", TEX_POSTPROCESS5);
-        eventOutputShaders[1]->SetUniform("dT", (uint32_t)round(dt*1e9));
+        Scalar dt = simTime - lastSimTime;
+        eventOutputShaders[1]->SetUniform("dT", (int32_t)round(dt*1e9));
         eventOutputShaders[1]->SetUniform("Tr", Tr_);
         eventOutputShaders[1]->SetUniform("C", C_);
         eventOutputShaders[1]->SetUniform("sigmaC", sigmaC_);
@@ -267,6 +269,7 @@ void OpenGLEventBasedCamera::ComputeOutput(double dt)
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
         initialized = true;
     }
+    lastSimTime = simTime;
 }
 
 void OpenGLEventBasedCamera::DrawLDR(GLuint destinationFBO, bool updated)
@@ -346,6 +349,7 @@ void OpenGLEventBasedCamera::Init()
     
     sources.clear();
     std::string header = "#version 430\n#define MAX_TEXTURE_WIDTH " + std::to_string(maxTextureSize.x) + "\n";
+    printf("Max texture size: %d\n", maxTextureSize.x);
     sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "event.comp", header));
     eventOutputShaders[1] = new GLSLShader(sources);
     eventOutputShaders[1]->AddUniform("currColor", ParameterType::INT);
@@ -353,8 +357,8 @@ void OpenGLEventBasedCamera::Init()
     eventOutputShaders[1]->AddUniform("events", ParameterType::INT);
     eventOutputShaders[1]->AddUniform("eventTimes", ParameterType::INT);
     eventOutputShaders[1]->AddUniform("crossings", ParameterType::INT);
-    eventOutputShaders[1]->AddUniform("dT", ParameterType::UINT);
-    eventOutputShaders[1]->AddUniform("Tr", ParameterType::UINT);
+    eventOutputShaders[1]->AddUniform("dT", ParameterType::INT);
+    eventOutputShaders[1]->AddUniform("Tr", ParameterType::INT);
     eventOutputShaders[1]->AddUniform("C", ParameterType::VEC2);
     eventOutputShaders[1]->AddUniform("sigmaC", ParameterType::VEC2);
     eventOutputShaders[1]->AddUniform("seed", ParameterType::VEC3);

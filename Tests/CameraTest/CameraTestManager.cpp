@@ -130,7 +130,7 @@ void CameraTestManager::BuildScenario()
     ofCam->AttachToSolid(camFrame, sf::Transform(sf::Quaternion(-M_PI_2, 0.0, M_PI_2), sf::Vector3(0,0,0)));
     AddSensor(ofCam);
 
-    sf::EventBasedCamera* evbCam = new sf::EventBasedCamera("EventBasedCamera", 400, 300, sf::Scalar(90.0), 0.1f, 0.1f, 1000, 30.0);
+    sf::EventBasedCamera* evbCam = new sf::EventBasedCamera("EventBasedCamera", 400, 300, sf::Scalar(90.0), 0.1f, 0.1f, 1000, 10.0);
     evbCam->setNoise(0.03, 0.03);
     evbCam->setDisplayOnScreen(true, 600, 300, 1.0);
     evbCam->AttachToSolid(camFrame, sf::Transform(sf::Quaternion(-M_PI_2, 0.0, M_PI_2), sf::Vector3(0,0,0)));

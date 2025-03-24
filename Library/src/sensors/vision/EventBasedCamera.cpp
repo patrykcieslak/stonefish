@@ -108,6 +108,24 @@ void EventBasedCamera::InstallNewDataHandler(std::function<void(EventBasedCamera
 void EventBasedCamera::NewDataReady(void* data, unsigned int index)
 {
     lastEventCount = index;
+
+#ifdef DEBUG
+    if(lastEventCount > 0)
+    {
+        GLint* data_ = (GLint*)data;
+        int firstTime = INT32_MAX;
+        int lastTime = 0;
+        for(unsigned int i = 0; i < lastEventCount; ++i)
+        {
+            if(abs(data_[i*2+1]) > lastTime)
+                lastTime = abs(data_[i*2+1]);
+            if(abs(data_[i*2+1]) < firstTime)
+                firstTime = abs(data_[i*2+1]);   
+        }
+        printf("First event time: %d, Last event time: %d\n", firstTime, lastTime);
+    }
+#endif
+
     if(newDataCallback != nullptr)
     {
         imageData = (GLint*)data;

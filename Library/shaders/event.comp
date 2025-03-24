@@ -26,8 +26,8 @@ layout(rg32i) uniform iimage2D events; // Events (out)
 layout(r32i) uniform iimage2D eventTimes; // Last event times (in/out)
 layout(r32f) uniform image2D crossings; // Crossings history (in/out)
 
-uniform uint dT; // Time step [ns]
-uniform uint Tr; // Refractory period [ns]
+uniform int dT; // Time step [ns]
+uniform int Tr; // Refractory period [ns]
 uniform vec2 C;   // Contrast thresholds
 uniform vec2 sigmaC; // Standard deviation of contrast threshold noise
 uniform vec3 seed; // Noise seed
@@ -71,30 +71,32 @@ void main()
             else
                 polC = -max(C.y + gaussian(noiseCoord, seed, sigmaC.y, 0.0), MIN_CONTRAST_THRESHOLD);
             
-            float currCrossing = imageLoad(crossings, coord).r; // Start from last crossing
+            float ct = imageLoad(crossings, coord).r; // Start from last crossing
             int lastEventTime = imageLoad(eventTimes, coord).r; // Get last event time
             int sinceLastEvent = 0;
             if(lastEventTime != 0)
-                sinceLastEvent = int(dT) - abs(lastEventTime);
+                sinceLastEvent = dT - abs(lastEventTime);
             
-            for(int i=0; i<10000000; ++i)
+            for(int i=0; i<4096; ++i)
             {
-                currCrossing += polC;
+                ct += polC; // Add contrast step to current crossing value
                 // Check if crossing occured
-                if( (polC > 0.0 && currCrossing > it && currCrossing <= itdt)
-                    ||(polC < 0.0 && currCrossing < it && currCrossing >= itdt))
+                if( (polC > 0.0 && ct > it && ct <= itdt)
+                    ||(polC < 0.0 && ct < it && ct >= itdt))
                 {
-                    int edt = int(round((currCrossing - it) * float(dT) / (itdt - it))) + 1; // Event time (+1 to reserve time==0 for no events)
+                    int edt = int(round((ct-it)/(itdt-it)*dT)) + 1; // Event time (+1 to reserve time==0 for no events)
                     if(lastEventTime == 0 || edt + sinceLastEvent - lastT >= Tr) // Check if time difference larger than refractory period
                     {
                         ivec4 event;
+                        event.z = 0;
+                        event.w = 0;
                         event.r = coord.x << 16 | coord.y;
                         event.g = int(sign(polC)) * edt;
                         int index = int(atomicCounterIncrement(eventCounter));
                         imageStore(events, ivec2(index % MAX_TEXTURE_WIDTH, index/MAX_TEXTURE_WIDTH), event);
                         lastT = edt + sinceLastEvent;
                     }
-                    imageStore(crossings, coord, vec4(currCrossing)); // Save crossing value
+                    imageStore(crossings, coord, vec4(ct)); // Save crossing value
                 }
                 else
                     break;
