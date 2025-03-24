@@ -32,6 +32,7 @@
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
+#include "entities/forcefields/Ocean.h"
 
 namespace sf
 {
@@ -249,7 +250,7 @@ ViewType OpenGLSegmentationCamera::getType() const
     return ViewType::SEGMENTATION_CAMERA;
 }
 
-void OpenGLSegmentationCamera::ComputeOutput(std::vector<Renderable>& objects)
+void OpenGLSegmentationCamera::ComputeOutput(std::vector<Renderable>& objects, Ocean* ocean)
 {
     OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
     content->SetCurrentView(this);
@@ -273,6 +274,12 @@ void OpenGLSegmentationCamera::ComputeOutput(std::vector<Renderable>& objects)
         segmentationCameraOutputShader->SetUniform("M", objects[i].model);
         segmentationCameraOutputShader->SetUniform("objectId", (GLuint)objects[i].objectId+1);
         content->DrawObject(objects[i].objectId, -1, objects[i].model);
+    }
+
+    if(ocean != nullptr && ocean->GetDepth(eye) > 0.f)
+    {
+        OpenGLOcean* glOcean = ocean->getOpenGLOcean();
+        glOcean->DrawParticlesId(this, (GLushort)(UINT16_MAX-1));
     }
 
     //Flip image

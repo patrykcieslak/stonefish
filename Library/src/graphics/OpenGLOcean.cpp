@@ -610,6 +610,21 @@ void OpenGLOcean::DrawParticles(OpenGLView* view)
     }
 }
 
+void OpenGLOcean::DrawParticlesId(OpenGLView* view, GLushort id)
+{
+    if(!particlesEnabled)
+        return;
+        
+    try
+    {
+        oceanParticles.at(view)->DrawId(view, id);
+    }
+    catch(const std::out_of_range& e)
+    {
+        cWarning("Particles missing!");
+    }
+}
+
 void OpenGLOcean::DrawVelocityField(OpenGLView* view, GLfloat velocityMax)
 {
     //1. Compute AABB of the limited viewera frustum

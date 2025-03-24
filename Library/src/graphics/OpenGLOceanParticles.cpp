@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/08/19.
-//  Copyright (c) 2019-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLOceanParticles.h"
@@ -42,8 +42,9 @@ namespace sf
     
 GLuint OpenGLOceanParticles::flakeTexture = 0;
 GLuint OpenGLOceanParticles::noiseTexture = 0;
-GLSLShader* OpenGLOceanParticles::renderShader = NULL;
-GLSLShader* OpenGLOceanParticles::updateShader = NULL;
+GLSLShader* OpenGLOceanParticles::renderShader = nullptr;
+GLSLShader* OpenGLOceanParticles::renderIdShader = nullptr;
+GLSLShader* OpenGLOceanParticles::updateShader = nullptr;
 
 OpenGLOceanParticles::OpenGLOceanParticles(size_t numOfParticles, GLfloat visibleRange) : OpenGLParticles(numOfParticles), uniformd(0, 1.f), normald(0, 1.f)
 {
@@ -127,6 +128,25 @@ void OpenGLOceanParticles::Draw(OpenGLView* view, OpenGLOcean* glOcn)
     OpenGLState::UnbindTexture(TEX_MAT_ALBEDO);
     OpenGLState::UseProgram(0);
 }
+
+void OpenGLOceanParticles::DrawId(OpenGLView* view, GLushort id)
+{
+    glm::mat4 MV = view->GetViewMatrix();
+    renderIdShader->Use();
+    renderIdShader->SetUniform("MV", MV);
+    renderIdShader->SetUniform("iMV", glm::inverse(MV));
+    renderIdShader->SetUniform("P", view->GetProjectionMatrix());
+    renderIdShader->SetUniform("FC", view->GetLogDepthConstant());
+    renderIdShader->SetUniform("objectId", (GLuint)id);
+
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POS, particlePosSSBO);
+    OpenGLState::BindTexture(TEX_MAT_ALBEDO, GL_TEXTURE_2D, flakeTexture);
+    OpenGLState::BindVertexArray(particleVAO);
+    glDrawElements(GL_TRIANGLES, nParticles * 6, GL_UNSIGNED_INT, 0);
+    OpenGLState::BindVertexArray(0);
+    OpenGLState::UnbindTexture(TEX_MAT_ALBEDO);
+    OpenGLState::UseProgram(0);
+}
     
 void OpenGLOceanParticles::Init()
 {
@@ -193,6 +213,23 @@ void OpenGLOceanParticles::Init()
     renderShader->SetUniform("color", glm::vec4(0.f,0.f,0.f,0.3f));
     OpenGLState::UseProgram(0);
 
+    sources.clear();
+    sources.push_back(GLSLSource(GL_VERTEX_SHADER, "particle.vert"));
+    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanParticleSegmentation.frag"));
+    
+    renderIdShader = new GLSLShader(sources);
+    renderIdShader->AddUniform("MV", ParameterType::MAT4);
+    renderIdShader->AddUniform("iMV", ParameterType::MAT4);
+    renderIdShader->AddUniform("P", ParameterType::MAT4);
+    renderIdShader->AddUniform("FC", ParameterType::FLOAT);
+    renderIdShader->AddUniform("texAlbedo", ParameterType::INT);
+    renderIdShader->AddUniform("objectId", ParameterType::UINT);
+    renderIdShader->BindShaderStorageBlock("Positions", SSBO_PARTICLE_POS);
+
+    renderIdShader->Use();
+    renderIdShader->SetUniform("texAlbedo", TEX_MAT_ALBEDO);
+    OpenGLState::UseProgram(0);
+
     //Load textures
     flakeTexture = OpenGLContent::LoadInternalTexture("flake.png", true, true);
 
@@ -218,8 +255,9 @@ void OpenGLOceanParticles::Init()
 
 void OpenGLOceanParticles::Destroy()
 {
-    if(updateShader != NULL) delete updateShader;
-    if(renderShader != NULL) delete renderShader;
+    if(updateShader != nullptr) delete updateShader;
+    if(renderShader != nullptr) delete renderShader;
+    if(renderIdShader != nullptr) delete renderIdShader;
     if(flakeTexture != 0) glDeleteTextures(1, &flakeTexture);
     if(noiseTexture != 0) glDeleteTextures(1, &noiseTexture);
 }

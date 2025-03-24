@@ -539,7 +539,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             {
                 OpenGLSegmentationCamera* camera = static_cast<OpenGLSegmentationCamera*>(view);
                 //Draw objects and compute camera data
-                camera->ComputeOutput(drawingQueueCopy);
+                camera->ComputeOutput(drawingQueueCopy, ocean);
                 //Draw camera output
                 camera->DrawLDR(screenFBO, true);
             }

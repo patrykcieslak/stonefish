@@ -127,6 +127,13 @@ namespace sf
 		 */
 		void DrawParticles(OpenGLView* view);
 
+        //! A method that draws underwater particles id.
+		/*!
+		 \param view a pointer to the active view
+         \param id the id of the particles
+		 */
+		void DrawParticlesId(OpenGLView* view, GLushort id);
+
         //! A method that draw water velocity field.
         /*!
          \param view a pointer to the view

@@ -63,6 +63,13 @@ namespace sf
          \param glOcn a pointer to the OpenGL ocean object
 		 */
 		void Draw(OpenGLView* view, OpenGLOcean* glOcn);
+
+		//! A method drawing the segmentation id of a particles.
+		/*!
+		 \param view a pointer to the active view
+		 \param id the id of the particles
+		 */
+		void DrawId(OpenGLView* view, GLushort id);
 		
 		//! A method used to load particle shaders.
 		static void Init();
@@ -84,6 +91,7 @@ namespace sf
 		static GLuint noiseTexture; 
 		static GLSLShader* updateShader;
 		static GLSLShader* renderShader;
+		static GLSLShader* renderIdShader;
 	};
 }
 

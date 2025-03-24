@@ -34,6 +34,7 @@ namespace sf
     class GLSLShader;
     class Camera;
     class SolidEntity;
+    class Ocean;
     
     //! A class representing a depth camera.
     class OpenGLSegmentationCamera : public OpenGLView
@@ -62,8 +63,9 @@ namespace sf
         //! A method that computes simulated depth data.
         /*
          \param objects a reference to a vector of renderable objects
+         \param ocean a pointer to an ocean object
          */
-        void ComputeOutput(std::vector<Renderable>& objects);
+        void ComputeOutput(std::vector<Renderable>& objects, Ocean* ocean = nullptr);
 
         //! A method to render the low dynamic range (final) image to the screen.
         /*!
