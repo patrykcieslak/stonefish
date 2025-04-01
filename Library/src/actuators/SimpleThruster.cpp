@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 07/04/2024.
-//  Copyright (c) 2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/SimpleThruster.h"
@@ -61,7 +61,9 @@ ActuatorType SimpleThruster::getType() const
 void SimpleThruster::setSetpoint(Scalar _thrust, Scalar _torque)
 {
     if(limits.second > limits.first) // Limitted
-        sThrust = _thrust < limits.first ? limits.first : (_thrust > limits.second ? limits.second : _thrust);
+        sThrust = btClamped(_thrust, limits.first, limits.second);
+    else // No limits
+        sThrust = _thrust;
     
     sTorque = _torque;
 

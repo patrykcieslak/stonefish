@@ -24,7 +24,8 @@ The changelog of the library code is presented below. **Breaking changes** were 
 -  *Rewritten computation of hydrodynamic drag*
 -  *Simple thruster is now a new actuator class and displays a rotating propeller*
 -  Implemented new trajectory generator for animated bodies utilising B-splines (now default)
--  Extended glue to support joining links of two robots together
+-  Extended glue to support joining links of two Featherstone robots together
+-  Extended fixed joint class to support updates of joint definition (dynamic activation/deactivation)
 -  Added a watchdog timer to the actuators, including parser support
 -  Added access to the viscous and quadratic hydrodynamic drag coefficients, including parser support
 -  Added an option to set internal parts of a compound body as always visible

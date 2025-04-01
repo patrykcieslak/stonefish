@@ -58,9 +58,8 @@ namespace sf
          \param solid a pointer to the solid body
          \param fe a pointer to the multibody
          \param linkId an index of the link of the multibody
-         \param pivot a connection point
          */
-        FixedJoint(std::string uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId, const Vector3& pivot);
+        FixedJoint(std::string uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId);
         
         //! A constructor to create fixed joint between two multibodies.
         /*!
@@ -69,9 +68,11 @@ namespace sf
          \param feB a pointer to the second multibody
          \param linkIdA an index of the link of the first multibody
          \param linkIdB an index of the link of the second multibody
-         \param pivot a connection point
          */
-        FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, FeatherstoneEntity* feB, int linkIdA, int linkIdB, const Vector3& pivot);
+        FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, FeatherstoneEntity* feB, int linkIdA, int linkIdB);
+
+        //! A method updating the definition of the joint based on current position of bodies.
+        void UpdateDefinition();
 
         //! A method implementing the rendering of the joint.
         std::vector<Renderable> Render();
