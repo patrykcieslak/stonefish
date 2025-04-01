@@ -121,6 +121,11 @@ VisionSensorType SSS::getVisionSensorType() const
     return VisionSensorType::SSS;
 }
 
+OpenGLView* SSS::getOpenGLView() const
+{
+    return glSSS;
+}
+
 void SSS::InitGraphics()
 {
     glSSS = new OpenGLSSS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),

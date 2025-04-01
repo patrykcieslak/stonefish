@@ -47,13 +47,7 @@ namespace sf
         
         //! A destructor.
         virtual ~LinkSensor();
-        
-        //! A method performing internal sensor state update.
-        /*!
-         \param dt the step time of the simulation [s]
-         */
-        virtual void InternalUpdate(Scalar dt) = 0;
-        
+          
         //! A method implementing the rendering of the sensor.
         virtual std::vector<Renderable> Render();
       
@@ -71,10 +65,17 @@ namespace sf
         void setRelativeSensorFrame(const Transform& origin);
 
         //! A method returning the type of the sensor.
-        SensorType getType() const;
+        SensorType getType() const override;
 
         //! A method returning the current sensor frame in world.
-        virtual Transform getSensorFrame() const;
+        Transform getSensorFrame() const override;
+
+        //! A method returning the velocity of the sensor measurement frame.
+        /*!
+         \param linear output of the linear velocity of the sensor measurement frame [m/s]
+         \param angular output of the angular velocity of the sensor measurement frame [rad/s]
+         */
+        void getSensorVelocity(Vector3& linear, Vector3& angular) const override;
         
         //! A method returning the name of the link that the sensor is attached to.
         std::string getLinkName() const;

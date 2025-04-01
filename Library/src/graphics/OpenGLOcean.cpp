@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/07/17.
-//  Copyright (c) 2017-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLOcean.h"
@@ -72,6 +72,7 @@ OpenGLOcean::OpenGLOcean(GLfloat size)
     GLint layers = 4;
     oceanSize = size;
     particlesEnabled = true;
+    waterTemperature = 15.f;
 
     //Create simulation textures
     oceanTextures[3] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D_ARRAY, glm::uvec3(params.fftSize, params.fftSize, layers), 
@@ -359,6 +360,16 @@ void OpenGLOcean::setWaterType(GLfloat t)
         lightScattering += fPart * (scattering[id+1] - scattering[id]);
     }
 }
+
+void OpenGLOcean::setWaterTemperature(GLfloat t)
+{
+    waterTemperature = t;
+}
+
+GLfloat OpenGLOcean::getWaterTemperature()
+{
+    return waterTemperature;
+}
     
 void OpenGLOcean::setParticles(bool enabled)
 {
@@ -534,16 +545,16 @@ void OpenGLOcean::Simulate(GLfloat dt)
     //Simulate particles (this is done every frame becasue even if the camera is not updated the particels need to move)
     if(particlesEnabled)
     {
-        for(std::map<OpenGLCamera*, OpenGLOceanParticles*>::iterator it=oceanParticles.begin(); it!=oceanParticles.end(); ++it)
+        for(std::map<OpenGLView*, OpenGLOceanParticles*>::iterator it=oceanParticles.begin(); it!=oceanParticles.end(); ++it)
             it->second->Update(it->first, dt);
     }
 }
 
-void OpenGLOcean::DrawUnderwaterMask(OpenGLCamera* cam)
+void OpenGLOcean::DrawUnderwaterMask(OpenGLView* view)
 {
     oceanShaders["mask_back"]->Use();
-    oceanShaders["mask_back"]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
-    oceanShaders["mask_back"]->SetUniform("FC", cam->GetLogDepthConstant());
+    oceanShaders["mask_back"]->SetUniform("MVP", view->GetProjectionMatrix() * view->GetViewMatrix());
+    oceanShaders["mask_back"]->SetUniform("FC", view->GetLogDepthConstant());
     oceanShaders["mask_back"]->SetUniform("size", oceanSize*0.5f);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetDrawingMode(DrawingMode::RAW);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawObject(oceanBoxObj, -1, glm::mat4(1.f));
@@ -551,13 +562,13 @@ void OpenGLOcean::DrawUnderwaterMask(OpenGLCamera* cam)
     OpenGLState::UseProgram(0);
 }
     
-void OpenGLOcean::DrawBackground(OpenGLCamera* cam)
+void OpenGLOcean::DrawBackground(OpenGLView* view)
 {
     oceanShaders["background"]->Use();
-    oceanShaders["background"]->SetUniform("MVP", cam->GetProjectionMatrix() * cam->GetViewMatrix());
-    oceanShaders["background"]->SetUniform("FC", cam->GetLogDepthConstant());
+    oceanShaders["background"]->SetUniform("MVP", view->GetProjectionMatrix() * view->GetViewMatrix());
+    oceanShaders["background"]->SetUniform("FC", view->GetLogDepthConstant());
     oceanShaders["background"]->SetUniform("size", oceanSize*0.5f);
-    oceanShaders["background"]->SetUniform("eyePos", cam->GetEyePosition());
+    oceanShaders["background"]->SetUniform("eyePos", view->GetEyePosition());
     oceanShaders["background"]->SetUniform("cWater", getLightAttenuation());
     oceanShaders["background"]->SetUniform("bWater", getLightScattering());
     glCullFace(GL_FRONT);
@@ -568,33 +579,59 @@ void OpenGLOcean::DrawBackground(OpenGLCamera* cam)
     OpenGLState::UseProgram(0);
 }
 
-void OpenGLOcean::DrawParticles(OpenGLCamera* cam)
+OpenGLOceanParticles* OpenGLOcean::AllocateParticles(OpenGLView* view)
+{
+    //Check if particles are already allocated for this view
+    if(oceanParticles.find(view) != oceanParticles.end())
+        return oceanParticles.at(view);
+
+    OpenGLOceanParticles* particles = new OpenGLOceanParticles(STD_OCEAN_PARTICLES_COUNT, STD_OCEAN_PARTICLES_RADIUS);
+    oceanParticles.insert(std::pair<OpenGLView*, OpenGLOceanParticles*>(view, particles));
+    return particles;
+}
+
+void OpenGLOcean::AssignParticles(OpenGLView* view, OpenGLOceanParticles* particles)
+{
+    oceanParticles[view] = particles;
+}
+
+void OpenGLOcean::DrawParticles(OpenGLView* view)
 {
     if(!particlesEnabled)
         return;
-
-    OpenGLOceanParticles* particles;
-    
+        
     try
     {
-        particles = oceanParticles.at(cam);
+        oceanParticles.at(view)->Draw(view, this);
     }
     catch(const std::out_of_range& e)
     {
-        particles = new OpenGLOceanParticles(5000, 3.0);
-        oceanParticles.insert(std::pair<OpenGLCamera*, OpenGLOceanParticles*>(cam, particles));
+        cWarning("Particles missing!");
     }
-
-    particles->Draw(cam, this);
 }
 
-void OpenGLOcean::DrawVelocityField(OpenGLCamera* cam, GLfloat velocityMax)
+void OpenGLOcean::DrawParticlesId(OpenGLView* view, GLushort id)
 {
-    //1. Compute AABB of the limited camera frustum
+    if(!particlesEnabled)
+        return;
+        
+    try
+    {
+        oceanParticles.at(view)->DrawId(view, id);
+    }
+    catch(const std::out_of_range& e)
+    {
+        cWarning("Particles missing!");
+    }
+}
+
+void OpenGLOcean::DrawVelocityField(OpenGLView* view, GLfloat velocityMax)
+{
+    //1. Compute AABB of the limited viewera frustum
     glm::vec3 frustum[5];
-    frustum[0] = cam->GetEyePosition();
-    glm::mat4 V = cam->GetViewMatrix();
-    glm::mat4 invP = glm::inverse(cam->GetProjectionMatrix());
+    frustum[0] = view->GetEyePosition();
+    glm::mat4 V = view->GetViewMatrix();
+    glm::mat4 invP = glm::inverse(view->GetProjectionMatrix());
     glm::mat4 invV = glm::inverse(V);
     glm::vec4 proj[4];
     proj[0] = invP * glm::vec4(-1.f, -1.f, -1.f, 1.f);
@@ -606,7 +643,7 @@ void OpenGLOcean::DrawVelocityField(OpenGLCamera* cam, GLfloat velocityMax)
     frustum[3] = invV * (proj[2]/proj[2].w);
     frustum[4] = invV * (proj[3]/proj[3].w);
 
-    GLfloat scaling = 10.f/cam->GetNearClip(); //5m of distance
+    GLfloat scaling = 10.f/view->GetNearClip(); //5m of distance
     frustum[1] = frustum[0] + (frustum[1]-frustum[0])*scaling;
     frustum[2] = frustum[0] + (frustum[2]-frustum[0])*scaling;
     frustum[3] = frustum[0] + (frustum[3]-frustum[0])*scaling;
@@ -656,7 +693,7 @@ void OpenGLOcean::DrawVelocityField(OpenGLCamera* cam, GLfloat velocityMax)
     oceanShaders["vectorfield"]->SetUniform("gridScale", gridScale);
     oceanShaders["vectorfield"]->SetUniform("vectorSize", 0.2f);
     oceanShaders["vectorfield"]->SetUniform("velocityMax", velocityMax);
-    oceanShaders["vectorfield"]->SetUniform("VP", cam->GetProjectionMatrix() * V);
+    oceanShaders["vectorfield"]->SetUniform("VP", view->GetProjectionMatrix() * V);
     oceanShaders["vectorfield"]->SetUniform("eyePos", frustum[0]);
     OpenGLState::EnableBlend();
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

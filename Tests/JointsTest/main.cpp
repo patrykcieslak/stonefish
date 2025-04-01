@@ -30,8 +30,8 @@
 int main(int argc, const char * argv[])
 {
     sf::RenderSettings s;
-    s.windowW = 800;
-    s.windowH = 600;
+    s.windowW = 1200;
+    s.windowH = 900;
     s.shadows = sf::RenderQuality::HIGH;
     s.ao = sf::RenderQuality::HIGH;
     s.atmosphere = sf::RenderQuality::HIGH;

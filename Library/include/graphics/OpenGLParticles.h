@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/08/19.
-//  Copyright (c) 2019-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2024 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLParticles__
@@ -30,8 +30,6 @@
 
 namespace sf
 {
-	class OpenGLCamera;
-
 	//! An abstract class implementing a general particle system
 	class OpenGLParticles
 	{

@@ -69,7 +69,12 @@ VisionSensorType ColorCamera::getVisionSensorType() const
 {
     return VisionSensorType::COLOR_CAMERA;
 }
-    
+
+OpenGLView* ColorCamera::getOpenGLView() const
+{
+    return glCamera;
+}
+
 void ColorCamera::InitGraphics()
 {
     glCamera = new OpenGLRealCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, depthRange, freq < Scalar(0));

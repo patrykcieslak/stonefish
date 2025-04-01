@@ -46,7 +46,7 @@ namespace sf
         /*!
          \param dt the step time of the simulation [s]
          */
-        void InternalUpdate(Scalar dt);
+        void InternalUpdate(Scalar dt) override;
 
         //! A method that resets the sensor.
         void Reset();
@@ -68,7 +68,7 @@ namespace sf
         void setNoise(Vector3 angleStdDev, Vector3 angularVelocityStdDev, Scalar yawAngleDrift, Vector3 linearAccelerationStdDev);
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const;
+        ScalarSensorType getScalarSensorType() const override;
 
         private:
             Scalar yawDriftRate;

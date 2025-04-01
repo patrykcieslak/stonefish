@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 20/11/2018.
-//  Copyright (c) 2018-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_ScalarSensor__
@@ -97,16 +97,7 @@ namespace sf
         
         //! A destructor.
         virtual ~ScalarSensor();
-        
-        //! A method performing internal sensor state update.
-        /*!
-         \param dt the step time of the simulation [s]
-         */
-        virtual void InternalUpdate(Scalar dt) = 0;
-        
-        //! A method returning the type of the sensor.
-        virtual SensorType getType() const = 0;
-        
+            
         //! A method resetting the sensor.
         virtual void Reset();
         
@@ -162,9 +153,6 @@ namespace sf
         
         //! A method returning the type of scalar sensor.
         virtual ScalarSensorType getScalarSensorType() const = 0;
-
-        //! A method returning the sensor measurement frame.
-        virtual Transform getSensorFrame() const = 0;
         
     protected:
         void AddSampleToHistory(const Sample& s);

@@ -59,20 +59,20 @@ OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction,
     SetupCamera(eyePosition, direction, cameraUp);
     UpdateTransform();
     
-    GLfloat fovx = horizontalFOVDeg/180.f*M_PI;
+    fov.x = horizontalFOVDeg/180.f*M_PI;
     
     if(verticalFOVDeg > 0.f)
     {
-        GLfloat fovy = verticalFOVDeg/180.f*M_PI;
-        projection[0] = glm::vec4(range.x/(range.x*tanf(fovx/2.f)), 0.f, 0.f, 0.f);
-        projection[1] = glm::vec4(0.f, range.x/(range.x*tanf(fovy/2.f)), 0.f, 0.f);
+        fov.y = verticalFOVDeg/180.f*M_PI;
+        projection[0] = glm::vec4(range.x/(range.x*tanf(fov.x/2.f)), 0.f, 0.f, 0.f);
+        projection[1] = glm::vec4(0.f, range.x/(range.x*tanf(fov.y/2.f)), 0.f, 0.f);
         projection[2] = glm::vec4(0.f, 0.f, -(range.y + range.x)/(range.y-range.x), -1.f);
         projection[3] = glm::vec4(0.f, 0.f, -2.f*range.y*range.x/(range.y-range.x), 0.f);
     }
     else
     {
-        GLfloat fovy = 2.f * atanf( (GLfloat)viewportHeight/(GLfloat)viewportWidth * tanf(fovx/2.f) );
-        projection = glm::perspectiveFov(fovy, (GLfloat)viewportWidth, (GLfloat)viewportHeight, range.x, range.y);
+        fov.y = 2.f * atanf( (GLfloat)viewportHeight/(GLfloat)viewportWidth * tanf(fov.x/2.f) );
+        projection = glm::perspectiveFov(fov.y, (GLfloat)viewportWidth, (GLfloat)viewportHeight, range.x, range.y);
     }
     
     //Render depth
@@ -188,9 +188,24 @@ glm::mat4 OpenGLDepthCamera::GetViewMatrix() const
     return cameraTransform;
 }
 
+GLfloat OpenGLDepthCamera::GetNearClip() const
+{
+    return range.x;
+}
+
 GLfloat OpenGLDepthCamera::GetFarClip() const
 {
     return range.y;
+}
+
+GLfloat OpenGLDepthCamera::GetFOVX() const
+{
+    return fov.x;
+}
+        
+GLfloat OpenGLDepthCamera::GetFOVY() const
+{
+    return fov.y;
 }
 
 void OpenGLDepthCamera::Update()
@@ -225,7 +240,7 @@ void OpenGLDepthCamera::setNoise(GLfloat depthStdDev)
     noiseDepth = depthStdDev;
 }
 
-ViewType OpenGLDepthCamera::getType()
+ViewType OpenGLDepthCamera::getType() const
 {
     return ViewType::DEPTH_CAMERA;
 }

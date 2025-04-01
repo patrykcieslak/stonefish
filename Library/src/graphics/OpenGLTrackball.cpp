@@ -72,7 +72,7 @@ OpenGLTrackball::~OpenGLTrackball()
         delete outlineShader[1];
 }
 
-ViewType OpenGLTrackball::getType()
+ViewType OpenGLTrackball::getType() const
 {
     return ViewType::TRACKBALL;
 }

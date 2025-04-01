@@ -40,7 +40,7 @@ The same can be achieved using the following code:
 Looks
 =====
 
-The graphical materials, called looks, define how the objects are rendered, thus they only exist in graphical mode simulations. All looks are rendered with a Cook-Torrance model, parametrised by reflectance (color), roughness, metalness and reflection factor (0.0 = no reflections, 1.0 = mirror). Additionally, it is possible to attach two textures to a material: an albedo texture and a normal texture. The albedo texture is multiplied by the reflectance to define the color of the material. The normal texture (map) is used to introduce surface details which would otherwise require complex geometry (bump mapping). The normal vectors computed from the geometry are rotated locally, based on the normal map, before the lighting calculations are performed. The normal map also affects the normals seen by the sonar, which allows for capturing realistic surface textures in the virtual sonar images.
+The graphical materials, called looks, define how the objects are rendered, thus they only exist in graphical mode simulations. All looks are rendered with a Cook-Torrance model, parametrised by reflectance (color), roughness, metalness and reflection factor (0.0 = no reflections, 1.0 = mirror). Additionally, it is possible to attach two textures to a material: an albedo texture and a normal texture. The albedo texture is multiplied by the reflectance to define the color of the material. The normal texture (map) is used to introduce surface details which would otherwise require complex geometry (bump mapping). The normal vectors computed from the geometry are rotated locally, based on the normal map, before the lighting calculations are performed. The normal map also affects the normals seen by the sonar, which allows for capturing realistic surface textures in the virtual sonar images. Finally, the temperature texture (map) is used by the thermal camera and allows definition of temperature distribution on surfaces of objects.
 
 Example of defining different looks, using the XML syntax, is presented below:
 
@@ -51,6 +51,7 @@ Example of defining different looks, using the XML syntax, is presented below:
         <look name="Gray" gray="0.3" roughness="0.4" metalness="0.5"/>
         <look name="Textured" gray="1.0" roughness="0.1" texture="tex.png"/>
         <look name="Bump" rgb="1.0 0.0 0.0" roughness="0.2" normal_map="normal.png"/>
+        <look name="Human" rgb="1.0 0.8 0.7" roughness="0.8" temperature_map="skin.png" temperature_min="34.0" temperature_max="38.0"/>
     </looks>
 
 The same can be achieved using the following code:
@@ -61,6 +62,7 @@ The same can be achieved using the following code:
     CreateLook("Gray", sf::Color::Gray(0.3f), 0.4f, 0.5f);
     CreateLook("Textured", sf::Color::Gray(1.f), 0.1f, 0.f, 0.f, sf::GetDataPath() + "tex.png");
     CreateLook("Bump", sf::Color::RGB(1.f, 0.f, 0.f), 0.2f, 0.f, 0.f, "", sf::GetDataPath() + "normal.png");
+    CreateLook("Human", sf::Color::RGB(1.f, 0.8f, 0.7f), 0.8f, 0.f, 0.f, "", "", sf::GetDataPath() + "skin.png", std::make_pair(34.f, 38.f));
     
 .. note::
 

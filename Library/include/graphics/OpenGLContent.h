@@ -76,7 +76,7 @@ namespace sf
     struct MaterialShader
     {
         std::string shadingAlgorithm;
-        GLSLShader* shaders[6];
+        std::array<GLSLShader*, 8> shaders;
 
         MaterialShader()
         {
@@ -86,7 +86,7 @@ namespace sf
         MaterialShader(const MaterialShader &obj)
         {
             shadingAlgorithm = obj.shadingAlgorithm;
-            for(size_t i=0; i<6; ++i)
+            for(size_t i=0; i<shaders.size(); ++i)
                 shaders[i] = obj.shaders[i];
         }
     };
@@ -269,11 +269,14 @@ namespace sf
          \param metalness the amount of metal look
          \param relfectivity the amount of reflection
          \param albedoTexturePath a path to the texture file specifying albedo color
-         \param normalTexturePath a path to the texture file specifying surface normal (bump mapping)
+         \param normalMapPath a path to the texture file specifying surface normal (bump mapping)
+         \param temperatureMapPath a path to the texture file specifying surface temperature
+         \param temperatureRange a pair of values specifying the temperature range represented by the thermal map
          \return the actual name of the created look
          */
         std::string CreatePhysicalLook(const std::string& name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness = 0.f, 
-                                       GLfloat reflectivity = 0.f, const std::string& albedoTexturePath = "", const std::string& normalTexturePath = "");
+                                       GLfloat reflectivity = 0.f, const std::string& albedoTexturePath = "", const std::string& normalMapPath = "", 
+                                       const std::string& temperatureMapPath = "", glm::vec2 temperatureRange = glm::vec2(20.f));
         
         //! A method to use a look.
         /*!
@@ -545,9 +548,6 @@ namespace sf
         std::map<std::string, GLSLShader*> basicShaders;
         std::vector<MaterialShader> materialShaders;
         GLSLShader* lightSourceShader[2];
-        
-        //Methods
-        void UseStandardLook(const glm::mat4& M);
     };
 }
 

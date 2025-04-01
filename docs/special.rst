@@ -67,3 +67,16 @@ The "magnetic" factor has different meaning depending on its value:
 -  **>0** - permanent magnet.
 
 The absolute value of the factor defines the strength of magnetic interactions. Only a pair of bodies, first made of a ferromagnetic material and second being a permanent magnet, will interact. Interaction between two magnets is not implemented due to the lack of information about polarity.
+
+Glue
+====
+
+A special feature available through the XML parser that allows for defining a fixed joint between two dynamic bodies or links of two different robots. It can be used to implement dynamically activating/deactivating connections between objects (requires subclassing of the ScenarioParser).
+A glue is defined according to the following syntax:
+
+.. code-block:: xml
+
+    <glue name="Glue1" activated="true">
+        <first_body name="Body1"/>
+        <second_body name="Body2"/>
+    </glue>

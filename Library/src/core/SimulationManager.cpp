@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/SimulationManager.h"
@@ -859,7 +859,12 @@ void SimulationManager::RestartScenario()
     BuildScenario(); //Defined by specific application
     
     if(SimulationApp::getApp()->hasGraphics())
+    {    
+        if(isOceanEnabled())
+            ocean->getOpenGLOcean()->AllocateParticles(((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getView(0));
+
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->Finalize();
+    }
 
     simulationFresh = true;
 }
@@ -1199,10 +1204,12 @@ bool SimulationManager::SetMaterialsInteraction(const std::string& firstMaterial
     return getMaterialManager()->SetMaterialsInteraction(firstMaterialName, secondMaterialName, staticFricCoeff, dynamicFricCoeff);
 }
 
-std::string SimulationManager::CreateLook(const std::string& name, Color color, float roughness, float metalness, float reflectivity, const std::string& albedoTexturePath, const std::string& normalTexturePath)
+std::string SimulationManager::CreateLook(const std::string& name, Color color, float roughness, float metalness, float reflectivity, 
+    const std::string& albedoTexturePath, const std::string& normalTexturePath, const std::string& temperatureTexturePath, const std::pair<float, float>& temperatureRange)
 {
     if(SimulationApp::getApp()->hasGraphics())
-        return ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->CreatePhysicalLook(name, color.rgb, roughness, metalness, reflectivity, albedoTexturePath, normalTexturePath);
+        return ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->CreatePhysicalLook(name, color.rgb, roughness, metalness, reflectivity, 
+            albedoTexturePath, normalTexturePath, temperatureTexturePath, glm::vec2(temperatureRange.first, temperatureRange.second));
     else
         return "";
 }

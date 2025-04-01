@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 21/11/2018.
-//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/LinkSensor.h"
@@ -52,6 +52,20 @@ Transform LinkSensor::getSensorFrame() const
         return attach->getOTransform() * o2s;
     else
         return o2s;
+}
+
+void LinkSensor::getSensorVelocity(Vector3& linear, Vector3& angular) const
+{
+    if(attach != nullptr)
+    {
+        linear = attach->getLinearVelocity();
+        angular = attach->getAngularVelocity();
+    }
+    else
+    {
+        linear = V0();
+        angular = V0();
+    }
 }
 
 SensorType LinkSensor::getType() const

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/07/2017.
-//  Copyright (c) 2017-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2024 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLOcean__
@@ -61,7 +61,8 @@ namespace sf
     #pragma pack(0)
 
     class GLSLShader;
-	class OpenGLCamera;
+	class OpenGLView;
+    class OpenGLCamera;
 	class OpenGLOceanParticles;
     class VelocityField;
 	
@@ -86,46 +87,59 @@ namespace sf
         
         //! A method that updates the wave mesh.
         /*!
-         \param cam a pointer to the active camera
+         \param view a pointer to the active view
          */
-        virtual void UpdateSurface(OpenGLCamera* cam) = 0;
+        virtual void UpdateSurface(OpenGLView* view) = 0;
         
         //! A method that draws the surface of the ocean.
         /*!
-         \param cam a pointer to the active camera
+         \param view a pointer to the active view
          */
-        virtual void DrawSurface(OpenGLCamera* cam) = 0;
+        virtual void DrawSurface(OpenGLView* view) = 0;
         
+        //! A method that draws the surface of the ocean as thermal image.
+        /*!
+         \param view a pointer to the active view
+         */
+        virtual void DrawSurfaceTemperature(OpenGLView* view) = 0;
+
         //! A method that draws the surface of the ocean, seen from underwater.
         /*!
-         \param cam a pointer to the active camera
+         \param view a pointer to the active view
          */
-        virtual void DrawBacksurface(OpenGLCamera* cam) = 0;
+        virtual void DrawBacksurface(OpenGLView* view) = 0;
         
         //! A method that generates the stencil mask.
         /*!
-         \param cam a pointer to the active camera
+         \param view a pointer to the active view
          */
-        virtual void DrawUnderwaterMask(OpenGLCamera* cam);
+        virtual void DrawUnderwaterMask(OpenGLView* view);
 
         //! A method that draws the distant background of the ocean.
         /*!
-         \param cam a pointer to the active camera
+         \param view a pointer to the active view
          */
-        void DrawBackground(OpenGLCamera* cam);
+        void DrawBackground(OpenGLView* view);
         
 		//! A method that draws underwater particles.
 		/*!
-		 \param cam a pointer to the active camera
+		 \param view a pointer to the active view
 		 */
-		void DrawParticles(OpenGLCamera* cam);
+		void DrawParticles(OpenGLView* view);
+
+        //! A method that draws underwater particles id.
+		/*!
+		 \param view a pointer to the active view
+         \param id the id of the particles
+		 */
+		void DrawParticlesId(OpenGLView* view, GLushort id);
 
         //! A method that draw water velocity field.
         /*!
-         \param cam a pointer to the camera
+         \param view a pointer to the view
          \param velocityMax velocity corresponding to the display limit
          */
-        void DrawVelocityField(OpenGLCamera* cam, GLfloat velocityMax);
+        void DrawVelocityField(OpenGLView* view, GLfloat velocityMax);
 		
         //! A method that draws the underwater bloom and blur effects (scattering).
         /*!
@@ -150,11 +164,37 @@ namespace sf
         //! A method that updates ocean currents information.
         void UpdateOceanCurrentsData(const OceanCurrentsUBO& data);
 
+        //! A method to allocate a particle system for a view.
+        /*!
+         \param view a pointer to the view.
+         \return a pointer to the allocated particle system
+         */
+        OpenGLOceanParticles* AllocateParticles(OpenGLView* view);
+
+        //! A method to assign particle system to a view.
+        /*!
+         \param view a pointer to the view.
+         \param particles a pointer to the particle system
+         */
+        void AssignParticles(OpenGLView* view, OpenGLOceanParticles* particles);
+
         //! A method to set the type of ocean water.
         /*!
          \param t type of water
          */
         void setWaterType(GLfloat t);
+
+        //! A method to set the temperature of the water.
+        /*!
+         \param t temperature of the water [degC]
+         */
+        void setWaterTemperature(GLfloat t);
+
+        //! A method to get the temperature of the water.
+        /*!
+         \return temperature of the water [degC]
+         */
+        GLfloat getWaterTemperature();
 
         //! A method to set if the particles should be rendered.
         /*!
@@ -189,7 +229,7 @@ namespace sf
         virtual void InitializeSimulation();
         float sqr(float x);
         
-        std::map<OpenGLCamera*, OpenGLOceanParticles*> oceanParticles;
+        std::map<OpenGLView*, OpenGLOceanParticles*> oceanParticles;
         glm::vec3 absorption[64];
         glm::vec3 scattering[64];
         OceanCurrentsUBO oceanCurrentsUBOData;
@@ -197,6 +237,7 @@ namespace sf
         OceanParams params;
         glm::vec3 lightAbsorption;
         glm::vec3 lightScattering;
+        GLfloat waterTemperature;
 
         std::map<std::string, GLSLShader*> oceanShaders;
         GLuint oceanFBOs[3];

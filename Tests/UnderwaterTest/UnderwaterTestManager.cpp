@@ -115,7 +115,7 @@ void UnderwaterTestManager::BuildScenario()
     getOcean()->AddVelocityField(new sf::Jet(sf::Vector3(0,0,1.0), sf::VY(), 0.3, 5.0));
     getOcean()->AddVelocityField(new sf::Uniform(sf::Vector3(1.0,0.0,0.0)));
     getOcean()->EnableCurrents();
-    getAtmosphere()->SetupSunPosition(0.0, 60.0);
+    getAtmosphere()->SetSunPosition(0.0, 60.0);
     getNED()->Init(41.77737, 3.03376, 0.0);
     
     sf::Terrain* seabed = new sf::Terrain("Seabed", sf::GetDataPath() + "terrain.png", 1.0, 1.0, 5.0, "Rock", "seabed", 5.f);

@@ -42,6 +42,8 @@
 #define MIN_INTENSITY_THRESHOLD 1.0f //Minimum light intensity to be considered [cd]
 #define STD_NEAR_PLANE_DISTANCE 0.02f //Standard near plane distance of the cameras
 #define STD_FAR_PLANE_DISTANCE 100000.f //Standard far plane distance of the cameras
+#define STD_OCEAN_PARTICLES_COUNT 5000 //Standard number of ocean particles
+#define STD_OCEAN_PARTICLES_RADIUS 3.0 //Standard size of ocean particles system
 
 //Standard texture unit bindings (OpenGL 3.x >=48; OpenGL 4.x >=80)
 #define TEX_BASE                ((GLint)0)
@@ -61,6 +63,7 @@
 #define TEX_SPOT_DEPTH          ((GLint)14)
 #define TEX_MAT_ALBEDO          ((GLint)15)
 #define TEX_MAT_NORMAL          ((GLint)16)
+#define TEX_MAT_TEMPERATURE     ((GLint)17)
 //#define TEX_POINT_SHADOW        ((GLint)X) 
 //#define TEX_POINT_DEPTH         ((GLint)X)
 
@@ -330,7 +333,7 @@ namespace sf
     };
     
     //! An enum representing the rendering mode.
-    enum class DrawingMode {RAW, SHADOW, FLAT, FULL, UNDERWATER};
+    enum class DrawingMode {RAW, SHADOW, FLAT, FULL, UNDERWATER, TEMPERATURE};
     
     //! A structure containing data of a view frustum.
     struct ViewFrustum
@@ -343,7 +346,7 @@ namespace sf
     };
     
     //! An enum defining supported color maps.
-    enum class ColorMap : int32_t {HOT, JET, PERULA, GREEN_BLUE, ORANGE_COPPER, COLD_BLUE};
+    enum class ColorMap : GLint {HOT, JET, PERULA, GREEN_BLUE, ORANGE_COPPER, COLD_BLUE, GREY};
 
     //! A structure representing a color system.
     struct ColorSystem
@@ -476,16 +479,21 @@ namespace sf
         LookType type;
         Color color;
         std::vector<GLfloat> params;
-        GLuint albedoTexture;
-        GLuint normalTexture;
         GLfloat reflectivity;
+        GLuint albedoTexture;
+        GLuint normalMap;
+        GLuint temperatureMap;
+        glm::vec2 temperatureRange;
 
         Look()
         {
             name = "";
             type = LookType::SIMPLE;
-            albedoTexture = normalTexture = 0;
             reflectivity = 0.f;
+            albedoTexture = 0;
+            normalMap = 0;
+            temperatureMap = 0;
+            temperatureRange = glm::vec2(20.f);
         }
     };
     
@@ -497,6 +505,7 @@ namespace sf
         int objectId;
         std::string materialName;
         glm::mat4 model;
+        glm::vec3 cor;
         glm::vec3 vel;
         glm::vec3 avel;
         std::vector<glm::vec3> points;
@@ -508,6 +517,7 @@ namespace sf
             objectId = -1;
             materialName = "";
             model = glm::mat4(1.f);
+            cor = glm::vec3(0.f);
             vel = glm::vec3(0.f);
             avel = glm::vec3(0.f);
         }

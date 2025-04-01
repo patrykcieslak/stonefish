@@ -257,6 +257,8 @@ OpenGLContent::OpenGLContent()
     GLuint oceanFlatFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanSurfaceFlat.glsl", "", &compiled);
     GLuint oceanWavesFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanSurface.glsl", "", &compiled);
     GLuint oceanOpticsFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanOptics.frag", "", &compiled);
+    GLuint materialTFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "materialT.frag", "", &compiled);
+    GLuint materialTUvFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "materialTUv.frag", "", &compiled);
     
     for(size_t i=0; i<shadingAlgorithms.size(); ++i)
     {
@@ -271,6 +273,11 @@ OpenGLContent::OpenGLContent()
         precompiled.push_back(materialVertex);
         precompiled.push_back(materialFragment);
         ms.shaders[0] = new GLSLShader(precompiled);
+        //Plain temperature
+        precompiled.pop_back();
+        precompiled.push_back(materialTFragment);
+        ms.shaders[3] = new GLSLShader(precompiled);
+        ms.shaders[3]->AddUniform("temperature", ParameterType::FLOAT);
         //Plain underwater
         precompiled.pop_back();
         precompiled.push_back(materialUFragment);
@@ -287,33 +294,34 @@ OpenGLContent::OpenGLContent()
         ms.shaders[2]->AddUniform("bWater", ParameterType::VEC3);
         ms.shaders[2]->AddUniform("texWaveFFT", ParameterType::INT);
         ms.shaders[2]->AddUniform("gridSizes", ParameterType::VEC4);
-
+        
         //Textured
         precompiled.clear();
         precompiled = commonMaterialShaders;
         precompiled.push_back(shadingFragment);
         precompiled.push_back(materialUvVertex);
         precompiled.push_back(materialUvFragment);
-        ms.shaders[3] = new GLSLShader(precompiled);
-        ms.shaders[3]->AddUniform("texAlbedo", ParameterType::INT);
-        ms.shaders[3]->AddUniform("texNormal", ParameterType::INT);
-        ms.shaders[3]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
-        ms.shaders[3]->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
-        //Textured underwater
-        precompiled.pop_back();
-        precompiled.push_back(materialUUvFragment);
-        precompiled.push_back(oceanOpticsFragment);
-        precompiled.push_back(oceanFlatFragment);
         ms.shaders[4] = new GLSLShader(precompiled);
         ms.shaders[4]->AddUniform("texAlbedo", ParameterType::INT);
         ms.shaders[4]->AddUniform("texNormal", ParameterType::INT);
         ms.shaders[4]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
         ms.shaders[4]->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
-        ms.shaders[4]->AddUniform("cWater", ParameterType::VEC3);
-        ms.shaders[4]->AddUniform("bWater", ParameterType::VEC3);
-        //Textured underwater waves
+        //Textured temperature
         precompiled.pop_back();
-        precompiled.push_back(oceanWavesFragment);
+        precompiled.push_back(materialTUvFragment);
+        ms.shaders[7] = new GLSLShader(precompiled);
+        ms.shaders[7]->AddUniform("texAlbedo", ParameterType::INT);
+        ms.shaders[7]->AddUniform("texNormal", ParameterType::INT);
+        ms.shaders[7]->AddUniform("texTemperature", ParameterType::INT);
+        ms.shaders[7]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
+        ms.shaders[7]->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
+        ms.shaders[7]->AddUniform("enableTemperatureTex", ParameterType::BOOLEAN);
+        ms.shaders[7]->AddUniform("temperatureRange", ParameterType::VEC2);
+        //Textured underwater
+        precompiled.pop_back();
+        precompiled.push_back(materialUUvFragment);
+        precompiled.push_back(oceanOpticsFragment);
+        precompiled.push_back(oceanFlatFragment);
         ms.shaders[5] = new GLSLShader(precompiled);
         ms.shaders[5]->AddUniform("texAlbedo", ParameterType::INT);
         ms.shaders[5]->AddUniform("texNormal", ParameterType::INT);
@@ -321,11 +329,21 @@ OpenGLContent::OpenGLContent()
         ms.shaders[5]->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
         ms.shaders[5]->AddUniform("cWater", ParameterType::VEC3);
         ms.shaders[5]->AddUniform("bWater", ParameterType::VEC3);
-        ms.shaders[5]->AddUniform("texWaveFFT", ParameterType::INT);
-        ms.shaders[5]->AddUniform("gridSizes", ParameterType::VEC4);
+        //Textured underwater waves
+        precompiled.pop_back();
+        precompiled.push_back(oceanWavesFragment);
+        ms.shaders[6] = new GLSLShader(precompiled);
+        ms.shaders[6]->AddUniform("texAlbedo", ParameterType::INT);
+        ms.shaders[6]->AddUniform("texNormal", ParameterType::INT);
+        ms.shaders[6]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
+        ms.shaders[6]->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
+        ms.shaders[6]->AddUniform("cWater", ParameterType::VEC3);
+        ms.shaders[6]->AddUniform("bWater", ParameterType::VEC3);
+        ms.shaders[6]->AddUniform("texWaveFFT", ParameterType::INT);
+        ms.shaders[6]->AddUniform("gridSizes", ParameterType::VEC4);
 
         //Add common uniforms
-        for(size_t h = 0; h<6; ++h)
+        for(size_t h = 0; h<ms.shaders.size(); ++h)
         {
             ms.shaders[h]->AddUniform("MVP", ParameterType::MAT4);
             ms.shaders[h]->AddUniform("M", ParameterType::MAT4);
@@ -353,10 +371,14 @@ OpenGLContent::OpenGLContent()
             ms.shaders[h]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
             ms.shaders[h]->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
             ms.shaders[h]->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
-            if(h > 2) //Textured?
+            if(h > 3) //Textured?
             {
                 ms.shaders[h]->SetUniform("texAlbedo", TEX_MAT_ALBEDO);
                 ms.shaders[h]->SetUniform("texNormal", TEX_MAT_NORMAL);
+            }
+            if(h == 7) //Temperature?
+            {
+                ms.shaders[h]->SetUniform("texTemperature", TEX_MAT_TEMPERATURE);
             }
         }
 
@@ -365,7 +387,7 @@ OpenGLContent::OpenGLContent()
         glDeleteShader(shadingFragment);
     }
 
-    for(size_t i=0; i<6; ++i)
+    for(size_t i=0; i<materialShaders[0].shaders.size(); ++i)
     {
         GLSLShader* shader;
         shader = materialShaders[0].shaders[i];
@@ -386,6 +408,8 @@ OpenGLContent::OpenGLContent()
     glDeleteShader(materialUUvFragment);
     glDeleteShader(oceanWavesFragment);
     glDeleteShader(oceanFlatFragment);
+    glDeleteShader(materialTFragment);
+    glDeleteShader(materialTUvFragment);
 
     //Light source rendering shaders
     std::vector<GLuint> commonLightShaders;
@@ -454,6 +478,8 @@ OpenGLContent::OpenGLContent()
     glDeleteShader(pcssFragment);
     glDeleteShader(oceanOpticsFragment);
     glDeleteShader(lightSourceFragment);
+
+    CreatePhysicalLook("StonefishDefault", glm::vec3(0.5f), 0.5f);
 }
 
 OpenGLContent::~OpenGLContent()
@@ -500,8 +526,10 @@ void OpenGLContent::DestroyContent()
     {
         if(looks[i].albedoTexture != 0)
             glDeleteTextures(1, &looks[i].albedoTexture);
-        if(looks[i].normalTexture != 0)
-            glDeleteTextures(1, &looks[i].normalTexture);
+        if(looks[i].normalMap != 0)
+            glDeleteTextures(1, &looks[i].normalMap);
+        if(looks[i].temperatureMap != 0)
+            glDeleteTextures(1, &looks[i].temperatureMap);
     }
     looks.clear();
     lookNameManager.ClearNames();
@@ -798,12 +826,14 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
         }
         break;
 
-        default:
+        case DrawingMode::FULL:
+        case DrawingMode::UNDERWATER:
+        case DrawingMode::TEMPERATURE:
         {
             if(lookId >= 0 && lookId < (int)looks.size())
                 UseLook(lookId, objects[objectId].texturable, M);
-            else
-                UseStandardLook(M);
+            else // Default look
+                UseLook(0, false, M);
     
             OpenGLState::BindVertexArray(objects[objectId].vao);
             glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
@@ -883,9 +913,13 @@ void OpenGLContent::UseLook(unsigned int lookId, bool texturable, const glm::mat
     if(ocean != NULL && ocean->hasWaves()) waves = true;
     
     Look& l = looks[lookId];
-    texturable = texturable && (l.albedoTexture > 0 || l.normalTexture > 0);
-    int shaderMode = (mode == DrawingMode::UNDERWATER) ? (waves ? 2 : 1) : 0;
-
+    texturable = texturable && (l.albedoTexture > 0 || l.normalMap > 0 || l.temperatureMap > 0);
+    int shaderMode = 0; // Above water/on surface
+    if(mode == DrawingMode::UNDERWATER)
+        shaderMode = (waves ? 2 : 1);
+    else if(mode == DrawingMode::TEMPERATURE)
+        shaderMode = 3;
+    
     bool updateMaterial = ((int)lookId != currentLookId) 
                           || (currentTexturable != texturable)
                           || (currentShaderMode != shaderMode);
@@ -893,7 +927,7 @@ void OpenGLContent::UseLook(unsigned int lookId, bool texturable, const glm::mat
     currentTexturable = texturable;
     currentShaderMode = shaderMode;
 
-    size_t shaderId = (currentTexturable ? 3 : 0) + (size_t)currentShaderMode;
+    size_t shaderId = (currentTexturable ? 4 : 0) + (size_t)currentShaderMode;
     GLSLShader* shader = materialShaders[l.type == LookType::SIMPLE ? 0 : 1].shaders[shaderId];
     shader->Use();
     shader->SetUniform("MVP", viewProjection*M);
@@ -941,63 +975,38 @@ void OpenGLContent::UseLook(unsigned int lookId, bool texturable, const glm::mat
                 OpenGLState::UnbindTexture(TEX_MAT_ALBEDO);
             }
 
-            if(l.normalTexture > 0)
+            if(l.normalMap > 0)
             {
                 shader->SetUniform("enableNormalTex", true);
-                OpenGLState::BindTexture(TEX_MAT_NORMAL, GL_TEXTURE_2D, l.normalTexture);
+                OpenGLState::BindTexture(TEX_MAT_NORMAL, GL_TEXTURE_2D, l.normalMap);
             }
             else
             {
                 shader->SetUniform("enableNormalTex", false);
                 OpenGLState::UnbindTexture(TEX_MAT_NORMAL);
             }
-        }
-    }
 
-    if(mode == DrawingMode::UNDERWATER)
-    {
-        shader->SetUniform("cWater", ocean->getOpenGLOcean()->getLightAttenuation());
-        shader->SetUniform("bWater", ocean->getOpenGLOcean()->getLightScattering());
-        if(waves)
+            if(shaderMode == 3)
+            {
+                if(l.temperatureMap > 0)
+                {
+                    OpenGLState::BindTexture(TEX_MAT_TEMPERATURE, GL_TEXTURE_2D, l.temperatureMap);
+                    shader->SetUniform("enableTemperatureTex", true);
+                    shader->SetUniform("texTemperature", TEX_MAT_TEMPERATURE);
+                }
+                else
+                {
+                    shader->SetUniform("enableTemperatureTex", false);
+                    OpenGLState::UnbindTexture(TEX_MAT_TEMPERATURE);
+                }
+                shader->SetUniform("temperatureRange", l.temperatureRange);
+            }
+        }
+        else
         {
-            OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, ocean->getOpenGLOcean()->getWaveTexture());
-            shader->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
-            shader->SetUniform("gridSizes", ocean->getOpenGLOcean()->getWaveGridSizes());
+            if(shaderMode == 3)
+                shader->SetUniform("temperature", l.temperatureRange.x);
         }
-    }
-}
-
-void OpenGLContent::UseStandardLook(const glm::mat4& M)
-{
-    bool waves = false;
-    Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
-    if(ocean != NULL && ocean->hasWaves()) waves = true;
-    
-    int shaderMode = (mode == DrawingMode::UNDERWATER) ? (waves ? 2 : 1) : 0;
-    bool updateMaterial = (currentLookId >= 0)
-                          || (currentShaderMode != shaderMode);
-    currentLookId = -1;
-    currentTexturable = false;
-    currentShaderMode = shaderMode;
-
-    GLSLShader* shader = materialShaders[1].shaders[(size_t)currentShaderMode];
-    shader->Use();
-    shader->SetUniform("MVP", viewProjection*M);
-    shader->SetUniform("M", M);
-    shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
-    shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
-    shader->SetUniform("FC", FC);
-    shader->SetUniform("eyePos", eyePos);
-    shader->SetUniform("viewDir", viewDir);
-
-    if(updateMaterial)
-    {
-        shader->SetUniform("roughness", 0.5f);
-        shader->SetUniform("metallic", 0.f);
-        shader->SetUniform("reflectivity", 0.f);
-        shader->SetUniform("color", glm::vec4(0.5f, 0.5f, 0.5f, 0.f));
-        OpenGLState::UnbindTexture(TEX_MAT_ALBEDO);
-        OpenGLState::UnbindTexture(TEX_MAT_NORMAL);
     }
 
     if(mode == DrawingMode::UNDERWATER)
@@ -1053,7 +1062,7 @@ unsigned int OpenGLContent::BuildObject(Mesh* mesh)
 }
 
 std::string OpenGLContent::CreateSimpleLook(const std::string& name, glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, 
-                                            GLfloat reflectivity, const std::string& albedoTextureName)
+                                            GLfloat reflectivity, const std::string& albedoTexturePath)
 {
     Look look;
     look.name = lookNameManager.AddName(name);
@@ -1062,13 +1071,14 @@ std::string OpenGLContent::CreateSimpleLook(const std::string& name, glm::vec3 r
     look.reflectivity = reflectivity;
     look.params.push_back(specular);
     look.params.push_back(shininess);
-    if(albedoTextureName != "") look.albedoTexture = LoadTexture(albedoTextureName);
+    if(albedoTexturePath != "") look.albedoTexture = LoadTexture(albedoTexturePath);
     looks.push_back(look);
     return look.name;
 }
 
 std::string OpenGLContent::CreatePhysicalLook(const std::string& name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness, 
-                                              GLfloat reflectivity, const std::string& albedoTextureName, const std::string& normalTextureName)
+                                              GLfloat reflectivity, const std::string& albedoTexturePath, const std::string& normalMapPath, 
+                                              const std::string& temperatureMapPath, glm::vec2 temperatureRange)
 {
     Look look;
     look.name = lookNameManager.AddName(name);
@@ -1077,8 +1087,10 @@ std::string OpenGLContent::CreatePhysicalLook(const std::string& name, glm::vec3
     look.reflectivity = reflectivity;
     look.params.push_back(roughness);
     look.params.push_back(metalness);
-    if(albedoTextureName != "") look.albedoTexture = LoadTexture(albedoTextureName, true, false, maxAnisotropy);
-    if(normalTextureName != "") look.normalTexture = LoadTexture(normalTextureName, false);
+    if(albedoTexturePath != "") look.albedoTexture = LoadTexture(albedoTexturePath, true, false, maxAnisotropy);
+    if(normalMapPath != "") look.normalMap = LoadTexture(normalMapPath, false);
+    if(temperatureMapPath != "") look.temperatureMap = LoadTexture(temperatureMapPath, false);
+    look.temperatureRange = temperatureRange;
     looks.push_back(look);
     return look.name;
 }

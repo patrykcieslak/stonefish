@@ -58,7 +58,7 @@ namespace sf
         /*!
          \param dt the step time of the simulation [s]
          */
-        void InternalUpdate(Scalar dt);
+        void InternalUpdate(Scalar dt) override;
         
         //! A method used to setup the OpenGL camera transformation.
         /*!
@@ -66,13 +66,13 @@ namespace sf
          \param dir a unit vector parallel to the optical axis of the camera
          \param up a unit vector pointing up (from center of image to the top edge of the image)
          */
-        void SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up);
+        void SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up) override;
         
         //! A method used to inform about new data.
         /*!
          \param index the id of the OpenGL camera uploading the data
          */
-        void NewDataReady(void* data, unsigned int index = 0);
+        void NewDataReady(void* data, unsigned int index = 0) override;
         
         //! A method used to set a callback function called when new data is available.
         /*!
@@ -97,8 +97,11 @@ namespace sf
         void* getImageDataPointer(unsigned int index = 0);
         
         //! A method returning the type of the vision sensor.
-        VisionSensorType getVisionSensorType() const;
+        VisionSensorType getVisionSensorType() const override;
         
+        //! A method returning a pointer to the underlaying OpenGLView object.
+        OpenGLView* getOpenGLView() const override;
+
     private:
         void InitGraphics();
         

@@ -107,12 +107,12 @@ namespace sf
         void setConstraint(btMultiBodyConstraint* c);
         SolidEntity* jSolidA;
         SolidEntity* jSolidB;
-        
+        btTypedConstraint* constraint;
+        btMultiBodyConstraint* mbConstraint;
+
     private:
         std::string name;
         bool collisionEnabled;
-        btTypedConstraint* constraint;
-        btMultiBodyConstraint* mbConstraint;
     };
 }
 

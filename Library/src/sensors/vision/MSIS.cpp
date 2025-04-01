@@ -164,6 +164,11 @@ VisionSensorType MSIS::getVisionSensorType() const
     return VisionSensorType::MSIS;
 }
 
+OpenGLView* MSIS::getOpenGLView() const
+{
+    return glMSIS;
+}
+
 void MSIS::InitGraphics()
 {
     glMSIS = new OpenGLMSIS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),

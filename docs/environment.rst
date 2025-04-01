@@ -62,7 +62,7 @@ The ocean definitions have to be placed inside the environment node of the scena
 .. code-block:: xml
 
     <ocean>
-        <water density="1031.0" jerlov="0.2"/>
+        <water density="1031.0" jerlov="0.2" temperature="15.0"/>
         <waves height="0.0"/>
         <particles enabled="true"/>
         <current type="uniform">
@@ -82,6 +82,7 @@ The following lines of code can be used to achieve the same:
     getMaterialManager()->CreateFluid("OceanWater", 1031.0, 0.002, 1.33);
     EnableOcean(0.0, getMaterialManager()->getFluid("OceanWater"));
     getOcean()->setWaterType(0.2);
+    getOcean()->SetConditions(15.0);
     getOcean()->AddVelocityField(new sf::Uniform(sf::Vector3(1.0, 0.0, 0.0)));
     getOcean()->AddVelocityField(new sf::Jet(sf::Vector3(0.0, 0.0, 3.0), sf::Vector3(0.0, 1.0, 0.0), 0.2, 2.0));
 
@@ -113,6 +114,7 @@ The atmosphere definitions have to be placed inside the environment node of the 
 
     <atmosphere>
         <sun azimuth="20.0" elevation="50.0"/>
+        <conditions temperature="20.0" pressure="101300.0" humidity="0.5">
         <wind type="uniform">
             <velocity xyz="1.0 0.0 0.0"/>
         </wind>
@@ -128,6 +130,7 @@ The following lines of code can be used to achieve the same:
 .. code-block:: cpp
 
     getAtmosphere()->SetupSunPosition(20.0, 50.0);
+    getAtmosphere()->SetConditions(20.0, 101300.0, 0.5);
     getAtmosphere()->AddVelocityField(new sf::Uniform(sf::Vector3(1.0, 0.0, 0.0)));
     getAtmosphere()->AddVelocityField(new sf::Jet(sf::Vector3(0.0, 0.0, 3.0), sf::Vector3(0.0, 1.0, 0.0), 0.2, 2.0));
 

@@ -112,6 +112,14 @@ void Trajectory::Play(Scalar dt)
 
     //Compute new interpolants
     Interpolate();
+
+    //Clear velocities when stopped
+    if(playTime == endTime && playMode == PlaybackMode::ONETIME)
+    {
+        interpVel.setZero();
+        interpAngVel.setZero();
+        interpAcc.setZero();
+    }
 }
 
 void Trajectory::calculateVelocityShortestPath(const Transform &transform0, const Transform &transform1, Scalar timeStep, Vector3 &linVel, Vector3 &angVel)

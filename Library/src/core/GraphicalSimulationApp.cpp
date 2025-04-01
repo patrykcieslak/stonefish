@@ -764,7 +764,7 @@ void GraphicalSimulationApp::DoHUD()
     elev = gui->DoSlider(id, 15.f, offset, 150.f, Scalar(-10), Scalar(90), elev, "Elevation[deg]");
     offset += 61.f;
     
-    getSimulationManager()->getAtmosphere()->SetupSunPosition(az, elev);
+    getSimulationManager()->getAtmosphere()->SetSunPosition(az, elev);
     
     //Ocean settings
     if(ocn != nullptr)

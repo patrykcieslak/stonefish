@@ -4,6 +4,20 @@ Changelog
 
 The changelog of the library code is presented below. **Breaking changes** were marked with *italics*.
 
+1.5
+===
+
+-  Implemented an event-based camera
+-  Implemented an optical flow sensor
+-  Implemented a segmentation camera
+-  Implemented a thermal camera
+-  Extended look definition to support temperature maps
+-  Added water temperature
+-  Added air temperature, pressure, and humidity
+-  Added a test application for all camera types
+-  Updated marine snow rendering to use the same particle system for vision sensors attached to the same body
+-  Fixed problems with vision sensor framerate not consistent with settings
+
 1.4
 ===
 
@@ -11,7 +25,8 @@ The changelog of the library code is presented below. **Breaking changes** were 
 -  *Rewritten computation of hydrodynamic drag*
 -  *Simple thruster is now a new actuator class and displays a rotating propeller*
 -  Implemented new trajectory generator for animated bodies utilising B-splines (now default)
--  Extended glue to support joining links of two robots together
+-  Extended glue to support joining links of two Featherstone robots together
+-  Extended fixed joint class to support updates of joint definition (dynamic activation/deactivation)
 -  Added a watchdog timer to the actuators, including parser support
 -  Added access to the viscous and quadratic hydrodynamic drag coefficients, including parser support
 -  Added an option to set internal parts of a compound body as always visible

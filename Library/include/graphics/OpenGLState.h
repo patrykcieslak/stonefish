@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 7/03/2020.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2024 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLState__
@@ -50,6 +50,7 @@ namespace sf
         static void BindTexture(GLuint unit, GLenum type, GLuint handle);
         static void UnbindTexture(GLuint unit);
         static GLfloat GetMaxAnisotropy();
+        static glm::uvec3 GetMaxTextureSize();
         
     private:
         OpenGLState() noexcept;
@@ -66,6 +67,8 @@ namespace sf
         static GLuint activeTexture; //Active texture unit
         static std::vector<std::pair<GLenum, GLuint>> textures; //(type, handle)
         static GLfloat maxAniso;
+        static GLint maxTextureSize;
+        static GLint maxTextureLayers;
     };
 }
 

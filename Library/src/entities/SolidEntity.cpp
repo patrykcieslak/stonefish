@@ -234,6 +234,7 @@ std::vector<Renderable> SolidEntity::Render()
             item.objectId = graObjectId;
             item.lookId = lookId;
             item.model = glMatrixFromTransform(getGTransform());
+            item.cor = glVectorFromVector(getCGTransform().getOrigin());
             item.vel = glVectorFromVector(getLinearVelocity());
             item.avel = glVectorFromVector(getAngularVelocity());
             items.push_back(item);
@@ -243,6 +244,7 @@ std::vector<Renderable> SolidEntity::Render()
             item.objectId = phyObjectId;
             item.lookId = -1;
             item.model = glMatrixFromTransform(getCTransform());
+            item.cor = glVectorFromVector(getCGTransform().getOrigin());
             item.vel = glVectorFromVector(getLinearVelocity());
             item.avel = glVectorFromVector(getAngularVelocity());
             items.push_back(item);

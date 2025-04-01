@@ -488,6 +488,94 @@ The depth camera captures a linear depth image. The output image is a grayscale 
     cam->setNoise(0.02);
     robot->AddVisionSensor(cam, "Link1", sf::I4());
 
+Event-based camera
+------------------
+
+The event-based camera simulates a new imaging sensor type that can asynchronously capture changes of brightness per image pixel. The model is closely following the operation of an actual device and the parameters should be familiar to the users.  
+The output of the sensor is an array of events, together with their polarity and timestamp.
+
+.. code-block:: xml
+    
+    <sensor name="EBCCam" type="ebc" rate="5.0">
+        <specs resolution_x="800" resolution_y="600" horizontal_fov="60.0"
+            contrast_threshold_pos="0.1" contrast_threshold_neg="0.15" refractory_period_ns="100"/>
+        <noise contrast_threshold_pos="0.01" contrast_threshold_neg="0.01"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <link name="Link1"/>
+    </sensor>
+
+.. code-block:: cpp
+
+    #include <Stonefish/sensors/vision/EventBasedCamera.h>
+    sf::EventBasedCamera* cam = new sf::EventBasedCamera("EBCCam", 800, 600, sf::Scalar(60.0), 0.1f, 0.15f, 100, 5.0);
+    cam->setNoise(0.01, 0.01);
+    robot->AddVisionSensor(cam, "Link1", sf::I4());
+
+Thermal camera
+------------------
+
+The thermal camera simulates an imaging device capable of capturing images in the infrared band. The output of the sensor is a floating point bitmap, where the pixel values represent the temperature in Celsius. The sensor can be optionally equipped with a noise model.
+
+.. code-block:: xml
+
+    <sensor name="Tcam" rate="5.0" type="thermalcamera">
+        <specs resolution_x="800" resolution_y="600" horizontal_fov="60.0" temperature_min="-10.0" temperature_max="100.0"/>
+        <noise temperature="0.2"/>
+        <display colormap="jet" temperature_min="5.0" temperature_max="50.0"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <link name="Link1"/>
+    </sensor>
+
+.. code-block:: cpp
+
+    #include <Stonefish/sensors/vision/ThermalCamera.h>
+    sf::ThermalCamera* cam = new sf::ThermalCamera("Tcam", 800, 600, sf::Scalar(60.0), -10.f, 100.f, 5.0); 
+    cam->setNoise(0.2);
+    cam->setDisplaySettings(sf::ColorMap::JET, 5.0, 50.0);
+    robot->AddVisionSensor(cam, "Link1", sf::I4());
+
+Optical-flow camera
+-------------------
+
+The optical-flow camera is a virutal imaging device that captures the velocities of the objects in the scene. The output is a floating point bitmap, where the pixel values represent the velocity in the image plane (2D). The sensor can be optionally equipped with a noise model.
+
+.. code-block:: xml
+
+    <sensor name="OfCam" rate="5.0" type="opticalflow">
+        <specs resolution_x="800" resolution_y="600" horizontal_fov="60.0"/>
+        <noise velocity_x="10.0" velocity_y="10.0"/>
+        <display velocity_max="500.0"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <link name="Link1"/>
+    </sensor>
+
+.. code-block:: cpp
+
+    #include <Stonefish/sensors/vision/OpticalFlowCamera.h>
+    sf::OpticalFlowCamera* cam = new sf::OpticalFlowCamera("OfCam", 800, 600, sf::Scalar(60.0), 5.0);
+    cam->setNoise(10.0, 10.0);
+    cam->setDisplaySettings(500.0);
+    robot->AddVisionSensor(cam, "Link1", sf::I4());
+
+Segmentation camera
+-------------------
+
+The segmentation camera is a virtual imaging device that captures the ID of the objects in the scene. The output is an unsigned short integer bitmap, where the pixel values represent the object ID. Additionally, the sensor generates a color mapped image.
+
+.. code-block:: xml
+
+    <sensor name="SCam" rate="5.0" type="segmentation">
+        <specs resolution_x="800" resolution_y="600" horizontal_fov="60.0"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <link name="Link1"/>
+    </sensor>
+
+.. code-block:: cpp
+    
+    #include <Stonefish/sensors/vision/SegmentationCamera.h>
+    sf::SegmentationCamera* cam = new sf::SegmentationCamera("SCam", 800, 600, sf::Scalar(60.0), 5.0);
+    robot->AddVisionSensor(cam, "Link1", sf::I4());
+
 Forward-looking sonar (FLS)
 ---------------------------
 

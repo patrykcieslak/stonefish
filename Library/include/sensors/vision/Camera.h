@@ -46,13 +46,7 @@ namespace sf
         
         //! A destructor.
         virtual ~Camera();
-        
-        //! A method performing internal sensor state update.
-        /*!
-         \param dt the step time of the simulation [s]
-         */
-        virtual void InternalUpdate(Scalar dt) = 0;
-        
+               
         //! A method used to inform about new data.
         /*!
          \param data a pointer to the OpenGL texture data
