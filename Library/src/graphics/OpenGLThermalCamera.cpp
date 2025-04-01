@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/02/2024.
-//  Copyright (c) 2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLThermalCamera.h"
@@ -321,7 +321,7 @@ void OpenGLThermalCamera::DrawLDR(GLuint destinationFBO, bool updated)
     {
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderTex[1]);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO);
-        glGetTexImage(GL_TEXTURE_2D, 0, GL_RG, GL_FLOAT, NULL);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, NULL);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, displayTex);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, displayPBO);

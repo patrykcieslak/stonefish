@@ -27,9 +27,11 @@
 #define __Stonefish_StonefishCommon__
 
 //STL
+#include <cstdint>
+#include <stdexcept>
 #include <string>
 #include <vector>
-#include <stdexcept>
+#include <array>
 
 //Bullet Physics
 #include "btBulletDynamicsCommon.h"
