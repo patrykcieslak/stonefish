@@ -370,8 +370,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         glCullFace(GL_FRONT);
         glDisable(GL_DEPTH_CLAMP);
         content->SetDrawingMode(DrawingMode::SHADOW);
-        for(unsigned int i=0; i<content->getLightsCount(); ++i)
-            content->getLight(i)->BakeShadowmap(this);
+        for(size_t i=0; i<content->getLightsCount(); ++i)
+        {
+            if(content->getLight(i)->isActive())
+                content->getLight(i)->BakeShadowmap(this);
+        }
         glEnable(GL_DEPTH_CLAMP);
         glCullFace(GL_BACK);
     }

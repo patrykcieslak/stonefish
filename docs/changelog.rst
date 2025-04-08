@@ -17,6 +17,7 @@ The changelog of the library code is presented below. **Breaking changes** were 
 -  Added a test application for all camera types
 -  Updated marine snow rendering to use the same particle system for vision sensors attached to the same body
 -  Fixed problems with vision sensor framerate not consistent with settings
+-  Fixed switching on/off lights
 
 1.4
 ===

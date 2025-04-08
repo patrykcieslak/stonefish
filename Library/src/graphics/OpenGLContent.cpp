@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/06/17.
-//  Copyright (c) 2017-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLContent.h"
@@ -852,34 +852,43 @@ void OpenGLContent::DrawLightSource(unsigned int lightId)
     if(objectId < 0 || objectId >= (int)objects.size())
         return;
 
-    //Render light source
-    glm::vec4 colorLi = lights[lightId]->getColorLi();
-    glm::mat4 M = lights[lightId]->getTransform();
-    GLint type = lights[lightId]->getType() == LightType::POINT ? 0 : 1; 
-    GLint id = lights[lightId]->getType() == LightType::POINT ? lightId : lightId - lightsUBOData.numPointLights;
-
-    GLSLShader* shader = mode == DrawingMode::FULL ? lightSourceShader[0] : lightSourceShader[1];
-    shader->Use();
-    shader->SetUniform("MVP", viewProjection * M);
-    shader->SetUniform("M", M);
-    shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
-    shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
-    shader->SetUniform("FC", FC);
-    shader->SetUniform("eyePos", eyePos);
-    shader->SetUniform("viewDir", viewDir);
-    shader->SetUniform("color", glm::vec3(colorLi) * colorLi.a);
-    shader->SetUniform("lightId", glm::ivec2(type, id));
-    
-    if(mode == DrawingMode::UNDERWATER)
+    if(lights[lightId]->isActive())
     {
-        Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
-        shader->SetUniform("cWater", ocean->getOpenGLOcean()->getLightAttenuation());
-        shader->SetUniform("bWater", ocean->getOpenGLOcean()->getLightScattering());
-    }
+        //Render light source (on)
+        glm::vec4 colorLi = lights[lightId]->getColorLi();
+        glm::mat4 M = lights[lightId]->getTransform();
+        GLint type = lights[lightId]->getType() == LightType::POINT ? 0 : 1; 
+        GLint id = lights[lightId]->getType() == LightType::POINT ? lightId : lightId - lightsUBOData.numPointLights;
 
-    OpenGLState::BindVertexArray(objects[objectId].vao);
-    glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
-    OpenGLState::BindVertexArray(0);
+        GLSLShader* shader = mode == DrawingMode::FULL ? lightSourceShader[0] : lightSourceShader[1];
+        shader->Use();
+        shader->SetUniform("MVP", viewProjection * M);
+        shader->SetUniform("M", M);
+        shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
+        shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
+        shader->SetUniform("FC", FC);
+        shader->SetUniform("eyePos", eyePos);
+        shader->SetUniform("viewDir", viewDir);
+        shader->SetUniform("color", glm::vec3(colorLi) * colorLi.a);
+        shader->SetUniform("lightId", glm::ivec2(type, id));
+        
+        if(mode == DrawingMode::UNDERWATER)
+        {
+            Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
+            shader->SetUniform("cWater", ocean->getOpenGLOcean()->getLightAttenuation());
+            shader->SetUniform("bWater", ocean->getOpenGLOcean()->getLightScattering());
+        }
+
+        OpenGLState::BindVertexArray(objects[objectId].vao);
+        glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
+        OpenGLState::BindVertexArray(0);
+    }
+    else
+    {
+        //Render light mesh (off)
+        glm::mat4 M = lights[lightId]->getTransform();
+        DrawObject(objectId, -1, M);
+    }
 }
 
 void OpenGLContent::SetupLights()
@@ -889,6 +898,9 @@ void OpenGLContent::SetupLights()
     
     for(size_t i=0; i<lights.size(); ++i)
     {
+        if(!lights[i]->isActive())
+            continue;
+            
         if(lights[i]->getType() == LightType::POINT)
         {
             lights[i]->SetupShader(&lightsUBOData.pointLights[pointId]);
@@ -901,6 +913,9 @@ void OpenGLContent::SetupLights()
         }
     }
     
+    lightsUBOData.numPointLights = pointId;
+    lightsUBOData.numSpotLights = spotId;
+
     glBindBuffer(GL_UNIFORM_BUFFER, lightsUBO);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(LightsUBO), &lightsUBOData);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -1116,24 +1131,7 @@ size_t OpenGLContent::getViewsCount()
 void OpenGLContent::AddLight(OpenGLLight* light)
 {
     lights.push_back(light);
-
     std::sort(lights.begin(), lights.end());
-    lightsUBOData.numPointLights = 0;
-    lightsUBOData.numSpotLights = 0;
-
-    for(size_t i=0; i<lights.size(); ++i)
-    {
-        switch(lights[i]->getType())
-        {
-            case LightType::POINT:
-                ++lightsUBOData.numPointLights;
-                break;
-
-            case LightType::SPOT:
-                ++lightsUBOData.numSpotLights;
-                break;
-        }
-    }
 }
 
 OpenGLLight* OpenGLContent::getLight(size_t id)
