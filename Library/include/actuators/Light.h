@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 4/7/17.
-//  Copyright (c) 2017-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Light__
@@ -96,7 +96,13 @@ namespace sf
         
         //! A method implementing the rendering of the light dummy.
         std::vector<Renderable> Render();
-        
+
+        //! A method to switch on/off the light.
+        /*!
+         \param on a flag specifying if the light should be switched on
+        */
+        void Switch(bool on);
+
 		//! A method returning actuator frame in the world frame.
 		Transform getActuatorFrame() const;
 		
