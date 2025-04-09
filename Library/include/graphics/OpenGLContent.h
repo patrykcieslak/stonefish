@@ -280,11 +280,11 @@ namespace sf
         
         //! A method to use a look.
         /*!
-         \param lookId an id of the look to use
+         \param look a reference to the look structure
          \param texturable a flag determining if the object rendered is texturable
          \param M the model matrix
          */
-        void UseLook(unsigned int lookId, bool texturable, const glm::mat4& M);
+        void UseLook(const Look& look, bool texturable, const glm::mat4& M);
         
         //! A method returning a pointer to a view.
         /*!
@@ -522,7 +522,7 @@ namespace sf
         std::vector<Object> objects; //VBAs
         std::vector<Look> looks; //OpenGL materials
         NameManager lookNameManager;
-        int currentLookId;
+        std::string currentLookName;
         bool currentTexturable;
         int currentShaderMode;
         

@@ -71,7 +71,7 @@ OpenGLContent::OpenGLContent()
     FC = 0.f;
     viewportSize = glm::vec2(800.f,600.f);
     mode = DrawingMode::FULL;
-    currentLookId = -1;
+    currentLookName = "";
     currentTexturable = false;
     currentShaderMode = -1;
 
@@ -478,8 +478,6 @@ OpenGLContent::OpenGLContent()
     glDeleteShader(pcssFragment);
     glDeleteShader(oceanOpticsFragment);
     glDeleteShader(lightSourceFragment);
-
-    CreatePhysicalLook("StonefishDefault", glm::vec3(0.5f), 0.5f);
 }
 
 OpenGLContent::~OpenGLContent()
@@ -518,6 +516,7 @@ void OpenGLContent::Finalize()
 {
     cInfo("Finalizing OpenGL rendering pipeline...");
     OpenGLLight::Init(lights);
+    CreatePhysicalLook("__Default__", glm::vec3(0.5f), 0.5f);
 }
 
 void OpenGLContent::DestroyContent()
@@ -533,6 +532,7 @@ void OpenGLContent::DestroyContent()
     }
     looks.clear();
     lookNameManager.ClearNames();
+    currentLookName = "";
             
     for(size_t i=0; i<objects.size(); ++i)
     {
@@ -830,11 +830,11 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
         case DrawingMode::UNDERWATER:
         case DrawingMode::TEMPERATURE:
         {
-            if(lookId >= 0 && lookId < (int)looks.size())
-                UseLook(lookId, objects[objectId].texturable, M);
-            else // Default look
-                UseLook(0, false, M);
-    
+            if(lookId < 0)
+                UseLook(getLook(looks.size()-1), false, M); // Use default look
+            else
+                UseLook(getLook(lookId), objects[objectId].texturable, M); // Use user defined look
+                
             OpenGLState::BindVertexArray(objects[objectId].vao);
             glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
             OpenGLState::BindVertexArray(0);
@@ -921,29 +921,28 @@ void OpenGLContent::SetupLights()
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
-void OpenGLContent::UseLook(unsigned int lookId, bool texturable, const glm::mat4& M)
+void OpenGLContent::UseLook(const Look& look, bool texturable, const glm::mat4& M)
 {	
     bool waves = false;
     Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
     if(ocean != NULL && ocean->hasWaves()) waves = true;
     
-    Look& l = looks[lookId];
-    texturable = texturable && (l.albedoTexture > 0 || l.normalMap > 0 || l.temperatureMap > 0);
+    texturable = texturable && (look.albedoTexture > 0 || look.normalMap > 0 || look.temperatureMap > 0);
     int shaderMode = 0; // Above water/on surface
     if(mode == DrawingMode::UNDERWATER)
         shaderMode = (waves ? 2 : 1);
     else if(mode == DrawingMode::TEMPERATURE)
         shaderMode = 3;
     
-    bool updateMaterial = ((int)lookId != currentLookId) 
+    bool updateMaterial = (look.name != currentLookName) 
                           || (currentTexturable != texturable)
                           || (currentShaderMode != shaderMode);
-    currentLookId = (int)lookId;
+    currentLookName = look.name;
     currentTexturable = texturable;
     currentShaderMode = shaderMode;
 
     size_t shaderId = (currentTexturable ? 4 : 0) + (size_t)currentShaderMode;
-    GLSLShader* shader = materialShaders[l.type == LookType::SIMPLE ? 0 : 1].shaders[shaderId];
+    GLSLShader* shader = materialShaders[look.type == LookType::SIMPLE ? 0 : 1].shaders[shaderId];
     shader->Use();
     shader->SetUniform("MVP", viewProjection*M);
     shader->SetUniform("M", M);
@@ -955,34 +954,34 @@ void OpenGLContent::UseLook(unsigned int lookId, bool texturable, const glm::mat
 
     if(updateMaterial)
     {
-        switch(l.type)
+        switch(look.type)
         {		
             default:
             case LookType::SIMPLE: //Blinn-Phong
             {
-                shader->SetUniform("specularStrength", l.params[0]);
-                shader->SetUniform("shininess", l.params[1]);
-                shader->SetUniform("reflectivity", l.reflectivity);
-                shader->SetUniform("color", glm::vec4(l.color.rgb, 1.f));
+                shader->SetUniform("specularStrength", look.params[0]);
+                shader->SetUniform("shininess", look.params[1]);
+                shader->SetUniform("reflectivity", look.reflectivity);
+                shader->SetUniform("color", glm::vec4(look.color.rgb, 1.f));
             }
             break;
             
             case LookType::PHYSICAL: //Cook-Torrance
             {
-                shader->SetUniform("roughness", l.params[0]);
-                shader->SetUniform("metallic", l.params[1]);
-                shader->SetUniform("reflectivity", l.reflectivity);
-                shader->SetUniform("color", glm::vec4(l.color.rgb, 1.f));
+                shader->SetUniform("roughness", look.params[0]);
+                shader->SetUniform("metallic", look.params[1]);
+                shader->SetUniform("reflectivity", look.reflectivity);
+                shader->SetUniform("color", glm::vec4(look.color.rgb, 1.f));
             }
             break;
         }
 
         if(currentTexturable)
         {
-            if(l.albedoTexture > 0)
+            if(look.albedoTexture > 0)
             {
                 shader->SetUniform("enableAlbedoTex", true);
-                OpenGLState::BindTexture(TEX_MAT_ALBEDO, GL_TEXTURE_2D, l.albedoTexture);
+                OpenGLState::BindTexture(TEX_MAT_ALBEDO, GL_TEXTURE_2D, look.albedoTexture);
             }
             else
             {
@@ -990,10 +989,10 @@ void OpenGLContent::UseLook(unsigned int lookId, bool texturable, const glm::mat
                 OpenGLState::UnbindTexture(TEX_MAT_ALBEDO);
             }
 
-            if(l.normalMap > 0)
+            if(look.normalMap > 0)
             {
                 shader->SetUniform("enableNormalTex", true);
-                OpenGLState::BindTexture(TEX_MAT_NORMAL, GL_TEXTURE_2D, l.normalMap);
+                OpenGLState::BindTexture(TEX_MAT_NORMAL, GL_TEXTURE_2D, look.normalMap);
             }
             else
             {
@@ -1003,9 +1002,9 @@ void OpenGLContent::UseLook(unsigned int lookId, bool texturable, const glm::mat
 
             if(shaderMode == 3)
             {
-                if(l.temperatureMap > 0)
+                if(look.temperatureMap > 0)
                 {
-                    OpenGLState::BindTexture(TEX_MAT_TEMPERATURE, GL_TEXTURE_2D, l.temperatureMap);
+                    OpenGLState::BindTexture(TEX_MAT_TEMPERATURE, GL_TEXTURE_2D, look.temperatureMap);
                     shader->SetUniform("enableTemperatureTex", true);
                     shader->SetUniform("texTemperature", TEX_MAT_TEMPERATURE);
                 }
@@ -1014,13 +1013,13 @@ void OpenGLContent::UseLook(unsigned int lookId, bool texturable, const glm::mat
                     shader->SetUniform("enableTemperatureTex", false);
                     OpenGLState::UnbindTexture(TEX_MAT_TEMPERATURE);
                 }
-                shader->SetUniform("temperatureRange", l.temperatureRange);
+                shader->SetUniform("temperatureRange", look.temperatureRange);
             }
         }
         else
         {
             if(shaderMode == 3)
-                shader->SetUniform("temperature", l.temperatureRange.x);
+                shader->SetUniform("temperature", look.temperatureRange.x);
         }
     }
 
@@ -1163,6 +1162,9 @@ const Object& OpenGLContent::getObject(size_t id)
 
 const Look& OpenGLContent::getLook(size_t id)
 {
+    if(id >= looks.size())
+        return looks[0];
+        
     return looks[id];
 }
     
