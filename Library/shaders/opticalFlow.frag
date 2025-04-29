@@ -56,5 +56,7 @@ void main()
     // Compute velicity in image plane (px/s)
     float depth = dot(d, R_cf);
     vec2 p = gl_FragCoord.xy - c;
-    fragColor = vec2(f*v.x + p.x*v.z, f*v.y + p.y*v.z)/depth;
+    vec2 v_img = vec2(f*v.x + p.x*v.z, f*v.y + p.y*v.z)/depth;
+    v_img.y = -v_img.y; // Invert y-axis
+    fragColor = v_img;
 }

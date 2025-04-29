@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 4/7/17.
-//  Copyright (c) 2017-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Light.h"
@@ -127,6 +127,7 @@ void Light::InitGraphics()
     
     UpdateTransform();
     glLight->UpdateTransform();
+    glLight->SwitchOn();
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddLight(glLight);
 }
     
@@ -199,6 +200,17 @@ std::vector<Renderable> Light::Render()
     items.push_back(item);
     
     return items;
+}
+
+void Light::Switch(bool on)
+{
+    if(glLight != nullptr)
+    {
+        if(on)
+            glLight->SwitchOn();
+        else
+            glLight->SwitchOff();
+    }
 }
 
 }
