@@ -144,6 +144,11 @@ int MSIS::getCurrentRotationStep() const
     return currentStep;
 }
 
+GLuint MSIS::getCurrentBeamIndex() const
+{
+    return (GLuint)(currentStep + (GLint)(resX/2));
+}
+
 Scalar MSIS::getRangeMin() const
 {
     return Scalar(range.x);

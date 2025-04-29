@@ -135,11 +135,14 @@ namespace sf
         //! A method returning the gain of the sonar.
         Scalar getGain() const;
 
-        //! A method returning the step size.
+        //! A method returning the step size in degrees.
         Scalar getRotationStepAngle() const;
 
         //! A method returning the current rotation step.
         int getCurrentRotationStep() const;
+
+        //! A method returning the current bean index in the sonar image.
+        GLuint getCurrentBeamIndex() const;
 
         //! A method returning a pointer to the sonar data.
         /*!
