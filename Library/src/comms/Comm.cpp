@@ -106,11 +106,16 @@ void Comm::Connect(uint64_t deviceId)
     cId = deviceId;
 }
 
-void Comm::SendMessage(std::string data)
+void Comm::SendMessage(const std::string& data)
+{
+    SendMessage(std::vector<uint8_t>(data.begin(), data.end()));
+}
+
+void Comm::SendMessage(const std::vector<uint8_t>& data)
 {
     if(cId > 0)
     {
-        CommDataFrame* msg = new CommDataFrame();
+        auto msg = std::make_shared<CommDataFrame>();
         msg->seq = txSeq++;
         msg->source = id;
         msg->destination = cId;
@@ -118,13 +123,11 @@ void Comm::SendMessage(std::string data)
         msg->data = data;
         txBuffer.push_back(msg);
     }
-    else
-        return;
 }
 
-CommDataFrame* Comm::ReadMessage()
+std::shared_ptr<CommDataFrame> Comm::ReadMessage()
 {
-    CommDataFrame* msg = nullptr;
+    std::shared_ptr<CommDataFrame> msg {nullptr};
     if(rxBuffer.size() > 0)
     {
         msg = rxBuffer[0];
@@ -133,9 +136,13 @@ CommDataFrame* Comm::ReadMessage()
     return msg;
 }
 
-void Comm::MessageReceived(CommDataFrame* message)
+void Comm::MessageReceived(std::shared_ptr<CommDataFrame> message)
 {
     rxBuffer.push_back(message);
+}
+
+void Comm::ProcessMessages()
+{
 }
 
 void Comm::AttachToWorld(const Transform& origin)

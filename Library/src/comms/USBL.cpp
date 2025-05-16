@@ -75,7 +75,7 @@ void USBL::InternalUpdate(Scalar dt)
         
         if(pingTime >= invRate)
         {
-            SendMessage("PING");
+            Comm::SendMessage("PING");
             pingTime -= invRate;
         }
     }

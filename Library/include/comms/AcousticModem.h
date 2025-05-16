@@ -58,7 +58,7 @@ namespace sf
         /*!
          \param data the data to be sent
          */
-        void SendMessage(std::string data);
+        virtual void SendMessage(const std::vector<uint8_t>& data) override;
         
         //! A method performing internal comm state update.
         /*!
@@ -104,7 +104,7 @@ namespace sf
     private:
         bool isReceptionPossible(Vector3 dir, Scalar distance);
         
-        std::map<AcousticDataFrame*, Vector3> propagating;
+        std::map<std::shared_ptr<AcousticDataFrame>, Vector3> propagating;
         Scalar range;
         Scalar minFov2, maxFov2;
         Vector3 position;

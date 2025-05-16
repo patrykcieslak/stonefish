@@ -85,6 +85,7 @@
 #include "comms/AcousticModem.h"
 #include "comms/USBLSimple.h"
 #include "comms/USBLReal.h"
+#include "comms/OpticalModem.h"
 #include "joints/FixedJoint.h"
 #include "graphics/OpenGLDataStructs.h"
 #include "utils/SystemUtil.hpp"
@@ -4645,6 +4646,33 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
             else
                 ((USBLReal*)comm)->setNoise(timeDev, svDev, phaseDev, blError, depthDev);
         }
+        return comm;
+    }
+    else if(typeStr == "optical_modem" || typeStr == "vlc")
+    {
+        Scalar fovDeg;
+        Scalar range;
+        Scalar ambientLightSensitivity {1};
+        unsigned int cId {0};
+        
+        if((item = element->FirstChildElement("specs")) == nullptr
+            || item->QueryAttribute("fov", &fovDeg) != XML_SUCCESS
+            || item->QueryAttribute("range", &range) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Specs of communication device '%s' not properly defined!", commName.c_str());
+            return nullptr;
+        }
+        item->QueryAttribute("ambient_light_sensitivity", &ambientLightSensitivity);
+        
+        item = element->FirstChildElement("connect");
+        if(item == nullptr || item->QueryAttribute("device_id", &cId) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Communication device '%s' not connected!", commName.c_str());
+            return nullptr;
+        }
+        
+        comm = new OpticalModem(commName, devId, fovDeg, range, ambientLightSensitivity);
+        comm->Connect(cId);
         return comm;
     }
     else 

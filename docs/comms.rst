@@ -34,7 +34,7 @@ Acoustic modem
 
 An acoustic modem is an underwater communication device based on an acoustic transducer. When creating an acoustic modem it is required to specify an id of the acoustic node it will be connected to.
 During the acoustic communication the directional characteristics of both the sender and the receiver are used to determine if both nodes can see each other. 
-Moreover, an occlusion test is performed as default, to take into account obstacles in the path of the acoustic beam. The occlusion test can be disabled (it has to be done for both communicating nodes).
+Moreover, an occlusion test is performed as default, to take into account the obstacles located on the path of the acoustic beam. The occlusion test can be disabled (it has to be done for both communicating nodes).
 
 .. code-block:: xml
 
@@ -82,3 +82,27 @@ Another feature of the USBL implementation is an automatic ping function used to
     usbl->setNoise(0.05, 0.2, 0.5);
     usbl->setResolution(0.1, 0.1);
     robot->AddComm(usbl, "Link1", sf::I4());
+
+Optical modem
+=============
+
+An optical modem, sometimes called VLC (visual light communication) device, is a communication device based on a combination of strong LEDs and photodiodes. When creating an optical modem it is required to specify an id of the optical node it will be connected to.
+During the optical communication the directional characteristics of both the sender and the receiver are used to determine if both nodes can see each other. 
+Moreover, an occlusion test is performed, to take into account the obstacles located on the path of the optical beam. Apart from geometrical limitations the optical modem is also implementing reception quality estimation and range limitation
+based on water turbidity, depth, and ambient light intensity. User can define a factor specifying how much the ambient light is affecting the reception quality.
+
+.. code-block:: xml
+
+    <comm name="Modem" device_id="5" type="optical_modem">
+        <specs fov="120.0" range="50.0" ambient_light_sensitivity="0.5"/>
+        <connect device_id="9"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <link name="Link1"/>
+    </comm>
+    
+.. code-block:: cpp
+
+    #include <Stonefish/comms/OpticalModem.h>
+    sf::OpticalModem* modem = new sf::OpticalModem("Modem", 5, 120.0, 50.0, 0.5);
+    modem->Connect(9);
+    robot->AddComm(modem, "Link1", sf::I4());

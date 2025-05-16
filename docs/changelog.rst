@@ -11,6 +11,7 @@ The changelog of the library code is presented below. **Breaking changes** were 
 -  Implemented an optical flow sensor
 -  Implemented a segmentation camera
 -  Implemented a thermal camera
+-  *Implemented an optical modem*
 -  Extended look definition to support temperature maps
 -  Added water temperature
 -  Added air temperature, pressure, and humidity

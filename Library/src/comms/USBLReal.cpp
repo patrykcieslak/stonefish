@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 21/12/2020.
-//  Copyright (c) 2020-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "comms/USBLReal.h"
@@ -49,10 +49,12 @@ void USBLReal::setNoise(Scalar timeDev, Scalar soundVelocityDev, Scalar phaseDev
 
 void USBLReal::ProcessMessages()
 {
-    AcousticDataFrame* msg;
-    while((msg = (AcousticDataFrame*)ReadMessage()) != nullptr)
+    std::shared_ptr<AcousticDataFrame> msg;
+    while((msg = std::static_pointer_cast<AcousticDataFrame>(ReadMessage())) != nullptr)
     {
-        if(msg->data == "ACK")
+        std::string ack {"ACK"};
+        std::vector<uint8_t> ackData(ack.begin(), ack.end());
+        if(msg->data == ackData)
         {  
             //Get message data
             AcousticModem* cNode = getNode(msg->source);
@@ -97,8 +99,6 @@ void USBLReal::ProcessMessages()
             
             newDataAvailable = true;
         }
-        
-        delete msg;
     }
 }
 

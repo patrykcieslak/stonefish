@@ -33,7 +33,7 @@
 namespace sf
 {
     //! An enum defining types of comms.
-    enum class CommType {RADIO, ACOUSTIC, USBL, VLC};
+    enum class CommType {RADIO, ACOUSTIC, USBL, OPTICAL};
     
     struct Renderable;
     class Entity;
@@ -46,7 +46,7 @@ namespace sf
         uint64_t seq;
         uint64_t source;
         uint64_t destination;
-        std::string data;
+        std::vector<uint8_t> data;
     };
     
     //! An abstract class representing a communication device.
@@ -69,17 +69,18 @@ namespace sf
          */
         void Connect(uint64_t deviceId);
         
-        //! A method used to send a message.
+        //! Methods used to send a message.
         /*!
          \param data the data to be sent
          */
-        virtual void SendMessage(std::string data);
+        virtual void SendMessage(const std::string& data);
+        virtual void SendMessage(const std::vector<uint8_t>& data);
         
-        //! A method to read received data frames. The data frame has to be destroyed manually. 
+        //! A method to read received data frames. 
         /*!
          \return a pointer to the data frame
          */
-        CommDataFrame* ReadMessage();
+        std::shared_ptr<CommDataFrame> ReadMessage();
                 
         //! A method used to attach the comm device to the world origin.
         /*!
@@ -145,13 +146,13 @@ namespace sf
         
     protected:
         //! A method used for data reception.
-        void MessageReceived(CommDataFrame* message);
+        virtual void MessageReceived(std::shared_ptr<CommDataFrame> message);
         //! A method to proccess received messages.
-        virtual void ProcessMessages() = 0;
+        virtual void ProcessMessages();
     
         bool newDataAvailable;
-        std::deque<CommDataFrame*> txBuffer;
-        std::deque<CommDataFrame*> rxBuffer;
+        std::deque<std::shared_ptr<CommDataFrame>> txBuffer;
+        std::deque<std::shared_ptr<CommDataFrame>> rxBuffer;
         uint64_t txSeq;
         
     private:

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 26/02/2020.
-//  Copyright (c) 2020-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "comms/AcousticModem.h"
@@ -166,7 +166,7 @@ CommType AcousticModem::getType() const
     return CommType::ACOUSTIC;
 }
 
-void AcousticModem::SendMessage(std::string data)
+void AcousticModem::SendMessage(const std::vector<uint8_t>& data)
 {    
     if(getConnectedId() < 0)
         return;
@@ -176,7 +176,7 @@ void AcousticModem::SendMessage(std::string data)
         for(size_t i=0; i<nodeIds.size(); ++i)
             if(nodeIds[i] != getDeviceId() && mutualContact(getDeviceId(), nodeIds[i]))
             {
-                AcousticDataFrame* msg = new AcousticDataFrame();
+                auto msg = std::make_shared<AcousticDataFrame>();
                 msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true);
                 msg->seq = txSeq++;
                 msg->source = getDeviceId();
@@ -192,7 +192,7 @@ void AcousticModem::SendMessage(std::string data)
         if(!mutualContact(getDeviceId(), getConnectedId()))
             return;
         
-        AcousticDataFrame* msg = new AcousticDataFrame();
+        auto msg = std::make_shared<AcousticDataFrame>();
         msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true);
         msg->seq = txSeq++;
         msg->source = getDeviceId();
@@ -206,22 +206,20 @@ void AcousticModem::SendMessage(std::string data)
 
 void AcousticModem::ProcessMessages()
 {
-    AcousticDataFrame* msg;
-    while((msg = (AcousticDataFrame*)ReadMessage()) != nullptr)
+    std::shared_ptr<AcousticDataFrame> msg;
+    while((msg = std::static_pointer_cast<AcousticDataFrame>(ReadMessage())) != nullptr)
     {
         //Different responses to messages should be implemented here
-        if(msg->data != "ACK")
+        std::string ack {"ACK"};
+        std::vector<uint8_t> ackData {ack.begin(), ack.end()};
+        if(msg->data != ackData)
         {
             //timestamp and sequence don't change
             msg->destination = msg->source;
             msg->source = getDeviceId();
-            msg->data = "ACK";
+            msg->data = ackData;
             msg->txPosition = getDeviceFrame().getOrigin();
             txBuffer.push_back(msg);
-        }
-        else
-        {
-            delete msg;
         }
     }
 }
@@ -229,7 +227,7 @@ void AcousticModem::ProcessMessages()
 void AcousticModem::InternalUpdate(Scalar dt)
 {
     //Propagate messages already sent
-    std::map<AcousticDataFrame*, Vector3>::iterator mIt;
+    std::map<std::shared_ptr<AcousticDataFrame>, Vector3>::iterator mIt;
     for(mIt = propagating.begin(); mIt != propagating.end(); )
     {
         AcousticModem* dest = getNode(mIt->first->destination);
@@ -257,12 +255,9 @@ void AcousticModem::InternalUpdate(Scalar dt)
     //Send first message from the tx buffer
     if(txBuffer.size() > 0)
     {
-        AcousticDataFrame* msg = (AcousticDataFrame*)txBuffer[0];
+        auto msg = std::static_pointer_cast<AcousticDataFrame>(txBuffer[0]);
         if(mutualContact(msg->source, msg->destination))
-            propagating[msg] = msg->txPosition;
-        else
-            delete msg;
-            
+            propagating[msg] = msg->txPosition;     
         txBuffer.pop_front();
     }
 }

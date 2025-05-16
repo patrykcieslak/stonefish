@@ -32,6 +32,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <memory>
 
 //Bullet Physics
 #include "btBulletDynamicsCommon.h"
