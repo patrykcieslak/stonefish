@@ -336,7 +336,7 @@ std::vector<Renderable> OpticalModem::Render()
     GLfloat iconSize = 0.25f;
     unsigned int div = 24;
     
-    GLfloat r = iconSize * tanf(fov);    
+    GLfloat r = iconSize * tanf((GLfloat)fov/2.f);    
     for(unsigned int i=0; i<div; ++i)
     {
         GLfloat angle1 = (GLfloat)i/(GLfloat)div * 2.f * M_PI;
