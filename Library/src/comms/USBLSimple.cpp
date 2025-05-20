@@ -52,10 +52,12 @@ void USBLSimple::setResolution(Scalar range, Scalar angleDeg)
 void USBLSimple::ProcessMessages()
 {
     std::shared_ptr<AcousticDataFrame> msg;
-    while((msg = std::static_pointer_cast<AcousticDataFrame>(ReadMessage())) != nullptr)
+    std::string ack {"ACK"};
+    std::vector<uint8_t> ackData(ack.begin(), ack.end());
+
+    for(auto it = rxBuffer.begin(); it != rxBuffer.end(); ++it)
     {
-        std::string ack {"ACK"};
-        std::vector<uint8_t> ackData(ack.begin(), ack.end());
+        msg = std::static_pointer_cast<AcousticDataFrame>(*it);
         if(msg->data == ackData)
         {  
             //Get message data
@@ -115,6 +117,9 @@ void USBLSimple::ProcessMessages()
             newDataAvailable = true;
         }
     }
+
+    // Standard processing of messages and removal of "ACK and "PING" messages
+    AcousticModem::ProcessMessages();
 }
 
 }

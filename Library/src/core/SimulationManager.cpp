@@ -1637,6 +1637,10 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
     for(size_t i = 0; i < simManager->comms.size(); ++i)
         simManager->comms[i]->Update(timeStep);
     
+    // Loop through all comms again to process messages (there can be a cross-influence between updates)
+    for(size_t i = 0; i < simManager->comms.size(); ++i)
+        simManager->comms[i]->ProcessMessages();
+    
     //Loop through contact manifolds -> update contacts
     if(simManager->getContact(0) != nullptr) // If at least one contact is defined
     {

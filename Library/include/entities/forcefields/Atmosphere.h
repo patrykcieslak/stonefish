@@ -100,7 +100,13 @@ namespace sf
          \param elevationDeg a reference to the variable that will store the elevation of the sun [deg]
          */
         void GetSunPosition(Scalar& azimuthDeg, Scalar& elevationDeg);
-        
+
+        //! A method returning sun directional vector.
+        /*!
+         \return sun directional vector
+         */
+        Vector3 GetSunDirection() const;
+
         //! A method returning the air velocity.
         /*!
          \param point the point in the atmosphere where the velocity should be measured [m]

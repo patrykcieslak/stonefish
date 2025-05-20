@@ -132,6 +132,17 @@ void Atmosphere::GetSunPosition(Scalar &azimuthDeg, Scalar &elevationDeg)
     }
 }
 
+Vector3 Atmosphere::GetSunDirection() const
+{
+    if(glAtmosphere == nullptr)
+        return Vector3(0,0,0);
+    else
+    {
+        glm::vec3 dir = glAtmosphere->GetSunDirection();
+        return Vector3(dir.x, dir.y, dir.z);
+    }
+}
+
 Vector3 Atmosphere::GetFluidVelocity(const Vector3& point) const
 {
     Vector3 fv(0,0,0);

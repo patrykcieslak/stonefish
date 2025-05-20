@@ -180,7 +180,9 @@ bool OpticalModem::isReceptionPossible(Vector3 worldDir, Scalar distance)
 {
     // Check if modems are close enough
     if(distance > trueRange) 
+    {
         return false;
+    }
         
     // Check if direction is in the FOV of the device
     Vector3 dir = (getDeviceFrame().getBasis().inverse() * worldDir).safeNormalize();
@@ -188,9 +190,10 @@ bool OpticalModem::isReceptionPossible(Vector3 worldDir, Scalar distance)
     Scalar vAngle {M_PI_2}; // When dir.z == 0.0
     if(!btFuzzyZero(dir.getZ()))
     {
-        vAngle = btAtan2(d, -dir.getZ());
+        vAngle = btAtan2(d, dir.getZ());
     }
-    return btFabs(vAngle) < fov/Scalar(2);
+    bool possible = btFabs(vAngle) < fov/Scalar(2);
+    return possible;
 }
 
 Scalar OpticalModem::getReceptionQuality() const
@@ -262,7 +265,7 @@ void OpticalModem::InternalUpdate(Scalar dt)
     if (underwater)
     {
         Scalar turbidity = ocean->getWaterType(); // 0.0 (clear) to 1.0 (very turbid)
-        trueRange = maxRange * (Scalar(1.0) - turbidity);
+        trueRange = maxRange * (Scalar(1) - turbidity);
     }
     else 
     {
@@ -287,6 +290,12 @@ void OpticalModem::InternalUpdate(Scalar dt)
             if(closest.hasHit())
             {
                 receptionPossible = false;
+                receptionQuality = Scalar(0);
+            }
+            else
+            {
+                // Exponentially decay the reception quality with distance
+                receptionQuality = Scalar(1) - btExp(-Scalar(10)*(trueRange - distance)/trueRange);
             }
         }
     }
@@ -296,20 +305,31 @@ void OpticalModem::InternalUpdate(Scalar dt)
     {
         // Estimate light intensity factor based on the sun position
         Atmosphere* atm = SimulationApp::getApp()->getSimulationManager()->getAtmosphere();
-        Scalar az, alt;
-        atm->GetSunPosition(az, alt);
-        btClamp(alt, Scalar(0), Scalar(90));
-        Scalar lightIntensity {Scalar(1) - btCos(btRadians(alt))};
-
         if (underwater)
         {
+            Scalar az, alt;
+            atm->GetSunPosition(az, alt);
+            btClamp(alt, Scalar(0), Scalar(90));
+            Scalar lightIntensity {Scalar(1) - btCos(btRadians(alt))};
+
+            Scalar directionalFactor {  
+                (getDeviceFrame().getBasis().getColumn(2).dot(Vector3(0,0,-1)) // 1 if facing up, -1 when facing down
+                + Scalar(1)) // Offset to (0,2) range
+                * Scalar(0.5) // Scale to (0,1) range
+            };
             Scalar depthRX {ocean->GetDepth(posRX)};
             Scalar turbidity = ocean->getWaterType(); // 0.0 (clear) to 1.0 (very turbid)   
-            receptionQuality = Scalar(1) - ambientLightSens * lightIntensity * btExp(-turbidity/10.0 * depthRX);
+            receptionQuality -= ambientLightSens * lightIntensity * directionalFactor * btExp(-turbidity * depthRX);
         }
         else
         {
-            receptionQuality = Scalar(1) - ambientLightSens * lightIntensity;
+            Vector3 sunDir = atm->GetSunDirection();
+            Scalar lightIntensity {
+                (getDeviceFrame().getBasis().getColumn(2).dot(-sunDir) // 1 if facing sun, -1 when facing opposite
+                + Scalar(1)) // Offset to (0,2) range
+                * Scalar(0.5) // Scale to (0,1) range
+            };
+            receptionQuality -= ambientLightSens * lightIntensity;
         }
     }
     else

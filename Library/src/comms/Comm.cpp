@@ -86,6 +86,16 @@ void Comm::MarkDataOld()
     newDataAvailable = false;
 }
 
+size_t Comm::getRxBufferCount() const
+{
+    return rxBuffer.size();
+}
+
+size_t Comm::getTxBufferCount() const
+{
+    return txBuffer.size();
+}
+
 bool Comm::isNewDataAvailable()
 {
     return newDataAvailable;
@@ -171,7 +181,6 @@ void Comm::AttachToSolid(MovingEntity* body, const Transform& origin)
 void Comm::Update(Scalar dt)
 {
     SDL_LockMutex(updateMutex);
-    ProcessMessages();
     InternalUpdate(dt);
     SDL_UnlockMutex(updateMutex);
 }

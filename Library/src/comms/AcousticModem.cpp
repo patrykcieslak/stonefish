@@ -25,6 +25,7 @@
 
 #include "comms/AcousticModem.h"
 
+#include <algorithm>
 #include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
@@ -168,12 +169,13 @@ CommType AcousticModem::getType() const
 
 void AcousticModem::SendMessage(const std::vector<uint8_t>& data)
 {    
-    if(getConnectedId() < 0)
+    if(getConnectedId() < 0) // Not connected
         return;
-    else if(getConnectedId() == 0)
+    else if(getConnectedId() == 0) // Broadcast
     {
         std::vector<uint64_t> nodeIds = getNodeIds();
         for(size_t i=0; i<nodeIds.size(); ++i)
+        {
             if(nodeIds[i] != getDeviceId() && mutualContact(getDeviceId(), nodeIds[i]))
             {
                 auto msg = std::make_shared<AcousticDataFrame>();
@@ -186,8 +188,9 @@ void AcousticModem::SendMessage(const std::vector<uint8_t>& data)
                 msg->travelled = Scalar(0);
                 txBuffer.push_back(msg);
             }
+        }
     }
-    else
+    else // Conneted to one receiver
     {
         if(!mutualContact(getDeviceId(), getConnectedId()))
             return;
@@ -207,28 +210,40 @@ void AcousticModem::SendMessage(const std::vector<uint8_t>& data)
 void AcousticModem::ProcessMessages()
 {
     std::shared_ptr<AcousticDataFrame> msg;
-    while((msg = std::static_pointer_cast<AcousticDataFrame>(ReadMessage())) != nullptr)
+    std::string ack {"ACK"};
+    std::vector<uint8_t> ackData {ack.begin(), ack.end()};
+    std::string ping {"PING"};
+    std::vector<uint8_t> pingData {ping.begin(), ping.end()};
+
+    for(auto it = rxBuffer.begin(); it != rxBuffer.end(); ++it)
     {
-        //Different responses to messages should be implemented here
-        std::string ack {"ACK"};
-        std::vector<uint8_t> ackData {ack.begin(), ack.end()};
+        // Send "ACK" message back to sender
+        msg = std::static_pointer_cast<AcousticDataFrame>(*it);
         if(msg->data != ackData)
         {
             //timestamp and sequence don't change
-            msg->destination = msg->source;
-            msg->source = getDeviceId();
-            msg->data = ackData;
-            msg->txPosition = getDeviceFrame().getOrigin();
-            txBuffer.push_back(msg);
+            std::shared_ptr<AcousticDataFrame> ackMsg = std::make_shared<AcousticDataFrame>();
+            ackMsg->timeStamp = msg->timeStamp;
+            ackMsg->seq = msg->seq;
+            ackMsg->destination = msg->source;
+            ackMsg->source = getDeviceId();
+            ackMsg->data = ackData;
+            ackMsg->txPosition = getDeviceFrame().getOrigin();
+            ackMsg->travelled = msg->travelled;
+            txBuffer.push_back(ackMsg);
         }
     }
+    // Remove "ACK" and "PING" messages from the RX buffer
+    rxBuffer.erase(std::remove_if(rxBuffer.begin(), rxBuffer.end(),
+        [&ackData, &pingData](const std::shared_ptr<CommDataFrame>& msg) {
+            return (msg->data == ackData || msg->data == pingData);
+        }), rxBuffer.end());
 }
 
 void AcousticModem::InternalUpdate(Scalar dt)
 {
     //Propagate messages already sent
-    std::map<std::shared_ptr<AcousticDataFrame>, Vector3>::iterator mIt;
-    for(mIt = propagating.begin(); mIt != propagating.end(); )
+    for(auto mIt = propagating.begin(); mIt != propagating.end();)
     {
         AcousticModem* dest = getNode(mIt->first->destination);
         Vector3 dO = dest->getDeviceFrame().getOrigin();
@@ -256,9 +271,13 @@ void AcousticModem::InternalUpdate(Scalar dt)
     if(txBuffer.size() > 0)
     {
         auto msg = std::static_pointer_cast<AcousticDataFrame>(txBuffer[0]);
-        if(mutualContact(msg->source, msg->destination))
-            propagating[msg] = msg->txPosition;     
         txBuffer.pop_front();
+
+        // The message is sent or lost
+        if(mutualContact(msg->source, msg->destination))
+        {
+            propagating.insert(std::make_pair(msg, msg->txPosition));
+        }
     }
 }
 

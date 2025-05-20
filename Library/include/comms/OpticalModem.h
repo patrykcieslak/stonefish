@@ -48,12 +48,6 @@ namespace sf
         //! A destructor.
         virtual ~OpticalModem();
 
-        //! A method performing internal comm state update.
-        /*!
-         \param dt the step time of the simulation [s]
-         */
-        virtual void InternalUpdate(Scalar dt);
-        
         //! A method implementing the rendering of the comm device.
         std::vector<Renderable> Render();
         
@@ -64,6 +58,12 @@ namespace sf
         virtual CommType getType() const;
         
     protected:
+        //! A method performing internal comm state update.
+        /*!
+         \param dt the step time of the simulation [s]
+         */
+        virtual void InternalUpdate(Scalar dt) override;
+
         virtual void MessageReceived(std::shared_ptr<CommDataFrame> message);
         bool isReceptionPossible(Vector3 worldDir, Scalar distance);
         

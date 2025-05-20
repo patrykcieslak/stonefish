@@ -111,6 +111,9 @@ namespace sf
          */
         void Update(Scalar dt);
         
+        //! A method that processes all messages in the rx buffer.
+        virtual void ProcessMessages();
+    
         //! A method used to mark data as old.
         void MarkDataOld();
         
@@ -122,6 +125,12 @@ namespace sf
         
         //! A method to set if the comm is renderable.
         void setRenderable(bool render);
+
+        //! A method returning the number of messages in the rx buffer.
+        size_t getRxBufferCount() const;
+
+        //! A method returning the number of messages in the tx buffer.
+        size_t getTxBufferCount() const;
         
         //! A method returning the current comm device frame in world.
         Transform getDeviceFrame();
@@ -135,21 +144,19 @@ namespace sf
         //! A method returning the comm name.
         std::string getName();
         
+        //! A method returning the type of the comm.
+        virtual CommType getType() const = 0;
+        
+    protected:
         //! A method performing an internal update of the comm state.
         /*!
          \param dt the time step of the simulation [s]
          */
         virtual void InternalUpdate(Scalar dt) = 0;
-        
-        //! A method returning the type of the comm.
-        virtual CommType getType() const = 0;
-        
-    protected:
+
         //! A method used for data reception.
         virtual void MessageReceived(std::shared_ptr<CommDataFrame> message);
-        //! A method to proccess received messages.
-        virtual void ProcessMessages();
-    
+        
         bool newDataAvailable;
         std::deque<std::shared_ptr<CommDataFrame>> txBuffer;
         std::deque<std::shared_ptr<CommDataFrame>> rxBuffer;

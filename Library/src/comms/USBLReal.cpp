@@ -50,10 +50,12 @@ void USBLReal::setNoise(Scalar timeDev, Scalar soundVelocityDev, Scalar phaseDev
 void USBLReal::ProcessMessages()
 {
     std::shared_ptr<AcousticDataFrame> msg;
-    while((msg = std::static_pointer_cast<AcousticDataFrame>(ReadMessage())) != nullptr)
+    std::string ack {"ACK"};
+    std::vector<uint8_t> ackData(ack.begin(), ack.end());
+    
+    for(auto it = rxBuffer.begin(); it != rxBuffer.end(); ++it)
     {
-        std::string ack {"ACK"};
-        std::vector<uint8_t> ackData(ack.begin(), ack.end());
+        msg = std::static_pointer_cast<AcousticDataFrame>(*it);
         if(msg->data == ackData)
         {  
             //Get message data
@@ -100,6 +102,9 @@ void USBLReal::ProcessMessages()
             newDataAvailable = true;
         }
     }
+
+    // Standard processing of messages and removal of "ACK and "PING" messages
+    AcousticModem::ProcessMessages();
 }
 
 Scalar USBLReal::CalcModel(Scalar R, Scalar theta)
