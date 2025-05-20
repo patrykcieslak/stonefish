@@ -95,6 +95,7 @@ SimulationManager::SimulationManager(Scalar stepsPerSecond, SolverType st, Colli
     timeOffset = 0;
     simulationTime = 0;
     mlcpFallbacks = 0;
+    callSimulationStepCompleted = true;
     dynamicsWorld = nullptr;
     mbSolver = nullptr;
     sbSolver = nullptr;
@@ -598,6 +599,18 @@ void SimulationManager::setRealtimeFactor(Scalar f)
     SDL_UnlockMutex(simInfoMutex);
 }
 
+void SimulationManager::setCallSimulationStepCompleted(bool call)
+{
+    SDL_LockMutex(simSettingsMutex);
+    callSimulationStepCompleted = call;
+    SDL_UnlockMutex(simSettingsMutex);
+}
+
+bool SimulationManager::getCallSimulationStepCompleted() const
+{
+    return callSimulationStepCompleted;
+}
+
 Scalar SimulationManager::getStepsPerSecond() const
 {
     return sps;
@@ -1077,21 +1090,27 @@ void SimulationManager::AdvanceSimulation()
         currentTime = timeInMicroseconds;
     }
     
-    //Step simulation
-    SDL_LockMutex(simSettingsMutex);
-    perfMon.PhysicsStarted();
-    dynamicsWorld->stepSimulation((Scalar)deltaTime/Scalar(1000000.0), 1000000, (Scalar)ssus/Scalar(1000000.0));
-    perfMon.PhysicsFinished();
-    SDL_UnlockMutex(simSettingsMutex);
-
+    StepSimulation((Scalar)deltaTime/Scalar(1000000.0));
+    
     SDL_LockMutex(simInfoMutex);
     Scalar cpuUsageNow = (Scalar)perfMon.getPhysicsTime()/(Scalar)deltaTime * Scalar(100);
     Scalar filter(0.001);
     cpuUsage = filter * cpuUsageNow + (Scalar(1)-filter) * cpuUsage;   
-    
+    SDL_UnlockMutex(simInfoMutex);
+}
+
+void SimulationManager::StepSimulation(Scalar timeStep)
+{
+    SDL_LockMutex(simSettingsMutex);
+    perfMon.PhysicsStarted();
+    dynamicsWorld->stepSimulation((Scalar)timeStep, 1000000, (Scalar)ssus/Scalar(1000000.0));
+    perfMon.PhysicsFinished();
+    SDL_UnlockMutex(simSettingsMutex);
+
     //Inform about MLCP failures
     if(solver != SolverType::SOLVER_SI)
     {
+        SDL_LockMutex(simInfoMutex);
         btMultiBodyMLCPConstraintSolver* mlcp = (btMultiBodyMLCPConstraintSolver*)mbSolver;
         int numFallbacks = mlcp->getNumFallbacks();
         if(numFallbacks)
@@ -1102,9 +1121,8 @@ void SimulationManager::AdvanceSimulation()
             cWarning("MLCP solver failed %d times.\n", mlcpFallbacks);
 #endif
         }
+        SDL_UnlockMutex(simInfoMutex);
     }
-    
-    SDL_UnlockMutex(simInfoMutex);
 }
 
 void SimulationManager::SimulationStepCompleted(Scalar timeStep)
@@ -1662,7 +1680,8 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
     simManager->simulationTime += timeStep;
     
     //Optional method to update some post simulation data (like ROS messages...)
-    simManager->SimulationStepCompleted(timeStep);
+    if (simManager->getCallSimulationStepCompleted())
+        simManager->SimulationStepCompleted(timeStep);
 }
 
 //Used to save contact information, including contact forces

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 23/03/2014.
-//  Copyright (c) 2014-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Sample__
@@ -36,12 +36,11 @@ namespace sf
     public:
         //! A constructor.
         /*!
-         \param nDimensions the number of dimensions of the measurement
-         \param values a pointer to the data
+         \param data a vector of values of the measurement
          \param invalid a flag to mark if it is and invalid output
          \param index a number specifying the id of the sample
          */
-        Sample(unsigned short nDimensions, Scalar* values, bool invalid = false, uint64_t index = 0);
+        Sample(const std::vector<Scalar>& data, bool invalid = false, uint64_t index = 0);
         
         //! A copy constructor.
         /*!
@@ -49,9 +48,6 @@ namespace sf
          \param index a number specifying the id of the sample
          */
         Sample(const Sample& other, uint64_t index = 0);
-        
-        //! A destructor.
-        ~Sample();
         
         //! A method returning the timestamp of the sample.
         Scalar getTimestamp() const;
@@ -61,13 +57,13 @@ namespace sf
          \param dimension the index of the dimension
          \return the value of the measurement for the dimension
          */
-        Scalar getValue(unsigned short dimension) const;
+        Scalar getValue(size_t dimension) const;
         
         //! A method returning the full data of the measurement.
         std::vector<Scalar> getData() const;
         
         //! A method returning the number of dimensions of the measurement.
-        unsigned short getNumOfDimensions() const;
+        size_t getNumOfDimensions() const;
         
         //! A method returning a pointer to the sample data.
         Scalar* getDataPointer();
@@ -77,8 +73,7 @@ namespace sf
         
     private:
         Scalar timestamp;
-        unsigned short nDim;
-        Scalar* data;
+        std::vector<Scalar> data;
         uint64_t id;
     };
 }

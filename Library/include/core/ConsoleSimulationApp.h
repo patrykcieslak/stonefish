@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2025 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_ConsoleSimulationApp__
@@ -66,7 +66,7 @@ namespace sf
     //! A structure used to pass information between threads.
     typedef struct
     {
-        SimulationApp* app;
+        ConsoleSimulationApp* app;
     }
     ConsoleSimulationThreadData;
 }

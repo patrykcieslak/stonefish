@@ -392,8 +392,7 @@ std::vector<Renderable> AcousticModem::Render()
 #ifdef DEBUG
     item.type = RenderableType::SENSOR_POINTS;
     item.model = glm::mat4(1.f);
-    std::map<AcousticDataFrame*, Vector3>::iterator mIt;
-    for(mIt = propagating.begin(); mIt != propagating.end(); ++mIt)
+    for( auto mIt = propagating.begin(); mIt != propagating.end(); ++mIt)
     {
         Vector3 mPos = mIt->second;
         item.points.push_back(glm::vec3((GLfloat)mPos.getX(), (GLfloat)mPos.getY(), (GLfloat)mPos.getZ()));

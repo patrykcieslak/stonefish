@@ -51,12 +51,7 @@ Sample ScalarSensor::getLastSample() const
     if(history.size() > 0)
         return Sample(*history.back());
     else
-    {
-        unsigned short chs = getNumOfChannels();
-        Scalar values[chs];
-        memset(values, 0, sizeof(Scalar) * chs);
-        return Sample(chs, values, true);
-    }
+        return Sample(std::vector<Scalar>(getNumOfChannels(), Scalar(0)), true);
 }
 
 const std::vector<Sample>* ScalarSensor::getHistory()

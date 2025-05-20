@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 18/11/2017.
-//  Copyright (c) 2017-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Accelerometer.h"
@@ -42,10 +42,10 @@ Accelerometer::Accelerometer(std::string uniqueName, Scalar frequency, int histo
 
 void Accelerometer::InternalUpdate(Scalar dt)
 {
-    //calculate transformation from global to imu frame
+    // Calculate transformation from global to imu frame
     Transform accTrans = getSensorFrame();
     
-    //get acceleration
+    // Get acceleration
     Vector3 R = accTrans.getOrigin() - attach->getCGTransform().getOrigin();
     Vector3 la = accTrans.getBasis().inverse() * (
                                                 attach->getLinearAcceleration() 
@@ -54,9 +54,8 @@ void Accelerometer::InternalUpdate(Scalar dt)
                                                 - SimulationApp::getApp()->getSimulationManager()->getGravity()
                                                 );
     
-    //record sample
-    Scalar values[3] = {la.x(), la.y(), la.z()};
-    Sample s(3, values);
+    // Record sample
+    Sample s{std::vector<Scalar>({la.x(), la.y(), la.z()})};
     AddSampleToHistory(s);
 }
 

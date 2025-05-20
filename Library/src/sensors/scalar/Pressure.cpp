@@ -46,7 +46,7 @@ void Pressure::InternalUpdate(Scalar dt)
         data += liq->GetPressure(getSensorFrame().getOrigin());
     
     //Record sample
-    Sample s(1, &data);
+    Sample s{std::vector<Scalar>({data})};
     AddSampleToHistory(s);
 }
 

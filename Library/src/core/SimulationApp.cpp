@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2022 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/SimulationApp.h"
@@ -40,6 +40,7 @@ SimulationApp::SimulationApp(std::string name, std::string dataDirPath, Simulati
     finished = false;
     running = false;
     physicsTime = 0.0;
+    timeStep_ = Scalar(0);
     console = new Console();
     //Version info
     if(STONEFISH_VER_PATCH != 0)
@@ -102,8 +103,10 @@ void SimulationApp::InitializeSimulation()
     cInfo("Simulation initialized -> using Bullet Physics %d.%d.", btGetVersion()/100, btGetVersion()%100);
 }
 
-void SimulationApp::Run(bool autostart)
+void SimulationApp::Run(bool autostart, Scalar timeStep)
 {
+    timeStep_ = timeStep < Scalar(0) ? Scalar(0) : timeStep;
+
     Init();
     if(autostart) StartSimulation();
 	Loop();

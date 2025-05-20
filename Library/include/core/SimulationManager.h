@@ -119,8 +119,11 @@ namespace sf
         //! A method which restarts the simulation.
         void RestartScenario();
         
-        //! A method computing the next simulation step.
+        //! A method that steps the simulation based on real time.
         void AdvanceSimulation();
+
+        //! A method that performs on simulation step of specified period.
+        void StepSimulation(Scalar timeStep);
         
         //! A method updating the drawing queue (thread safe)
         void UpdateDrawingQueue();
@@ -259,6 +262,9 @@ namespace sf
          */
         void setStepsPerSecond(Scalar steps);
 
+        //! A method to set a flag that enables automatic calling of the SimulationStepCompleted method.
+        void setCallSimulationStepCompleted(bool call);
+
         //! A method that directly sets the fluid dynamics prescaler.
         /*!
          \param presc a prescaler used to compute the update frequency of fluid dynamics computations
@@ -313,6 +319,9 @@ namespace sf
         
         //! A method returning the current number of steps per second used.
         Scalar getStepsPerSecond() const;
+
+        //! A method returning the flag that enables automatic calling of the SimulationStepCompleted method.
+        bool getCallSimulationStepCompleted() const;
         
         //! A method returning the axis-aligned bounding box of the simulation world.
         /*!
@@ -555,6 +564,7 @@ namespace sf
         uint64_t timeOffset;   // Offset between simulation time and system time in us
         uint64_t ssus;         // Simulation step time in us
         bool simulationFresh;
+        bool callSimulationStepCompleted;
 
         // Performance
         PerformanceMonitor perfMon;

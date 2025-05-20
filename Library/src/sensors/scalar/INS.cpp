@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/10/2021.
-//  Copyright (c) 2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2021-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/INS.h"
@@ -172,10 +172,11 @@ void INS::InternalUpdate(Scalar dt)
     (imuTrans * out).getBasis().getEulerYPR(yaw, pitch, roll);
 
     //record sample
-    Scalar values[18] = {nedo.x(), nedo.y(), nedo.z(), altitude, latitude, longitude,
-                         velo.x(), velo.y(), velo.z(), roll, pitch, yaw, 
-                         avo.x(), avo.y(), avo.z(), acco.x(), acco.y(), acco.z()};
-    Sample s(18, values);
+    Sample s{std::vector<Scalar>(
+        {nedo.x(), nedo.y(), nedo.z(), altitude, latitude, longitude,
+         velo.x(), velo.y(), velo.z(), roll, pitch, yaw, 
+         avo.x(), avo.y(), avo.z(), acco.x(), acco.y(), acco.z()}
+        )};
     AddSampleToHistory(s); //Adds noise.....:(
 }
 

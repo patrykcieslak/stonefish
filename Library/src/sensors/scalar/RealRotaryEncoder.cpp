@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 29/03/2014.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/RealRotaryEncoder.h"
@@ -88,11 +88,7 @@ void RealRotaryEncoder::InternalUpdate(Scalar dt)
     }
     
     //record sample
-    Scalar m[2];
-    m[0] = angle;
-    m[1] = Scalar(0.);
-    
-    Sample s(2, m);
+    Sample s{std::vector<Scalar>({angle, Scalar(0)})};
     AddSampleToHistory(s);
 }
 

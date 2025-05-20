@@ -79,7 +79,7 @@ void Multibeam::InternalUpdate(Scalar dt)
     }
     
     //record sample
-    Sample s(angSteps+1, distances.data());
+    Sample s(distances);
     AddSampleToHistory(s);
 }
 

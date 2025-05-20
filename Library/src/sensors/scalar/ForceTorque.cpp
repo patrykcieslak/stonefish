@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/10/2017.
-//  Copyright (c) 2017-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/ForceTorque.h"
@@ -75,8 +75,7 @@ void ForceTorque::InternalUpdate(Scalar dt)
         force = toSensor * force;
         torque = toSensor * torque;
 	
-        Scalar values[6] = {force.getX(), force.getY(), force.getZ(), torque.getX(), torque.getY(), torque.getZ()};
-        Sample s(6, values);
+        Sample s{std::vector<Scalar>({force.getX(), force.getY(), force.getZ(), torque.getX(), torque.getY(), torque.getZ()})};
         AddSampleToHistory(s);
     }
     else
@@ -89,8 +88,7 @@ void ForceTorque::InternalUpdate(Scalar dt)
         torque = toSensor * torque;
         lastFrame = fe->getLink(childId).solid->getCGTransform() * lastFrame; //From local to global
         
-        Scalar values[6] = {force.getX(), force.getY(), force.getZ(), torque.getX(), torque.getY(), torque.getZ()};
-        Sample s(6, values);
+        Sample s{std::vector<Scalar>({force.getX(), force.getY(), force.getZ(), torque.getX(), torque.getY(), torque.getZ()})};
         AddSampleToHistory(s);
     }
 }

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/GraphicalSimulationApp.h"
@@ -1094,13 +1094,23 @@ int GraphicalSimulationApp::RunSimulation(void* data)
 {
     GraphicalSimulationThreadData* stdata = (GraphicalSimulationThreadData*)data;
     SimulationManager* sim = stdata->app->getSimulationManager();
+    sim->setCallSimulationStepCompleted(stdata->app->timeStep_ == Scalar(0));
 
     int maxThreads = std::max(omp_get_max_threads()/2, 1);
     omp_set_num_threads(maxThreads);
     
     while(stdata->app->isRunning())
     {
-        sim->AdvanceSimulation();
+        if (stdata->app->timeStep_ == Scalar(0)) // Real time simulation
+        {
+            sim->AdvanceSimulation();
+        }
+        else // Fixed step simulation
+        {   
+            sim->StepSimulation(stdata->app->timeStep_);
+            sim->SimulationStepCompleted(stdata->app->timeStep_);
+        }
+        
         if(stdata->app->getGLPipeline()->isDrawingQueueEmpty())
         {
             SDL_LockMutex(stdata->drawingQueueMutex);

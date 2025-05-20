@@ -26,3 +26,6 @@ target_link_libraries(UnderwaterTest Stonefish_test)
 
 add_executable(FluidDynamicsTest FluidDynamicsTest/main.cpp FluidDynamicsTest/FluidDynamicsTestApp.cpp FluidDynamicsTest/FluidDynamicsTestManager.cpp)
 target_link_libraries(FluidDynamicsTest Stonefish_test)
+
+add_executable(LearningTest LearningTest/main.cpp LearningTest/LearningTestManager.cpp)
+target_link_libraries(LearningTest Stonefish_test)

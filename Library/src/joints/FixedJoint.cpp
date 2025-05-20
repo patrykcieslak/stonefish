@@ -142,14 +142,14 @@ std::vector<Renderable> FixedJoint::Render()
 {
     std::vector<Renderable> items(0);
     
-    Renderable item;
-    item.model = glm::mat4(1.f);
-    item.type = RenderableType::JOINT_LINES;
-    Vector3 A = jSolidA->getCGTransform().getOrigin();
-    Vector3 B = jSolidB->getCGTransform().getOrigin();
-    item.points.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
-    item.points.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
-    items.push_back(item);    
+    // Renderable item;
+    // item.model = glm::mat4(1.f);
+    // item.type = RenderableType::JOINT_LINES;
+    // Vector3 A = jSolidA->getCGTransform().getOrigin();
+    // Vector3 B = jSolidB->getCGTransform().getOrigin();
+    // item.points.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
+    // item.points.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
+    // items.push_back(item);    
     
     return items;
 }

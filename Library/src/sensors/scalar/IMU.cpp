@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/05/2014.
-//  Copyright (c) 2014-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/IMU.h"
@@ -75,8 +75,7 @@ void IMU::InternalUpdate(Scalar dt)
                 );
     
     //record sample
-    Scalar values[9] = {roll, pitch, yaw, av.x(), av.y(), av.z(), la.x(), la.y(), la.z()};
-    Sample s(9, values);
+    Sample s{std::vector<Scalar>({roll, pitch, yaw, av.x(), av.y(), av.z(), la.x(), la.y(), la.z()})};
     AddSampleToHistory(s);
 }
 

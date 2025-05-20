@@ -56,9 +56,10 @@ namespace sf
         
         //! A method implementing the simulation sequence.
         /*!
-         \param autostart a flag determining if the simulation should automatically start running
+         \param autostart optional flag determining if the simulation should automatically start running
+         \param timeStep optional time step that will be used for each simulation update instead of real time (0 means real time)
          */
-        void Run(bool autostart = true);
+        void Run(bool autostart = true, Scalar timeStep = Scalar(0));
         
         //! A method informing if the application is graphical.
         virtual bool hasGraphics() = 0;
@@ -102,7 +103,8 @@ namespace sf
         
         Console* console;
         uint64_t startTime;
-        
+        Scalar timeStep_;
+
     private:
         SimulationManager* simulation;
         std::string appName;
