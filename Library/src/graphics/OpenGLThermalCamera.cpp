@@ -42,7 +42,7 @@ GLSLShader* OpenGLThermalCamera::thermalOutputShader = nullptr;
 OpenGLThermalCamera::OpenGLThermalCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
                           GLint originX, GLint originY, GLint width, GLint height, GLfloat horizontalFOVDeg, 
                           glm::vec2 tempRange, glm::vec2 depthRange, bool continuousUpdate)
- : OpenGLView(originX, originY, width, height), randDist(0.f, 1.f), temperatureNoise(0.f), newData(false), camera(nullptr), _needsUpdate(false)
+ : OpenGLView(originX, originY, width, height), camera(nullptr), _needsUpdate(false), newData(false), temperatureNoise(0.f), randDist(0.f, 1.f)
 {
     continuous = continuousUpdate;
     this->depthRange = depthRange;

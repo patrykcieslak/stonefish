@@ -78,7 +78,7 @@ int FeatherstoneRobot::getLinkIndex(const std::string& name) const
     int index = -2;
     if(dynamics != nullptr)
     {
-        for(int i=0; i<dynamics->getNumOfLinks(); ++i)
+        for(int i=0; i<(int)dynamics->getNumOfLinks(); ++i)
             if(dynamics->getLink(i).solid->getName() == name)
             {
                 index = i-1;

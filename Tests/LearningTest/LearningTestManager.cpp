@@ -118,16 +118,3 @@ void LearningTestManager::BuildScenario()
     // Add to simulation
     AddRobot(robot, sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,-2.0)));
 }
-
-void LearningTestManager::SimulationStepCompleted(sf::Scalar timeStep)
-{
-    // Get observations
-    sf::Scalar angle1 = static_cast<sf::RotaryEncoder*>(getSensor("Encoder1"))->getLastSample().getValue(0);
-    sf::Scalar angle2 = static_cast<sf::RotaryEncoder*>(getSensor("Encoder2"))->getLastSample().getValue(0);
-
-    // Compute command
-    sf::Scalar command = btCos(angle1 * angle2) * 20;
-
-    // Apply actuator commands
-    static_cast<sf::Motor*>(getActuator("Motor"))->setIntensity(command);
-}

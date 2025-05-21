@@ -39,7 +39,7 @@ namespace sf
 {
 
 SolidEntity::SolidEntity(std::string uniqueName, BodyPhysicsSettings phy, std::string material, std::string look, Scalar thickness) 
-    : MovingEntity(uniqueName, material, look), phy(phy), thick(thickness)
+    : MovingEntity(uniqueName, material, look), thick(thickness), phy(phy)
 {
     //Check if ocean is enabled and change physics mode accordingly
     if((phy.mode == BodyPhysicsMode::SUBMERGED || phy.mode == BodyPhysicsMode::FLOATING) && !SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())

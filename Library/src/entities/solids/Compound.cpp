@@ -557,8 +557,6 @@ std::vector<Renderable> Compound::Render()
         items.push_back(item);
         item.points.clear();
         
-        Transform oCompoundTrans = getOTransform();
-        
         for(size_t i=0; i<parts.size(); ++i)
         {
             std::vector<Renderable> partItems = Render(i);

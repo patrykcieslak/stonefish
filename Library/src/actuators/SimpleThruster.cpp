@@ -120,8 +120,6 @@ void SimpleThruster::Update(Scalar dt)
         //Get transforms
         Transform solidTrans = attach->getCGTransform();
         Transform thrustTrans = attach->getOTransform() * o2a;
-        Vector3 relPos = thrustTrans.getOrigin() - solidTrans.getOrigin();
-        Vector3 velocity = attach->getLinearVelocityInLocalPoint(relPos);
         
         //Calculate thrust
         Ocean* ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();

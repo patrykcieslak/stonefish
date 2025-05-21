@@ -36,7 +36,6 @@ public:
     LearningTestManager(sf::Scalar stepsPerSecond);
     
     void BuildScenario() override;
-    void SimulationStepCompleted(sf::Scalar timeStep) override;
 };
 
 #endif

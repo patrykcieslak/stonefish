@@ -40,9 +40,10 @@ Thruster::Thruster(std::string uniqueName, SolidEntity* propeller,
                                             std::shared_ptr<ThrustModel> thrustConversion,
                                             Scalar diameter, bool rightHand, Scalar maxSetpoint,
                                             bool invertedSetpoint, bool normalizedSetpoint)
-    : LinkActuator(uniqueName), rotorModel(rotorDynamics), thrustModel(thrustConversion), D(diameter), RH(rightHand), 
-      setpointLimit(maxSetpoint), inv(invertedSetpoint), normalized(normalizedSetpoint), 
-      theta(Scalar(0)), omega(Scalar(0)), thrust(Scalar(0)), torque(Scalar(0)), setpoint(Scalar(0))
+    : LinkActuator(uniqueName), RH(rightHand), D(diameter),
+      theta(Scalar(0)), omega(Scalar(0)), thrust(Scalar(0)), torque(Scalar(0)),
+      setpoint(Scalar(0)), setpointLimit(maxSetpoint), inv(invertedSetpoint), normalized(normalizedSetpoint),
+      rotorModel(rotorDynamics), thrustModel(thrustConversion)
 {
     setSetpointLimit(maxSetpoint);
     prop = propeller;

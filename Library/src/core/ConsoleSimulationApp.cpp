@@ -37,7 +37,7 @@ namespace sf
 ConsoleSimulationApp::ConsoleSimulationApp(std::string name, std::string dataDirPath, SimulationManager* sim)
 : SimulationApp(name, dataDirPath, sim)
 {
-    simulationThread = NULL;
+    simulationThread = nullptr;
 }
 
 ConsoleSimulationApp::~ConsoleSimulationApp()
@@ -56,6 +56,8 @@ void ConsoleSimulationApp::Init()
     cInfo("Initializing simulation:");
     InitializeSimulation();
     cInfo("Ready for running...");
+
+    state_ = SimulationState::STOPPED;
 }
 
 void ConsoleSimulationApp::LoopInternal()
@@ -67,50 +69,49 @@ void ConsoleSimulationApp::StartSimulation()
 {
     SimulationApp::StartSimulation();
     
-    ConsoleSimulationThreadData* data = new ConsoleSimulationThreadData();
-    data->app = this;
-    simulationThread = SDL_CreateThread(ConsoleSimulationApp::RunSimulation, "simulationThread", data);
+    if (autostep_)
+    {
+        ConsoleSimulationThreadData* data = new ConsoleSimulationThreadData{*this};
+        simulationThread = SDL_CreateThread(ConsoleSimulationApp::RunSimulation, "simulationThread", data);
+    }
 }
 
 void ConsoleSimulationApp::ResumeSimulation()
 {
     SimulationApp::ResumeSimulation();
     
-    ConsoleSimulationThreadData* data = new ConsoleSimulationThreadData();
-    data->app = this;
-    simulationThread = SDL_CreateThread(ConsoleSimulationApp::RunSimulation, "simulationThread", data);
+    if (autostep_)
+    {
+        ConsoleSimulationThreadData* data = new ConsoleSimulationThreadData{*this};
+        simulationThread = SDL_CreateThread(ConsoleSimulationApp::RunSimulation, "simulationThread", data);
+    }
 }
 
 void ConsoleSimulationApp::StopSimulation()
 {
     SimulationApp::StopSimulation();
     
-    int status;
-    SDL_WaitThread(simulationThread, &status);
-    simulationThread = NULL;
+    if (autostep_ && simulationThread != nullptr)
+    {
+        int status;
+        SDL_WaitThread(simulationThread, &status);
+        simulationThread = nullptr;
+    }
 }
 
 //Static
 int ConsoleSimulationApp::RunSimulation(void* data)
 {
-    ConsoleSimulationThreadData* stdata = (ConsoleSimulationThreadData*)data;
-    SimulationManager* sim = stdata->app->getSimulationManager();
-    sim->setCallSimulationStepCompleted(stdata->app->timeStep_ == Scalar(0));
+    ConsoleSimulationApp& simApp = static_cast<ConsoleSimulationThreadData*>(data)->app;
+    SimulationManager* simManager = simApp.getSimulationManager();
+    simManager->setCallSimulationStepCompleted(simApp.timeStep_ == Scalar(0));
 
     int maxThreads = std::max(omp_get_max_threads()/2, 1);
     omp_set_num_threads(maxThreads);
     
-    while(stdata->app->isRunning())
+    while(simApp.getState() == SimulationState::RUNNING)
     {
-        if (stdata->app->timeStep_ == Scalar(0)) // Real time simulation
-        {
-            sim->AdvanceSimulation();
-        }
-        else // Fixed step simulation
-        {   
-            sim->StepSimulation(stdata->app->timeStep_);
-            sim->SimulationStepCompleted(stdata->app->timeStep_);
-        }
+        simApp.StepSimulation();
     }
 
     return 0;

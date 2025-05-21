@@ -54,6 +54,18 @@ namespace sf
         
         //! A destructor.
         virtual ~GraphicalSimulationApp();
+
+        //! A method that starts the simulation on demand.
+        void StartSimulation() override;
+
+        //! A method that stops the simulation on demand.
+        void StopSimulation() override;
+
+        //! A method that resumes the simulation on demand.
+        void ResumeSimulation() override;
+
+        //! A method that performs a single simulation step and necessary updates.
+        void StepSimulation() override;
         
         //! A method implementing the GUI on top of the simulation window.
         virtual void DoHUD();
@@ -174,9 +186,6 @@ namespace sf
         void Init();
         void LoopInternal();
         void CleanUp();
-        void StartSimulation();
-        void ResumeSimulation();
-        void StopSimulation();
         
         virtual void InitializeGUI();
         
@@ -222,19 +231,9 @@ namespace sf
     };
     
     //! A structure used to pass information between threads.
-    typedef struct
+    struct GraphicalSimulationThreadData
     {
-        GraphicalSimulationApp* app;
-        SDL_mutex* drawingQueueMutex;
-    }
-    GraphicalSimulationThreadData;
-    
-    //! A structure used to pass information between threads.
-    typedef struct
-    {
-        GraphicalSimulationApp* app;
-        SDL_mutex* mutex;
-    }
-    LoadingThreadData;
+        GraphicalSimulationApp& app;
+    };
 }
 #endif

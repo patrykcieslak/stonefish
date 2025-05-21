@@ -214,6 +214,8 @@ void GraphicalSimulationApp::Init()
 
     //Create performance counters
     glGenQueries(2, timeQuery);
+
+    state_ = SimulationState::STOPPED;
 }
 
 void GraphicalSimulationApp::InitializeSDL()
@@ -296,9 +298,7 @@ void GraphicalSimulationApp::InitializeSDL()
     ((OpenGLConsole*)console)->Init(windowW, windowH);
     
     //Create loading thread
-    LoadingThreadData* data = new LoadingThreadData();
-    data->app = this;
-    data->mutex = console->getLinesMutex();
+    GraphicalSimulationThreadData* data = new GraphicalSimulationThreadData{*this};
     loadingThread = SDL_CreateThread(GraphicalSimulationApp::RenderLoadingScreen, "loadingThread", data);
     
     //Look for joysticks
@@ -348,17 +348,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
         case SDLK_ESCAPE:
             Quit();
             break;
-            
-        // case SDLK_SPACE:
-        //     selectedEntity = std::make_pair(nullptr, 0);
-        //     if(!getSimulationManager()->isSimulationFresh())
-        //     {
-        //         StopSimulation();
-        //         getSimulationManager()->RestartScenario();
-        //     }
-        //     StartSimulation();
-        //     break;
-            
+                      
         case SDLK_h:
             displayHUD = !displayHUD;
             break;
@@ -569,7 +559,7 @@ void GraphicalSimulationApp::LoopInternal()
                 
             case SDL_QUIT:
             {
-                if(isRunning())
+                if(state_ == SimulationState::RUNNING)
                     StopSimulation();
                     
                 Quit();
@@ -629,7 +619,7 @@ void GraphicalSimulationApp::LoopInternal()
 void GraphicalSimulationApp::RenderLoop()
 {
     //Do some updates
-    if(!isRunning())
+    if(state_ != SimulationState::RUNNING)
     {
         getSimulationManager()->UpdateDrawingQueue();
     }
@@ -1004,21 +994,23 @@ void GraphicalSimulationApp::DoHUD()
 void GraphicalSimulationApp::StartSimulation()
 {
     SimulationApp::StartSimulation();
-    
-    GraphicalSimulationThreadData* data = new GraphicalSimulationThreadData();
-    data->app = this;
-    data->drawingQueueMutex = glPipeline->getDrawingQueueMutex();
-    simulationThread = SDL_CreateThread(GraphicalSimulationApp::RunSimulation, "simulationThread", data);
+
+    if (autostep_)
+    {   
+        GraphicalSimulationThreadData* data = new GraphicalSimulationThreadData{*this};
+        simulationThread = SDL_CreateThread(GraphicalSimulationApp::RunSimulation, "simulationThread", data);
+    }
 }
 
 void GraphicalSimulationApp::ResumeSimulation()
 {
     SimulationApp::ResumeSimulation();
     
-    GraphicalSimulationThreadData* data = new GraphicalSimulationThreadData();
-    data->app = this;
-    data->drawingQueueMutex = glPipeline->getDrawingQueueMutex();
-    simulationThread = SDL_CreateThread(GraphicalSimulationApp::RunSimulation, "simulationThread", data);
+    if (autostep_)
+    {
+        GraphicalSimulationThreadData* data = new GraphicalSimulationThreadData{*this};
+        simulationThread = SDL_CreateThread(GraphicalSimulationApp::RunSimulation, "simulationThread", data);
+    }
 }
 
 void GraphicalSimulationApp::StopSimulation()
@@ -1027,9 +1019,24 @@ void GraphicalSimulationApp::StopSimulation()
 	selectedEntity = std::make_pair(nullptr, -1);
 	trackballCenter = nullptr;
     
-    int status;
-    SDL_WaitThread(simulationThread, &status);
-    simulationThread = nullptr;
+    if (autostep_ && simulationThread != nullptr)
+    {
+        int status;
+        SDL_WaitThread(simulationThread, &status);
+        simulationThread = nullptr;
+    }
+}
+
+void GraphicalSimulationApp::StepSimulation()
+{
+    SimulationApp::StepSimulation();
+        
+    if(getGLPipeline()->isDrawingQueueEmpty())
+    {
+        SDL_LockMutex(getGLPipeline()->getDrawingQueueMutex());
+        getSimulationManager()->UpdateDrawingQueue();
+        SDL_UnlockMutex(getGLPipeline()->getDrawingQueueMutex());
+    }
 }
 
 void GraphicalSimulationApp::CleanUp()
@@ -1051,15 +1058,15 @@ void GraphicalSimulationApp::CleanUp()
 int GraphicalSimulationApp::RenderLoadingScreen(void* data)
 {
     //Get application
-    LoadingThreadData* ltdata = (LoadingThreadData*)data;
+    GraphicalSimulationApp& app = static_cast<GraphicalSimulationThreadData*>(data)->app;
     
     //Make drawing in this thread possible
-    SDL_GL_MakeCurrent(ltdata->app->window, ltdata->app->glLoadingContext);  
+    SDL_GL_MakeCurrent(app.window, app.glLoadingContext);  
     
     //Render loading screen
     glClearColor(0.2f, 0.2f, 0.2f, 0.0f);
-    glScissor(0, 0, ltdata->app->windowW, ltdata->app->windowH);
-    glViewport(0, 0, ltdata->app->windowW, ltdata->app->windowH);
+    glScissor(0, 0, app.windowW, app.windowH);
+    glViewport(0, 0, app.windowW, app.windowH);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
@@ -1070,53 +1077,39 @@ int GraphicalSimulationApp::RenderLoadingScreen(void* data)
     glBindVertexArray(vao);
     glEnableVertexAttribArray(0);
     
-    while(ltdata->app->loading)
+    while(app.loading)
     {
         glClear(GL_COLOR_BUFFER_BIT);
         
         //Lock to prevent adding lines to the console while rendering
-        SDL_LockMutex(ltdata->mutex);
-        ((OpenGLConsole*)ltdata->app->getConsole())->Render(false);
-        SDL_UnlockMutex(ltdata->mutex);
+        SDL_LockMutex(app.console->getLinesMutex());
+        static_cast<OpenGLConsole*>(app.console)->Render(false);
+        SDL_UnlockMutex(app.console->getLinesMutex());
         
-        SDL_GL_SwapWindow(ltdata->app->window);
+        SDL_GL_SwapWindow(app.window);
     }
     
     glBindVertexArray(0);
     glDeleteVertexArrays(1, &vao);
     
     //Detach thread from GL context
-    SDL_GL_MakeCurrent(ltdata->app->window, nullptr);
+    SDL_GL_MakeCurrent(app.window, nullptr);
     return 0;
 }
 
 int GraphicalSimulationApp::RunSimulation(void* data)
 {
-    GraphicalSimulationThreadData* stdata = (GraphicalSimulationThreadData*)data;
-    SimulationManager* sim = stdata->app->getSimulationManager();
-    sim->setCallSimulationStepCompleted(stdata->app->timeStep_ == Scalar(0));
+    GraphicalSimulationApp& simApp = static_cast<GraphicalSimulationThreadData*>(data)->app;
+    SimulationManager* simManager = simApp.getSimulationManager();
+
+    simManager->setCallSimulationStepCompleted(simApp.timeStep_ == Scalar(0));
 
     int maxThreads = std::max(omp_get_max_threads()/2, 1);
     omp_set_num_threads(maxThreads);
     
-    while(stdata->app->isRunning())
+    while(simApp.getState() == SimulationState::RUNNING)
     {
-        if (stdata->app->timeStep_ == Scalar(0)) // Real time simulation
-        {
-            sim->AdvanceSimulation();
-        }
-        else // Fixed step simulation
-        {   
-            sim->StepSimulation(stdata->app->timeStep_);
-            sim->SimulationStepCompleted(stdata->app->timeStep_);
-        }
-        
-        if(stdata->app->getGLPipeline()->isDrawingQueueEmpty())
-        {
-            SDL_LockMutex(stdata->drawingQueueMutex);
-            sim->UpdateDrawingQueue();
-            SDL_UnlockMutex(stdata->drawingQueueMutex);
-        }
+        simApp.StepSimulation();
     }
     
     return 0;

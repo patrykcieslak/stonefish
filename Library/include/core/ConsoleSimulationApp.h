@@ -47,6 +47,15 @@ namespace sf
         
         //! A destructor.
         virtual ~ConsoleSimulationApp();
+
+        //! A method that starts the simulation on demand.
+        void StartSimulation() override;
+
+        //! A method that stops the simulation on demand.
+        void StopSimulation() override;
+
+        //! A method that resumes the simulation on demand.
+        void ResumeSimulation() override;
         
         //! A method informing if the application is graphical.
         bool hasGraphics();
@@ -54,9 +63,6 @@ namespace sf
     protected:
         void Init();
         void LoopInternal();
-        void StartSimulation();
-        void ResumeSimulation();
-        void StopSimulation();
         
     private:
         SDL_Thread* simulationThread;
@@ -64,11 +70,10 @@ namespace sf
     };
     
     //! A structure used to pass information between threads.
-    typedef struct
+    struct ConsoleSimulationThreadData
     {
-        ConsoleSimulationApp* app;
-    }
-    ConsoleSimulationThreadData;
+        ConsoleSimulationApp& app;
+    };
 }
 
 #endif

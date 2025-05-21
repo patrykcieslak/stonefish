@@ -508,8 +508,6 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 
                         //Rendering only above water
                         //possible because camera near plane is (virtually) removed with logarithmic depth buffer.
-                        glm::vec3 eye = camera->GetEyePosition();
-                        
                         glOcean->DrawSurfaceTemperature(camera);
                         //Draw all objects as above surface 
                         //(depth testing will secure drawing only what is above water)

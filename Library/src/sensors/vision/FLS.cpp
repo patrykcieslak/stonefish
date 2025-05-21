@@ -192,7 +192,6 @@ std::vector<Renderable> FLS::Render()
         item.type = RenderableType::SENSOR_LINES;    
         
         //Create sonar dummy
-        GLfloat iconSize = range.y;
         int div = 12;
         GLfloat fovStep = glm::radians(fovH)/(GLfloat)div;
         //Min Arcs
