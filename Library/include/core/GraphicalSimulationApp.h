@@ -44,13 +44,13 @@ namespace sf
     public:
         //! A constructor.
         /*!
-         \param name a name for the application
+         \param title a title for the application
          \param dataDirPath a path to the directory containing simulation data
          \param s a structure containing the rendering settings
          \param h a structure containing the helper objects display settings
          \param sim a pointer to the simulation manager
          */
-        GraphicalSimulationApp(std::string name, std::string dataDirPath, RenderSettings s, HelperSettings h, SimulationManager* sim);
+        GraphicalSimulationApp(std::string title, std::string dataDirPath, RenderSettings s, HelperSettings h, SimulationManager* sim);
         
         //! A destructor.
         virtual ~GraphicalSimulationApp();

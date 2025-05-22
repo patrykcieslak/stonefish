@@ -53,11 +53,11 @@ namespace sf
     public:
         //! A constructor.
         /*!
-         \param name a name for the application
+         \param title a title for the application
          \param dataDirPath a path to the directory containing simulation data
          \param sim a pointer to the simulation manager
          */
-        SimulationApp(std::string name, std::string dataDirPath, SimulationManager* sim);
+        SimulationApp(std::string title, std::string dataDirPath, SimulationManager* sim);
         
         //! A destructor.
         virtual ~SimulationApp();
@@ -116,17 +116,17 @@ namespace sf
         
         virtual void InitializeSimulation();
         
-        Console* console;
-        uint64_t startTime;
+        Console* console_;
+        uint64_t startTime_;
         bool autostep_;
         Scalar timeStep_;
         SimulationState state_;
 
     private:
-        SimulationManager* simulation;
-        std::string appName;
-        std::string dataPath;
-        double physicsTime;
+        SimulationManager* simManager_;
+        std::string title_;
+        std::string dataPath_;
+        double physicsTime_;
         
         static SimulationApp* handle;
     };

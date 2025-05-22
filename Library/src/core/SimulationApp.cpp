@@ -31,16 +31,12 @@
 namespace sf
 {
 
-SimulationApp::SimulationApp(std::string name, std::string dataDirPath, SimulationManager* sim)
+SimulationApp::SimulationApp(std::string title, std::string dataDirPath, SimulationManager* sim)
+    : console_{new Console()}, startTime_{0}, autostep_{true}, timeStep_{Scalar(0)}, state_{SimulationState::NOT_READY},
+      simManager_{sim}, title_{title}, dataPath_{dataDirPath}, physicsTime_{0.0}
 {
     SimulationApp::handle = this;
-	state_ = SimulationState::NOT_READY;
-    appName = name;
-    dataPath = dataDirPath;
-    simulation = sim;
-    physicsTime = 0.0;
-    timeStep_ = Scalar(0);
-    console = new Console();
+
     //Version info
     if(STONEFISH_VER_PATCH != 0)
         cInfo("Welcome to Stonefish %d.%d.%d", STONEFISH_VER_MAJOR, STONEFISH_VER_MINOR, STONEFISH_VER_PATCH);
@@ -61,27 +57,27 @@ SimulationState SimulationApp::getState() const
 
 SimulationManager* SimulationApp::getSimulationManager()
 {
-    return simulation;
+    return simManager_;
 }
 
 double SimulationApp::getPhysicsTime()
 {
-    return physicsTime;
+    return physicsTime_;
 }
 
 std::string SimulationApp::getDataPath()
 {
-    return dataPath;
+    return dataPath_;
 }
 
 std::string SimulationApp::getName()
 {
-	return appName;
+	return title_;
 }
 
 Console* SimulationApp::getConsole()
 {
-    return console;
+    return console_;
 }
 
 void SimulationApp::Init()
@@ -91,9 +87,9 @@ void SimulationApp::Init()
 void SimulationApp::InitializeSimulation()
 {
     cInfo("Building scenario...");
-    simulation->RestartScenario();
+    simManager_->RestartScenario();
     cInfo("Synchronizing motion states...");
-    simulation->getDynamicsWorld()->synchronizeMotionStates();
+    simManager_->getDynamicsWorld()->synchronizeMotionStates();
     cInfo("Simulation initialized -> using Bullet Physics %d.%d.", btGetVersion()/100, btGetVersion()%100);
 }
 
@@ -110,40 +106,40 @@ void SimulationApp::Run(bool autostart, bool autostep, Scalar timeStep)
 
 void SimulationApp::Loop()
 {
-    startTime = GetTimeInMicroseconds();
+    startTime_ = GetTimeInMicroseconds();
     while(state_ != SimulationState::FINISHED)
         LoopInternal();
 }
 
 void SimulationApp::StartSimulation()
 {
-    simulation->StartSimulation();
+    simManager_->StartSimulation();
     state_ = SimulationState::RUNNING;
 }
 
 void SimulationApp::ResumeSimulation()
 {
-    simulation->ResumeSimulation();
+    simManager_->ResumeSimulation();
     state_ = SimulationState::RUNNING;
 }
 
 void SimulationApp::StopSimulation()
 {
-    simulation->StopSimulation();
+    simManager_->StopSimulation();
 	state_ = SimulationState::STOPPED;
-    physicsTime = 0.f;
+    physicsTime_ = 0.f;
 }
 
 void SimulationApp::StepSimulation()
 {
     if (timeStep_ == Scalar(0)) // Real time simulation
     {
-        simulation->AdvanceSimulation();
+        simManager_->AdvanceSimulation();
     }
     else // Fixed step simulation
     {   
-        simulation->StepSimulation(timeStep_);
-        simulation->SimulationStepCompleted(timeStep_);
+        simManager_->StepSimulation(timeStep_);
+        simManager_->SimulationStepCompleted(timeStep_);
     }
 }
 

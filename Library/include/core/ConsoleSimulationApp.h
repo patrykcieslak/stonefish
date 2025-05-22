@@ -39,11 +39,11 @@ namespace sf
     public:
         //! A constructor.
         /*!
-         \param name a name for the application
+         \param title a title for the application
          \param dataDirPath a path to the directory containing the simulation data
          \param sim a pointer to the simulation manager
          */
-        ConsoleSimulationApp(std::string name, std::string dataDirPath, SimulationManager* sim);
+        ConsoleSimulationApp(std::string title, std::string dataDirPath, SimulationManager* sim);
         
         //! A destructor.
         virtual ~ConsoleSimulationApp();

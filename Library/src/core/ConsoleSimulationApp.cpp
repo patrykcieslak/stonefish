@@ -34,15 +34,15 @@
 namespace sf
 {
 
-ConsoleSimulationApp::ConsoleSimulationApp(std::string name, std::string dataDirPath, SimulationManager* sim)
-: SimulationApp(name, dataDirPath, sim)
+ConsoleSimulationApp::ConsoleSimulationApp(std::string title, std::string dataDirPath, SimulationManager* sim)
+: SimulationApp(title, dataDirPath, sim)
 {
     simulationThread = nullptr;
 }
 
 ConsoleSimulationApp::~ConsoleSimulationApp()
 {
-    delete console;
+    delete console_;
 }
 
 bool ConsoleSimulationApp::hasGraphics()

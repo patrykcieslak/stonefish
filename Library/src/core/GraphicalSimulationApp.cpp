@@ -47,8 +47,8 @@
 namespace sf
 {
 
-GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dataDirPath, RenderSettings r, HelperSettings h, SimulationManager* sim)
-: SimulationApp(name, dataDirPath, sim)
+GraphicalSimulationApp::GraphicalSimulationApp(std::string title, std::string dataDirPath, RenderSettings r, HelperSettings h, SimulationManager* sim)
+: SimulationApp(title, dataDirPath, sim)
 {
 #ifdef SHADER_DIR_PATH
     shaderPath = SHADER_DIR_PATH;
@@ -89,7 +89,7 @@ GraphicalSimulationApp::GraphicalSimulationApp(std::string name, std::string dat
 
 GraphicalSimulationApp::~GraphicalSimulationApp()
 {
-    if(console != nullptr) delete console;
+    if(console_ != nullptr) delete console_;
     if(glPipeline != nullptr) delete glPipeline;
     if(gui != nullptr) delete gui;
     
@@ -290,12 +290,12 @@ void GraphicalSimulationApp::InitializeSDL()
     GLSLShader::Init();
     
     //Initialize console output
-    std::vector<ConsoleMessage> textLines = console->getLines();
-    delete console;
-    console = new OpenGLConsole();
+    std::vector<ConsoleMessage> textLines = console_->getLines();
+    delete console_;
+    console_ = new OpenGLConsole();
     for(size_t i=0; i<textLines.size(); ++i)
-        console->AppendMessage(textLines[i]);
-    ((OpenGLConsole*)console)->Init(windowW, windowH);
+        console_->AppendMessage(textLines[i]);
+    ((OpenGLConsole*)console_)->Init(windowW, windowH);
     
     //Create loading thread
     GraphicalSimulationThreadData* data = new GraphicalSimulationThreadData{*this};
@@ -363,7 +363,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
 
         case SDLK_c:
             displayConsole = !displayConsole;
-            ((OpenGLConsole*)console)->ResetScroll();
+            ((OpenGLConsole*)console_)->ResetScroll();
             break;
             
         case SDLK_w: //Forward
@@ -533,7 +533,7 @@ void GraphicalSimulationApp::LoopInternal()
             case SDL_MOUSEWHEEL:
             {
                 if(displayConsole) //GUI
-                    ((OpenGLConsole*)console)->Scroll((GLfloat)-event.wheel.y);
+                    ((OpenGLConsole*)console_)->Scroll((GLfloat)-event.wheel.y);
                 else
                 {
                     //Trackball
@@ -609,10 +609,10 @@ void GraphicalSimulationApp::LoopInternal()
     //Framerate limitting (60Hz)
     if(limitFramerate)
     {
-        uint64_t elapsedTime = GetTimeInMicroseconds() - startTime;
+        uint64_t elapsedTime = GetTimeInMicroseconds() - startTime_;
         if(elapsedTime < 16000)
             std::this_thread::sleep_for(std::chrono::microseconds(16000 - elapsedTime));
-        startTime = GetTimeInMicroseconds();
+        startTime_ = GetTimeInMicroseconds();
     }
 }
 
@@ -633,7 +633,7 @@ void GraphicalSimulationApp::RenderLoop()
     if(displayConsole)
     {
         gui->GenerateBackground();
-        ((OpenGLConsole*)console)->Render(true);
+        ((OpenGLConsole*)console_)->Render(true);
     }
     else
     {
@@ -1082,9 +1082,9 @@ int GraphicalSimulationApp::RenderLoadingScreen(void* data)
         glClear(GL_COLOR_BUFFER_BIT);
         
         //Lock to prevent adding lines to the console while rendering
-        SDL_LockMutex(app.console->getLinesMutex());
-        static_cast<OpenGLConsole*>(app.console)->Render(false);
-        SDL_UnlockMutex(app.console->getLinesMutex());
+        SDL_LockMutex(app.console_->getLinesMutex());
+        static_cast<OpenGLConsole*>(app.console_)->Render(false);
+        SDL_UnlockMutex(app.console_->getLinesMutex());
         
         SDL_GL_SwapWindow(app.window);
     }

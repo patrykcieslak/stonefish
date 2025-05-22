@@ -349,7 +349,6 @@ void OpenGLEventBasedCamera::Init()
     
     sources.clear();
     std::string header = "#version 430\n#define MAX_TEXTURE_WIDTH " + std::to_string(maxTextureSize.x) + "\n";
-    printf("Max texture size: %d\n", maxTextureSize.x);
     sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "event.comp", header));
     eventOutputShaders[1] = new GLSLShader(sources);
     eventOutputShaders[1]->AddUniform("currColor", ParameterType::INT);
