@@ -68,7 +68,6 @@ GraphicalSimulationApp::GraphicalSimulationApp(std::string title, std::string da
     joystickButtons = nullptr;
     joystickHats = nullptr;
     mouseWasDown.type = SDL_LASTEVENT;
-    limitFramerate = true;
     simulationThread = nullptr;
     loadingThread = nullptr;
     glPipeline = nullptr;
@@ -77,6 +76,7 @@ GraphicalSimulationApp::GraphicalSimulationApp(std::string title, std::string da
     timeQuery[1] = 0;
     timeQueryPingpong = 0;
     drawingTime = 0.0;
+    fps_ = 0.0;
     maxDrawingTime = 0.0;
     maxCounter = 0;
     rSettings = r;
@@ -119,11 +119,6 @@ void GraphicalSimulationApp::ShowConsole()
 void GraphicalSimulationApp::HideConsole()
 {
     displayConsole = false;
-}
-
-void GraphicalSimulationApp::setLimitFramerate(bool enabled)
-{
-    limitFramerate = enabled;
 }
 
 OpenGLPipeline* GraphicalSimulationApp::getGLPipeline()
@@ -273,9 +268,12 @@ void GraphicalSimulationApp::InitializeSDL()
     if(glMainContext == nullptr)
         cCritical("SDL2: %s", SDL_GetError());
     
-    //Disable vertical synchronization --> use framerate limitting instead (e.g. max 60 FPS)
-    if(SDL_GL_SetSwapInterval(0) == -1)
-        cError("SDL2: %s", SDL_GetError());
+    //Disable vertical synchronization
+    if(!rSettings.verticalSync)
+    {
+        if(SDL_GL_SetSwapInterval(0) == -1)
+            cError("SDL2: %s", SDL_GetError());
+    }
     
     //Initialize OpenGL function handlers 
     int version = gladLoadGL((GLADloadfunc) SDL_GL_GetProcAddress);
@@ -606,14 +604,12 @@ void GraphicalSimulationApp::LoopInternal()
     }
     mouseWasDown.type = SDL_LASTEVENT;
 
-    //Framerate limitting (60Hz)
-    if(limitFramerate)
-    {
-        uint64_t elapsedTime = GetTimeInMicroseconds() - startTime_;
-        if(elapsedTime < 16000)
-            std::this_thread::sleep_for(std::chrono::microseconds(16000 - elapsedTime));
-        startTime_ = GetTimeInMicroseconds();
-    }
+    // Update FPS
+    uint64_t elapsedTime = GetTimeInMicroseconds() - startTime_;
+    startTime_ = GetTimeInMicroseconds();
+    double dt = std::min(elapsedTime/1000000.0 + 1e-6, 1.0); //in s, secure against large values at the beginning
+	constexpr double f = 1.0/60.0;
+	fps_ = f*(1.0/dt) + (1.0-f)*fps_;
 }
 
 void GraphicalSimulationApp::RenderLoop()
@@ -947,14 +943,14 @@ void GraphicalSimulationApp::DoHUD()
     //Bottom panel
     gui->DoPanel(-10, getWindowHeight()-30.f, getWindowWidth()+20, 30.f);
     
-    std::sprintf(buf, "Drawing time: %1.2lf (%1.2lf) ms", getDrawingTime(), getDrawingTime(true));
+    std::sprintf(buf, "Drawing time: %1.2lf ms (FPS %1.0lf)", getDrawingTime(), fps_);
     gui->DoLabel(10, getWindowHeight() - 20.f, buf);
     
     std::sprintf(buf, "CPU usage: %1.0lf%%", getSimulationManager()->getCpuUsage());
-    gui->DoLabel(190, getWindowHeight() - 20.f, buf);
+    gui->DoLabel(220, getWindowHeight() - 20.f, buf);
     
     std::sprintf(buf, "Simulation time: %1.2lf s", getSimulationManager()->getSimulationTime());
-    gui->DoLabel(320, getWindowHeight() - 20.f, buf);
+    gui->DoLabel(350, getWindowHeight() - 20.f, buf);
 
     gui->DoLabel(getWindowWidth() - 100.f, getWindowHeight() - 20.f, "Hit [K] for keymap");
 

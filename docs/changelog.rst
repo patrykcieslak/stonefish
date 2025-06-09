@@ -12,12 +12,14 @@ The changelog of the library code is presented below. **Breaking changes** were 
 -  Implemented a segmentation camera
 -  Implemented a thermal camera
 -  *Implemented an optical modem*
--  Improved processing of messages of all communication devices
+-  *Improved processing of messages of all communication devices*
 -  Extended look definition to support temperature maps
 -  Added water temperature
 -  Added air temperature, pressure, and humidity
 -  Added a test application for all camera types
 -  Updated marine snow rendering to use the same particle system for vision sensors attached to the same body
+-  Removed failing framerate limitting and added option to enable vertical synchronisation
+-  Fixed application of hydrodynamic drag coefficients to compound bodies
 -  Fixed problems with vision sensor framerate not consistent with settings
 -  Fixed switching on/off lights
 

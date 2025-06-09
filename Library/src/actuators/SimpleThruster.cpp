@@ -34,7 +34,7 @@
 namespace sf
 {
 
-SimpleThruster::SimpleThruster(std::string uniqueName, SolidEntity* propeller, bool rightHand, bool inverted) : LinkActuator(uniqueName)
+SimpleThruster::SimpleThruster(std::string uniqueName, std::shared_ptr<SolidEntity> propeller, bool rightHand, bool inverted) : LinkActuator(uniqueName)
 {
     RH = rightHand;
     inv = inverted;
@@ -43,14 +43,8 @@ SimpleThruster::SimpleThruster(std::string uniqueName, SolidEntity* propeller, b
     torque = Scalar(0);
     setThrustLimits(1, -1); // No limits
     
-    prop = propeller;
-    prop->BuildGraphicalObject();
-}
-
-SimpleThruster::~SimpleThruster()
-{
-    if(prop != nullptr)
-        delete prop;
+    propeller_ = propeller;
+    propeller_->BuildGraphicalObject();
 }
 
 ActuatorType SimpleThruster::getType() const
@@ -158,9 +152,9 @@ std::vector<Renderable> SimpleThruster::Render()
     std::vector<Renderable> items(0);
     Renderable item;
     item.type = RenderableType::SOLID;
-    item.materialName = prop->getMaterial().name;
-    item.objectId = prop->getGraphicalObject();
-    item.lookId = dm == DisplayMode::GRAPHICAL ? prop->getLook() : -1;
+    item.materialName = propeller_->getMaterial().name;
+    item.objectId = propeller_->getGraphicalObject();
+    item.lookId = dm == DisplayMode::GRAPHICAL ? propeller_->getLook() : -1;
 	item.model = glMatrixFromTransform(thrustTrans);
     items.push_back(item);
     

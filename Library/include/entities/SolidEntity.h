@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 29/12/12.
-//  Copyright(c) 2012-2021 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2012-2025 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_SolidEntity__
@@ -126,8 +126,12 @@ namespace sf
          \param _Tdq the torque induced by the form drag force [Nm]
          \param _Fdf the skin friction force [N]
          \param _Tdf the torque induced by the skin friction force [Nm]
+         \param fdCd the form drag coefficient
+         \param fdCf the skin friction coefficient
+         \param T_O a transform from the world frame to the body origin frame
         */
-        void CorrectHydrodynamicForces(Ocean* ocn, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fdf, Vector3& _Tdf);
+        static void CorrectHydrodynamicForces(Ocean* ocn, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fdf, Vector3& _Tdf, 
+            const Vector3& fdCd, const Vector3& fdCf, const Transform& T_O);
         
         //! A static method that computes fluid dynamics when a body is crossing the fluid surface.
         /*!

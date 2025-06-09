@@ -21,7 +21,7 @@
 //
 //  Created by Roger Pi on 03/06/2024
 //  Modified by Patryk Cieslak on 30/06/2024
-//  Copyright (c) 2024 Roger Pi and Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2025 Roger Pi and Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Thruster.h"
@@ -35,7 +35,7 @@
 namespace sf
 {
 
-Thruster::Thruster(std::string uniqueName, SolidEntity* propeller,
+Thruster::Thruster(std::string uniqueName, std::shared_ptr<SolidEntity> propeller,
                                             std::shared_ptr<RotorDynamics> rotorDynamics,
                                             std::shared_ptr<ThrustModel> thrustConversion,
                                             Scalar diameter, bool rightHand, Scalar maxSetpoint,
@@ -46,14 +46,8 @@ Thruster::Thruster(std::string uniqueName, SolidEntity* propeller,
       rotorModel(rotorDynamics), thrustModel(thrustConversion)
 {
     setSetpointLimit(maxSetpoint);
-    prop = propeller;
-    prop->BuildGraphicalObject();
-}
-
-Thruster::~Thruster()
-{
-    if (prop != nullptr)
-        delete prop;
+    propeller_ = propeller;
+    propeller_->BuildGraphicalObject();
 }
 
 ActuatorType Thruster::getType() const
@@ -182,9 +176,9 @@ std::vector<Renderable> Thruster::Render()
     std::vector<Renderable> items(0);
     Renderable item;
     item.type = RenderableType::SOLID;
-    item.materialName = prop->getMaterial().name;
-    item.objectId = prop->getGraphicalObject();
-    item.lookId = dm == DisplayMode::GRAPHICAL ? prop->getLook() : -1;
+    item.materialName = propeller_->getMaterial().name;
+    item.objectId = propeller_->getGraphicalObject();
+    item.lookId = dm == DisplayMode::GRAPHICAL ? propeller_->getLook() : -1;
     item.model = glMatrixFromTransform(thrustTrans);
     items.push_back(item);
 

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2025 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_GraphicalSimulationApp__
@@ -178,9 +178,6 @@ namespace sf
         
         //! A method returning a mutable reference to the helper object rendering settings.
         HelperSettings& getHelperSettings();
-
-        //! A method used to enable frame rate limitting.
-        void setLimitFramerate(bool enabled);
         
     protected:
         void Init();
@@ -217,6 +214,7 @@ namespace sf
         bool loading;
         double drawingTime;
         double maxDrawingTime;
+        double fps_;
         int maxCounter;
         int windowW;
         int windowH;
@@ -224,8 +222,7 @@ namespace sf
         HelperSettings hSettings;
         GLuint timeQuery[2];
         GLint timeQueryPingpong;
-        bool limitFramerate;
-
+        
         static int RenderLoadingScreen(void* data);
         static int RunSimulation(void* data);
     };

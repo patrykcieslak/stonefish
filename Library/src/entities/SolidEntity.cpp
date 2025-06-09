@@ -1014,6 +1014,9 @@ void SolidEntity::BuildGraphicalObject()
 {
     if(phyMesh == nullptr || !SimulationApp::getApp()->hasGraphics())
         return;
+
+    if (graObjectId > -1) // Object already built
+        return;
         
     graObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh);
     phyObjectId = graObjectId;
@@ -1229,30 +1232,29 @@ BodyFluidPosition SolidEntity::CheckBodyFluidPosition(Ocean* ocn)
         return BodyFluidPosition::CROSSING_SURFACE;
 }
 
-void SolidEntity::CorrectHydrodynamicForces(Ocean* ocn, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fdf, Vector3& _Tdf)
+void SolidEntity::CorrectHydrodynamicForces(Ocean* ocn, Vector3& _Fdq, Vector3& _Tdq, Vector3& _Fdf, Vector3& _Tdf, 
+    const Vector3& fdCd, const Vector3& fdCf, const Transform& T_O)
 {
-    Vector3 Fdq = getOTransform().getBasis().inverse() * _Fdq; // In origin frame
+    Matrix3 toOrigin = T_O.getBasis().inverse();
+
+    Vector3 Fdq = toOrigin * _Fdq;
     Fdq = Fdq.safeNormalize();
     Scalar Fdqc = btFabs(Fdq.getX()) * fdCd.getX() + btFabs(Fdq.getY()) * fdCd.getY() + btFabs(Fdq.getZ()) * fdCd.getZ();
-    //Fdqc = 1.0;
     _Fdq = Scalar(0.5) * ocn->getLiquid().density * Fdqc * _Fdq; //0.5*rho*Cd*S*v2 from drag equation    
 
-    Vector3 Tdq = getOTransform().getBasis().inverse() * _Tdq; // In origin frame
+    Vector3 Tdq = toOrigin * _Tdq;
     Tdq = Tdq.safeNormalize();
     Scalar Tdqc = btFabs(Tdq.getX()) * fdCd.getX() + btFabs(Tdq.getY()) * fdCd.getY() + btFabs(Tdq.getZ()) * fdCd.getZ();
-    //Tdqc = 1.0;
     _Tdq = Scalar(0.5) * ocn->getLiquid().density * Tdqc * _Tdq; //0.5*rho*Cd*S*v2 from drag equation
 
-    Vector3 Fdf = getOTransform().getBasis().inverse() * _Fdf; // In origin frame
+    Vector3 Fdf = toOrigin * _Fdf;
     Fdf = Fdf.safeNormalize();
     Scalar Fdfc = btFabs(Fdf.getX()) * fdCf.getX() + btFabs(Fdf.getY()) * fdCf.getY() + btFabs(Fdf.getZ()) * fdCf.getZ(); 
-    //Fdfc = 1.0;
     _Fdf = ocn->getLiquid().density * Fdfc * _Fdf; //rho*Cf*S*v from viscous drag equation
     
-    Vector3 Tdf = getOTransform().getBasis().inverse() * _Tdf; // In origin frame
+    Vector3 Tdf = toOrigin * _Tdf;
     Tdf = Tdf.safeNormalize();
     Scalar Tdfc = btFabs(Tdf.getX()) * fdCf.getX() + btFabs(Tdf.getY()) * fdCf.getY() + btFabs(Tdf.getZ()) * fdCf.getZ();
-    //Tdfc = 1.0;
     _Tdf = ocn->getLiquid().density * Tdfc * _Tdf; //rho*S*v from viscous drag equation
 }
 
@@ -1812,7 +1814,7 @@ void SolidEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
     }
     
     if(settings.dampingForces)
-        CorrectHydrodynamicForces(ocn, Fdq, Tdq, Fdf, Tdf);
+        CorrectHydrodynamicForces(ocn, Fdq, Tdq, Fdf, Tdf, fdCd, fdCf, getOTransform());
 }
 
 void SolidEntity::ComputeAerodynamicForces(Atmosphere* atm)

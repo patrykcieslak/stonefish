@@ -535,6 +535,7 @@ namespace sf
         RenderQuality ocean;
         RenderQuality aa;
         RenderQuality ssr;
+        bool verticalSync;
         
         //! A constructor.
         RenderSettings()
@@ -547,6 +548,7 @@ namespace sf
             ocean = RenderQuality::MEDIUM;
             aa = RenderQuality::MEDIUM;
             ssr = RenderQuality::MEDIUM;
+            verticalSync = false;
         }
     };
     

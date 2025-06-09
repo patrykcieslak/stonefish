@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 07/04/2024.
-//  Copyright (c) 2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2025 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_SimpleThruster__
@@ -40,10 +40,7 @@ namespace sf
          \param propeller a pointer to a rigid body representing the propeller
          \param rightHand a flag to indicate if the propeller is right hand (clockwise rotation)
         */
-        SimpleThruster(std::string uniqueName, SolidEntity* propeller, bool rightHand, bool inverted = false);
-        
-        //! A destructor.
-        ~SimpleThruster();
+        SimpleThruster(std::string uniqueName, std::shared_ptr<SolidEntity> propeller, bool rightHand, bool inverted = false);
         
         //! A method used to update the internal state of the thruster.
         /*!
@@ -83,7 +80,7 @@ namespace sf
         void WatchdogTimeout() override;
 
         //Params
-        SolidEntity* prop;
+        std::shared_ptr<SolidEntity> propeller_;
         bool RH;
         bool inv;
         std::pair<Scalar, Scalar> limits;

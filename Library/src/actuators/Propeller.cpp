@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/05/2019.
-//  Copyright (c) 2019-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Propeller.h"
@@ -34,7 +34,7 @@
 namespace sf
 {
 
-Propeller::Propeller(std::string uniqueName, SolidEntity* propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand, bool inverted) : LinkActuator(uniqueName)
+Propeller::Propeller(std::string uniqueName, std::shared_ptr<SolidEntity> propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand, bool inverted) : LinkActuator(uniqueName)
 {
     D = diameter;
     kT0 = thrustCoeff;
@@ -53,14 +53,8 @@ Propeller::Propeller(std::string uniqueName, SolidEntity* propeller, Scalar diam
     setpoint = Scalar(0);
     iError = Scalar(0);
     
-    prop = propeller;
-    prop->BuildGraphicalObject();
-}
-
-Propeller::~Propeller()
-{
-    if(prop != nullptr)
-        delete prop;
+    propeller_ = propeller;
+    propeller_->BuildGraphicalObject();
 }
 
 ActuatorType Propeller::getType() const
@@ -161,9 +155,9 @@ std::vector<Renderable> Propeller::Render()
     std::vector<Renderable> items(0);
     Renderable item;
     item.type = RenderableType::SOLID;
-    item.materialName = prop->getMaterial().name;
-    item.objectId = prop->getGraphicalObject();
-    item.lookId = dm == DisplayMode::GRAPHICAL ? prop->getLook() : -1;
+    item.materialName = propeller_->getMaterial().name;
+    item.objectId = propeller_->getGraphicalObject();
+    item.lookId = dm == DisplayMode::GRAPHICAL ? propeller_->getLook() : -1;
 	item.model = glMatrixFromTransform(propTrans);
     items.push_back(item);
     

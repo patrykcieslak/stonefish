@@ -21,7 +21,7 @@
 //
 //  Created by Roger Pi on 03/06/2024
 //  Modified by Patryk Cieslak on 30/06/2024
-//  Copyright (c) 2024 Roger Pi and Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2025 Roger Pi and Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -47,15 +47,12 @@ public:
    \param invertedSetpoint a flag to indicate if the setpoint is inverted (positive value results in backward force)
    \param normalizedSetpoint a flag to indicate if the setpoint given by the user is normalized [-1,1] 
   */
-  Thruster(std::string uniqueName, SolidEntity* propeller,     
+  Thruster(std::string uniqueName, std::shared_ptr<SolidEntity> propeller,     
                        std::shared_ptr<RotorDynamics> rotorDynamics,   
                        std::shared_ptr<ThrustModel> thrustConversion,  
                        Scalar diameter, bool rightHand, Scalar maxSetpoint, 
                        bool invertedSetpoint = false,
                        bool normalizedSetpoint = true);
-
-  //! A destructor.
-  ~Thruster();
 
   //! A method used to update the internal state of the thruster.
   /*!
@@ -109,7 +106,7 @@ private:
   void WatchdogTimeout() override;
 
   // Params
-  SolidEntity* prop;
+  std::shared_ptr<SolidEntity> propeller_;
   bool RH;
   Scalar D;
 

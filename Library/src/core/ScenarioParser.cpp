@@ -2596,7 +2596,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         phy.collisions = false;
         phy.buoyancy = false;
         phy.mode = BodyPhysicsMode::SUBMERGED;
-        Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), 
+        std::shared_ptr<Polyhedron> propeller = std::make_shared<Polyhedron>(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), 
             propScale, I4(), std::string(mat), lookStr, -1, GeometryApproxType::CYLINDER);
 
         Scalar maxSetpoint;
@@ -2608,7 +2608,6 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             if (item->QueryAttribute("max_setpoint", &maxSetpoint) != XML_SUCCESS)
             {
                 log.Print(MessageType::ERROR, "Max setpoint value of actuator '%s' missing!", actuatorName.c_str());
-                delete prop;
                 return nullptr;
             }
             item->QueryAttribute("inverted_setpoint", &inverted);
@@ -2617,14 +2616,12 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         else 
         {
             log.Print(MessageType::ERROR, "Specs of actuator '%s' missing!", actuatorName.c_str());
-            delete prop;
             return nullptr;
         }
 
         if ((item = element->FirstChildElement("rotor_dynamics")) == nullptr)
         {
             log.Print(MessageType::ERROR, "Rotor dynamics of actuator '%s' missing!", actuatorName.c_str());
-            delete prop;
             return nullptr;
         }
 
@@ -2641,7 +2638,6 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         else
         {
             log.Print(MessageType::ERROR, "Rotor dynamics type for actuator '%s' missing!", actuatorName.c_str());
-            delete prop;
             return nullptr;
         }
 
@@ -2661,7 +2657,6 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             {
                 log.Print(MessageType::ERROR, "Time constant of First Order rotor dynamics model of actuator '%s' missing!",
                     actuatorName.c_str());
-                delete prop;
                 return nullptr;
             }
         }
@@ -2679,7 +2674,6 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             {
                 log.Print(MessageType::ERROR, "Alpha or Beta of Yoerger rotor dynamics model in actuator '%s' missing!",
                         actuatorName.c_str());
-                delete prop;
                 return nullptr;
             }
         }
@@ -2704,14 +2698,13 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             else
             {
                 log.Print(MessageType::ERROR, "Bessa rotor dynamics model parameters in actuator '%s' missing!", actuatorName.c_str());
-                delete prop;
                 return nullptr;
             }
         }
         // Mechanical model with PI controller
         else if (rotorDynTypeStr == "mechanical_pi")
         {
-            Scalar J = prop->getInertia().getX() + prop->getAddedInertia().getX();
+            Scalar J = propeller->getInertia().getX() + propeller->getAddedInertia().getX();
             if((item2 = item->FirstChildElement("rotor_inertia")) != nullptr)
             {
                 item2->QueryAttribute("value", &J);
@@ -2719,7 +2712,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             else
             {
                 log.Print(MessageType::INFO, "Actuator '%s': using calculated rotor inertia = %1.5lf and added inertia = %1.5lf.", 
-                    actuatorName.c_str(), prop->getInertia().getX(), prop->getAddedInertia().getX());
+                    actuatorName.c_str(), propeller->getInertia().getX(), propeller->getAddedInertia().getX());
             }
 
             Scalar kp, ki, iLim; // PI settings
@@ -2735,14 +2728,12 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             else
             {
                 log.Print(MessageType::ERROR, "Mechanical rotor dynamics model parameters in actuator '%s' missing!", actuatorName.c_str());
-                delete prop;
                 return nullptr;
             }
         }
         else
         {
             log.Print(MessageType::ERROR, "Unknown rotor dynamics model type in actuator '%s'!", actuatorName.c_str());
-            delete prop;
             return nullptr;
         }
 
@@ -2752,7 +2743,6 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         if ((item = element->FirstChildElement("thrust_model")) == nullptr)
         {
             log.Print(MessageType::ERROR, "Thrust model of actuator '%s' missing!", actuatorName.c_str());
-            delete prop;
             return nullptr;
         }
 
@@ -2766,7 +2756,6 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         else
         {
             log.Print(MessageType::ERROR, "Thrust model type of actuator '%s' missing!", actuatorName.c_str());
-            delete prop;
             return nullptr;
         }
 
@@ -2784,7 +2773,6 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             { 
                 log.Print(MessageType::ERROR, "Quadratic thrust model rotor_constant of actuator '%s' missing!",
                         actuatorName.c_str());
-                delete prop;
                 return nullptr;
             }
 
@@ -2807,7 +2795,6 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             {    
                 log.Print(MessageType::ERROR, "Deadband thrust model parameters in actuator '%s' missing!",
                     actuatorName.c_str());
-                delete prop;
                 return nullptr;
             }
 
@@ -2847,7 +2834,6 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             else
             {
                 log.Print(MessageType::ERROR, "Linear interpolation of actuator '%s' missing!", actuatorName.c_str());
-                delete prop;
                 return nullptr;
             }
         }
@@ -2866,18 +2852,16 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             else
             {
                 log.Print(MessageType::ERROR, "Fluid dynamics model parameters in actuator '%s' missing!", actuatorName.c_str());
-                delete prop;
                 return nullptr;
             }
         }
         else
         {
             log.Print(MessageType::ERROR, "Unknown thrust model type in actuator '%s'!", actuatorName.c_str());
-            delete prop;
             return nullptr;
         }
 
-        Thruster* th = new Thruster(actuatorName, prop, rotorModel, thrustModel, diameter, rightHand, maxSetpoint, inverted, normalized);
+        Thruster* th = new Thruster(actuatorName, propeller, rotorModel, thrustModel, diameter, rightHand, maxSetpoint, inverted, normalized);
         return th;
     }
     else if(typeStr == "simple_thruster")
@@ -2918,14 +2902,14 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         phy.buoyancy = false;
         
         phy.mode = BodyPhysicsMode::SUBMERGED;
-        Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), lookStr);
+        std::shared_ptr<Polyhedron> propeller = std::make_shared<Polyhedron>(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), lookStr);
         
         if((item = element->FirstChildElement("specs")) != nullptr)
         {
             bool inverted = false;
             item->QueryAttribute("inverted", &inverted); //Optional
 
-            SimpleThruster* th = new SimpleThruster(actuatorName, prop, rightHand, inverted);
+            SimpleThruster* th = new SimpleThruster(actuatorName, propeller, rightHand, inverted);
 
             Scalar lower, upper;
             if(item->QueryAttribute("lower_thrust_limit", &lower) == XML_SUCCESS 
@@ -2937,7 +2921,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         }
         else
         {
-            SimpleThruster* th = new SimpleThruster(actuatorName, prop, rightHand);
+            SimpleThruster* th = new SimpleThruster(actuatorName, propeller, rightHand);
             return th;
         }
     }
@@ -2990,8 +2974,8 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         phy.collisions = false;
         phy.buoyancy = false;
         phy.mode = BodyPhysicsMode::AERODYNAMIC;
-        Polyhedron* prop = new Polyhedron(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), lookStr);
-        Propeller* p = new Propeller(actuatorName, prop, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
+        std::shared_ptr<Polyhedron> propeller = std::make_shared<Polyhedron>(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), lookStr);
+        Propeller* p = new Propeller(actuatorName, propeller, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
         return p;
     }
     else if(typeStr == "rudder")

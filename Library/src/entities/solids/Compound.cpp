@@ -343,8 +343,12 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
                     || parts[i].solid->getBodyPhysicsMode() == BodyPhysicsMode::FLOATING)) //Compute drag only for external parts
                 {
                     Transform T_C_part = getOTransform() * parts[i].origin * parts[i].solid->getO2CTransform();
+                    Transform T_O_part = getOTransform() * parts[i].origin;
+
                     ComputeHydrodynamicForcesSubmerged(parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fdqp, Tdqp, Fdfp, Tdfp);
-                    parts[i].solid->CorrectHydrodynamicForces(ocn, Fdqp, Tdqp, Fdfp, Tdfp);
+                    Vector3 Cd, Cf;
+                    parts[i].solid->getHydrodynamicCoefficients(Cd, Cf);
+                    CorrectHydrodynamicForces(ocn, Fdqp, Tdqp, Fdfp, Tdfp, Cd, Cf, T_O_part);
                     Fdq += Fdqp;
                     Tdq += Tdqp;
                     Fdf += Fdfp;
@@ -398,13 +402,16 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
                     continue;
 
                 Transform T_C_part = getOTransform() * parts[i].origin * parts[i].solid->getO2CTransform();
+                Transform T_O_part = getOTransform() * parts[i].origin;
                 HydrodynamicsSettings pSettings = settings;
                 pSettings.reallisticBuoyancy &= parts[i].solid->isBuoyant();
 
                 if(parts[i].isExternal) //Compute buoyancy and drag
                 {
                     ComputeHydrodynamicForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdqp, Tdqp, Fdfp, Tdfp, Swetp, Vsubp, submerged);
-                    parts[i].solid->CorrectHydrodynamicForces(ocn, Fdqp, Tdqp, Fdfp, Tdfp);
+                    Vector3 Cd, Cf;
+                    parts[i].solid->getHydrodynamicCoefficients(Cd, Cf);
+                    CorrectHydrodynamicForces(ocn, Fdqp, Tdqp, Fdfp, Tdfp, Cd, Cf, T_O_part);
                     Fb += Fbp;
                     Tb += Tbp;
                     Fdq += Fdqp;
