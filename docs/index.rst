@@ -36,11 +36,21 @@ If you find this software useful in your research, please cite:
       doi = "10.1109/OCEANSE.2019.8867434"
    }
 
+*Michele Grimaldi, Patryk Cieślak, Eduardo Ochoa, Vibhav Bharti, Hayat Rajani, Ignacio Carlucho, Maria Koskinopoulou, Yvan R. Petillot, and Nuno Gracias, "Stonefish: Supporting Machine Learning Research in Marine Robotics", In Proceedings of IEEE ICRA 2025, May 2025, Atlanta, USA*
 
-Support
-=======
+.. code-block:: bib
 
-I offer paid support on setting up the simulation of your own systems, including necessary 3D modelling (simplification of CAD models for physics, preparation of accurate visualisations, etc.), setup of simulation scenarios, development of new sensors, actuators, and custom features that do not require significant changes to the code base. Please contact me at patryk.cieslak@udg.edu.
+   @inproceedings{stonefish_ml,
+      author = "Michele Grimaldi and Patryk Cieslak and Eduardo Ochoa and Vibhav Bharti and Hayat Rajani and Ignacio Carlucho and Maria Koskinopoulou and Yvan R. Petillot and Nuno Gracias",
+      title = "Stonefish: Supporting Machine Learning Research in Marine Robotics",
+      booktitle = "Proceedings of the IEEE International Conference on Robotics and Automation",
+      month = "may",
+      year = "2025",
+      eprint = "2502.11887",
+      archivePrefix = "arXiv",
+      url = "https://arxiv.org/abs/2502.11887",
+      organization = "IEEE"
+   }
 
 Funding
 =======
