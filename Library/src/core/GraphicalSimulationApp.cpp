@@ -200,6 +200,13 @@ void GraphicalSimulationApp::Init()
     
     cInfo("Ready for running...");
     SDL_Delay(1000);
+
+    Robot* drone = getSimulationManager()->getRobot("Orca");
+    if (drone) 
+    {
+        trackballCenter = drone->getBaseLink();
+        getSimulationManager()->getTrackball()->GlueToMoving(trackballCenter);
+    }
     
     //Close loading console - exit loading thread
     loading = false;
