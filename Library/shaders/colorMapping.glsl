@@ -5,50 +5,50 @@ const float perulaB[256] = float[](0.5292, 0.5411, 0.553, 0.565, 0.5771, 0.5892,
 
 vec3 applyColorMapping(float value, int cmap)
 {
-    vec3 output;
+    vec3 color;
     switch(cmap)
     {
         case 0: //Hot
-            output.r = clamp(1.0/0.4*value, 0.0, 1.0);
-            output.g = clamp(1.0/0.4*(value-0.4), 0.0, 1.0);
-            output.b = clamp(1.0/0.2*(value-0.8), 0.0, 1.0);
+            color.r = clamp(1.0/0.4*value, 0.0, 1.0);
+            color.g = clamp(1.0/0.4*(value-0.4), 0.0, 1.0);
+            color.b = clamp(1.0/0.2*(value-0.8), 0.0, 1.0);
             break;
             
         case 1: //Jet
-            output.r = clamp((value-0.375)*4.0, 0.0, 1.0) - clamp((value-0.875)*4.0, 0.0, 0.5);
-            output.g = clamp((value-0.125)*4.0, 0.0, 1.0) - clamp((value-0.625)*4.0, 0.0, 1.0);
-            output.b = 0.5 + clamp(value*4.0, 0.0, 0.5) - clamp((value-0.375)*4.0, 0.0, 1.0);
+            color.r = clamp((value-0.375)*4.0, 0.0, 1.0) - clamp((value-0.875)*4.0, 0.0, 0.5);
+            color.g = clamp((value-0.125)*4.0, 0.0, 1.0) - clamp((value-0.625)*4.0, 0.0, 1.0);
+            color.b = 0.5 + clamp(value*4.0, 0.0, 0.5) - clamp((value-0.375)*4.0, 0.0, 1.0);
             break;
             
         case 2: //Perula
             int i = int(clamp(value*255.0, 0.0, 255.0));
-            output.r = perulaR[i];
-            output.g = perulaG[i];
-            output.b = perulaB[i];
+            color.r = perulaR[i];
+            color.g = perulaG[i];
+            color.b = perulaB[i];
             break;
             
         case 3: //Green-blue
-            output.r = clamp(cos((value-1.0)*2.0),0.0,1.0)*0.9;
-            output.g = clamp(cos((value-1.0)*1.57),0.0,1.0);
-            output.b = clamp(cos((value-0.3)*8.0)*0.5+0.5,0.0,1.0)*0.5;
+            color.r = clamp(cos((value-1.0)*2.0),0.0,1.0)*0.9;
+            color.g = clamp(cos((value-1.0)*1.57),0.0,1.0);
+            color.b = clamp(cos((value-0.3)*8.0)*0.5+0.5,0.0,1.0)*0.5;
             break;
 
         default:   
         case 4: //Orange-copper
-            output.r = clamp(value*1.3+0.3, 0.0, 1.0);
-            output.g = clamp(value*1.5-0.2, 0.0, 1.0);
-            output.b = clamp(value*2.0-1.0, 0.0, 1.0);
+            color.r = clamp(value*1.3+0.3, 0.0, 1.0);
+            color.g = clamp(value*1.5-0.2, 0.0, 1.0);
+            color.b = clamp(value*2.0-1.0, 0.0, 1.0);
             break;
 
         case 5: //Blue
-            output.r = clamp(value*2.0-1.0, 0.0, 1.0);
-            output.g = clamp(value*1.5-0.2, 0.0, 1.0);
-            output.b = clamp(value*1.3+0.3, 0.0, 1.0);
+            color.r = clamp(value*2.0-1.0, 0.0, 1.0);
+            color.g = clamp(value*1.5-0.2, 0.0, 1.0);
+            color.b = clamp(value*1.3+0.3, 0.0, 1.0);
             break;
 
         case 6: //Grey
-            output = vec3(clamp(value, 0.0, 1.0));
+            color = vec3(clamp(value, 0.0, 1.0));
             break;
     }
-    return output;
+    return color;
 }
