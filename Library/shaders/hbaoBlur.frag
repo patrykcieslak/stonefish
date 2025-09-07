@@ -35,7 +35,7 @@ layout(location=0,index=0) out vec4 fragColor;
 
 float BlurFunction(vec2 uv, float r, float center_c, float center_d, inout float w_total)
 {
-	vec2  aoz = texture2D(texSource, uv).xy;
+	vec2  aoz = texture(texSource, uv).xy;
 	float c = aoz.x;
 	float d = aoz.y;
   
@@ -51,7 +51,7 @@ float BlurFunction(vec2 uv, float r, float center_c, float center_d, inout float
 
 void main()
 {
-	vec2  aoz = texture2D(texSource, texcoord).xy;
+	vec2  aoz = texture(texSource, texcoord).xy;
 	float center_c = aoz.x;
 	float center_d = aoz.y;
   
