@@ -2,8 +2,7 @@
 set -e
 
 # ----------------------------- GLOBAL VARIABLES -----------------------------
-echo -e "Current directory: $(pwd)"
-STONEFISH_DIR="$HOME/stonefish"
+STONEFISH_DIR="${GITHUB_WORKSPACE}/stonefish"
 LOG_PREFIX="[$(date +%T)]"
 
 # ----------------------------- HELPER FUNCTIONS -----------------------------
