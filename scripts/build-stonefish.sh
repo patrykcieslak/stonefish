@@ -2,7 +2,7 @@
 set -e
 
 # ----------------------------- GLOBAL VARIABLES -----------------------------
-pwd
+echo -e "Current directory: $(pwd)"
 STONEFISH_DIR="$HOME/stonefish"
 LOG_PREFIX="[$(date +%T)]"
 
