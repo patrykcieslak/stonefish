@@ -17,7 +17,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          path: /opt/{{ github.event.repository.name }}
+          path: stonefish
 
       - name: Build Stonefish
         run: ./scripts/build-stonefish.sh
