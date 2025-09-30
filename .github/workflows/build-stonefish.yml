@@ -11,8 +11,8 @@ on:
     - cron: '0 3 * * *' # Runs daily at 03:00 UTC
 
 jobs:
-  run:
-    - name: Build Stonefish
+  build:
+      name: Build Stonefish
       runs-on: ubuntu-22.04
       steps:
         - name: Checkout
