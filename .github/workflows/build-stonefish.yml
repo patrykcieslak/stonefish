@@ -20,4 +20,5 @@ jobs:
           path: stonefish
 
       - name: Build Stonefish
-        run: scripts/build-stonefish.sh
+        working-directory: stonefish
+        run: ./scripts/build-stonefish.sh
