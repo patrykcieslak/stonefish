@@ -12,14 +12,18 @@ on:
 
 jobs:
   run:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          path: stonefish
+    - name: Build Stonefish
+      runs-on: ubuntu-22.04
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+          with:
+            path: stonefish
 
-      - name: Build Stonefish
-        working-directory: stonefish
-        run: chmod +x scripts/build-stonefish.sh
-        run: ./scripts/build-stonefish.sh
+        - name: Make build script executable
+          working-directory: stonefish
+          run: chmod +x scripts/build-stonefish.sh
+
+        - name: Run build script
+          working-directory: stonefish
+          run: ./scripts/build-stonefish.sh
