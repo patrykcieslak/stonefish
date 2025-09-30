@@ -1,0 +1,23 @@
+name: Build Stonefish
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [ opened, synchronize, reopened, ready_for_review ]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *' # Runs daily at 03:00 UTC
+
+jobs:
+  run:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: /opt/{{ github.event.repository.name }}
+
+      - name: Build Stonefish
+        run: ./scripts/build-stonefish.sh
