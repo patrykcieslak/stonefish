@@ -1,3 +1,5 @@
+[![Build Stonefish](https://github.com/vortexntnu/stonefish/actions/workflows/build-stonefish.yml/badge.svg)](https://github.com/vortexntnu/stonefish/actions/workflows/build-stonefish.yml)
+
 ![Stonefish logo](https://github.com/patrykcieslak/stonefish/blob/master/Library/shaders/logo_64.png)
 # ***Stonefish***
 ### An advanced simulation tool developed for marine robotics.
