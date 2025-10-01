@@ -30,3 +30,5 @@ RUN cd /opt/stonefish/build && \
     cmake .. && \
     make -j1 && \
     make install
+
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
