@@ -161,8 +161,8 @@ Example of creating a button widget (*note:* ``MySimulationApp`` is a subclass o
         GraphicalSimulationApp::DoHUD(); //Keep standard GUI
 
         sf::Uid button;
-        button.owner = 10; //e.g. id of a panel (owner 1 to 8 used by standard GUI) 
-        button.item = 0;   //e.g. id of an option on a list
+        button.owner = 0;  //e.g. id of a panel 
+        button.item = 10;  //e.g. id of an option on a list (item 1 to 8 used by standard GUI) 
 
         if(getGUI()->DoButton(button, 200, 10, 200, 50, "Press me"))
             code_to_execute;
