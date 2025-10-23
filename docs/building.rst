@@ -165,5 +165,6 @@ Example of creating a button widget (*note:* ``MySimulationApp`` is a subclass o
         button.item = 10;  //e.g. id of an option on a list (item 1 to 8 used by standard GUI) 
 
         if(getGUI()->DoButton(button, 200, 10, 200, 50, "Press me"))
-            code_to_execute;
+            //code_to_execute (e.g. Console info log) 
+            cInfo("Button Pressed");          
     }
