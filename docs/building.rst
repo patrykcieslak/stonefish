@@ -138,7 +138,7 @@ The *Stonefish* library uses the concept of an immediate-mode GUI (IMGUI), which
 Customising the IMGUI
 ---------------------
 
-To customise the IMGUI, the class ``sf::GraphicalSimulationApp`` has to be subclassed and the method ``void DoHUD()`` has to be overridden. Every widget has to use a unique ``sf::ui_id``, which allows for identification of active IMGUI elements.
+To customise the IMGUI, the class ``sf::GraphicalSimulationApp`` has to be subclassed and the method ``void DoHUD()`` has to be overridden. Every widget has to use a unique ``sf::Uid``, which allows for identification of active IMGUI elements.
 
 The available widgets include: 
 
@@ -160,9 +160,8 @@ Example of creating a button widget (*note:* ``MySimulationApp`` is a subclass o
     {
         GraphicalSimulationApp::DoHUD(); //Keep standard GUI
 
-        sf::ui_id button;
+        sf::Uid button;
         button.owner = 1; //e.g. id of a panel
-        button.index = 0; //e.g. id of a widget on the panel
         button.item = 0; //e.q. id of an option on a list
 
         if(getGUI()->DoButton(button, 200, 10, 200, 50, "Press me"))
