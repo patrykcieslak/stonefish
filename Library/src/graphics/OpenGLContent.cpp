@@ -422,7 +422,6 @@ OpenGLContent::OpenGLContent()
 	
     std::vector<GLSLSource> sources;
     sources.push_back(GLSLSource(GL_VERTEX_SHADER, "material.vert"));
-    sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "light.frag"));
     lightSourceShader[0] = new GLSLShader(sources, commonLightShaders);
 
     //Under surface

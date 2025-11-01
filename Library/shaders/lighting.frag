@@ -425,14 +425,13 @@ const vec2 Poisson128[128] = vec2[](
 uniform vec3 eyePos;
 uniform vec3 viewDir;
 
+#inject "light.glsl"
 #inject "lightingDef.glsl"
 
 uniform sampler2DArray spotLightsDepthMap;
 uniform sampler2DArrayShadow spotLightsShadowMap;
 uniform sampler2DArray sunDepthMap;
 uniform sampler2DArrayShadow sunShadowMap;
-
-vec3 ShadingModel(vec3 N, vec3 V, vec3 L, vec3 Lcolor, vec3 albedo);
 
 // Derivatives of light-space depth with respect to texture2D coordinates
 vec2 depthGradient(vec2 uv, float z)
@@ -652,7 +651,7 @@ vec4 PointLightContribution(int id, vec3 P, vec3 N, vec3 toEye, vec3 albedo)
 	float dist = max(pointLights[id].radius, length(toLight));  //Not possible to be closer than the light surface
     toLight /= dist;                                            //Normalize point-light vector
 	float attenuation = 1.0/dist*dist;                          //Inverse square law
-	return vec4(ShadingModel(N, toEye, toLight, pointLights[id].color * attenuation, albedo), dist);
+	return vec4(LightShadingModel(N, toEye, toLight, pointLights[id].color * attenuation, albedo), dist);
 }
 
 vec4 SpotLightContribution(int id, vec3 P, vec3 N, vec3 toEye, vec3 albedo)
@@ -666,7 +665,7 @@ vec4 SpotLightContribution(int id, vec3 P, vec3 N, vec3 toEye, vec3 albedo)
 	{
 		float attenuation = 1.0/distance*distance;                          //Inverse square law
         float edge = smoothstep(1, 1.05, spotEffect/spotLights[id].cone);   //Smooth spot edge
-		return vec4(ShadingModel(N, toEye, toLight, spotLights[id].color * SpotShadow(id, P) * edge * attenuation, albedo), distance);
+		return vec4(LightShadingModel(N, toEye, toLight, spotLights[id].color * SpotShadow(id, P) * edge * attenuation, albedo), distance);
 	}
 	else
 		return vec4(0.0);
@@ -678,7 +677,7 @@ vec3 SunContribution(vec3 P, vec3 N, vec3 toEye, vec3 albedo, vec3 illuminance)
 	
 	if(NdotL > 0.0)
 	{	
-		return ShadingModel(N, toEye, sunDirection, illuminance * SunShadow(P), albedo);
+		return LightShadingModel(N, toEye, sunDirection, illuminance * SunShadow(P), albedo);
 	}
 	else
 		return vec3(0.0);
