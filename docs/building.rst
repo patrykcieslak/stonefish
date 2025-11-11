@@ -92,7 +92,10 @@ Following the steps above should result in 3 new files: *main.cpp*, *MySimulatio
         AddStaticEntity(plane, sf::I4());
 
         //Create object
-        sf::Sphere* sph = new sf::Sphere("Sphere", 0.1, sf::I4(), "Aluminium", sf::BodyPhysicsType::SURFACE, "red");
+        sf::BodyPhysicsSettings phy;
+        phy.mode = sf::BodyPhysicsMode::SURFACE;
+    
+        sf::Sphere* sph = new sf::Sphere("Sphere", phy, 0.1, sf::I4(), "Aluminium",  "red");
         AddSolidEntity(sph, sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,-1.0)));
     }
 
@@ -135,7 +138,7 @@ The *Stonefish* library uses the concept of an immediate-mode GUI (IMGUI), which
 Customising the IMGUI
 ---------------------
 
-To customise the IMGUI, the class ``sf::GraphicalSimulationApp`` has to be subclassed and the method ``void DoHUD()`` has to be overridden. Every widget has to use a unique ``sf::ui_id``, which allows for identification of active IMGUI elements.
+To customise the IMGUI, the class ``sf::GraphicalSimulationApp`` has to be subclassed and the method ``void DoHUD()`` has to be overridden. Every widget has to use a unique ``sf::Uid``, which allows for identification of active IMGUI elements.
 
 The available widgets include: 
 
@@ -157,11 +160,11 @@ Example of creating a button widget (*note:* ``MySimulationApp`` is a subclass o
     {
         GraphicalSimulationApp::DoHUD(); //Keep standard GUI
 
-        sf::ui_id button;
-        button.owner = 1; //e.g. id of a panel
-        button.index = 0; //e.g. id of a widget on the panel
-        button.item = 0; //e.q. id of an option on a list
+        sf::Uid button;
+        button.owner = 0;  //e.g. id of a panel 
+        button.item = 10;  //e.g. id of an option on a list (item 1 to 8 used by standard GUI) 
 
         if(getGUI()->DoButton(button, 200, 10, 200, 50, "Press me"))
-            code_to_execute;
+            //code_to_execute (e.g. Console info log) 
+            cInfo("Button Pressed");          
     }
