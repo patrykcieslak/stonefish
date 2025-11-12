@@ -119,6 +119,9 @@ namespace sf
         //! A method returning the gain of the sonar.
         Scalar getGain() const;
 
+        //! A method returning the vertical beam width [deg].
+        Scalar getVerticalFOV() const;
+
         //! A method returning a pointer to the sonar data.
         /*!
          \param index the id of the OpenGL camera (here sonar) for which the data pointer is requested

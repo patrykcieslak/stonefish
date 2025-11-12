@@ -116,6 +116,11 @@ Scalar FLS::getGain() const
 {
     return gain;
 }
+
+Scalar FLS::getVerticalFOV() const
+{
+    return fovV;
+}
     
 VisionSensorType FLS::getVisionSensorType() const
 {
