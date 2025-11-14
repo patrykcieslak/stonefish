@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 8/20/13.
-//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/FeatherstoneEntity.h"
@@ -722,6 +722,8 @@ std::vector<Renderable> FeatherstoneEntity::Render()
     Renderable item;
     item.type = RenderableType::MULTIBODY_AXIS;
     item.model = glm::mat4(1.f);
+    item.data = std::make_shared<std::vector<glm::vec3>>();
+    auto points = item.getDataAsPoints();
     
     for(size_t i = 1; i < links.size(); ++i)
     {
@@ -740,8 +742,8 @@ std::vector<Renderable> FeatherstoneEntity::Render()
             axisEnd += axisInWorld * Scalar(0.3);
         }
         
-        item.points.push_back(glm::vec3((GLfloat)pivot.x(), (GLfloat)pivot.y(), (GLfloat)pivot.z()));
-        item.points.push_back(glm::vec3((GLfloat)axisEnd.x(), (GLfloat)axisEnd.y(), (GLfloat)axisEnd.z()));
+        points->push_back(glm::vec3((GLfloat)pivot.x(), (GLfloat)pivot.y(), (GLfloat)pivot.z()));
+        points->push_back(glm::vec3((GLfloat)axisEnd.x(), (GLfloat)axisEnd.y(), (GLfloat)axisEnd.z()));
     }
     
     items.push_back(item);

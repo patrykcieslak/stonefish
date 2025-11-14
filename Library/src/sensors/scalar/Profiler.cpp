@@ -109,8 +109,10 @@ std::vector<Renderable> Profiler::Render()
         Renderable item;
         item.type = RenderableType::SENSOR_LINES;
         item.model = glMatrixFromTransform(getSensorFrame());
-        item.points.push_back(glm::vec3(0,0,0));
-        item.points.push_back(glm::vec3(dir.x()*distance, dir.y()*distance, dir.z()*distance));
+        item.data = std::make_shared<std::vector<glm::vec3>>();
+        auto points = item.getDataAsPoints();
+        points->push_back(glm::vec3(0,0,0));
+        points->push_back(glm::vec3(dir.x()*distance, dir.y()*distance, dir.z()*distance));
         items.push_back(item);
     }
     return items;

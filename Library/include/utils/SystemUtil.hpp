@@ -20,22 +20,19 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2017 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2025 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_SystemUtil__
 #define __Stonefish_SystemUtil__
 
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cstdarg>
 #include <ctime>
 #include <chrono>
-#include <iostream>
-#include <string>
-#include <iomanip>
 
 #ifdef __linux__
     #include <unistd.h>
@@ -182,33 +179,6 @@ inline float grandom(float mean, float stdDeviation, long *seed)
         use_last = 1;
     }
     return mean + y1 * stdDeviation;
-}
-    
-inline void PrintTransform(const Transform& T, unsigned int decimals)
-{
-    std::string format = "%1." + std::to_string(decimals) + "lf";
-    std::string row = format + " " + format + " " + format + " " + format + "\n";
-    printf(row.c_str(), T.getBasis().getRow(0).getX(), T.getBasis().getRow(0).getY(), T.getBasis().getRow(0).getZ(), T.getOrigin().getX());
-    printf(row.c_str(), T.getBasis().getRow(1).getX(), T.getBasis().getRow(1).getY(), T.getBasis().getRow(1).getZ(), T.getOrigin().getY());
-    printf(row.c_str(), T.getBasis().getRow(2).getX(), T.getBasis().getRow(2).getY(), T.getBasis().getRow(2).getZ(), T.getOrigin().getZ());
-}
-
-inline bool TestScalar(const std::string title, const Scalar& value, const Scalar& expected, Scalar tolerance = 1e-6)
-{
-    bool success = btFabs(value - expected) < tolerance;
-    std::cout << (success ? "[PASS] " : "[FAIL] ") << title << ": " << std::setprecision(8) << value << " (expected " << expected << ")" << std::endl;
-    return success;
-}
-
-inline bool TestVector3(const std::string title, const Vector3& value, const Vector3& expected, Scalar tolerance = 1e-6)
-{
-    bool success = btFabs(value.getX() - expected.getX()) < tolerance 
-                && btFabs(value.getY() - expected.getY()) < tolerance 
-                && btFabs(value.getZ() - expected.getZ()) < tolerance;
-
-    std::cout << (success ? "[PASS] " : "[FAIL] ") << title << std::setprecision(8) << ": [" << value.getX() << ", " << value.getY() << ", " << value.getZ() 
-        << "] (expected [" << expected.getX() << ", " << expected.getY() << ", " << expected.getZ() << "])" << std::endl;
-    return success;
 }
 
 }

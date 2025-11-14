@@ -296,9 +296,12 @@ std::vector<Renderable> AcousticModem::Render()
     std::vector<Renderable> items(0);
     
     //Fov indicator
-    Renderable item;
-    item.model = glMatrixFromTransform(getDeviceFrame());
-    item.type = RenderableType::SENSOR_LINES;
+    Renderable item1;
+    item1.model = glMatrixFromTransform(getDeviceFrame());
+    item1.type = RenderableType::SENSOR_LINES;
+    item1.data = std::make_shared<std::vector<glm::vec3>>();
+    auto points = item1.getDataAsPoints();
+
     GLfloat iconSize = 0.25f;
     int div = 24;
     //Upper circle
@@ -309,9 +312,9 @@ std::vector<Renderable> AcousticModem::Render()
         for(int i=0; i<=div; ++i)
         {
             GLfloat angle = (GLfloat)i/(GLfloat)div * 2.f * M_PI;
-            item.points.push_back(glm::vec3(glm::cos(angle)*r, glm::sin(angle)*r, -h));
+            points->push_back(glm::vec3(glm::cos(angle)*r, glm::sin(angle)*r, -h));
             if(i > 0 && i < div)
-                item.points.push_back(item.points.back());
+                points->push_back(points->back());
         }
     }
     //Lower circle
@@ -322,9 +325,9 @@ std::vector<Renderable> AcousticModem::Render()
         for(int i=0; i<=div; ++i)
         {
             GLfloat angle = (GLfloat)i/(GLfloat)div * 2.f * M_PI;
-            item.points.push_back(glm::vec3(glm::cos(angle)*r, glm::sin(angle)*r, -h));
+            points->push_back(glm::vec3(glm::cos(angle)*r, glm::sin(angle)*r, -h));
             if(i > 0 && i < div)
-                item.points.push_back(item.points.back());
+                points->push_back(points->back());
         }
     }
     //4 bars
@@ -339,33 +342,37 @@ std::vector<Renderable> AcousticModem::Render()
             for(int h=0; h<=div; ++h)
             {
                 GLfloat angle = (GLfloat)h/(GLfloat)div * (maxFov2-minFov2) + minFov2;
-                item.points.push_back(glm::vec3(glm::sin(angle)*x, glm::sin(angle)*y, -glm::cos(angle)*iconSize));
+                points->push_back(glm::vec3(glm::sin(angle)*x, glm::sin(angle)*y, -glm::cos(angle)*iconSize));
                 if(h == 0 && minFov2 > Scalar(0))
                 {
-                    glm::vec3 v = item.points.back();
-                    item.points.push_back(glm::vec3(0.f,0.f,0.f));
-                    item.points.push_back(v);
+                    glm::vec3 v = points->back();
+                    points->push_back(glm::vec3(0.f,0.f,0.f));
+                    points->push_back(v);
                 }
                 else if(h == div && maxFov2 < Scalar(M_PI))
                 {
-                    item.points.push_back(item.points.back());
-                    item.points.push_back(glm::vec3(0.f,0.f,0.f));
+                    points->push_back(points->back());
+                    points->push_back(glm::vec3(0.f,0.f,0.f));
                 }
                 else if(h > 0 && h < div)
-                    item.points.push_back(item.points.back());
+                    points->push_back(points->back());
             }
         }
     }
-    items.push_back(item);
+    items.push_back(item1);
 
     //Axes
-    item.type = RenderableType::SENSOR_CS;
-    items.push_back(item);
+    Renderable item2;
+    item2.type = RenderableType::SENSOR_CS;
+    items.push_back(item2);
 
     //Connected nodes
-    item.type = RenderableType::SENSOR_LINES;
-    item.model = glm::mat4(1.f);
-    item.points.clear();
+    Renderable item3;
+    item3.type = RenderableType::SENSOR_LINES;
+    item3.model = glm::mat4(1.f);
+    item3.data = std::make_shared<std::vector<glm::vec3>>();
+    points = item3.getDataAsPoints();
+
     if(getConnectedId() == 0)
     {
         std::vector<uint64_t> nodeIds = getNodeIds();
@@ -373,8 +380,8 @@ std::vector<Renderable> AcousticModem::Render()
             if(nodeIds[i] != getDeviceId())
             {               
                 Transform Tn = getNode(nodeIds[i])->getDeviceFrame();
-                item.points.push_back(glVectorFromVector(getDeviceFrame().getOrigin()));
-                item.points.push_back(glVectorFromVector(Tn.getOrigin()));
+                points->push_back(glVectorFromVector(getDeviceFrame().getOrigin()));
+                points->push_back(glVectorFromVector(Tn.getOrigin()));
             }
     }
     else if(getConnectedId() > 0)
@@ -382,22 +389,26 @@ std::vector<Renderable> AcousticModem::Render()
         AcousticModem* cNode = getNode(getConnectedId());
         if(cNode != nullptr)
         {
-            item.points.push_back(glVectorFromVector(getDeviceFrame().getOrigin()));
-            item.points.push_back(glVectorFromVector(cNode->getDeviceFrame().getOrigin()));    
+            points->push_back(glVectorFromVector(getDeviceFrame().getOrigin()));
+            points->push_back(glVectorFromVector(cNode->getDeviceFrame().getOrigin()));    
         }
     }
-    if(!item.points.empty())
-        items.push_back(item);
+    if(!points->empty())
+        items.push_back(item3);
 
 #ifdef DEBUG
-    item.type = RenderableType::SENSOR_POINTS;
-    item.model = glm::mat4(1.f);
+    Renderable item4;
+    item4.type = RenderableType::SENSOR_POINTS;
+    item4.model = glm::mat4(1.f);
+    item4.data = std::make_shared<std::vector<glm::vec3>>();
+    points = item4.getDataAsPoints();
+
     for( auto mIt = propagating.begin(); mIt != propagating.end(); ++mIt)
     {
         Vector3 mPos = mIt->second;
-        item.points.push_back(glm::vec3((GLfloat)mPos.getX(), (GLfloat)mPos.getY(), (GLfloat)mPos.getZ()));
+        points->push_back(glm::vec3((GLfloat)mPos.getX(), (GLfloat)mPos.getY(), (GLfloat)mPos.getZ()));
     }
-    items.push_back(item);
+    items.push_back(item4);
 #endif
 
     return items;

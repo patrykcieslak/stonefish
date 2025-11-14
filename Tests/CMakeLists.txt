@@ -29,3 +29,6 @@ target_link_libraries(FluidDynamicsTest Stonefish_test)
 
 add_executable(LearningTest LearningTest/main.cpp LearningTest/LearningTestManager.cpp)
 target_link_libraries(LearningTest Stonefish_test)
+
+add_executable(CableTest CableTest/main.cpp CableTest/CableTestApp.cpp CableTest/CableTestManager.cpp)
+target_link_libraries(CableTest Stonefish_test)

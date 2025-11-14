@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/08/2018.
-//  Copyright (c) 2018-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Multibeam.h"
@@ -91,11 +91,13 @@ std::vector<Renderable> Multibeam::Render()
         Renderable item;
         item.type = RenderableType::SENSOR_LINES;
         item.model = glMatrixFromTransform(getSensorFrame());    
+        item.data = std::make_shared<std::vector<glm::vec3>>();
+        auto points = item.getDataAsPoints();
         for(unsigned int i=0; i <= angSteps; ++i)
         {
             Vector3 dir = Vector3(1, 0, 0) * btCos(angles[i]) + Vector3(0, 1, 0) * btSin(angles[i]);
-            item.points.push_back(glm::vec3(0,0,0));
-            item.points.push_back(glm::vec3(dir.x() * distances[i], dir.y() * distances[i], dir.z() * distances[i]));
+            points->push_back(glm::vec3(0,0,0));
+            points->push_back(glm::vec3(dir.x() * distances[i], dir.y() * distances[i], dir.z() * distances[i]));
         }        
         items.push_back(item);
     }

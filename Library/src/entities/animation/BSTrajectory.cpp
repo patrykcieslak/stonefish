@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 08/11/2023.
-//  Copyright (c) 2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2023-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/animation/BSTrajectory.h"
@@ -153,10 +153,10 @@ void BSTrajectory::BuildGraphicalPath()
 
     if(points.size() >= 3)
     {
-        vis[1].points.clear();
+        vis[1].getDataAsPoints()->clear();
         std::vector<Scalar> p = spline.sample((size_t)ceil(points.back().t * 10));
         for(size_t i = 0; i<p.size(); i+=4)
-            vis[1].points.push_back(glm::vec3((GLfloat)p[i+1], (GLfloat)p[i+2], (GLfloat)p[i+3]));
+            vis[1].getDataAsPoints()->push_back(glm::vec3((GLfloat)p[i+1], (GLfloat)p[i+2], (GLfloat)p[i+3]));
     }
 }
 

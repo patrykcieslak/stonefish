@@ -76,7 +76,7 @@
 #include <core/NED.h>
 
 UnderwaterTestManager::UnderwaterTestManager(sf::Scalar stepsPerSecond)
-: SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE)
+: SimulationManager(stepsPerSecond, sf::Solver::SI, sf::CollisionFilter::EXCLUSIVE)
 {
 }
 

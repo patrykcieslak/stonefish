@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 29/12/12.
-//  Copyright (c) 2012-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/SolidEntity.h"
@@ -102,6 +102,7 @@ SolidEntity::SolidEntity(std::string uniqueName, BodyPhysicsSettings phy, std::s
     dm = DisplayMode::GRAPHICAL;
     submerged.type = RenderableType::HYDRO_LINES;
     submerged.model = glm::mat4(1.f);
+    submerged.data = std::make_shared<std::vector<glm::vec3>>();
 }
 
 SolidEntity::~SolidEntity()
@@ -113,6 +114,11 @@ SolidEntity::~SolidEntity()
 EntityType SolidEntity::getType() const
 {
     return EntityType::SOLID;
+}
+
+btMultiBodyLinkCollider* SolidEntity::getMultiBodyLinkCollider() const
+{
+    return multibodyCollider;
 }
 
 void SolidEntity::ScalePhysicalPropertiesToArbitraryMass(Scalar mass)
@@ -225,134 +231,156 @@ std::vector<Renderable> SolidEntity::Render()
     
     if( (rigidBody != nullptr || multibodyCollider != nullptr)  && isRenderable() )
     {
-        Renderable item;
-        item.type = RenderableType::SOLID;
-        item.materialName = mat.name;
+        //Mesh
+        Renderable item1;
+        item1.type = RenderableType::SOLID;
+        item1.materialName = mat.name;
         
         if(dm == DisplayMode::GRAPHICAL && graObjectId >= 0)
         {
-            item.objectId = graObjectId;
-            item.lookId = lookId;
-            item.model = glMatrixFromTransform(getGTransform());
-            item.cor = glVectorFromVector(getCGTransform().getOrigin());
-            item.vel = glVectorFromVector(getLinearVelocity());
-            item.avel = glVectorFromVector(getAngularVelocity());
-            items.push_back(item);
+            item1.objectId = graObjectId;
+            item1.lookId = lookId;
+            item1.model = glMatrixFromTransform(getGTransform());
+            item1.cor = glVectorFromVector(getCGTransform().getOrigin());
+            item1.vel = glVectorFromVector(getLinearVelocity());
+            item1.avel = glVectorFromVector(getAngularVelocity());
+            items.push_back(item1);
         }
         else if(dm == DisplayMode::PHYSICAL && phyObjectId >= 0)
         {
-            item.objectId = phyObjectId;
-            item.lookId = -1;
-            item.model = glMatrixFromTransform(getCTransform());
-            item.cor = glVectorFromVector(getCGTransform().getOrigin());
-            item.vel = glVectorFromVector(getLinearVelocity());
-            item.avel = glVectorFromVector(getAngularVelocity());
-            items.push_back(item);
+            item1.objectId = phyObjectId;
+            item1.lookId = -1;
+            item1.model = glMatrixFromTransform(getCTransform());
+            item1.cor = glVectorFromVector(getCGTransform().getOrigin());
+            item1.vel = glVectorFromVector(getLinearVelocity());
+            item1.avel = glVectorFromVector(getAngularVelocity());
+            items.push_back(item1);
         }
         
-        item.type = RenderableType::SOLID_CS;
-        item.model = glMatrixFromTransform(getCGTransform());
-        items.push_back(item);
+        //Coordinate system
+        Renderable item2;
+        item2.type = RenderableType::SOLID_CS;
+        item2.model = glMatrixFromTransform(getCGTransform());
+        items.push_back(item2);
         
         //Hydrodynamics
         Vector3 cbWorld = getCGTransform() * P_CB;
-        item.type = RenderableType::HYDRO_CS;
-        item.model = glMatrixFromTransform(Transform(Quaternion::getIdentity(), cbWorld));
-        items.push_back(item);
+        Renderable item3;
+        item3.type = RenderableType::HYDRO_CS;
+        item3.model = glMatrixFromTransform(Transform(Quaternion::getIdentity(), cbWorld));
+        items.push_back(item3);
 
         //Forces
         Vector3 cg = getCGTransform().getOrigin();
         glm::vec3 cgv((GLfloat)cg.x(), (GLfloat)cg.y(), (GLfloat)cg.z());
-        item.points.clear();
-        item.points.push_back(cgv);
-        item.model = glm::mat4(1.f);
+
+        //---Buoyancy
+        Renderable item4;
+        item4.type = RenderableType::FORCE_BUOYANCY;
+        item4.model = glm::mat4(1.f);
+        item4.data = std::make_shared<std::vector<glm::vec3>>();
+        auto points = item4.getDataAsPoints();
+        points->push_back(cgv);
+        points->push_back(cgv + glm::vec3((GLfloat)Fb.x(), (GLfloat)Fb.y(), (GLfloat)Fb.z())/1000.f);
+        items.push_back(item4);
         
-        item.type = RenderableType::FORCE_BUOYANCY;
-        item.points.push_back(cgv + glm::vec3((GLfloat)Fb.x(), (GLfloat)Fb.y(), (GLfloat)Fb.z())/1000.f);
-        items.push_back(item);
-        
-        item.points.pop_back();
-        item.type = RenderableType::FORCE_LINEAR_DRAG;
-        item.points.push_back(cgv + glm::vec3((GLfloat)Fdf.x(), (GLfloat)Fdf.y(), (GLfloat)Fdf.z()));
-        items.push_back(item);
-        
-        item.points.pop_back();
-        item.type = RenderableType::FORCE_QUADRATIC_DRAG;
-        item.points.push_back(cgv + glm::vec3((GLfloat)Fdq.x(), (GLfloat)Fdq.y(), (GLfloat)Fdq.z()));
-        items.push_back(item);
+        //---Linear drag
+        Renderable item5;
+        item5.type = RenderableType::FORCE_LINEAR_DRAG;
+        item5.model = glm::mat4(1.f);
+        item5.data = std::make_shared<std::vector<glm::vec3>>();
+        points = item5.getDataAsPoints();
+        points->push_back(cgv);
+        points->push_back(cgv + glm::vec3((GLfloat)Fdf.x(), (GLfloat)Fdf.y(), (GLfloat)Fdf.z()));
+        items.push_back(item5);
+
+        //---Quadratic drag
+        Renderable item6;
+        item6.type = RenderableType::FORCE_QUADRATIC_DRAG;
+        item6.model = glm::mat4(1.f);
+        item6.data = std::make_shared<std::vector<glm::vec3>>();
+        points = item6.getDataAsPoints();
+        points->push_back(cgv);
+        points->push_back(cgv + glm::vec3((GLfloat)Fdq.x(), (GLfloat)Fdq.y(), (GLfloat)Fdq.z()));
+        items.push_back(item6);
 
         //Surface crossing debug
 #ifdef DEBUG_HYDRO
         items.push_back(submerged);
 
-        item.type = RenderableType::HYDRO_LINES;
-        item.model = glm::mat4(1.f);
-        
+        //points = submerged.getDataAsPoints();
+        Renderable debugItem;
+        debugItem.type = RenderableType::HYDRO_LINES;
+        debugItem.model = glm::mat4(1.f);
+        debugItem.data = std::make_shared<std::vector<glm::vec3>>();
+        points = debugItem.getDataAsPoints();
+
         Vector3 min, max;
         getAABB(min, max);
 
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)min.z()));
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)min.z()));
 
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)min.z()));
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)min.z()));
 
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)min.z()));
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)max.z()));
 
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)min.z()));
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)max.z()));
 
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)max.z()));
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)max.z()));
 
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)max.z()));
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)max.z()));
 
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)min.z()));
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)max.z()));
 
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)min.z()));
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)min.z()));
 
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)min.z()));
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)min.z()));
 
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)min.z()));
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)max.z()));
 
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)max.z()));
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)max.z()));
 
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)max.z()));
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)max.z()));
 
-        items.push_back(item);
+        items.push_back(debugItem);
 #else
         //Geometry approximation
-        item.model = glMatrixFromTransform(getHTransform());
-        item.points.clear();
+        Renderable item7;
+        item7.model = glMatrixFromTransform(getHTransform());
+        item7.data = std::make_shared<std::vector<glm::vec3>>();
+        points = item7.getDataAsPoints();
+
         switch(fdApproxType)
         {    
             case GeometryApproxType::SPHERE:
-                item.type = RenderableType::HYDRO_ELLIPSOID;
-                item.points.push_back(glm::vec3((GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[0]));
-                items.push_back(item);
+                item7.type = RenderableType::HYDRO_ELLIPSOID;
+                points->push_back(glm::vec3((GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[0]));
                 break;
                 
             case GeometryApproxType::CYLINDER:
-                item.type = RenderableType::HYDRO_CYLINDER;
-                item.points.push_back(glm::vec3((GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[1]));
-                items.push_back(item);
+                item7.type = RenderableType::HYDRO_CYLINDER;
+                points->push_back(glm::vec3((GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[1]));
                 break;
 
             case GeometryApproxType::AUTO:       
             case GeometryApproxType::ELLIPSOID:
-                item.type = RenderableType::HYDRO_ELLIPSOID;
-                item.points.push_back(glm::vec3((GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[1], (GLfloat)fdApproxParams[2]));
-                items.push_back(item);
+                item7.type = RenderableType::HYDRO_ELLIPSOID;
+                points->push_back(glm::vec3((GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[1], (GLfloat)fdApproxParams[2]));
                 break;
         }
+        items.push_back(item7);
 #endif
     }
     
@@ -1283,6 +1311,8 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
         return;
     }
 
+    auto debugPoints = debug.getDataAsPoints();
+
     //Computation with floats (geometry has float precision)
     glm::vec3 Fb(0.f);
     glm::vec3 Tb(0.f);
@@ -1358,12 +1388,12 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
                 fn1 = fn/len; //Normalised normal (length = 1)
                 A = len/2.f; //Area of the face (triangle)         
 #ifdef DEBUG_HYDRO
-                debug.points.push_back(p1);
-                debug.points.push_back(p2);
-                debug.points.push_back(p2);
-                debug.points.push_back(p3);
-                debug.points.push_back(p3);
-                debug.points.push_back(p1);
+                debugPoints->push_back(p1);
+                debugPoints->push_back(p2);
+                debugPoints->push_back(p2);
+                debugPoints->push_back(p3);
+                debugPoints->push_back(p3);
+                debugPoints->push_back(p1);
 #endif
             }
             else if(depth[2] < 0.f) //Two vertices above water (triangle)
@@ -1393,12 +1423,12 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
                 fn1 = fn/len; //Normalised normal (length = 1)
                 A = len/2.f; //Area of the face (triangle)         
 #ifdef DEBUG_HYDRO
-                debug.points.push_back(p1);
-                debug.points.push_back(p2);
-                debug.points.push_back(p2);
-                debug.points.push_back(p3);
-                debug.points.push_back(p3);
-                debug.points.push_back(p1);
+                debugPoints->push_back(p1);
+                debugPoints->push_back(p2);
+                debugPoints->push_back(p2);
+                debugPoints->push_back(p3);
+                debugPoints->push_back(p3);
+                debugPoints->push_back(p1);
 #endif
             }
             else //depth[1] >= 0 && depth[2] >= 0 --> Two vertices under water (quad = two triangles)
@@ -1440,14 +1470,14 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
                 A = (len + glm::length(glm::cross(fv3, fv4)))/2.f; //Quad
                 fn = fn1 * A;
 #ifdef DEBUG_HYDRO
-                debug.points.push_back(p1);
-                debug.points.push_back(p2);
-                debug.points.push_back(p2);
-                debug.points.push_back(p3);
-                debug.points.push_back(p3);
-                debug.points.push_back(p4);
-                debug.points.push_back(p4);
-                debug.points.push_back(p1);
+                debugPoints->push_back(p1);
+                debugPoints->push_back(p2);
+                debugPoints->push_back(p2);
+                debugPoints->push_back(p3);
+                debugPoints->push_back(p3);
+                debugPoints->push_back(p4);
+                debugPoints->push_back(p4);
+                debugPoints->push_back(p1);
 #endif  
             }
         }
@@ -1480,12 +1510,12 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
                 fn1 = fn/len; //Normalised normal (length = 1)
                 A = len/2.f; //Area of the face (triangle)
 #ifdef DEBUG_HYDRO
-                debug.points.push_back(p1);
-                debug.points.push_back(p2);
-                debug.points.push_back(p2);
-                debug.points.push_back(p3);
-                debug.points.push_back(p3);
-                debug.points.push_back(p1);
+                debugPoints->push_back(p1);
+                debugPoints->push_back(p2);
+                debugPoints->push_back(p2);
+                debugPoints->push_back(p3);
+                debugPoints->push_back(p3);
+                debugPoints->push_back(p1);
 #endif                
             }
             else
@@ -1526,14 +1556,14 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
                 A = (len + glm::length(glm::cross(fv3, fv4)))/2.f; //Quad
                 fn = fn1 * A;
 #ifdef DEBUG_HYDRO
-                debug.points.push_back(p1);
-                debug.points.push_back(p2);
-                debug.points.push_back(p2);
-                debug.points.push_back(p4);
-                debug.points.push_back(p4);
-                debug.points.push_back(p3);
-                debug.points.push_back(p3);
-                debug.points.push_back(p1);
+                debugPoints->push_back(p1);
+                debugPoints->push_back(p2);
+                debugPoints->push_back(p2);
+                debugPoints->push_back(p4);
+                debugPoints->push_back(p4);
+                debugPoints->push_back(p3);
+                debugPoints->push_back(p3);
+                debugPoints->push_back(p1);
 #endif                 
             }
         }
@@ -1575,14 +1605,14 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
             A = (len + glm::length(glm::cross(fv3, fv4)))/2.f; //Quad
             fn = fn1 * A;
 #ifdef DEBUG_HYDRO
-            debug.points.push_back(p1);
-            debug.points.push_back(p2);
-            debug.points.push_back(p2);
-            debug.points.push_back(p3);
-            debug.points.push_back(p3);
-            debug.points.push_back(p4);
-            debug.points.push_back(p4);
-            debug.points.push_back(p1);
+            debugPoints->push_back(p1);
+            debugPoints->push_back(p2);
+            debugPoints->push_back(p2);
+            debugPoints->push_back(p3);
+            debugPoints->push_back(p3);
+            debugPoints->push_back(p4);
+            debugPoints->push_back(p4);
+            debugPoints->push_back(p1);
 #endif             
         }
         else //All underwater
@@ -1607,12 +1637,12 @@ void SolidEntity::ComputeHydrodynamicForcesSurface(const HydrodynamicsSettings& 
             A = len/2.f; //Area of the face (triangle)
             fc = (p1+p2+p3)/3.f; //Face centroid
 #ifdef DEBUG_HYDRO
-            debug.points.push_back(p1);
-            debug.points.push_back(p2);
-            debug.points.push_back(p2);
-            debug.points.push_back(p3);
-            debug.points.push_back(p3);
-            debug.points.push_back(p1);
+            debugPoints->push_back(p1);
+            debugPoints->push_back(p2);
+            debugPoints->push_back(p2);
+            debugPoints->push_back(p3);
+            debugPoints->push_back(p3);
+            debugPoints->push_back(p1);
 #endif             
         }
 
@@ -1770,7 +1800,9 @@ void SolidEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
 {
     if(phy.mode != BodyPhysicsMode::FLOATING && phy.mode != BodyPhysicsMode::SUBMERGED) return;
     
-    submerged.points.clear();
+    auto points = submerged.getDataAsPoints();
+    if (points != nullptr)
+        points->clear();
 
     BodyFluidPosition bf = CheckBodyFluidPosition(ocn);
     

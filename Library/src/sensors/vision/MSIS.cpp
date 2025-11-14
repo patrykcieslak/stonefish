@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/07/20.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/vision/MSIS.h"
@@ -257,6 +257,8 @@ std::vector<Renderable> MSIS::Render()
         Renderable item;
         item.model = glMatrixFromTransform(getSensorFrame());
         item.type = RenderableType::SENSOR_LINES;    
+        item.data = std::make_shared<std::vector<glm::vec3>>();
+        auto points = item.getDataAsPoints();
         
         //Create sonar dummy
         int div = 24;
@@ -271,9 +273,9 @@ std::vector<Renderable> MSIS::Render()
         {
             GLfloat z = cosf(hAngle) * cosVAngle;
             GLfloat x = sinf(hAngle) * cosVAngle;
-            item.points.push_back(glm::vec3(x, sinVAngle, z));
+            points->push_back(glm::vec3(x, sinVAngle, z));
             if(i > 0 && i < div)
-                item.points.push_back(glm::vec3(x, sinVAngle, z));
+                points->push_back(glm::vec3(x, sinVAngle, z));
             hAngle += fovStep;
         }
         hAngle = glm::radians(l1Deg);
@@ -281,9 +283,9 @@ std::vector<Renderable> MSIS::Render()
         {
             GLfloat z = cosf(hAngle) * cosVAngle;
             GLfloat x = sinf(hAngle) * cosVAngle;
-            item.points.push_back(glm::vec3(x, -sinVAngle, z));
+            points->push_back(glm::vec3(x, -sinVAngle, z));
             if(i > 0 && i < div)
-                item.points.push_back(glm::vec3(x, -sinVAngle, z));
+                points->push_back(glm::vec3(x, -sinVAngle, z));
             hAngle += fovStep;
         }
         //Arcs max
@@ -294,9 +296,9 @@ std::vector<Renderable> MSIS::Render()
         {
             GLfloat z = cosf(hAngle) * cosVAngle;
             GLfloat x = sinf(hAngle) * cosVAngle;
-            item.points.push_back(glm::vec3(x, sinVAngle, z));
+            points->push_back(glm::vec3(x, sinVAngle, z));
             if(i > 0 && i < div)
-                item.points.push_back(glm::vec3(x, sinVAngle, z));
+                points->push_back(glm::vec3(x, sinVAngle, z));
             hAngle += fovStep;
         }
         hAngle = glm::radians(l1Deg);
@@ -304,21 +306,21 @@ std::vector<Renderable> MSIS::Render()
         {
             GLfloat z = cosf(hAngle) * cosVAngle;
             GLfloat x = sinf(hAngle) * cosVAngle;
-            item.points.push_back(glm::vec3(x, -sinVAngle, z));
+            points->push_back(glm::vec3(x, -sinVAngle, z));
             if(i > 0 && i < div)
-                item.points.push_back(glm::vec3(x, -sinVAngle, z));
+                points->push_back(glm::vec3(x, -sinVAngle, z));
             hAngle += fovStep;
         }
         //Current beam position
         hAngle = currentStep * stepSize;
         GLfloat zc = cosf(hAngle) * cosVAngle;
         GLfloat xc = sinf(hAngle) * cosVAngle;
-        item.points.push_back(glm::vec3(0,0,0));
-        item.points.push_back(glm::vec3(xc, sinVAngle, zc));
-        item.points.push_back(glm::vec3(xc, sinVAngle, zc));
-        item.points.push_back(glm::vec3(xc, -sinVAngle, zc));
-        item.points.push_back(glm::vec3(xc, -sinVAngle, zc));
-        item.points.push_back(glm::vec3(0,0,0));
+        points->push_back(glm::vec3(0,0,0));
+        points->push_back(glm::vec3(xc, sinVAngle, zc));
+        points->push_back(glm::vec3(xc, sinVAngle, zc));
+        points->push_back(glm::vec3(xc, -sinVAngle, zc));
+        points->push_back(glm::vec3(xc, -sinVAngle, zc));
+        points->push_back(glm::vec3(0,0,0));
         
         if(!fullRotation)
         {
@@ -326,22 +328,22 @@ std::vector<Renderable> MSIS::Render()
             hAngle = glm::radians(l1Deg);
             GLfloat zs = cosf(hAngle) * cosVAngle;
             GLfloat xs = sinf(hAngle) * cosVAngle;
-            item.points.push_back(glm::vec3(xs, sinVAngle, zs));
-            item.points.push_back(glm::vec3(xs, -sinVAngle, zs));
+            points->push_back(glm::vec3(xs, sinVAngle, zs));
+            points->push_back(glm::vec3(xs, -sinVAngle, zs));
             hAngle = glm::radians(l2Deg);
             GLfloat ze = cosf(hAngle) * cosVAngle;
             GLfloat xe = sinf(hAngle) * cosVAngle;
-            item.points.push_back(glm::vec3(xe, sinVAngle, ze));
-            item.points.push_back(glm::vec3(xe, -sinVAngle, ze));
+            points->push_back(glm::vec3(xe, sinVAngle, ze));
+            points->push_back(glm::vec3(xe, -sinVAngle, ze));
             //Pyramid
-            item.points.push_back(glm::vec3(0,0,0));
-            item.points.push_back(glm::vec3(xs, sinVAngle, zs));
-            item.points.push_back(glm::vec3(0,0,0));
-            item.points.push_back(glm::vec3(xs, -sinVAngle, zs));
-            item.points.push_back(glm::vec3(0,0,0));
-            item.points.push_back(glm::vec3(xe, sinVAngle, ze));
-            item.points.push_back(glm::vec3(0,0,0));
-            item.points.push_back(glm::vec3(xe, -sinVAngle, ze));
+            points->push_back(glm::vec3(0,0,0));
+            points->push_back(glm::vec3(xs, sinVAngle, zs));
+            points->push_back(glm::vec3(0,0,0));
+            points->push_back(glm::vec3(xs, -sinVAngle, zs));
+            points->push_back(glm::vec3(0,0,0));
+            points->push_back(glm::vec3(xe, sinVAngle, ze));
+            points->push_back(glm::vec3(0,0,0));
+            points->push_back(glm::vec3(xe, -sinVAngle, ze));
         }
 
         items.push_back(item);

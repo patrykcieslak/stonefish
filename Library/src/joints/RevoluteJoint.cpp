@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/13/13.
-//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/RevoluteJoint.h"
@@ -185,6 +185,8 @@ std::vector<Renderable> RevoluteJoint::Render()
     Renderable item;
     item.model = glm::mat4(1.f);
     item.type = RenderableType::JOINT_LINES;
+    item.data = std::make_shared<std::vector<glm::vec3>>();
+    auto points = item.getDataAsPoints();
     
     btTypedConstraint* revo = getConstraint();
     Vector3 A = revo->getRigidBodyA().getCenterOfMassPosition();
@@ -195,8 +197,8 @@ std::vector<Renderable> RevoluteJoint::Render()
     //Calculate axis ends
     Vector3 C1 = pivot;
     Vector3 C2 = pivot + axis * btMax(0.05, btFabs((A-B).safeNorm())/Scalar(2));
-    item.points.push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
-    item.points.push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
+    points->push_back(glm::vec3(C1.getX(), C1.getY(), C1.getZ()));
+    points->push_back(glm::vec3(C2.getX(), C2.getY(), C2.getZ()));
     
     items.push_back(item);
     

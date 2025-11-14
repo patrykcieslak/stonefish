@@ -157,43 +157,48 @@ std::vector<Renderable> Light::Render()
     Renderable item;
     item.model = glMatrixFromTransform(getActuatorFrame());
     item.type = RenderableType::ACTUATOR_LINES;
-    
+    item.data = std::make_shared<std::vector<glm::vec3>>();
+    auto points = item.getDataAsPoints();
+        
     GLfloat iconSize = 1.f;
     unsigned int div = 24;
     
     if(coneAngle > Scalar(0))
     {
+        points->reserve(div * 2 + 8);
+
         GLfloat r = iconSize * tanf((GLfloat)coneAngle/360.f*M_PI);
-        
         for(unsigned int i=0; i<div; ++i)
         {
             GLfloat angle1 = (GLfloat)i/(GLfloat)div * 2.f * M_PI;
             GLfloat angle2 = (GLfloat)(i+1)/(GLfloat)div * 2.f * M_PI;
-            item.points.push_back(glm::vec3(r * cosf(angle1), r * sinf(angle1), iconSize));
-            item.points.push_back(glm::vec3(r * cosf(angle2), r * sinf(angle2), iconSize));
+            points->push_back(glm::vec3(r * cosf(angle1), r * sinf(angle1), iconSize));
+            points->push_back(glm::vec3(r * cosf(angle2), r * sinf(angle2), iconSize));
         }
         
-        item.points.push_back(glm::vec3(0,0,0));
-        item.points.push_back(glm::vec3(r, 0, iconSize));
-        item.points.push_back(glm::vec3(0,0,0));
-        item.points.push_back(glm::vec3(-r, 0, iconSize));
-        item.points.push_back(glm::vec3(0,0,0));
-        item.points.push_back(glm::vec3(0, r, iconSize));
-        item.points.push_back(glm::vec3(0,0,0));
-        item.points.push_back(glm::vec3(0, -r, iconSize));
+        points->push_back(glm::vec3(0,0,0));
+        points->push_back(glm::vec3(r, 0, iconSize));
+        points->push_back(glm::vec3(0,0,0));
+        points->push_back(glm::vec3(-r, 0, iconSize));
+        points->push_back(glm::vec3(0,0,0));
+        points->push_back(glm::vec3(0, r, iconSize));
+        points->push_back(glm::vec3(0,0,0));
+        points->push_back(glm::vec3(0, -r, iconSize));
     }
     else
     {
+        points->reserve(div * 6);
+
         for(unsigned int i=0; i<div; ++i)
         {
             GLfloat angle1 = (GLfloat)i/(GLfloat)div * 2.f * M_PI;
             GLfloat angle2 = (GLfloat)(i+1)/(GLfloat)div * 2.f * M_PI;
-            item.points.push_back(glm::vec3(0.5f * iconSize * cosf(angle1), 0.5f * iconSize * sinf(angle1), 0));
-            item.points.push_back(glm::vec3(0.5f * iconSize * cosf(angle2), 0.5f * iconSize * sinf(angle2), 0));
-            item.points.push_back(glm::vec3(0.5f * iconSize * cosf(angle1), 0, 0.5f * iconSize * sinf(angle1)));
-            item.points.push_back(glm::vec3(0.5f * iconSize * cosf(angle2), 0, 0.5f * iconSize * sinf(angle2)));
-            item.points.push_back(glm::vec3(0, 0.5f * iconSize * cosf(angle1), 0.5f * iconSize * sinf(angle1)));
-            item.points.push_back(glm::vec3(0, 0.5f * iconSize * cosf(angle2), 0.5f * iconSize * sinf(angle2)));
+            points->push_back(glm::vec3(0.5f * iconSize * cosf(angle1), 0.5f * iconSize * sinf(angle1), 0));
+            points->push_back(glm::vec3(0.5f * iconSize * cosf(angle2), 0.5f * iconSize * sinf(angle2), 0));
+            points->push_back(glm::vec3(0.5f * iconSize * cosf(angle1), 0, 0.5f * iconSize * sinf(angle1)));
+            points->push_back(glm::vec3(0.5f * iconSize * cosf(angle2), 0, 0.5f * iconSize * sinf(angle2)));
+            points->push_back(glm::vec3(0, 0.5f * iconSize * cosf(angle1), 0.5f * iconSize * sinf(angle1)));
+            points->push_back(glm::vec3(0, 0.5f * iconSize * cosf(angle2), 0.5f * iconSize * sinf(angle2)));
         }
     }
     

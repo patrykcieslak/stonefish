@@ -37,7 +37,7 @@
 #include <actuators/Motor.h>
 
 LearningTestManager::LearningTestManager(sf::Scalar stepsPerSecond)
-   : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_DANTZIG, sf::CollisionFilteringType::COLLISION_EXCLUSIVE)
+   : SimulationManager(stepsPerSecond, sf::Solver::DANTZIG, sf::CollisionFilter::EXCLUSIVE)
 {
 }
 

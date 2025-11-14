@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/05/2014.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/Contact.h"
@@ -233,8 +233,9 @@ std::vector<Renderable> Contact::Render()
     {
         Renderable item;
         item.model = glm::mat4(1.f);
-        item.points = vertices;
         item.type = RenderableType::SENSOR_LINES;
+        item.data = std::make_shared<std::vector<glm::vec3>>();
+        *item.getDataAsPoints() = vertices;
         items.push_back(item);
     }
         
@@ -244,11 +245,13 @@ std::vector<Renderable> Contact::Render()
         Renderable item;
         item.model = glm::mat4(1.f);
         item.type = RenderableType::SENSOR_POINTS;
+        item.data = std::make_shared<std::vector<glm::vec3>>();
+        auto itemPoints = item.getDataAsPoints();
         
         for(size_t i = 0; i < points.size(); ++i)
         {	
             Vector3 p = points[i].locationA;
-            item.points.push_back(glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ()));
+            itemPoints->push_back(glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ()));
         }
         
         items.push_back(item);
@@ -259,11 +262,13 @@ std::vector<Renderable> Contact::Render()
         Renderable item;
         item.model = glm::mat4(1.f);
         item.type = RenderableType::SENSOR_POINTS;
+        item.data = std::make_shared<std::vector<glm::vec3>>();
+        auto itemPoints = item.getDataAsPoints();
         
         for(size_t i = 0; i < points.size(); ++i)
         {	
             Vector3 p = points[i].locationB;
-            item.points.push_back(glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ()));
+            itemPoints->push_back(glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ()));
         }
         
         items.push_back(item);

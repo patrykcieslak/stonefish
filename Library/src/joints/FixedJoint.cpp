@@ -30,6 +30,7 @@
 #include "core/SimulationManager.h"
 #include "entities/SolidEntity.h"
 #include "entities/FeatherstoneEntity.h"
+#include "utils/DebugUtil.hpp"
 
 namespace sf
 {
@@ -70,11 +71,12 @@ FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid, FeatherstoneE
 {
     Transform linkTransform = fe->getLinkTransform(linkId+1);
     Transform solidTransform = solid->getCGTransform();
-    Vector3 pivotInA = V0();
-    Vector3 pivotInB = solidTransform.inverse() * linkTransform.getOrigin();
-    Matrix3 frameInA = Matrix3::getIdentity();
-    Matrix3 frameInB = solidTransform.getBasis().inverse() * linkTransform.getBasis();
-    
+
+    Vector3 pivotInA = linkTransform.inverse() * solidTransform.getOrigin();
+    Vector3 pivotInB = V0();
+    Matrix3 frameInA = linkTransform.getBasis().inverse() * solidTransform.getBasis();
+    Matrix3 frameInB = Matrix3::getIdentity();
+
     btMultiBodyFixedConstraint* fixed = new btMultiBodyFixedConstraint(fe->getMultiBody(), linkId, solid->rigidBody, pivotInA, pivotInB, frameInA, frameInB);
     fixed->setMaxAppliedImpulse(BT_LARGE_FLOAT);
     setConstraint(fixed);
@@ -141,16 +143,6 @@ void FixedJoint::UpdateDefinition()
 std::vector<Renderable> FixedJoint::Render()
 {
     std::vector<Renderable> items(0);
-    
-    // Renderable item;
-    // item.model = glm::mat4(1.f);
-    // item.type = RenderableType::JOINT_LINES;
-    // Vector3 A = jSolidA->getCGTransform().getOrigin();
-    // Vector3 B = jSolidB->getCGTransform().getOrigin();
-    // item.points.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
-    // item.points.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
-    // items.push_back(item);    
-    
     return items;
 }
 

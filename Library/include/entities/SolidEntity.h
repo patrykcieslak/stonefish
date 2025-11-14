@@ -252,12 +252,15 @@ namespace sf
          \param Cf a vector of skin friction (viscous drag) coefficients
          */
         void SetHydrodynamicCoefficients(const Vector3& Cd, const Vector3& Cf);
-        
+
         //! A method to set the body pose in the world frame.
         void setCGTransform(const Transform& trans);
         
         //! A method returning the type of the entity.
         EntityType getType() const;
+
+        //! A method returning a pointer to the multibody link collider.
+        btMultiBodyLinkCollider* getMultiBodyLinkCollider() const;
         
         //! A method returning the transformation from the CG frame to the graphics mesh origin.
         Transform getCG2GTransform() const;

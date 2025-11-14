@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/09/17.
-//  Copyright (c) 2017-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/solids/Compound.h"
@@ -292,7 +292,9 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
 {
     if(phy.mode != BodyPhysicsMode::FLOATING && phy.mode != BodyPhysicsMode::SUBMERGED) return;
     
-    submerged.points.clear();
+    auto points = submerged.getDataAsPoints();
+    if (points != nullptr)
+        points->clear();
 
     BodyFluidPosition bf = CheckBodyFluidPosition(ocn);
      
@@ -474,36 +476,36 @@ std::vector<Renderable> Compound::Render(size_t partId)
 
     try
     {
-        Renderable item;
+        Renderable item1;
 
         if((parts.at(partId).isExternal && !displayInternals)  
             || (!parts.at(partId).isExternal && displayInternals)
             || (parts.at(partId).alwaysVisible))
         {
-            item.type = RenderableType::SOLID;
-            item.materialName = parts.at(partId).solid->getMaterial().name;
+            item1.type = RenderableType::SOLID;
+            item1.materialName = parts.at(partId).solid->getMaterial().name;
                 
             if(dm == DisplayMode::GRAPHICAL)
             {
                 Transform oTrans = oCompoundTrans * parts.at(partId).origin * parts.at(partId).solid->getO2GTransform();
-                item.objectId = parts.at(partId).solid->getGraphicalObject();
-                item.lookId = parts.at(partId).solid->getLook();
-                item.model = glMatrixFromTransform(oTrans);
-                item.cor = glVectorFromVector(getCGTransform().getOrigin());
-                item.vel = glVectorFromVector(getLinearVelocity());
-                item.avel = glVectorFromVector(getAngularVelocity());
-                items.push_back(item);
+                item1.objectId = parts.at(partId).solid->getGraphicalObject();
+                item1.lookId = parts.at(partId).solid->getLook();
+                item1.model = glMatrixFromTransform(oTrans);
+                item1.cor = glVectorFromVector(getCGTransform().getOrigin());
+                item1.vel = glVectorFromVector(getLinearVelocity());
+                item1.avel = glVectorFromVector(getAngularVelocity());
+                items.push_back(item1);
             }
             else if(dm == DisplayMode::PHYSICAL)
             {
                 Transform oTrans = oCompoundTrans * parts.at(partId).origin * parts.at(partId).solid->getO2CTransform();
-                item.objectId = parts.at(partId).solid->getPhysicalObject();
-                item.lookId = -1;
-                item.model = glMatrixFromTransform(oTrans);
-                item.cor = glVectorFromVector(getCGTransform().getOrigin());
-                item.vel = glVectorFromVector(getLinearVelocity());
-                item.avel = glVectorFromVector(getAngularVelocity());
-                items.push_back(item);
+                item1.objectId = parts.at(partId).solid->getPhysicalObject();
+                item1.lookId = -1;
+                item1.model = glMatrixFromTransform(oTrans);
+                item1.cor = glVectorFromVector(getCGTransform().getOrigin());
+                item1.vel = glVectorFromVector(getLinearVelocity());
+                item1.avel = glVectorFromVector(getAngularVelocity());
+                items.push_back(item1);
             }
         }
 
@@ -511,29 +513,32 @@ std::vector<Renderable> Compound::Render(size_t partId)
         GeometryApproxType atype;
         std::vector<Scalar> aparams;
         parts.at(partId).solid->getGeometryApprox(atype, aparams);
-        item.model = glMatrixFromTransform(oCompoundTrans * parts.at(partId).origin * parts.at(partId).solid->getO2HTransform());
-        
+
+        Renderable item2;
+        item2.model = glMatrixFromTransform(oCompoundTrans * parts.at(partId).origin * parts.at(partId).solid->getO2HTransform());
+        item2.data = std::make_shared<std::vector<glm::vec3>>();
+
         switch(atype)
         {
             case  GeometryApproxType::AUTO:
                 break;
             
             case  GeometryApproxType::SPHERE:
-                item.type = RenderableType::HYDRO_ELLIPSOID;
-                item.points.push_back(glm::vec3((GLfloat)aparams[0], (GLfloat)aparams[0], (GLfloat)aparams[0]));
-                items.push_back(item);
+                item2.type = RenderableType::HYDRO_ELLIPSOID;
+                item2.getDataAsPoints()->push_back(glm::vec3((GLfloat)aparams[0], (GLfloat)aparams[0], (GLfloat)aparams[0]));
+                items.push_back(item2);
                 break;
             
             case  GeometryApproxType::CYLINDER:
-                item.type = RenderableType::HYDRO_CYLINDER;
-                item.points.push_back(glm::vec3((GLfloat)aparams[0], (GLfloat)aparams[0], (GLfloat)aparams[1]));
-                items.push_back(item);
+                item2.type = RenderableType::HYDRO_CYLINDER;
+                item2.getDataAsPoints()->push_back(glm::vec3((GLfloat)aparams[0], (GLfloat)aparams[0], (GLfloat)aparams[1]));
+                items.push_back(item2);
                 break;
             
             case  GeometryApproxType::ELLIPSOID:
-                item.type = RenderableType::HYDRO_ELLIPSOID;
-                item.points.push_back(glm::vec3((GLfloat)aparams[0], (GLfloat)aparams[1], (GLfloat)aparams[2]));
-                items.push_back(item);
+                item2.type = RenderableType::HYDRO_ELLIPSOID;
+                item2.getDataAsPoints()->push_back(glm::vec3((GLfloat)aparams[0], (GLfloat)aparams[1], (GLfloat)aparams[2]));
+                items.push_back(item2);
                 break;
         }   
 #endif
@@ -552,18 +557,20 @@ std::vector<Renderable> Compound::Render()
     
     if(isRenderable())
     {
-        Renderable item;
-        item.type = RenderableType::SOLID_CS;
-        item.model = glMatrixFromTransform(getCGTransform());
-        items.push_back(item);
+        Renderable item1;
+        item1.type = RenderableType::SOLID_CS;
+        item1.model = glMatrixFromTransform(getCGTransform());
+        items.push_back(item1);
         
         Vector3 cbWorld = getCGTransform() * P_CB;
-        item.type = RenderableType::HYDRO_CS;
-        item.model = glMatrixFromTransform(Transform(Quaternion::getIdentity(), cbWorld));
-        item.points.push_back(glm::vec3(volume, volume, volume));
-        items.push_back(item);
-        item.points.clear();
+        Renderable item2;
+        item2.type = RenderableType::HYDRO_CS;
+        item2.model = glMatrixFromTransform(Transform(Quaternion::getIdentity(), cbWorld));
+        item2.data = std::make_shared<std::vector<glm::vec3>>();
+        item2.getDataAsPoints()->push_back(glm::vec3(volume, volume, volume));
+        items.push_back(item2);
         
+        //Parts
         for(size_t i=0; i<parts.size(); ++i)
         {
             std::vector<Renderable> partItems = Render(i);
@@ -573,70 +580,83 @@ std::vector<Renderable> Compound::Render()
         //Forces
         Vector3 cg = getCGTransform().getOrigin();
         glm::vec3 cgv((GLfloat)cg.x(), (GLfloat)cg.y(), (GLfloat)cg.z());
-        item.points.clear();
-        item.points.push_back(cgv);
-        item.model = glm::mat4(1.f);
+
+        //--- Buoyancy
+        Renderable item3;
+        item3.type = RenderableType::FORCE_BUOYANCY;
+        item3.model = glm::mat4(1.f);
+        item3.data = std::make_shared<std::vector<glm::vec3>>();
+        item3.getDataAsPoints()->push_back(cgv);
+        item3.getDataAsPoints()->push_back(cgv + glm::vec3((GLfloat)Fb.x(), (GLfloat)Fb.y(), (GLfloat)Fb.z())/1000.f);
+        items.push_back(item3);
         
-        item.type = RenderableType::FORCE_BUOYANCY;
-        item.points.push_back(cgv + glm::vec3((GLfloat)Fb.x(), (GLfloat)Fb.y(), (GLfloat)Fb.z())/1000.f);
-        items.push_back(item);
+        //--- Linear drag
+        Renderable item4;
+        item4.type = RenderableType::FORCE_LINEAR_DRAG;
+        item4.model = glm::mat4(1.f);
+        item4.data = std::make_shared<std::vector<glm::vec3>>();
+        item4.getDataAsPoints()->push_back(cgv);
+        item4.getDataAsPoints()->push_back(cgv + glm::vec3((GLfloat)Fdf.x(), (GLfloat)Fdf.y(), (GLfloat)Fdf.z()));
+        items.push_back(item4);
         
-        item.points.pop_back();
-        item.type = RenderableType::FORCE_LINEAR_DRAG;
-        item.points.push_back(cgv + glm::vec3((GLfloat)Fdf.x(), (GLfloat)Fdf.y(), (GLfloat)Fdf.z()));
-        items.push_back(item);
-        
-        item.points.pop_back();
-        item.type = RenderableType::FORCE_QUADRATIC_DRAG;
-        item.points.push_back(cgv + glm::vec3((GLfloat)Fdq.x(), (GLfloat)Fdq.y(), (GLfloat)Fdq.z()));
-        items.push_back(item);
+        //--- Quadratic drag
+        Renderable item5;
+        item5.type = RenderableType::FORCE_QUADRATIC_DRAG;
+        item5.model = glm::mat4(1.f);
+        item5.data = std::make_shared<std::vector<glm::vec3>>();
+        item5.getDataAsPoints()->push_back(cgv);
+        item5.getDataAsPoints()->push_back(cgv + glm::vec3((GLfloat)Fdq.x(), (GLfloat)Fdq.y(), (GLfloat)Fdq.z()));
+        items.push_back(item5);
 
 #ifdef DEBUG_HYDRO
         items.push_back(submerged);
 
-        item.type = RenderableType::HYDRO_LINES;
-        item.model = glm::mat4(1.f);
+        Renderable debugItem;
+        debugItem.type = RenderableType::HYDRO_LINES;
+        debugItem.model = glm::mat4(1.f);
+        debugItem.data = std::make_shared<std::vector<glm::vec3>>();
+        auto points = debugItem.getDataAsPoints();
         
         Vector3 min, max;
         getAABB(min, max);
 
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)min.z()));
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)min.z()));
 
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)min.z()));
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)min.z()));
 
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)min.z()));
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)max.z()));
 
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)min.z()));
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)max.z()));
 
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)max.z()));
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)max.z()));
 
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)max.z()));
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)max.z()));
 
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)min.z()));
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)max.z()));
 
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)min.z()));
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)min.z()));
 
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)min.z()));
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)min.z()));
 
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)min.z()));
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)min.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)max.z()));
 
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)max.z()));
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)min.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)max.z()));
 
-        item.points.push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)max.z()));
-        item.points.push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)min.x(), (GLfloat)max.y(), (GLfloat)max.z()));
+        points->push_back(glm::vec3((GLfloat)max.x(), (GLfloat)max.y(), (GLfloat)max.z()));
 
-        items.push_back(item);
+        items.push_back(debugItem);
 #endif
     }
         

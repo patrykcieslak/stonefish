@@ -212,6 +212,9 @@ std::vector<Renderable> DVL::Render()
         Renderable item;
         item.type = RenderableType::SENSOR_LINES;
         item.model = glMatrixFromTransform(getSensorFrame());    
+        item.data = std::make_shared<std::vector<glm::vec3>>();
+        auto points = item.getDataAsPoints();
+
         //Bottom ping
         if(status == 0 || status == 2) //Good bottom ping
         {
@@ -234,26 +237,26 @@ std::vector<Renderable> DVL::Render()
 
             if(range[0] > Scalar(0))
             {
-                item.points.push_back(glm::vec3(0,0,0));
-                item.points.push_back(glm::vec3(dir[0].x()*range[0], dir[0].y()*range[0], dir[0].z()*range[0]));
+                points->push_back(glm::vec3(0,0,0));
+                points->push_back(glm::vec3(dir[0].x()*range[0], dir[0].y()*range[0], dir[0].z()*range[0]));
             }
             
             if(range[1] > Scalar(0))
             {
-                item.points.push_back(glm::vec3(0,0,0));
-                item.points.push_back(glm::vec3(dir[1].x()*range[1], dir[1].y()*range[1], dir[1].z()*range[1]));
+                points->push_back(glm::vec3(0,0,0));
+                points->push_back(glm::vec3(dir[1].x()*range[1], dir[1].y()*range[1], dir[1].z()*range[1]));
             }
             
             if(range[2] > Scalar(0))
             {
-                item.points.push_back(glm::vec3(0,0,0));
-                item.points.push_back(glm::vec3(dir[2].x()*range[2], dir[2].y()*range[2], dir[2].z()*range[2]));
+                points->push_back(glm::vec3(0,0,0));
+                points->push_back(glm::vec3(dir[2].x()*range[2], dir[2].y()*range[2], dir[2].z()*range[2]));
             }
             
             if(range[3] > Scalar(0))
             {
-                item.points.push_back(glm::vec3(0,0,0));
-                item.points.push_back(glm::vec3(dir[3].x()*range[3], dir[3].y()*range[3], dir[3].z()*range[3]));
+                points->push_back(glm::vec3(0,0,0));
+                points->push_back(glm::vec3(dir[3].x()*range[3], dir[3].y()*range[3], dir[3].z()*range[3]));
             }
         }
         //Water ping
@@ -270,10 +273,10 @@ std::vector<Renderable> DVL::Render()
                 GLfloat ang2 = (GLfloat)(i+1)/2.f * glm::pi<GLfloat>();
                 glm::vec3 d1(glm::sin(ang1), glm::cos(ang1), 0.f);
                 glm::vec3 d2(glm::sin(ang2), glm::cos(ang2), 0.f);
-                item.points.push_back(r1 * d1 + glm::vec3(0.f, 0.f, -a1));
-                item.points.push_back(r1 * d2 + glm::vec3(0.f, 0.f, -a1));
-                item.points.push_back(r2 * d1 + glm::vec3(0.f, 0.f, -a2));
-                item.points.push_back(r2 * d2 + glm::vec3(0.f, 0.f, -a2));
+                points->push_back(r1 * d1 + glm::vec3(0.f, 0.f, -a1));
+                points->push_back(r1 * d2 + glm::vec3(0.f, 0.f, -a1));
+                points->push_back(r2 * d1 + glm::vec3(0.f, 0.f, -a2));
+                points->push_back(r2 * d2 + glm::vec3(0.f, 0.f, -a2));
             }
         }
         items.push_back(item);
