@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/07/18.
-//  Copyright(c) 2018-2021 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2025 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Pipe__
@@ -56,6 +56,15 @@ namespace sf
          \return velocity [m/s]
          */
         Vector3 GetVelocityAtPoint(const Vector3& p) const;
+
+        //! A method to set the inlet flow velocity.
+        /*!
+         \param v the velocity at the inlet [m/s]
+         */
+        void setInletVelocity(Scalar v);
+
+        //! A method to get the flow velocity at the inlet.
+        Scalar getInletVelocity() const;
         
         //! A method implementing the rendering of the pipe.
         std::vector<Renderable> Render(VelocityFieldUBO& ubo);

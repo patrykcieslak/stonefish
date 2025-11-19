@@ -65,8 +65,8 @@ void LearningTestManager::BuildScenario()
     sf::Plane* floor = new sf::Plane("Floor", 10000.f, "Ground", "Grid");
     AddStaticEntity(floor, sf::Transform::getIdentity());
 
-    sf::BodyPhysicsSettings phy;
-    phy.mode = sf::BodyPhysicsMode::SURFACE;
+    sf::PhysicsSettings phy;
+    phy.mode = sf::PhysicsMode::SURFACE;
     phy.collisions = false;
 
     // Robot   

@@ -39,27 +39,7 @@ namespace sf
     enum class GeometryApproxType {AUTO, SPHERE, CYLINDER, ELLIPSOID};
     //! An enum used to define if the body is submerged.
     enum class BodyFluidPosition {INSIDE, OUTSIDE, CROSSING_SURFACE};
-    //! An enum defining what is the medium in which the body moves (affects which forces are computed, needed because it is not possible to change mass during simulation).
-    /*!
-     DISABLED -> no computation of physics, zero mass and inertia
-     SURFACE -> no aerodynamics or hydrodynamics
-     FLOATING -> hydrodynamics with buoyancy
-     SUBMERGED -> hydrodynamics with buoyancy and added mass
-     AERODYNAMIC -> aerodynamics
-    */
-    enum class BodyPhysicsMode {DISABLED, SURFACE, FLOATING, SUBMERGED, AERODYNAMIC};
-    //! A structure defining the physics computation settings for the body.
-    struct BodyPhysicsSettings
-    {
-        BodyPhysicsMode mode;
-        bool collisions;
-        bool buoyancy;
-
-        BodyPhysicsSettings() : mode(BodyPhysicsMode::SUBMERGED), collisions(true), buoyancy(true)
-        {
-        }
-    };
-
+    
     struct HydrodynamicsSettings;
     class Ocean;
     class Atmosphere;
@@ -76,7 +56,7 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param thickness if positive the body is considered a shell instead of a solid
          */
-        SolidEntity(std::string uniqueName, BodyPhysicsSettings phy, std::string material, std::string look, Scalar thickness);
+        SolidEntity(std::string uniqueName, PhysicsSettings phy, std::string material, std::string look, Scalar thickness);
         
         //! A destructor.
         virtual ~SolidEntity();
@@ -381,7 +361,7 @@ namespace sf
         bool isBuoyant() const;
         
         //! A method informing what kind of physics computations are performed for the body.
-        BodyPhysicsMode getBodyPhysicsMode() const;
+        PhysicsMode getPhysicsMode() const;
         
         //Rendering
         //! A method used to build the graphical representation of the body.
@@ -446,7 +426,7 @@ namespace sf
         Vector3 fdCf;
         Transform T_CG2H; //Transform between CG and hydrodynamic proxy frame
         
-        BodyPhysicsSettings phy;
+        PhysicsSettings phy;
         Vector3 Fb;
         Vector3 Tb;
         Vector3 Fdq;

@@ -843,12 +843,10 @@ void SimulationManager::InitializeSolver()
     sbInfo.water_density = 0.0;
     sbInfo.water_normal = Vector3(0.0, 0.0, -1.0);
     sbInfo.water_offset = 0.0;
-    sbInfo.m_gravity.setValue(0, 0, g);
+    sbInfo.m_gravity.setValue(0, 0, 0);
         
     //Debugging
-    debugDrawer = new OpenGLDebugDrawer(
-        btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawContactPoints | btIDebugDraw::DBG_DrawFrames
-    );
+    debugDrawer = new OpenGLDebugDrawer();
     dynamicsWorld->setDebugDrawer(debugDrawer);
 }
 
@@ -1389,10 +1387,10 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
 void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, Scalar timeStep)
 {
     SimulationManager* simManager = (SimulationManager*)world->getWorldUserInfo();
-    btMultiBodyDynamicsWorld* researchWorld = (btMultiBodyDynamicsWorld*)world;
+    btSoftMultiBodyDynamicsWorld* dynamicsWorld = static_cast<btSoftMultiBodyDynamicsWorld*>(world);
     
     //Clear all forces to ensure that no summing occurs
-    researchWorld->clearForces(); //Includes clearing of multibody forces!
+    dynamicsWorld->clearForces(); //Includes clearing of multibody forces!
     
     //Solve for objects settling
     bool objectsSettled = true;
@@ -1411,6 +1409,11 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, Scalar timeS
             {
                 FeatherstoneEntity* feather = (FeatherstoneEntity*)simManager->entities[i];
                 feather->ApplyGravity(world->getGravity());
+            }
+            else if(simManager->entities[i]->getType() == EntityType::CABLE)
+            {
+                CableEntity* cable = (CableEntity*)simManager->entities[i];
+                cable->ApplyGravity(world->getGravity());
             }
         }
         
@@ -1471,6 +1474,18 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, Scalar timeS
                             break;
                     }
                 }
+                else if(simManager->entities[i]->getType() == EntityType::CABLE)
+                {
+                    btSoftBody* cableBody = static_cast<CableEntity*>(simManager->entities[i])->getSoftBody();
+                    for (size_t h = 0; h < cableBody->m_nodes.size(); ++h)
+                    {
+                        if (cableBody->m_nodes[h].m_v.length() > simManager->icLinTolerance * Scalar(100.))
+                        {
+                            objectsSettled = false;
+                            break;
+                        }
+                    }
+                }
             }
         }
     }
@@ -1494,10 +1509,10 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, Scalar timeS
 void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar timeStep)
 {
     SimulationManager* simManager = (SimulationManager*)world->getWorldUserInfo();
-    btMultiBodyDynamicsWorld* mbDynamicsWorld = (btMultiBodyDynamicsWorld*)world;
+    btSoftMultiBodyDynamicsWorld* dynamicsWorld = static_cast<btSoftMultiBodyDynamicsWorld*>(world);
         
     //Clear all forces to ensure that no summing occurs
-    mbDynamicsWorld->clearForces(); //Includes clearing of multibody forces!
+    dynamicsWorld->clearForces(); //Includes clearing of multibody forces!
         
     //loop through all actuators -> apply forces to bodies (free and connected by joints)
     for(size_t i = 0; i < simManager->actuators.size(); ++i)
@@ -1515,19 +1530,19 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
         if(ent->getType() == EntityType::SOLID)
         {
             SolidEntity* solid = (SolidEntity*)ent;
-            solid->ApplyGravity(mbDynamicsWorld->getGravity());
+            solid->ApplyGravity(dynamicsWorld->getGravity());
         }
         else if(ent->getType() == EntityType::FEATHERSTONE)
         {
             FeatherstoneEntity* multibody = (FeatherstoneEntity*)ent;
-            multibody->ApplyGravity(mbDynamicsWorld->getGravity());
+            multibody->ApplyGravity(dynamicsWorld->getGravity());
             multibody->ApplyDamping();
         }
-        /*else if(ent->getType() == EntityType::CABLE)
+        else if(ent->getType() == EntityType::CABLE)
         {
             CableEntity* cable = (CableEntity*)ent;
-            cable->ApplyGravity(mbDynamicsWorld->getGravity());
-        }*/
+            cable->ApplyGravity(dynamicsWorld->getGravity());
+        }
         else if(ent->getType() == EntityType::FORCEFIELD)
         {
             ForcefieldEntity* ff = (ForcefieldEntity*)ent;

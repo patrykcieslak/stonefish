@@ -50,7 +50,7 @@ namespace sf
          \param firstExternalPart a pointer to the first external rigid body
          \param origin a transformation from the compound body origin to the first part origin
          */
-        Compound(std::string uniqueName, BodyPhysicsSettings phy, SolidEntity* firstExternalPart, const Transform& origin);
+        Compound(std::string uniqueName, PhysicsSettings phy, SolidEntity* firstExternalPart, const Transform& origin);
         
         //! A destructor.
         ~Compound();

@@ -73,8 +73,8 @@ void JointsTestManager::BuildScenario()
     sf::Plane* floor = new sf::Plane("Floor", 1000.f, "Steel", "grid");
     AddStaticEntity(floor, sf::I4());
     
-    sf::BodyPhysicsSettings phy;
-    phy.mode = sf::BodyPhysicsMode::SURFACE;
+    sf::PhysicsSettings phy;
+    phy.mode = sf::PhysicsMode::SURFACE;
     phy.collisions = true;
 
     //----Fixed Joint----

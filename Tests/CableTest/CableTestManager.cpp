@@ -25,6 +25,8 @@
 
 #include "CableTestManager.h"
 
+#include <iostream>
+#include <format>
 #include <utils/SystemUtil.hpp>
 #include <utils/UnitSystem.h>
 #include <entities/statics/Plane.h>
@@ -35,6 +37,7 @@
 #include <graphics/OpenGLContent.h>
 #include <entities/forcefields/Uniform.h>
 #include <entities/solids/Cylinder.h>
+#include <entities/statics/Obstacle.h>
 #include <actuators/Servo.h>
 #include <actuators/Motor.h>
 #include <joints/RevoluteJoint.h>
@@ -67,24 +70,25 @@ void CableTestManager::BuildScenario()
     CreateLook("Red", sf::Color::RGB(1.0f, 0.3f, 0.3f), 0.5f, 0.0f);
     CreateLook("Rope", sf::Color::Gray(1.f), 1.f, 0.f, 0.f, sf::GetDataPath() + "rope_color.jpg", sf::GetDataPath() + "rope_normal.png");
 
-    EnableOcean(0.0);
+    EnableOcean();
     getOcean()->setWaterType(0.2);
-    getOcean()->AddVelocityField(new sf::Uniform(sf::Vector3(1.0,0.0,0.0)));
+    getOcean()->AddVelocityField(new sf::Uniform(sf::Vector3(0.0,0.0,0.0)));
     getOcean()->EnableCurrents();
     
     ////////OBJECTS
     sf::Plane* floor = new sf::Plane("Floor", 10000, "Ground", "Grid");
     AddStaticEntity(floor, sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 10.0)));
 
-    sf::BodyPhysicsSettings phy;
-    phy.mode = sf::BodyPhysicsMode::SUBMERGED;
+    sf::PhysicsSettings phy;
+    phy.mode = sf::PhysicsMode::SUBMERGED;
     phy.collisions = true;
 
     // Box attached to a fixed cable
     sf::Box* box = new sf::Box("Box", phy, sf::Vector3(0.1, 0.1, 0.1), sf::I4(), "Steel", "Red");
     AddSolidEntity(box, sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 2.0)));
 
-    sf::CableEntity* cable = new sf::CableEntity("Cable1", sf::CableEnds::FIRST, sf::Vector3(0, 0, -2), sf::Vector3(0, 0, 1.5), 100, 0.02, "Steel", "Red");
+    sf::CableEntity* cable = new sf::CableEntity("Cable1", phy, sf::Vector3(2.0, 0, -2), sf::Vector3(0, 0, 1.5), 100, 0.01, "Steel", "Red", 0.0);
+    cable->AttachToWorld(sf::CableEnds::FIRST);
     cable->AttachToSolid(sf::CableEnds::SECOND, box);
     AddEntity(cable);
 
@@ -109,7 +113,25 @@ void CableTestManager::BuildScenario()
     sf::FixedJoint* fixedJoint = new sf::FixedJoint("CableAttachJoint", sphere, winch->getDynamics(), 0);
     AddJoint(fixedJoint);
 
-    sf::CableEntity* cable2 = new sf::CableEntity("Cable2", sf::CableEnds::NONE, sf::Vector3(5.0, 1.0, -4.78), sf::Vector3(5.0, 1.0, -1.0), 100, 0.02, "Steel", "Rope", 80.f);
+    sf::CableEntity* cable2 = new sf::CableEntity("Cable2", phy, sf::Vector3(5.0, 1.0, -4.78), sf::Vector3(5.0, 1.0, -1.0), 100, 0.02, "Wood", "Rope", 0.0, 80.f);
     cable2->AttachToSolid(sf::CableEnds::FIRST, sphere);
     AddEntity(cable2);
+
+    sf::CableEntity* cable3 = new sf::CableEntity("Cable3", phy, sf::Vector3(2.0, -1.5, -2.0), sf::Vector3(2.0, 1.5, -2.0), 50, 0.05, "Wood", "Rope", 0.0, 80.f);
+    AddEntity(cable3);
+
+    sf::Obstacle* obs = new sf::Obstacle("Obstacle", 0.25, 2.0, sf::I4(), "Steel", "Red");
+    AddStaticEntity(obs, sf::Transform(sf::IQ(), sf::Vector3(5.0, 0.0, 0.0)));
+}
+
+void CableTestManager::SimulationStepCompleted(sf::Scalar timeStep)
+{
+    sf::CableEntity* cable = dynamic_cast<sf::CableEntity*>(getEntity("Cable1"));
+    if (cable != nullptr)
+    {
+        sf::Scalar length = cable->getLength();
+        sf::Scalar restLength = cable->getRestLength();
+        sf::Scalar stretch = (length - restLength) / restLength;
+        std::cout << std::format("[Cable1] Length: {:.3f} m, Stretch: {:.2f} %\n", length, stretch * 100.0);
+    }
 }

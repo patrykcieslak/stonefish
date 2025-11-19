@@ -46,6 +46,7 @@
 #include "entities/forcefields/Uniform.h"
 #include "entities/forcefields/Jet.h"
 #include "entities/FeatherstoneEntity.h"
+#include "entities/CableEntity.h"
 #include "sensors/scalar/Accelerometer.h"
 #include "sensors/scalar/Gyroscope.h"
 #include "sensors/scalar/IMU.h"
@@ -243,7 +244,7 @@ bool ScenarioParser::Parse(std::string filename)
         }
         element = element->NextSiblingElement("dynamic");
     }
-    
+
     //Load robots (optional)
     element = root->FirstChildElement("robot");
     while(element != nullptr)
@@ -254,6 +255,18 @@ bool ScenarioParser::Parse(std::string filename)
             return false;
         }
         element = element->NextSiblingElement("robot");
+    }
+
+    //Load cables (optional)
+    element = root->FirstChildElement("cable");
+    while(element != nullptr)
+    {
+        if(!ParseCable(element))
+        {
+            log.Print(MessageType::ERROR, "Cable not properly defined!");
+            return false;
+        }
+        element = element->NextSiblingElement("cable");
     }
 
     //Load glue (optional)
@@ -1609,13 +1622,231 @@ bool ScenarioParser::ParseDynamic(XMLElement* element)
     return true;
 }
 
+bool ScenarioParser::ParseCable(XMLElement* element)
+{
+    //---- Basic ----
+    const char* name = nullptr;
+    bool collides = false;
+    if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
+    {
+        log.Print(MessageType::ERROR, "Name of cable missing!");
+        return false;
+    }
+    std::string cableName(name);
+
+    const char* phyType = nullptr;
+    PhysicsSettings phy;
+    if(element->QueryStringAttribute("physics", &phyType) == XML_SUCCESS)
+    {
+        std::string phyTypeStr(phyType);
+        if(phyTypeStr == "disabled")
+            phy.mode = PhysicsMode::DISABLED;
+        else if(phyTypeStr == "surface")
+            phy.mode = PhysicsMode::SURFACE;
+        else if(phyTypeStr == "floating")
+            phy.mode = PhysicsMode::FLOATING;
+        else if(phyTypeStr == "submerged")
+            phy.mode = PhysicsMode::SUBMERGED;
+        else if(phyTypeStr == "aerodynamic")
+            phy.mode = PhysicsMode::AERODYNAMIC;
+        else 
+        {
+            log.Print(MessageType::ERROR, "Incorrect physics type for cable '%s'!", cableName.c_str());
+            return false;
+        }
+    }
+    element->QueryAttribute("collisions", &phy.collisions);
+
+    //---- Cable specific ----
+    XMLElement* item;
+    const char* mat = nullptr;
+    const char* look = nullptr;
+    float uvScale = 1.f;
+    
+    //Material
+    if((item = element->FirstChildElement("material")) == nullptr
+       || item->QueryStringAttribute("name", &mat) != XML_SUCCESS)
+    {
+        log.Print(MessageType::ERROR, "Material of cable '%s' not properly defined!", cableName.c_str());
+        return false;
+    }
+    //Look
+    if((item = element->FirstChildElement("look")) == nullptr
+       || item->QueryStringAttribute("name", &look) != XML_SUCCESS)
+    {
+        log.Print(MessageType::ERROR, "Look of cable '%s' not properly defined!", cableName.c_str());
+        return false;
+    }
+    else
+    {
+        item->QueryAttribute("uv_scale", &uvScale); //Optional
+    }
+
+    //Dimensions
+    Scalar diameter;
+    unsigned int numSegments;
+    if((item = element->FirstChildElement("geometry")) == nullptr
+        || item->QueryAttribute("diameter", &diameter) != XML_SUCCESS
+        || item->QueryAttribute("number_of_segments", &numSegments) != XML_SUCCESS)
+    {
+        log.Print(MessageType::ERROR, "Geometry of cable '%s' not properly defined!", cableName.c_str());
+        return false;
+    }
+
+    //Stretching
+    Scalar stretching {0};
+    if ((item = element->FirstChildElement("stretching")) != nullptr)
+        item->QueryAttribute("factor", &stretching); //Optional
+    
+    //Ends
+    const char* firstPosition = nullptr;
+    const char* firstAnchorType = nullptr;
+    if((item = element->FirstChildElement("first_end")) == nullptr
+        || item->QueryStringAttribute("position", &firstPosition) != XML_SUCCESS
+        || item->QueryStringAttribute("anchor", &firstAnchorType) != XML_SUCCESS)
+    {
+        log.Print(MessageType::ERROR, "Definition of the first end of cable '%s' missing!", cableName.c_str());
+        return false;
+    }
+    
+    Vector3 first;
+    if(!ParseVector(firstPosition, first))
+    {
+        log.Print(MessageType::ERROR, "Position of the first end of cable '%s' not properly defined!", cableName.c_str());
+        return false;
+    }
+
+    const char* secondPosition = nullptr;
+    const char* secondAnchorType = nullptr;
+    if((item = element->FirstChildElement("second_end")) == nullptr
+        || item->QueryStringAttribute("position", &secondPosition) != XML_SUCCESS
+        || item->QueryStringAttribute("anchor", &secondAnchorType) != XML_SUCCESS)
+    {
+        log.Print(MessageType::ERROR, "Definition of the second end of cable '%s' missing!", cableName.c_str());
+        return false;
+    }
+    
+    Vector3 second;
+    if(!ParseVector(secondPosition, second))
+    {
+        log.Print(MessageType::ERROR, "Position of the second end of cable '%s' not properly defined!", cableName.c_str());
+        return false;
+    }
+
+    //---- Add to world ----
+    CableEntity* cable = new CableEntity(cableName, phy, first, second, numSegments, diameter, std::string(mat), std::string(look), stretching, uvScale);
+    sm->AddEntity(cable);
+
+    //---- Anchors ----
+    auto parseAnchor = [&](XMLElement* anchorItem, const std::string& anchorTypeStr, sf::CableEnds anchorEnd) -> bool
+    {
+        if (anchorTypeStr == "world")
+        {
+            cable->AttachToWorld(anchorEnd);
+            return true;
+        }
+        else if (anchorTypeStr == "dynamic")
+        {
+            XMLElement* childItem;
+            const char* bodyName;
+            if ((childItem = anchorItem->FirstChildElement("body")) != nullptr
+                && childItem->QueryStringAttribute("name", &bodyName) == XML_SUCCESS)
+            {        
+                SolidEntity* body = dynamic_cast<SolidEntity*>(sm->getEntity(std::string(bodyName)));
+                if (body != nullptr)
+                {
+                    cable->AttachToSolid(anchorEnd, body);
+                    return true;
+                }
+                else
+                {
+                    log.Print(MessageType::ERROR, "Dynamic body '%s', to which the first end of cable '%s' is anchored, not found!", bodyName, cableName.c_str());
+                    return false;
+                }
+            }
+            else 
+            {
+                log.Print(MessageType::ERROR, "Dynamic body, to which the first end of cable '%s' is anchored, not properly defined!", cableName.c_str());
+                return false;
+            }
+        }
+        else if (anchorTypeStr == "link")
+        {
+            XMLElement* childItem;
+            const char* robotName;
+            const char* linkName;
+            if ((childItem = anchorItem->FirstChildElement("robot")) != nullptr
+                && childItem->QueryStringAttribute("name", &robotName) == XML_SUCCESS
+                && (childItem = anchorItem->FirstChildElement("link")) != nullptr
+                && childItem->QueryStringAttribute("name", &linkName) == XML_SUCCESS)
+            {
+                Robot* robot = sm->getRobot(std::string(robotName));
+                if (robot != nullptr)
+                {
+                    SolidEntity* link = robot->getLink(std::string(linkName));
+                    if (link != nullptr)
+                    {
+                        if (robot->getType() == RobotType::GENERAL)
+                        {
+                            cable->AttachToSolid(anchorEnd, link);
+                            return true;
+                        }
+                        else 
+                        // Featherstone
+                        // !!! Cannot attach directly to Featherstone robot link, a virtual solid entity and a fixed joint are needed !!!
+                        {
+                            FeatherstoneRobot* fsRobot = static_cast<FeatherstoneRobot*>(robot);
+
+                            PhysicsSettings attachPhy;
+                            attachPhy.mode = PhysicsMode::SURFACE;
+                            attachPhy.buoyancy = false;
+                            attachPhy.collisions = false;
+                            Sphere* attachment = new Sphere(cableName + "_attachment_body", attachPhy, Scalar(0.01), I4(), "default", "default");
+                            attachment->setRenderable(false);
+                            sm->AddSolidEntity(attachment, link->getCGTransform());
+
+                            FixedJoint* fix = new FixedJoint(cableName + "_attachment_joint", attachment, fsRobot->getDynamics(), fsRobot->getLinkIndex(std::string(linkName)));
+                            sm->AddJoint(fix);
+
+                            cable->AttachToSolid(anchorEnd, attachment);
+                            return true;
+                        }
+                    } 
+                    else
+                    {
+                        log.Print(MessageType::ERROR, "Link '%s' of robot '%s', to which the first end of cable '%s' is anchored, not found!", linkName, robotName, cableName.c_str());
+                        return false;
+                    }
+                }
+                else
+                {
+                    log.Print(MessageType::ERROR, "Robot '%s', to which the first end of cable '%s' is anchored, not found!", robotName, cableName.c_str());
+                    return false;
+                }
+            }
+            else
+            {
+                log.Print(MessageType::ERROR, "Robot link, to which the first end of cable '%s' is anchored, not properly defined!", cableName.c_str());
+                return false;
+            }
+        }
+        else
+            return false;
+    };
+    
+    parseAnchor(element->FirstChildElement("first_end"), std::string(firstAnchorType), sf::CableEnds::FIRST);
+    parseAnchor(element->FirstChildElement("second_end"), std::string(secondAnchorType), sf::CableEnds::SECOND);
+
+    return true;
+}
+
 bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::string ns, bool compoundPart)
 {
     //---- Basic ----
     const char* name = nullptr;
     const char* type = nullptr;
     const char* phyType = nullptr;
-    BodyPhysicsSettings phy;
+    PhysicsSettings phy;
     
     if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
     {
@@ -1633,15 +1864,15 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
     {
         std::string phyTypeStr(phyType);
         if(phyTypeStr == "disabled")
-            phy.mode = BodyPhysicsMode::DISABLED;
+            phy.mode = PhysicsMode::DISABLED;
         else if(phyTypeStr == "surface")
-            phy.mode = BodyPhysicsMode::SURFACE;
+            phy.mode = PhysicsMode::SURFACE;
         else if(phyTypeStr == "floating")
-            phy.mode = BodyPhysicsMode::FLOATING;
+            phy.mode = PhysicsMode::FLOATING;
         else if(phyTypeStr == "submerged")
-            phy.mode = BodyPhysicsMode::SUBMERGED;
+            phy.mode = PhysicsMode::SUBMERGED;
         else if(phyTypeStr == "aerodynamic")
-            phy.mode = BodyPhysicsMode::AERODYNAMIC;
+            phy.mode = PhysicsMode::AERODYNAMIC;
         else 
         {
             log.Print(MessageType::ERROR, "Incorrect physics type for rigid body '%s'!", solidName.c_str());
@@ -2592,10 +2823,10 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             lookStr = std::string(look);
         }
 
-        BodyPhysicsSettings phy;
+        PhysicsSettings phy;
         phy.collisions = false;
         phy.buoyancy = false;
-        phy.mode = BodyPhysicsMode::SUBMERGED;
+        phy.mode = PhysicsMode::SUBMERGED;
         std::shared_ptr<Polyhedron> propeller = std::make_shared<Polyhedron>(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), 
             propScale, I4(), std::string(mat), lookStr, -1, GeometryApproxType::CYLINDER);
 
@@ -2897,11 +3128,11 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             lookStr = std::string(look);
         }
 
-        BodyPhysicsSettings phy;
+        PhysicsSettings phy;
         phy.collisions = false;
         phy.buoyancy = false;
         
-        phy.mode = BodyPhysicsMode::SUBMERGED;
+        phy.mode = PhysicsMode::SUBMERGED;
         std::shared_ptr<Polyhedron> propeller = std::make_shared<Polyhedron>(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), lookStr);
         
         if((item = element->FirstChildElement("specs")) != nullptr)
@@ -2970,10 +3201,10 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             lookStr = std::string(look);
         }
 
-        BodyPhysicsSettings phy;
+        PhysicsSettings phy;
         phy.collisions = false;
         phy.buoyancy = false;
-        phy.mode = BodyPhysicsMode::AERODYNAMIC;
+        phy.mode = PhysicsMode::AERODYNAMIC;
         std::shared_ptr<Polyhedron> propeller = std::make_shared<Polyhedron>(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), lookStr);
         Propeller* p = new Propeller(actuatorName, propeller, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
         return p;
@@ -3034,8 +3265,8 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             return nullptr;
         }
 
-        BodyPhysicsSettings phy;
-        phy.mode = BodyPhysicsMode::SUBMERGED;
+        PhysicsSettings phy;
+        phy.mode = PhysicsMode::SUBMERGED;
         phy.collisions = false;
         phy.buoyancy = false;
 
@@ -4872,9 +5103,17 @@ FixedJoint* ScenarioParser::ParseGlue(XMLElement* element)
     {
         fix = new FixedJoint(std::string(glueName), robotA->getDynamics(), robotB->getDynamics(), linkIdA, linkIdB);
     }
+    else if(entA != nullptr && entA->getType() == EntityType::SOLID && robotB != nullptr) //Glue robot link to dynamic body
+    {
+        fix = new FixedJoint(std::string(glueName), static_cast<SolidEntity*>(entA), robotB->getDynamics(), linkIdB);
+    }
+    else if(robotA != nullptr && entB != nullptr && entB->getType() == EntityType::SOLID) //Glue robot link to dynamic body
+    {
+        fix = new FixedJoint(std::string(glueName), static_cast<SolidEntity*>(entB), robotA->getDynamics(), linkIdA);
+    }
     else
     {
-        log.Print(MessageType::ERROR, "Glueing dynamic bodies to Featherstone robot links not supported (glue '%s')!", glueName.c_str());
+        log.Print(MessageType::ERROR, "Glue '%s' configuration not supported!", glueName.c_str());
         return nullptr;
     }
     

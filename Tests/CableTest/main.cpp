@@ -46,7 +46,7 @@ int main(int argc, const char * argv[])
     h.showActuators = false;
     h.showForces = false;
     
-    CableTestManager* simulationManager = new CableTestManager(1000.0);
+    CableTestManager* simulationManager = new CableTestManager(500.0);
     CableTestApp app(std::string(DATA_DIR_PATH), s, h, simulationManager);
     app.Run(true);
     

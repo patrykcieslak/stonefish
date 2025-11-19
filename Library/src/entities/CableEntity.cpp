@@ -37,8 +37,8 @@
 namespace sf
 {
 
-CableEntity::CableEntity(std::string uniqueName, CableEnds fixedEnds, Vector3 firstEnd, Vector3 secondEnd, 
-    size_t numSegments, Scalar diameter, std::string material, std::string look, float uvScale) : Entity(uniqueName)
+CableEntity::CableEntity(std::string uniqueName, PhysicsSettings phy, Vector3 firstEnd, Vector3 secondEnd, 
+    size_t numSegments, Scalar diameter, std::string material, std::string look, Scalar stretching, float uvScale) : Entity(uniqueName), phy_(phy)
 {
     SimulationManager* sm = SimulationApp::getApp()->getSimulationManager();
 
@@ -46,14 +46,17 @@ CableEntity::CableEntity(std::string uniqueName, CableEnds fixedEnds, Vector3 fi
     mat_ = sm->getMaterialManager()->getMaterial(material);
     
     // Create cable soft body
-    cableBody_ = btSoftBodyHelpers::CreateRope(sm->getSoftBodyWorldInfo(), firstEnd, secondEnd, numSegments, static_cast<int>(fixedEnds));
-    
+    numSegments = numSegments < 2 ? 2 : numSegments;
+    cableBody_ = btSoftBodyHelpers::CreateRope(sm->getSoftBodyWorldInfo(), firstEnd, secondEnd, numSegments, 0);
+    nodalForces_.resize(cableBody_->m_nodes.size());
+    restLength_ = (secondEnd - firstEnd).safeNorm();
+
     // Material properties
-    cableBody_->m_materials[0]->m_kLST = 1.0;
-    cableBody_->m_materials[0]->m_kAST = 1.0;
-    cableBody_->m_materials[0]->m_kVST = 1.0;
-    diameter_ = diameter;
-    Scalar cableVolume = M_PI * (diameter_ * diameter_) / 4.0 * (firstEnd - secondEnd).length();
+    cableBody_->m_materials[0]->m_kLST = lerp(Scalar(1.0), Scalar(0.02), btClamped(stretching, Scalar(0), Scalar(1)));
+    cableBody_->m_materials[0]->m_kAST = Scalar(1);
+    cableBody_->m_materials[0]->m_kVST = Scalar(1);
+    radius_ = diameter / Scalar(2);
+    Scalar cableVolume = M_PI * (radius_ * radius_) * (firstEnd - secondEnd).length();
     cableBody_->setTotalMass(cableVolume * mat_.density);
 
     // Solver setup
@@ -72,8 +75,7 @@ CableEntity::CableEntity(std::string uniqueName, CableEnds fixedEnds, Vector3 fi
     
     // Collisions
     cableBody_->setCollisionFlags(cableBody_->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
-    cableBody_->getCollisionShape()->setMargin(diameter_ / 2.0);
-    cableBody_->getCollisionShape()->setUserPointer(cableBody_);
+    cableBody_->getCollisionShape()->setMargin(radius_);
     cableBody_->setUserPointer(this);
     cableBody_->setActivationState(DISABLE_DEACTIVATION);
     
@@ -108,10 +110,61 @@ EntityType CableEntity::getType() const
 {
     return EntityType::CABLE;
 }
+
+Scalar CableEntity::getRestLength() const
+{
+    return restLength_;
+}
+
+Scalar CableEntity::getLength() const
+{
+    if (cableBody_ != nullptr)
+    {
+        Scalar length {0};
+        for (size_t i=0; i<cableBody_->m_nodes.size()-1; ++i)
+            length += (cableBody_->m_nodes[i+1].m_x - cableBody_->m_nodes[i].m_x).safeNorm();
+        return length;
+    }
+    else
+        return Scalar(0);
+}
+
+btSoftBody* CableEntity::getSoftBody() const
+{
+    return cableBody_;
+}
+
 void CableEntity::getAABB(Vector3& min, Vector3& max)
 {
     if (cableBody_ != nullptr)
         cableBody_->getAabb(min, max);
+}
+
+void CableEntity::AttachToWorld(CableEnds ends)
+{
+    if (cableBody_ != nullptr)
+    {
+        if (ends == CableEnds::NONE)
+        {
+            cableBody_->setMass(0, cableBody_->getMass(1));
+            cableBody_->setMass(cableBody_->m_nodes.size() - 1, cableBody_->getMass(cableBody_->m_nodes.size() - 2));
+            cableBody_->removeAnchor(0);
+            cableBody_->removeAnchor(cableBody_->m_nodes.size() - 1);
+            return;
+        }
+
+        if (ends == CableEnds::FIRST || ends == CableEnds::BOTH)
+        {
+            cableBody_->setMass(0, Scalar(0));
+            cableBody_->removeAnchor(0);
+        }
+        
+        if (ends == CableEnds::SECOND || ends == CableEnds::BOTH)
+        {
+            cableBody_->setMass(cableBody_->m_nodes.size() - 1, Scalar(0));
+            cableBody_->removeAnchor(cableBody_->m_nodes.size() - 1);
+        }
+    }
 }
 
 void CableEntity::AttachToSolid(CableEnds ends, SolidEntity* solid)
@@ -122,41 +175,19 @@ void CableEntity::AttachToSolid(CableEnds ends, SolidEntity* solid)
     if (cableBody_ != nullptr && solid != nullptr)
     {
         btRigidBody* rb = solid->getRigidBody();
-        if (rb != nullptr)
+        if (rb == nullptr) // Not working for multibody colliders (deformable anchor doesn't work!)
+            return;
+
+        if (ends == CableEnds::FIRST || ends == CableEnds::BOTH)
         {
-            if ((ends == CableEnds::FIRST || ends == CableEnds::BOTH) 
-                && cableBody_->getMass(0) > Scalar(0)
-            )
-            {
-                cableBody_->appendAnchor(0, rb);
-            }
-            
-            if ((ends == CableEnds::SECOND || ends == CableEnds::BOTH) 
-                && cableBody_->getMass(cableBody_->m_nodes.size() - 1) > Scalar(0)
-            )
-            {
-                cableBody_->appendAnchor(cableBody_->m_nodes.size() - 1, rb);
-            }
+            cableBody_->setMass(0, cableBody_->getMass(1));
+            cableBody_->appendAnchor(0, rb);
         }
-        else 
+
+        if (ends == CableEnds::SECOND || ends == CableEnds::BOTH)
         {
-            btMultiBodyLinkCollider* mbc = solid->getMultiBodyLinkCollider();
-            if (mbc != nullptr)
-            {
-                if ((ends == CableEnds::FIRST || ends == CableEnds::BOTH) 
-                    && cableBody_->getMass(0) > Scalar(0)
-                )
-                {
-                    cableBody_->appendDeformableAnchor(0, mbc); // Not working?!
-                }
-                
-                if ((ends == CableEnds::SECOND || ends == CableEnds::BOTH) 
-                    && cableBody_->getMass(cableBody_->m_nodes.size() - 1) > Scalar(0)
-                )
-                {
-                    cableBody_->appendDeformableAnchor(cableBody_->m_nodes.size() - 1, mbc); // Not working?!
-                }
-            }
+            cableBody_->setMass(cableBody_->m_nodes.size() - 1, cableBody_->getMass(cableBody_->m_nodes.size() - 2));
+            cableBody_->appendAnchor(cableBody_->m_nodes.size() - 1, rb);
         }
     }
 }
@@ -164,19 +195,192 @@ void CableEntity::AttachToSolid(CableEnds ends, SolidEntity* solid)
 void CableEntity::AddToSimulation(SimulationManager* sm)
 {
     if (cableBody_ != nullptr)
-        sm->getDynamicsWorld()->addSoftBody(cableBody_);
+    {
+        if (phy_.collisions)
+        {
+            sm->getDynamicsWorld()->addSoftBody(cableBody_, MASK_DYNAMIC, MASK_GHOST | MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING);
+        }
+        else
+        {
+            cableBody_->setCollisionFlags(cableBody_->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
+            sm->getDynamicsWorld()->addSoftBody(cableBody_, MASK_DYNAMIC, MASK_GHOST);
+        }
+    }
+}
+
+void CableEntity::ApplyGravity(const Vector3& g)
+{
+    if (cableBody_ != nullptr)
+        cableBody_->addForce(g * cableBody_->getTotalMass() / static_cast<Scalar>(cableBody_->m_nodes.size()));
+}
+
+Scalar CableEntity::circularSegmentArea(Scalar h) const
+{
+    if (h <= Scalar(0))
+        return Scalar(0);
+    else if (h >= Scalar(2) * radius_)
+        return Scalar(M_PI) * radius_ * radius_;
+    else
+    {
+        if (h > radius_)
+        {
+            h = Scalar(2) * radius_ - h;
+            Scalar theta = Scalar(2) * btAcos((radius_ - h) / radius_);
+            return radius_ * radius_ * (Scalar(M_PI) - (theta - btSin(theta)) / Scalar(2));
+        }
+        else
+        {
+            Scalar theta = Scalar(2) * btAcos((radius_ - h) / radius_);
+            return (radius_ * radius_ / Scalar(2)) * (theta - btSin(theta));
+        }
+    }
 }
 
 void CableEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* ocn)
 {
-    // To be implemented
-    printf("ComputeHydrodynamicForces not implemented yet!\n");
+    if(phy_.mode != PhysicsMode::FLOATING && phy_.mode != PhysicsMode::SUBMERGED) return;
+
+    // Clear forces
+    for (size_t i = 0; i < nodalForces_.size(); ++i)
+        nodalForces_[i].clearForces();
+
+    for (size_t i = 0; i < cableBody_->m_nodes.size()-1; ++i)
+    {
+        // Segment
+        Vector3 p1 = cableBody_->m_nodes[i].m_x;
+        Vector3 p2 = cableBody_->m_nodes[i+1].m_x;
+        Scalar d1 = ocn->GetDepth(p1);
+        Scalar d2 = ocn->GetDepth(p2);
+
+        // Sort so that p1 is the shallower point (more negative depth)
+        if (d1 > d2)
+        {
+            std::swap(p1, p2);
+            std::swap(d1, d2);
+        }
+
+        // Segment parameters
+        Scalar dz = d2 - d1; // positive (d1 < d2)
+        Scalar dxy = Vector3(p2.getX() - p1.getX(), p2.getY() - p1.getY(), 0.0).safeNorm();
+        Vector3 segmentVec = p2 - p1;
+        Scalar segmentLength = segmentVec.length();
+        Scalar alpha = btAtan(dz/dxy); // angle between segment and horizontal plane
+        Scalar margin = btFuzzyZero(dxy) ? Scalar(0) : radius_ * btCos(alpha);
+        
+        // Compute submerged volume
+        Scalar submergedV {0};
+
+        if (d2 < -margin) // Segment is out of water
+        {
+            continue;
+        }
+        else if (d1 > margin) // Segment is fully submerged
+        {
+            submergedV = Scalar(M_PI) * radius_ * radius_ * segmentLength; 
+        }
+        else // Segment is partially submerged
+        {
+            if (btFuzzyZero(dxy)) // Vertical segment
+            {
+                Scalar submergedL = btMin(d2, dz);
+                submergedV = Scalar(M_PI) * radius_ * radius_ * submergedL;
+            }
+            else if (btFuzzyZero(dz)) // Horizontal segment
+            {
+                Scalar submergedA = circularSegmentArea(d1 + radius_);
+                submergedV = submergedA * segmentLength;
+            }
+            else if (btFabs(d1) <= margin && btFabs(d2) <= margin) // Inclined segment, both caps partially submerged
+            {
+                // Compute submerged area at both ends
+                Scalar A1 = circularSegmentArea(d1/btCos(alpha) + radius_);
+                Scalar A2 = circularSegmentArea(d2/btCos(alpha) + radius_);
+                submergedV = (A1 + A2) / Scalar(2) * segmentLength;
+            }
+            else if (d1 < -margin && d2 > margin) // Inclined segment, first cap out of water, second cap submerged
+            {
+                // Compute length of completely submerged segment
+                Scalar l1 = (d2 - radius_ * btCos(alpha)) / btSin(alpha);
+                
+                // Compute length of half-submerged segment
+                Scalar l2 = Scalar(2) * radius_ * btCos(alpha);
+                
+                submergedV = Scalar(M_PI) * radius_ * radius_ * (l1 + l2 / Scalar(2));
+            }
+            else if (d2 <= margin) // d1 > margin // Inclined segment, first cap out of water, second cap partially submerged
+            {
+                // Compute length of half-submerged segment
+                Scalar a = radius_ + d2 / btCos(alpha);
+                Scalar l = a/btSin(alpha);
+                submergedV = circularSegmentArea(a) * l / Scalar(2);
+            }
+            else if (d1 >= -margin) // Inclined segment, first cap partially submerged, second cap submerged
+            {
+                // Compute length of half-submerged segment
+                Scalar a = radius_ - d1 / btCos(alpha);
+                Scalar l = a/btSin(alpha);
+                submergedV = Scalar(M_PI) * radius_ * radius_ * segmentLength - circularSegmentArea(a) * l / Scalar(2);
+            }
+        }
+
+        // Apply buoyancy force
+        if (settings.reallisticBuoyancy)
+        {
+            // !!! Here it is an approximation because the buoyancy force should be applied at the buoyancy center and then it will generate torque 
+            // which will result in asymmetrical forces on both ends of the segment !!!
+            Vector3 buoyancy = -submergedV * ocn->getLiquid().density * SimulationApp::getApp()->getSimulationManager()->getGravity();
+            nodalForces_[i].Fb += buoyancy / Scalar(2);
+            nodalForces_[i+1].Fb += buoyancy / Scalar(2);
+        }
+
+        // Drag
+        if (settings.dampingForces && submergedV > Scalar(0))
+        {
+            Vector3 p = (p1 + p2) / Scalar(2);
+            Vector3 v1 = cableBody_->m_nodes[i].m_v;
+            Vector3 v2 = cableBody_->m_nodes[i+1].m_v;
+            Vector3 v = (v1 + v2) / Scalar(2);
+            Vector3 waterV = ocn->GetFluidVelocity(p);
+            Vector3 relV = v - waterV;
+        
+            const Scalar Cd {0.5}; // Form drag coefficient
+            const Scalar Cf {0.2}; // Skin friction coefficient
+            Scalar f1 = btFabs(segmentVec.dot(relV));
+            Scalar f2 = submergedV / (Scalar(M_PI) * radius_ * radius_ * segmentLength);
+
+            // Form drag
+            {
+                Scalar S = Scalar(2) * radius_ * segmentLength;
+                Vector3 Fdq = -(Scalar(1) - f1) * f2 * Scalar(0.5) * ocn->getLiquid().density * Scalar(Cd) * S * relV.length() * relV;
+                nodalForces_[i].Fdq += Fdq / Scalar(2);
+                nodalForces_[i+1].Fdq += Fdq / Scalar(2);
+            }
+            // Skin friction
+            {
+                Scalar S = f2 * (Scalar(2 * M_PI) * radius_ * segmentLength);
+                Vector3 Fdf = -S * relV;
+                nodalForces_[i].Fdf += Fdf / Scalar(2);
+                nodalForces_[i+1].Fdf += Fdf / Scalar(2);
+            }
+        }
+    }
+
+    // Correction for end nodes
+    nodalForces_[0].Fb *= Scalar(2);
+    nodalForces_[cableBody_->m_nodes.size() - 1].Fb *= Scalar(2);
+    nodalForces_[0].Fdq *= Scalar(2);
+    nodalForces_[cableBody_->m_nodes.size() - 1].Fdq *= Scalar(2);
+    nodalForces_[0].Fdf *= Scalar(2);
+    nodalForces_[cableBody_->m_nodes.size() - 1].Fdf *= Scalar(2);
 }
 
 void CableEntity::ApplyHydrodynamicForces()
 {
-    // To be implemented
-    printf("ApplyHydrodynamicForces not implemented yet!\n");
+    for (size_t i = 0; i < cableBody_->m_nodes.size(); ++i)
+    {
+        Vector3 totalForce = nodalForces_[i].Fb + nodalForces_[i].Fdf + nodalForces_[i].Fdq;
+        cableBody_->addForce(totalForce, i);
+    }
 }
 
 std::vector<Renderable> CableEntity::Render()
@@ -185,12 +389,13 @@ std::vector<Renderable> CableEntity::Render()
 
     if (cableBody_ != nullptr)
     {
+        // Cable mesh
         Renderable item;
         item.type = RenderableType::CABLE;
         item.lookId = displayMode_ == DisplayMode::GRAPHICAL ? lookId_ : -1;
         item.objectId = objectId_;
         item.materialName = mat_.name;
-        item.model = glm::mat4(static_cast<GLfloat>(diameter_)/2.f); // Radius is used for drawing
+        item.model = glm::mat4(static_cast<GLfloat>(radius_));
         item.cor = glm::vec3(0.f);
         item.vel = glm::vec3(0.f);
         item.avel = glm::vec3(0.f);
@@ -256,6 +461,44 @@ std::vector<Renderable> CableEntity::Render()
         }
 
         items.push_back(item);
+
+        // Hydrodynamic forces
+        if(phy_.mode == PhysicsMode::FLOATING || phy_.mode == PhysicsMode::SUBMERGED)
+        {
+
+            Renderable itemFb;
+            itemFb.type = RenderableType::FORCE_BUOYANCY;
+            itemFb.model = glm::mat4(1.f);
+            itemFb.data = std::make_shared<std::vector<glm::vec3>>();
+            std::vector<glm::vec3>* pointsFb = itemFb.getDataAsPoints();
+
+            Renderable itemFdq;
+            itemFdq.type = RenderableType::FORCE_QUADRATIC_DRAG;
+            itemFdq.model = glm::mat4(1.f);
+            itemFdq.data = std::make_shared<std::vector<glm::vec3>>();
+            std::vector<glm::vec3>* pointsFdq = itemFdq.getDataAsPoints();
+
+            Renderable itemFdf;
+            itemFdf.type = RenderableType::FORCE_LINEAR_DRAG;
+            itemFdf.model = glm::mat4(1.f);
+            itemFdf.data = std::make_shared<std::vector<glm::vec3>>();
+            std::vector<glm::vec3>* pointsFdf = itemFdf.getDataAsPoints();
+
+            for (size_t i = 0; i < cableBody_->m_nodes.size(); ++i)
+            {
+                glm::vec3 p = glVectorFromVector(cableBody_->m_nodes[i].m_x);
+                pointsFb->push_back(p);
+                pointsFb->push_back(p + glVectorFromVector(nodalForces_[i].Fb));
+                pointsFdq->push_back(p);
+                pointsFdq->push_back(p + glVectorFromVector(nodalForces_[i].Fdq));
+                pointsFdf->push_back(p);
+                pointsFdf->push_back(p + glVectorFromVector(nodalForces_[i].Fdf));
+            }
+
+            items.push_back(itemFb);
+            items.push_back(itemFdq);
+            items.push_back(itemFdf);
+        }
     }
 
     return items;

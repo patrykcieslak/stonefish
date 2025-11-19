@@ -50,16 +50,13 @@ void main() {
     vec3 t1 = gs_in[1].localTangent;
     
     vec3 up1 = vec3(0.0, 1.0, 0.0);
-    if (abs(dot(t0, up1)) > 0.99) {
+    if (abs(dot((t0 + t1)/2.0, up1)) > 0.75) {
         up1 = vec3(1.0, 0.0, 0.0);
     }
+    vec3 up2 = up1; // To avoid twisting
+
     vec3 right1 = normalize(cross(t0, up1));
     up1 = normalize(cross(right1, t0));
-
-    vec3 up2 = vec3(0.0, 1.0, 0.0);
-    if (abs(dot(t1, up2)) > 0.99) {
-        up2 = vec3(1.0, 0.0, 0.0);
-    }
     vec3 right2 = normalize(cross(t1, up2));
     up2 = normalize(cross(right2, t1));
 

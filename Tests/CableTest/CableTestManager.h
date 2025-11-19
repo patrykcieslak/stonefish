@@ -33,7 +33,8 @@ class CableTestManager : public sf::SimulationManager
 public:
     CableTestManager(sf::Scalar stepsPerSecond);
     
-    void BuildScenario();
+    void BuildScenario() override;
+    void SimulationStepCompleted(sf::Scalar timeStep) override;
 };
 
 #endif

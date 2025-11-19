@@ -30,7 +30,7 @@
 namespace sf
 {
 
-Sphere::Sphere(std::string uniqueName, BodyPhysicsSettings phy, Scalar radius, const Transform& origin, std::string material, std::string look, Scalar thickness)
+Sphere::Sphere(std::string uniqueName, PhysicsSettings phy, Scalar radius, const Transform& origin, std::string material, std::string look, Scalar thickness)
     : SolidEntity(uniqueName, phy, material, look, thickness)
 {
     r = radius;

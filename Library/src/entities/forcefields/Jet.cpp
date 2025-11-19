@@ -41,6 +41,11 @@ void Jet::setOutletVelocity(Scalar x)
     vout = x;
 }
 
+Scalar Jet::getOutletVelocity() const
+{
+    return vout;
+}
+
 VelocityFieldType Jet::getType() const
 {
     return VelocityFieldType::JET;

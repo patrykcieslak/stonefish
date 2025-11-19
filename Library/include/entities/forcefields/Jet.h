@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/07/18.
-//  Copyright(c) 2018-2021 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2025 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Jet__
@@ -63,6 +63,9 @@ namespace sf
          \param x new outlet velocity [m/s]
          */
         void setOutletVelocity(Scalar x);
+
+        //! A method to get the flow velocity.
+        Scalar getOutletVelocity() const;
 
          //! A method returning the type of the velocity field.
         VelocityFieldType getType() const;

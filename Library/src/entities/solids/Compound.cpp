@@ -32,7 +32,7 @@
 namespace sf
 {
 
-Compound::Compound(std::string uniqueName, BodyPhysicsSettings phy, SolidEntity* firstExternalPart, const Transform& origin)
+Compound::Compound(std::string uniqueName, PhysicsSettings phy, SolidEntity* firstExternalPart, const Transform& origin)
     : SolidEntity(uniqueName, phy, "", "", Scalar(-1))
 {
     //All transformations are zero -> transforming the origin of a compound body doesn't make sense...
@@ -290,7 +290,7 @@ btCollisionShape* Compound::BuildCollisionShape()
 
 void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* ocn)
 {
-    if(phy.mode != BodyPhysicsMode::FLOATING && phy.mode != BodyPhysicsMode::SUBMERGED) return;
+    if(phy.mode != PhysicsMode::FLOATING && phy.mode != PhysicsMode::SUBMERGED) return;
     
     auto points = submerged.getDataAsPoints();
     if (points != nullptr)
@@ -341,8 +341,8 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
             
             for(size_t i=0; i<parts.size(); ++i) //Go through all parts
                 if(parts[i].isExternal 
-                    && (parts[i].solid->getBodyPhysicsMode() == BodyPhysicsMode::SUBMERGED
-                    || parts[i].solid->getBodyPhysicsMode() == BodyPhysicsMode::FLOATING)) //Compute drag only for external parts
+                    && (parts[i].solid->getPhysicsMode() == PhysicsMode::SUBMERGED
+                    || parts[i].solid->getPhysicsMode() == PhysicsMode::FLOATING)) //Compute drag only for external parts
                 {
                     Transform T_C_part = getOTransform() * parts[i].origin * parts[i].solid->getO2CTransform();
                     Transform T_O_part = getOTransform() * parts[i].origin;
@@ -399,8 +399,8 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
 
             for(size_t i=0; i<parts.size(); ++i) //Loop through all parts
             {
-                if(parts[i].solid->getBodyPhysicsMode() != BodyPhysicsMode::SUBMERGED
-                    && parts[i].solid->getBodyPhysicsMode() != BodyPhysicsMode::FLOATING)
+                if(parts[i].solid->getPhysicsMode() != PhysicsMode::SUBMERGED
+                    && parts[i].solid->getPhysicsMode() != PhysicsMode::FLOATING)
                     continue;
 
                 Transform T_C_part = getOTransform() * parts[i].origin * parts[i].solid->getO2CTransform();
@@ -438,7 +438,7 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
 
 void Compound::ComputeAerodynamicForces(Atmosphere* atm)
 {
-    if(phy.mode != BodyPhysicsMode::AERODYNAMIC) return;
+    if(phy.mode != PhysicsMode::AERODYNAMIC) return;
     
     //Set zero
     Fda.setZero();

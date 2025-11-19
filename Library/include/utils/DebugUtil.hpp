@@ -60,7 +60,7 @@ void printMatrix3(std::string_view title, const Matrix3& m, unsigned int precisi
 bool testScalar(const std::string title, const Scalar& value, const Scalar& expected, Scalar tolerance = 1e-6)
 {
     bool success = btFabs(value - expected) < tolerance;
-    std::cout << (success ? "[PASS] " : "[FAIL] ") << title << ": " << std::setprecision(8) << value << " (expected " << expected << ")" << std::endl;
+    std::cout << std::format("{}: {}: {:.6f} (expected {:.6f})\n", (success ? "[PASS]" : "[FAIL]"), title, value, expected);
     return success;
 }
 
@@ -69,9 +69,8 @@ bool testVector3(const std::string title, const Vector3& value, const Vector3& e
     bool success = btFabs(value.getX() - expected.getX()) < tolerance 
                 && btFabs(value.getY() - expected.getY()) < tolerance 
                 && btFabs(value.getZ() - expected.getZ()) < tolerance;
-
-    std::cout << (success ? "[PASS] " : "[FAIL] ") << title << std::setprecision(8) << ": [" << value.getX() << ", " << value.getY() << ", " << value.getZ() 
-        << "] (expected [" << expected.getX() << ", " << expected.getY() << ", " << expected.getZ() << "])" << std::endl;
+    std::cout << std::format("{}: {}: [{:.6f}, {:.6f}, {:.6f}] (expected [{:.6f}, {:.6f}, {:.6f}])\n", 
+        (success ? "[PASS]" : "[FAIL]"), title, value.getX(), value.getY(), value.getZ(), expected.getX(), expected.getY(), expected.getZ());
     return success;
 }
 

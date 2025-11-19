@@ -47,8 +47,8 @@ When using the XML parser, these settings are passed as attributes (see below). 
 
 .. code-block:: cpp
 
-    sf::BodyPhysicsSettings phy;
-    phy.mode = sf::BodyPhysicsMode::SUBMERGED;
+    sf::PhysicsSettings phy;
+    phy.mode = sf::PhysicsMode::SUBMERGED;
     phy.collisions = true;
     phy.buoyancy = true;
 

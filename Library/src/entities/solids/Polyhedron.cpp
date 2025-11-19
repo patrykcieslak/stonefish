@@ -33,7 +33,7 @@
 namespace sf
 {
 
-Polyhedron::Polyhedron(std::string uniqueName, BodyPhysicsSettings phy, 
+Polyhedron::Polyhedron(std::string uniqueName, PhysicsSettings phy, 
                        std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
                        std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
                        std::string material, std::string look, Scalar thickness, GeometryApproxType approx)
@@ -71,7 +71,7 @@ Polyhedron::Polyhedron(std::string uniqueName, BodyPhysicsSettings phy,
     P_CB = Vector3(0,0,0);
 }
     
-Polyhedron::Polyhedron(std::string uniqueName, BodyPhysicsSettings phy, 
+Polyhedron::Polyhedron(std::string uniqueName, PhysicsSettings phy, 
                        std::string modelFilename, Scalar scale, const Transform& origin,
                        std::string material, std::string look, Scalar thickness, GeometryApproxType approx)
                         : Polyhedron(uniqueName, phy, modelFilename, scale, origin, "", scale, origin, material, look, thickness, approx)

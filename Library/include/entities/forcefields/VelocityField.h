@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/07/18.
-//  Copyright (c) 2018-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2025 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_VelocityField__
@@ -32,7 +32,7 @@
 namespace sf
 {
     //! An enum representing the type of a velocity field.
-    enum class VelocityFieldType {UNIFORM, JET, PIPE, STREAM};
+    enum class VelocityFieldType {UNIFORM, JET, PIPE};
 
     //! An abstract class representing a velocity field.
     class VelocityField

@@ -44,6 +44,16 @@ VelocityFieldType Pipe::getType() const
     return VelocityFieldType::PIPE;
 }
 
+void Pipe::setInletVelocity(Scalar v)
+{
+    vin = v;
+}
+
+Scalar Pipe::getInletVelocity() const
+{
+    return vin;
+}
+
 Vector3 Pipe::GetVelocityAtPoint(const Vector3& p) const
 {
     //Calculate distance to line

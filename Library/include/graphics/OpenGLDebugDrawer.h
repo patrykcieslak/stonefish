@@ -40,7 +40,7 @@ namespace sf
         /*!
          \param debugMode the debug display mode
          */
-        OpenGLDebugDrawer(int debugMode);
+        OpenGLDebugDrawer(int debugMode = btIDebugDraw::DBG_MAX_DEBUG_DRAW_MODE);
         
         //! A method to draw a line.
         /*!

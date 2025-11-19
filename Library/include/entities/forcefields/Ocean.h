@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/10/17.
-//  Copyright (c) 2017-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Ocean__
@@ -141,12 +141,12 @@ namespace sf
         //! A method returning a pointer to the OpenGL object implementing the ocean.
         OpenGLOcean* getOpenGLOcean();
 
-        //! A method giving direct access to the currents.
+        //! A method giving direct access to the defined velocity fields.
         /*!
          \param index an id of the current
          \return pointer to the current object
          */
-        VelocityField* getCurrent(unsigned int index);
+        VelocityField* getVelocityField(size_t index);
 
         //! A method returning the type of the force field.
         ForcefieldType getForcefieldType();

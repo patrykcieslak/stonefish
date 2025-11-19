@@ -84,8 +84,8 @@ void FallingTestManager::BuildScenario()
 	AddActuator(spot);
     
     //---Robot---
-    sf::BodyPhysicsSettings phy;
-    phy.mode = sf::BodyPhysicsMode::SURFACE;
+    sf::PhysicsSettings phy;
+    phy.mode = sf::PhysicsMode::SURFACE;
     phy.collisions = true;
     /*
     //Mechanical parts

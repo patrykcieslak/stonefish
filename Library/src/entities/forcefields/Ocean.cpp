@@ -107,7 +107,7 @@ Fluid Ocean::getLiquid() const
     return liquid;
 }
 
-VelocityField* Ocean::getCurrent(unsigned int index)
+VelocityField* Ocean::getVelocityField(size_t index)
 {
     if(index < currents.size())
         return currents[index];
@@ -237,7 +237,6 @@ void Ocean::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co, bool
     else if (btSoftBody* sb = dynamic_cast<btSoftBody*>(co))
     {
         ent = static_cast<Entity*>(sb->getUserPointer());
-        printf("Ocean hydrodynamics for soft bodies not implemented yet!\n");
     }
     else
         return;

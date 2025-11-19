@@ -56,8 +56,8 @@ void FloatingTestManager::BuildScenario()
     getAtmosphere()->SetSunPosition(0.0, 60.0);
     
     //Hull
-    sf::BodyPhysicsSettings phy;
-    phy.mode = sf::BodyPhysicsMode::FLOATING;
+    sf::PhysicsSettings phy;
+    phy.mode = sf::PhysicsMode::FLOATING;
     phy.collisions = true;
     phy.buoyancy = true;
     sf::Polyhedron* hull = new sf::Polyhedron("Hull", phy, sf::GetDataPath() + "boat_gra.obj", sf::Scalar(1), sf::I4(), sf::GetDataPath() + "boat.obj", sf::Scalar(1), sf::I4(), 
@@ -65,7 +65,7 @@ void FloatingTestManager::BuildScenario()
     hull->ScalePhysicalPropertiesToArbitraryMass(150.0);
 
     //Propeller
-    phy.mode = sf::BodyPhysicsMode::SUBMERGED;
+    phy.mode = sf::PhysicsMode::SUBMERGED;
     phy.buoyancy = false;
 
     std::shared_ptr<sf::Polyhedron> propeller = std::make_shared<sf::Polyhedron>("Propeller", phy, sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "propeller");
