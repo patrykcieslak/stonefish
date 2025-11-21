@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/07/18.
-//  Copyright(c) 2018-2021 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/forcefields/Pipe.h"
@@ -42,6 +42,16 @@ Pipe::Pipe(const Vector3& point1, const Vector3& point2, Scalar radius1, Scalar 
 VelocityFieldType Pipe::getType() const
 {
     return VelocityFieldType::PIPE;
+}
+
+void Pipe::setInletVelocity(Scalar v)
+{
+    vin = v;
+}
+
+Scalar Pipe::getInletVelocity() const
+{
+    return vin;
 }
 
 Vector3 Pipe::GetVelocityAtPoint(const Vector3& p) const
@@ -85,31 +95,38 @@ std::vector<Renderable> Pipe::Render(VelocityFieldUBO& ubo)
     Renderable inlet;
     inlet.type = RenderableType::HYDRO_LINE_STRIP;
     inlet.model = model;
+    inlet.data = std::make_shared<std::vector<glm::vec3>>();
+    auto inletPoints = inlet.getDataAsPoints();
     
     Renderable outlet;
     outlet.type = RenderableType::HYDRO_LINE_STRIP;
     outlet.model = model;
-
+    outlet.data = std::make_shared<std::vector<glm::vec3>>();
+    auto outletPoints = outlet.getDataAsPoints();
+    
     //Pipe
     Renderable pipe;
     pipe.type = RenderableType::HYDRO_LINES;
     pipe.model = model;
-    pipe.points.push_back(glm::vec3(0, 0, 0));
-    pipe.points.push_back(glm::vec3(0, 0, l));
+    pipe.data = std::make_shared<std::vector<glm::vec3>>();
+    auto pipePoints = pipe.getDataAsPoints();
+    
+    pipePoints->push_back(glm::vec3(0, 0, 0));
+    pipePoints->push_back(glm::vec3(0, 0, l));
     
     for(unsigned int i=0; i<12; ++i)
     {
         Scalar alpha = Scalar(i)/Scalar(12) * M_PI * Scalar(2);
         Vector3 v1(btCos(alpha)*r1, btSin(alpha)*r1, 0);
         Vector3 v2(v1.x()*r2/r1, v1.y()*r2/r1, l);
-        pipe.points.push_back(glm::vec3(v1.x(), v1.y(), v1.z()));
-        inlet.points.push_back(pipe.points.back());
-        pipe.points.push_back(glm::vec3(v2.x(), v2.y(), v2.z()));
-        outlet.points.push_back(pipe.points.back());
+        pipePoints->push_back(glm::vec3(v1.x(), v1.y(), v1.z()));
+        inletPoints->push_back(pipePoints->back());
+        pipePoints->push_back(glm::vec3(v2.x(), v2.y(), v2.z()));
+        outletPoints->push_back(pipePoints->back());
     }
     
-    inlet.points.push_back(inlet.points.front());
-    outlet.points.push_back(outlet.points.front());
+    inletPoints->push_back(inletPoints->front());
+    outletPoints->push_back(outletPoints->front());
     
     items.push_back(inlet);
     items.push_back(outlet);

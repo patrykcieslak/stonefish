@@ -40,94 +40,94 @@ namespace sf
 
 Robot::Robot(std::string uniqueName, bool fixedBase)
 {
-    name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
-    fixed = fixedBase;
+    name_ = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
+    fixed_ = fixedBase;
 }
 
 Robot::~Robot()
 {
     if(SimulationApp::getApp() != nullptr)
-        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
+        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name_);
 }
 
 std::string Robot::getName()
 {
-    return name;
+    return name_;
 }
 
-SolidEntity* Robot::getLink(const std::string& name)
+SolidEntity* Robot::getLink(const std::string& lname)
 {
-    for(size_t i=0; i<links.size(); ++i)
-        if(links[i]->getName() == name) return links[i];
-    
-    for(size_t i=0; i<detachedLinks.size(); ++i)
-        if(detachedLinks[i]->getName() == name) return detachedLinks[i];
+    for(size_t i=0; i<links_.size(); ++i)
+        if(links_[i]->getName() == lname) return links_[i];
+
+    for(size_t i=0; i<detachedLinks_.size(); ++i)
+        if(detachedLinks_[i]->getName() == lname) return detachedLinks_[i];
     
     return nullptr;
 }
 
 SolidEntity* Robot::getLink(size_t index)
 {
-    if(index < links.size())
-        return links[index];
+    if(index < links_.size())
+        return links_[index];
     else
         return nullptr;
 }
     
-Actuator* Robot::getActuator(std::string name)
+Actuator* Robot::getActuator(std::string aname)
 {
-    for(size_t i=0; i<actuators.size(); ++i)
-        if(actuators[i]->getName() == name)
-            return actuators[i];
+    for(size_t i=0; i<actuators_.size(); ++i)
+        if(actuators_[i]->getName() == aname)
+            return actuators_[i];
 
     return nullptr;
 }
 
 Actuator* Robot::getActuator(size_t index)
 {
-    if(index < actuators.size())
-        return actuators[index];
+    if(index < actuators_.size())
+        return actuators_[index];
     else
         return nullptr;
 }
     
-Sensor* Robot::getSensor(std::string name)
+Sensor* Robot::getSensor(std::string sname)
 {
-    for(size_t i=0; i<sensors.size(); ++i)
-        if(sensors[i]->getName() == name)
-            return sensors[i];
+    for(size_t i=0; i<sensors_.size(); ++i)
+        if(sensors_[i]->getName() == sname)
+            return sensors_[i];
     
     return nullptr;
 }
 
 Sensor* Robot::getSensor(size_t index)
 {
-    if(index < sensors.size())
-        return sensors[index];
+    if(index < sensors_.size())
+        return sensors_[index];
     else
         return nullptr;
 }
 
-Comm* Robot::getComm(std::string name)
+Comm* Robot::getComm(std::string cname)
 {
-    for(size_t i=0; i<comms.size(); ++i)
-        if(comms[i]->getName() == name)
-            return comms[i];
+    for(size_t i=0; i<comms_.size(); ++i)
+        if(comms_[i]->getName() == cname)
+            return comms_[i];
     
     return nullptr;
 }
 
 Comm* Robot::getComm(size_t index)
 {
-    if(index < comms.size())
-        return comms[index];
+    if(index < comms_.size())
+        return comms_[index];
     else
         return nullptr;
 }
 
 SolidEntity* Robot::getBaseLink()
 {
-    return links[0];
+    return links_[0];
 }
 
 void Robot::DefineRevoluteJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar,Scalar> positionLimits, Scalar damping)
@@ -141,7 +141,7 @@ void Robot::DefineRevoluteJoint(std::string jointName, std::string parentName, s
     jd.axis = axis;
     jd.posLim = positionLimits;
     jd.damping = damping;
-    jointsData.push_back(jd);
+    jointsData_.push_back(jd);
 }
 
 void Robot::DefinePrismaticJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin, const Vector3& axis, std::pair<Scalar,Scalar> positionLimits, Scalar damping)
@@ -155,7 +155,7 @@ void Robot::DefinePrismaticJoint(std::string jointName, std::string parentName, 
     jd.axis = axis;
     jd.posLim = positionLimits;
     jd.damping = damping;
-    jointsData.push_back(jd);
+    jointsData_.push_back(jd);
 }
 
 void Robot::DefineFixedJoint(std::string jointName, std::string parentName, std::string childName, const Transform& origin)
@@ -166,7 +166,7 @@ void Robot::DefineFixedJoint(std::string jointName, std::string parentName, std:
     jd.parent = parentName;
     jd.child = childName;
     jd.origin = origin;
-    jointsData.push_back(jd);
+    jointsData_.push_back(jd);
 }
 
 void Robot::AddLinkSensor(LinkSensor* s, const std::string& monitoredLinkName, const Transform& origin)
@@ -175,7 +175,7 @@ void Robot::AddLinkSensor(LinkSensor* s, const std::string& monitoredLinkName, c
     if(link != nullptr)
     {
         s->AttachToSolid(link, origin);
-        sensors.push_back(s);
+        sensors_.push_back(s);
     }
     else
         cCritical("Link '%s' doesn't exist. Sensor '%s' cannot be attached!", monitoredLinkName.c_str(), s->getName().c_str());
@@ -187,7 +187,7 @@ void Robot::AddVisionSensor(VisionSensor* s, const std::string& attachmentLinkNa
     if(link != nullptr)
     {
         s->AttachToSolid(link, origin);
-        sensors.push_back(s);
+        sensors_.push_back(s);
     }
     else
         cCritical("Link '%s' doesn't exist. Sensor '%s' cannot be attached!", attachmentLinkName.c_str(), s->getName().c_str());
@@ -202,7 +202,7 @@ void Robot::AddLinkActuator(LinkActuator* a, const std::string& actuatedLinkName
         return;
     }
     a->AttachToSolid(link, origin);
-    actuators.push_back(a);
+    actuators_.push_back(a);
 }
 
 void Robot::AddComm(Comm* c, const std::string& attachmentLinkName, const Transform& origin)
@@ -211,7 +211,7 @@ void Robot::AddComm(Comm* c, const std::string& attachmentLinkName, const Transf
     if(link != nullptr)
     {
         c->AttachToSolid(link, origin);
-        comms.push_back(c);
+        comms_.push_back(c);
     }
     else
         cCritical("Link '%s' doesn't exist. Communication device '%s' cannot be attached!", attachmentLinkName.c_str(), c->getName().c_str());
@@ -219,12 +219,12 @@ void Robot::AddComm(Comm* c, const std::string& attachmentLinkName, const Transf
 
 void Robot::AddToSimulation(SimulationManager* sm, const Transform& origin)
 {
-    for(size_t i=0; i<sensors.size(); ++i)
-        sm->AddSensor(sensors[i]);
-    for(size_t i=0; i<actuators.size(); ++i)
-        sm->AddActuator(actuators[i]);
-    for(size_t i=0; i<comms.size(); ++i)
-        sm->AddComm(comms[i]);
+    for(size_t i=0; i<sensors_.size(); ++i)
+        sm->AddSensor(sensors_[i]);
+    for(size_t i=0; i<actuators_.size(); ++i)
+        sm->AddActuator(actuators_[i]);
+    for(size_t i=0; i<comms_.size(); ++i)
+        sm->AddComm(comms_[i]);
 }
 
 void Robot::Respawn(SimulationManager* sm, const Transform& origin)

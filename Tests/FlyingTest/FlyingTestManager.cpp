@@ -36,7 +36,7 @@
 #include <actuators/Propeller.h>
 
 FlyingTestManager::FlyingTestManager(sf::Scalar stepsPerSecond)
-   : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE)
+   : SimulationManager(stepsPerSecond, sf::Solver::SI, sf::CollisionFilter::EXCLUSIVE)
 {
 }
 
@@ -61,8 +61,8 @@ void FlyingTestManager::BuildScenario()
     sf::Plane* floor = new sf::Plane("Floor", 10000, "Ground", "grid");
     AddStaticEntity(floor, sf::Transform::getIdentity());
 
-    sf::BodyPhysicsSettings phy;
-    phy.mode = sf::BodyPhysicsMode::AERODYNAMIC;
+    sf::PhysicsSettings phy;
+    phy.mode = sf::PhysicsMode::AERODYNAMIC;
     phy.collisions = true;
 
     sf::Box* leaf = new sf::Box("Leaf", phy, sf::Vector3(5,3,0.0001), sf::I4(), "Fiberglass","white");

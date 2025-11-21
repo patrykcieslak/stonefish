@@ -350,9 +350,12 @@ std::vector<Renderable> OpticalModem::Render()
     std::vector<Renderable> items(0);
     
     //Fov indicator
-    Renderable item;
-    item.model = glMatrixFromTransform(getDeviceFrame());
-    item.type = RenderableType::SENSOR_LINES;
+    Renderable item1;
+    item1.model = glMatrixFromTransform(getDeviceFrame());
+    item1.type = RenderableType::SENSOR_LINES;
+    item1.data = std::make_shared<std::vector<glm::vec3>>();
+    auto points = item1.getDataAsPoints();
+
     GLfloat iconSize = 0.25f;
     unsigned int div = 24;
     
@@ -361,39 +364,43 @@ std::vector<Renderable> OpticalModem::Render()
     {
         GLfloat angle1 = (GLfloat)i/(GLfloat)div * 2.f * M_PI;
         GLfloat angle2 = (GLfloat)(i+1)/(GLfloat)div * 2.f * M_PI;
-        item.points.push_back(glm::vec3(r * cosf(angle1), r * sinf(angle1), iconSize));
-        item.points.push_back(glm::vec3(r * cosf(angle2), r * sinf(angle2), iconSize));
+        points->push_back(glm::vec3(r * cosf(angle1), r * sinf(angle1), iconSize));
+        points->push_back(glm::vec3(r * cosf(angle2), r * sinf(angle2), iconSize));
     }
         
-    item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(r, 0, iconSize));
-    item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(-r, 0, iconSize));
-    item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(0, r, iconSize));
-    item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(0, -r, iconSize));
-    items.push_back(item);
+    points->push_back(glm::vec3(0,0,0));
+    points->push_back(glm::vec3(r, 0, iconSize));
+    points->push_back(glm::vec3(0,0,0));
+    points->push_back(glm::vec3(-r, 0, iconSize));
+    points->push_back(glm::vec3(0,0,0));
+    points->push_back(glm::vec3(0, r, iconSize));
+    points->push_back(glm::vec3(0,0,0));
+    points->push_back(glm::vec3(0, -r, iconSize));
+    items.push_back(item1);
 
     //Axes
-    item.type = RenderableType::SENSOR_CS;
-    items.push_back(item);
+    Renderable item2;
+    item2.type = RenderableType::SENSOR_CS;
+    items.push_back(item2);
 
     //Connected nodes
-    item.type = RenderableType::SENSOR_LINES;
-    item.model = glm::mat4(1.f);
-    item.points.clear();
+    Renderable item3;
+    item3.type = RenderableType::SENSOR_LINES;
+    item3.model = glm::mat4(1.f);
+    item3.data = std::make_shared<std::vector<glm::vec3>>();
+    points = item3.getDataAsPoints();
+
     if(getConnectedId() > 0)
     {
         OpticalModem* cNode = getNode(getConnectedId());
         if(cNode != nullptr)
         {
-            item.points.push_back(glVectorFromVector(getDeviceFrame().getOrigin()));
-            item.points.push_back(glVectorFromVector(cNode->getDeviceFrame().getOrigin()));    
+            points->push_back(glVectorFromVector(getDeviceFrame().getOrigin()));
+            points->push_back(glVectorFromVector(cNode->getDeviceFrame().getOrigin()));    
         }
     }
-    if(!item.points.empty())
-        items.push_back(item);
+    if(!points->empty())
+        items.push_back(item3);
 
     return items;
 }

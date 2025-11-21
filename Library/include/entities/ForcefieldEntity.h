@@ -23,8 +23,7 @@
 //  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_ForcefieldEntity__
-#define __Stonefish_ForcefieldEntity__
+#pragma once
 
 #include "BulletCollision/CollisionDispatch/btGhostObject.h"
 #include "entities/Entity.h"
@@ -76,5 +75,3 @@ namespace sf
         btPairCachingGhostObject* ghost;
     };
 }
-
-#endif

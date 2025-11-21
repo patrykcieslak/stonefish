@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 15/02/13.
-//  Copyright (c) 2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2023-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/SpringJoint.h"
@@ -106,10 +106,12 @@ std::vector<Renderable> SpringJoint::Render()
         Renderable item;
         item.model = glm::mat4(1.f);
         item.type = RenderableType::JOINT_LINES;
+        item.data = std::make_shared<std::vector<glm::vec3>>();
+        auto points = item.getDataAsPoints();
         Vector3 A = (c->getRigidBodyA().getCenterOfMassTransform() * c->getFrameOffsetA()).getOrigin();
         Vector3 B = (c->getRigidBodyB().getCenterOfMassTransform() * c->getFrameOffsetB()).getOrigin();   
-        item.points.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
-        item.points.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
+        points->push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
+        points->push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
         items.push_back(item);    
     }
     return items;

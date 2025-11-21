@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/06/2017.
-//  Copyright (c) 2017-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLContent__
@@ -76,7 +76,7 @@ namespace sf
     struct MaterialShader
     {
         std::string shadingAlgorithm;
-        std::array<GLSLShader*, 8> shaders;
+        std::map<std::string, GLSLShader*> shaders;
 
         MaterialShader()
         {
@@ -86,8 +86,8 @@ namespace sf
         MaterialShader(const MaterialShader &obj)
         {
             shadingAlgorithm = obj.shadingAlgorithm;
-            for(size_t i=0; i<shaders.size(); ++i)
-                shaders[i] = obj.shaders[i];
+            for(auto i : obj.shaders)
+                shaders[i.first] = i.second;
         }
     };
 
@@ -213,7 +213,7 @@ namespace sf
          \param color the color to be used when drawing
          \param M the model matrix
          */
-        void DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& vertices, glm::vec4 color, glm::mat4 M = glm::mat4(1.f));
+        void DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>* vertices, glm::vec4 color, glm::mat4 M = glm::mat4(1.f));
         
         //! A method to draw an object.
         /*!
@@ -228,6 +228,14 @@ namespace sf
          \param lightId the id of the light
          */
         void DrawLightSource(unsigned int lightId);
+
+        //! A method to draw a cable.
+        /*!
+         \param cableId the id of the cable object
+         \param nodeData a list of cable nodes data
+         \param lookId the id of the graphical material
+         */
+        void DrawCable(size_t cableId, GLfloat radius, const std::vector<CableNode>& nodeData, int lookId);
 
         //! A method to add a view to the list of views.
         /*!
@@ -248,6 +256,13 @@ namespace sf
          */
         unsigned int BuildObject(Mesh* mesh);
         
+        //! A method to build a cable object.
+        /*!
+         \param numNodes the number of nodes of the cable
+         \return an id of the built cable object
+         */
+        size_t BuildCable(size_t numNodes);
+
         //! A method to create a new simple look.
         /*!
          \param name the name of the look
@@ -286,6 +301,13 @@ namespace sf
          */
         void UseLook(const Look& look, bool texturable, const glm::mat4& M);
         
+        //! A method to use a cable look.
+        /*!
+         \param look a reference to the look structure
+         \param radius the radius of the cable
+         */
+        void UseCableLook(const Look& look, GLfloat radius);
+
         //! A method returning a pointer to a view.
         /*!
          \param id the index of the view
@@ -519,12 +541,12 @@ namespace sf
         //Data
         std::vector<OpenGLView*> views;
         std::vector<OpenGLLight*> lights;
-        std::vector<Object> objects; //VBAs
-        std::vector<Look> looks; //OpenGL materials
+        std::vector<Object> objects; // Rigid meshes (static)
+        std::vector<Cable> cables;   // Cables (dynamic)
+        std::vector<Look> looks;     // OpenGL materials
         NameManager lookNameManager;
         std::string currentLookName;
-        bool currentTexturable;
-        int currentShaderMode;
+        std::string currentShaderMode;
         
         glm::vec3 eyePos;
         glm::vec3 viewDir;

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 17/07/19.
-//  Copyright (c) 2019-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2025 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_ScenarioParser__
@@ -167,6 +167,13 @@ namespace sf
          \return success
          */
         virtual bool ParseDynamic(XMLElement* element);
+
+        //! A method used to parse a cable description.
+        /*!
+         \param element a pointer to the XML node
+         \return success   
+         */
+        virtual bool ParseCable(XMLElement* element);
 
         //! A method used to parse a dynamic object description.
         /*!

@@ -4,7 +4,7 @@
 		<ned latitude="40.0" longitude="3.0"/>
 		
 		<ocean>
-			<water density="1025.0" jerlov="0.25"/>
+			<water density="1000.0" jerlov="0.25"/>
 			<waves height="0.0"/>
 			<current type="uniform">
 				<velocity xyz="1.0 0.0 0.0"/>
@@ -55,85 +55,27 @@
 		<look name="seabed"/>
 		<world_transform rpy="0.0 0.0 0.0" xyz="0.0 0.0 40.0"/>
 	</static>
-	<!--
-	<static name="HorizontalPipe" type="cylinder">
-		<dimensions radius="0.25" height="4.0"/>
-		<material name="Fiberglass"/>
-		<look name="pipe"/>
-		<world_transform rpy="1.57 0.0 0.0" xyz="0.0 0.0 3.5"/>
-	</static>
 
-	<static name="Multiobj" type="model">
-		<physical>
-			<mesh filename="multi_object_test.obj" scale="1.0"/>
-			<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-		</physical>		
-		<material name="Aluminium"/>
-		<look name="gray"/>
-		<world_transform rpy="0.0 0.0 0.0" xyz="2.0 0.0 3.0"/>
-		<sensor name="cam" type="camera" rate="10.0">
-			<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-			<specs resolution_x="1360" resolution_y="1024" horizontal_fov="55.0"/>
-		</sensor>
-	</static>
-	-->	
-	<animated name="Anim" type="empty" collisions="false">
-		<trajectory type="spline" playback="boomerang">
-			<keypoint time="0.0" xyz="0.0 0.0 -4.0" rpy="0.0 2.0 0.0"/>
-			<keypoint time="1.0" xyz="10.0 0.0 0.0" rpy="0.0 2.0 0.0"/>
-			<keypoint time="4.0" xyz="10.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
-			<keypoint time="7.0" xyz="10.0 4.0 0.0" rpy="0.0 0.0 10.0"/>
-			<keypoint time="10.0" xyz="0.0 0.0 5.0" rpy="1.0 2.0 0.0"/>
-			<keypoint time="14.0" xyz="0.0 0.0 5.0" rpy="1.0 2.0 0.0"/>
-		</trajectory>
-		<!--
-		<sensor name="gpsanim" type="gps" rate="1.0">
-			<origin rpy="0.0 0.0 0.0" xyz="-0.54 -0.35 -0.74"/>
-			<noise ned_position="0.5"/>
-		</sensor>
-		-->
-	</animated>
-	<!--
-	<dynamic name="Ball" type="sphere" physics="submerged">
-		<dimensions radius="0.5"/>
-		<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-		<material name="Aluminium"/>
-		<look name="gray"/>
-		<world_transform rpy="0.0 0.0 0.0" xyz="0.0 0.0 -2.0"/>
-		<sensor name="dvl" type="dvl" rate="5.0">
-			<origin rpy="3.1416 0.0 -0.785" xyz="0.0 0.0 0.4"/>
-			<specs beam_angle="30.0"/>
-			<range velocity="9.0 9.0 9.0" altitude_min="0.5" altitude_max="81.0"/>
-			<noise velocity="0.0015" altitude="0.001"/>
-		</sensor>
+	<dynamic name="Buoy" type="sphere" physics="submerged" buoyant="true">
+		<dimensions radius="0.3"/>
+		<origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+		<material name="Neutral"/>
+		<look name="yellow"/>
+		<world_transform rpy="0.0 0.0 0.0" xyz="5.0 0.0 1.0"/>
 	</dynamic>
-	-->
+
     <include file="girona500auv_full.scn">
 		<arg name="robot_name" value="GIRONA500"/>
 		<arg name="robot_position" value="0.0 0.0 1.0"/>
 	</include>
 
-	<include file="girona500auv_full.scn">
-		<arg name="robot_name" value="GIRONA500_2"/>
-		<arg name="robot_position" value="2.5 0.0 1.0"/>
-	</include>
-
-	<include file="girona500auv_full.scn">
-		<arg name="robot_name" value="GIRONA500_3"/>
-		<arg name="robot_position" value="5.0 0.0 1.0"/>
-	</include>
-    
-    <comm name="Modem" type="acoustic_modem" device_id="2">
-		<connect device_id="1"/>
-		<specs min_vertical_fov="0.0" max_vertical_fov="360.0" range="1000.0"/>
-		<world_transform rpy="3.14159 0.0 0.0" xyz="100.0 20.0 4.0"/>
-	</comm>
-
-	<!--
-    <contact name="EEPipeContact">
-		<bodyA name="HorizontalPipe" display="path"/>
-		<bodyB name="GIRONA500/Vehicle"/>
-		<history points="100"/>
-	</contact>
-	-->
+	<cable name="Cable1" physics="submerged" buoyant="false">
+		<geometry diameter="0.02" number_of_segments="100"/>
+		<material name="Fiberglass"/>
+		<look name="pipe"/>
+		<first_end position="2.0 0.0 -1.0" anchor="world"/>
+		<second_end position="10.0 0.0 -1.0" anchor="dynamic">
+			<body name="Buoy"/>
+		</second_end>
+	</cable>
 </scenario>

@@ -98,10 +98,10 @@ namespace sf
 
         //! A method returning the index of the link.
         /*!
-         \param name the name of the link
+         \param lname the name of the link
          \return index of the link
         */
-        int getLinkIndex(const std::string& name) const;
+        int getLinkIndex(const std::string& lname) const;
 
         //! A method returning type of algorithm used for the robot.
         RobotType getType() const;
@@ -110,7 +110,7 @@ namespace sf
         FeatherstoneEntity* getDynamics();
 
     private:
-        int getJoint(const std::string& name);
+        int getJoint(const std::string& jname);
 
         FeatherstoneEntity* dynamics;
     };

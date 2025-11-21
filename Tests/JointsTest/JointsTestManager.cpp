@@ -46,7 +46,7 @@
 #include <core/NED.h>
 
 JointsTestManager::JointsTestManager(sf::Scalar stepsPerSecond) 
-  : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE)
+  : SimulationManager(stepsPerSecond, sf::Solver::SI, sf::CollisionFilter::EXCLUSIVE)
 {
 }
 
@@ -73,8 +73,8 @@ void JointsTestManager::BuildScenario()
     sf::Plane* floor = new sf::Plane("Floor", 1000.f, "Steel", "grid");
     AddStaticEntity(floor, sf::I4());
     
-    sf::BodyPhysicsSettings phy;
-    phy.mode = sf::BodyPhysicsMode::SURFACE;
+    sf::PhysicsSettings phy;
+    phy.mode = sf::PhysicsMode::SURFACE;
     phy.collisions = true;
 
     //----Fixed Joint----

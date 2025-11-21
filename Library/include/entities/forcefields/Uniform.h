@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 2/05/19.
-//  Copyright(c) 2019-2021 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2019-2025 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Uniform__
-#define __Stonefish_Uniform__
+#pragma once
 
 #include "entities/forcefields/VelocityField.h"
 
@@ -59,6 +58,9 @@ namespace sf
          */
         void setVelocity(const Vector3& x);
 
+        //! A method to get the flow velocity.
+        Vector3 getVelocity() const;
+
         //! A method returning the type of the velocity field.
         VelocityFieldType getType() const;
         
@@ -66,5 +68,3 @@ namespace sf
         Vector3 v;
     };
 }
-
-#endif

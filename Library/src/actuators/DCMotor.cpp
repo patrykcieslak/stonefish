@@ -71,7 +71,7 @@ Scalar DCMotor::getGearRatio() const
     return gearRatio;
 }
 
-void DCMotor::setIntensity(Scalar volt)
+void DCMotor::setCommand(Scalar volt)
 {
     V = volt;
 }

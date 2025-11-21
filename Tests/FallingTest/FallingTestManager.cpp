@@ -43,7 +43,7 @@
 #include <actuators/Light.h>
 
 FallingTestManager::FallingTestManager(sf::Scalar stepsPerSecond) 
-    : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE)
+    : SimulationManager(stepsPerSecond, sf::Solver::SI, sf::CollisionFilter::EXCLUSIVE)
 {
 }
 
@@ -84,8 +84,8 @@ void FallingTestManager::BuildScenario()
 	AddActuator(spot);
     
     //---Robot---
-    sf::BodyPhysicsSettings phy;
-    phy.mode = sf::BodyPhysicsMode::SURFACE;
+    sf::PhysicsSettings phy;
+    phy.mode = sf::PhysicsMode::SURFACE;
     phy.collisions = true;
     /*
     //Mechanical parts

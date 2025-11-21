@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/10/2020.
-//  Copyright (c) 2020-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/animation/PWLTrajectory.h"
@@ -34,10 +34,12 @@ PWLTrajectory::PWLTrajectory(PlaybackMode playback) : Trajectory(playback)
     Renderable pathPoints;
     pathPoints.type = RenderableType::PATH_POINTS;
     pathPoints.model = glm::mat4(1.f);
+    pathPoints.data = std::make_shared<std::vector<glm::vec3>>();
 
     Renderable pathLine;
     pathLine.type = RenderableType::PATH_LINE_STRIP;
     pathLine.model = glm::mat4(1.f);
+    pathLine.data = std::make_shared<std::vector<glm::vec3>>();
 
     vis.push_back(pathPoints);
     vis.push_back(pathLine);
@@ -113,11 +115,11 @@ void PWLTrajectory::Interpolate()
 
 void PWLTrajectory::BuildGraphicalPath()
 {
-    vis[0].points.clear();
-    vis[1].points.clear();
+    vis[0].getDataAsPoints()->clear();
+    vis[1].getDataAsPoints()->clear();
     for(size_t i=0; i<points.size(); ++i)
-        vis[0].points.push_back(glVectorFromVector(points[i].T.getOrigin()));
-    vis[1].points = vis[0].points;
+        vis[0].getDataAsPoints()->push_back(glVectorFromVector(points[i].T.getOrigin()));
+    *vis[1].getDataAsPoints() = *vis[0].getDataAsPoints();
 }
 
 std::vector<Renderable> PWLTrajectory::Render()

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 28/06/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLDebugDrawer__
@@ -40,7 +40,7 @@ namespace sf
         /*!
          \param debugMode the debug display mode
          */
-        OpenGLDebugDrawer(int debugMode);
+        OpenGLDebugDrawer(int debugMode = btIDebugDraw::DBG_MAX_DEBUG_DRAW_MODE);
         
         //! A method to draw a line.
         /*!
@@ -95,8 +95,9 @@ namespace sf
         int	getDebugMode() const;
         
     private:
-        int mode;
-        std::vector<glm::vec3> lineVertices;
+        int mode_;
+        std::vector<glm::vec3> lineVertices_;
+        std::vector<glm::vec3> pointVertices_;
     };
 }
 

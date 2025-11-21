@@ -54,7 +54,7 @@
 #include "utils/UnitSystem.h"
 #include "utils/RayTest.hpp"
 #include "entities/Entity.h"
-//#include "entities/CableEntity.h"
+#include "entities/CableEntity.h"
 #include "entities/FeatherstoneEntity.h"
 #include "entities/solids/Compound.h"
 #include "entities/StaticEntity.h"
@@ -78,7 +78,7 @@ extern ContactDestroyedCallback gContactDestroyedCallback;
 namespace sf
 {
 
-SimulationManager::SimulationManager(Scalar stepsPerSecond, SolverType st, CollisionFilteringType cft) 
+SimulationManager::SimulationManager(Scalar stepsPerSecond, Solver st, CollisionFilter cft) 
     : perfMon(PerformanceMonitor(100))
 {
     //Initialize simulation world
@@ -323,14 +323,14 @@ void SimulationManager::EnableCollision(const Entity* entA, const Entity* entB)
 {
     int colId = CheckCollision(entA, entB);
     
-    if(collisionFilter == CollisionFilteringType::COLLISION_INCLUSIVE && colId == -1)
+    if(collisionFilter == CollisionFilter::INCLUSIVE && colId == -1)
     {
         Collision c;
         c.A = const_cast<Entity*>(entA);
         c.B = const_cast<Entity*>(entB);
         collisions.push_back(c);
     }
-    else if(collisionFilter == CollisionFilteringType::COLLISION_EXCLUSIVE && colId > -1)
+    else if(collisionFilter == CollisionFilter::EXCLUSIVE && colId > -1)
     {
         collisions.erase(collisions.begin() + colId);
     }
@@ -339,7 +339,7 @@ void SimulationManager::EnableCollision(const Entity* entA, const Entity* entB)
 void SimulationManager::DisableCollision(const Entity* entA, const Entity* entB)
 {
     int colId = CheckCollision(entA, entB);
-    if(collisionFilter == CollisionFilteringType::COLLISION_EXCLUSIVE && colId == -1)
+    if(collisionFilter == CollisionFilter::EXCLUSIVE && colId == -1)
     {
         Collision c;
         c.A = const_cast<Entity*>(entA);
@@ -347,7 +347,7 @@ void SimulationManager::DisableCollision(const Entity* entA, const Entity* entB)
         collisions.push_back(c);
         cInfo("Disabling collisions between '%s' and '%s'.", entA->getName().c_str(), entB->getName().c_str());
     }
-    else if(collisionFilter == CollisionFilteringType::COLLISION_INCLUSIVE && colId > -1)
+    else if(collisionFilter == CollisionFilter::INCLUSIVE && colId > -1)
     {
         collisions.erase(collisions.begin() + colId);
         cInfo("Disabling collisions between '%s' and '%s'.", entA->getName().c_str(), entB->getName().c_str());
@@ -390,12 +390,12 @@ Contact* SimulationManager::getContact(const std::string& name)
     return nullptr;
 }
 
-CollisionFilteringType SimulationManager::getCollisionFilter() const
+CollisionFilter SimulationManager::getCollisionFilter() const
 {
     return collisionFilter;
 }
 
-SolverType SimulationManager::getSolverType() const
+Solver SimulationManager::getSolver() const
 {
     return solver;
 }
@@ -706,6 +706,8 @@ void SimulationManager::setSolidDisplayMode(DisplayMode m)
             ((MovingEntity*)entities[i])->setDisplayMode(sdm);
         else if(entities[i]->getType() == EntityType::FEATHERSTONE)
             ((FeatherstoneEntity*)entities[i])->setDisplayMode(sdm);
+        else if(entities[i]->getType() == EntityType::CABLE)
+            ((CableEntity*)entities[i])->setDisplayMode(sdm);
     }
 
     for(size_t i=0; i<actuators.size(); ++i)
@@ -736,24 +738,23 @@ void SimulationManager::getJointErp(Scalar& erp, Scalar& stopErp) const
 
 void SimulationManager::InitializeSolver()
 {
-    dwBroadphase = new btDbvtBroadphase(); //btAxisSweep3(Vector3(-50000.0, -50000.0, -10000.0), Vector3(50000.0, 50000.0, 10000.0));
+    dwBroadphase = new btDbvtBroadphase();
     dwCollisionConfig = new btSoftBodyRigidBodyCollisionConfiguration();
-
+    
     //Choose collision dispatcher
     switch(collisionFilter)
     {
-        case CollisionFilteringType::COLLISION_INCLUSIVE:
+        case CollisionFilter::INCLUSIVE:
             dwDispatcher = new FilteredCollisionDispatcher(dwCollisionConfig, true);
             break;
 
-        case CollisionFilteringType::COLLISION_EXCLUSIVE:
+        case CollisionFilter::EXCLUSIVE:
             dwDispatcher = new FilteredCollisionDispatcher(dwCollisionConfig, false);
             break;
     }
-    //dwDispatcher = new btCollisionDispatcher(dwCollisionConfig);
     
     //Choose constraint solver
-    if(solver == SolverType::SOLVER_SI)
+    if(solver == Solver::SI)
     {
         mbSolver = new btMultiBodyConstraintSolver();
     }
@@ -764,21 +765,21 @@ void SimulationManager::InitializeSolver()
         switch(solver)
         {
             default:
-            case SolverType::SOLVER_DANTZIG:
+            case Solver::DANTZIG:
                 mlcp = new btDantzigSolver();
                 break;
             
-            case SolverType::SOLVER_PGS:
+            case Solver::PGS:
                 mlcp = new btSolveProjectedGaussSeidel();
                 break;
             
-            case SolverType::SOLVER_LEMKE:
+            case Solver::LEMKE:
                 mlcp = new btLemkeSolver();
                 //((btLemkeSolver*)mlcp)->m_maxLoops = 10000;
                 break;
         }
         
-        mbSolver = new btMultiBodyMLCPConstraintSolver(mlcp); //ResearchConstraintSolver(mlcp);
+        mbSolver = new btMultiBodyMLCPConstraintSolver(mlcp);
     }
     
     sbSolver = new btDefaultSoftBodySolver();
@@ -823,6 +824,9 @@ void SimulationManager::InitializeSolver()
     dynamicsWorld->getSolverInfo().m_singleAxisRollingFrictionThreshold = Scalar(1e30); //single axis rolling velocity threshold
     dynamicsWorld->getSolverInfo().m_linearSlop = Scalar(0.); //position bias
     
+    dynamicsWorld->getWorldInfo().m_sparsesdf.setDefaultVoxelsz(Scalar(0.25));
+    dynamicsWorld->getWorldInfo().m_sparsesdf.Reset();
+
     //Override default callbacks
     dynamicsWorld->setWorldUserInfo(this);
     dynamicsWorld->getPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
@@ -834,14 +838,18 @@ void SimulationManager::InitializeSolver()
     //Set default params
     g = Scalar(9.81);
 
-    sbInfo.m_broadphase = dwBroadphase;
-    sbInfo.m_dispatcher = dwDispatcher;
+    sbInfo = dynamicsWorld->getWorldInfo();
     sbInfo.m_sparsesdf.Initialize();
-    sbInfo.m_sparsesdf.Reset(); 
-    sbInfo.m_gravity.setValue(0,0,g);
+    sbInfo.m_sparsesdf.setDefaultVoxelsz(Scalar(0.1));
+    sbInfo.m_sparsesdf.Reset();
+    sbInfo.air_density = 0.0;
+    sbInfo.water_density = 0.0;
+    sbInfo.water_normal = Vector3(0.0, 0.0, -1.0);
+    sbInfo.water_offset = 0.0;
+    sbInfo.m_gravity.setValue(0, 0, 0);
         
     //Debugging
-    debugDrawer = new OpenGLDebugDrawer(btIDebugDraw::DBG_DrawWireframe);
+    debugDrawer = new OpenGLDebugDrawer();
     dynamicsWorld->setDebugDrawer(debugDrawer);
 }
 
@@ -1108,7 +1116,7 @@ void SimulationManager::StepSimulation(Scalar timeStep)
     SDL_UnlockMutex(simSettingsMutex);
 
     //Inform about MLCP failures
-    if(solver != SolverType::SOLVER_SI)
+    if(solver != Solver::SI)
     {
         SDL_LockMutex(simInfoMutex);
         btMultiBodyMLCPConstraintSolver* mlcp = (btMultiBodyMLCPConstraintSolver*)mbSolver;
@@ -1382,10 +1390,10 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
 void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, Scalar timeStep)
 {
     SimulationManager* simManager = (SimulationManager*)world->getWorldUserInfo();
-    btMultiBodyDynamicsWorld* researchWorld = (btMultiBodyDynamicsWorld*)world;
+    btSoftMultiBodyDynamicsWorld* dynamicsWorld = static_cast<btSoftMultiBodyDynamicsWorld*>(world);
     
     //Clear all forces to ensure that no summing occurs
-    researchWorld->clearForces(); //Includes clearing of multibody forces!
+    dynamicsWorld->clearForces(); //Includes clearing of multibody forces!
     
     //Solve for objects settling
     bool objectsSettled = true;
@@ -1404,6 +1412,11 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, Scalar timeS
             {
                 FeatherstoneEntity* feather = (FeatherstoneEntity*)simManager->entities[i];
                 feather->ApplyGravity(world->getGravity());
+            }
+            else if(simManager->entities[i]->getType() == EntityType::CABLE)
+            {
+                CableEntity* cable = (CableEntity*)simManager->entities[i];
+                cable->ApplyGravity(world->getGravity());
             }
         }
         
@@ -1464,6 +1477,18 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, Scalar timeS
                             break;
                     }
                 }
+                else if(simManager->entities[i]->getType() == EntityType::CABLE)
+                {
+                    btSoftBody* cableBody = static_cast<CableEntity*>(simManager->entities[i])->getSoftBody();
+                    for (size_t h = 0; h < cableBody->m_nodes.size(); ++h)
+                    {
+                        if (cableBody->m_nodes[h].m_v.length() > simManager->icLinTolerance * Scalar(100.))
+                        {
+                            objectsSettled = false;
+                            break;
+                        }
+                    }
+                }
             }
         }
     }
@@ -1487,10 +1512,10 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, Scalar timeS
 void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar timeStep)
 {
     SimulationManager* simManager = (SimulationManager*)world->getWorldUserInfo();
-    btMultiBodyDynamicsWorld* mbDynamicsWorld = (btMultiBodyDynamicsWorld*)world;
+    btSoftMultiBodyDynamicsWorld* dynamicsWorld = static_cast<btSoftMultiBodyDynamicsWorld*>(world);
         
     //Clear all forces to ensure that no summing occurs
-    mbDynamicsWorld->clearForces(); //Includes clearing of multibody forces!
+    dynamicsWorld->clearForces(); //Includes clearing of multibody forces!
         
     //loop through all actuators -> apply forces to bodies (free and connected by joints)
     for(size_t i = 0; i < simManager->actuators.size(); ++i)
@@ -1508,19 +1533,19 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
         if(ent->getType() == EntityType::SOLID)
         {
             SolidEntity* solid = (SolidEntity*)ent;
-            solid->ApplyGravity(mbDynamicsWorld->getGravity());
+            solid->ApplyGravity(dynamicsWorld->getGravity());
         }
         else if(ent->getType() == EntityType::FEATHERSTONE)
         {
             FeatherstoneEntity* multibody = (FeatherstoneEntity*)ent;
-            multibody->ApplyGravity(mbDynamicsWorld->getGravity());
+            multibody->ApplyGravity(dynamicsWorld->getGravity());
             multibody->ApplyDamping();
         }
-        /*else if(ent->getType() == EntityType::CABLE)
+        else if(ent->getType() == EntityType::CABLE)
         {
             CableEntity* cable = (CableEntity*)ent;
-            cable->ApplyGravity(mbDynamicsWorld->getGravity());
-        }*/
+            cable->ApplyGravity(dynamicsWorld->getGravity());
+        }
         else if(ent->getType() == EntityType::FORCEFIELD)
         {
             ForcefieldEntity* ff = (ForcefieldEntity*)ent;

@@ -34,7 +34,7 @@
 #include <core/Console.h>
 
 ConsoleTestManager::ConsoleTestManager(sf::Scalar stepsPerSecond) 
-    : SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE)
+    : SimulationManager(stepsPerSecond, sf::Solver::SI, sf::CollisionFilter::EXCLUSIVE)
 {
 }
 
@@ -80,8 +80,8 @@ void ConsoleTestManager::BuildScenario()
     sf::Plane* plane = new sf::Plane("Bottom", 1000.0, "Rock");
     AddStaticEntity(plane, sf::Transform(sf::IQ(), sf::Vector3(0,0,0)));
     
-    sf::BodyPhysicsSettings phy;
-    phy.mode = sf::BodyPhysicsMode::SURFACE;
+    sf::PhysicsSettings phy;
+    phy.mode = sf::PhysicsMode::SURFACE;
     phy.collisions = true;
     sf::Sphere* sph1 = new sf::Sphere("Sphere1", phy, 0.1, sf::I4(), "Rock", "");
     sf::Sphere* sph2 = new sf::Sphere("Sphere2", phy, 0.1, sf::I4(), "Rock", "");

@@ -239,16 +239,19 @@ std::vector<Renderable> INS::Render()
     std::vector<Renderable> items = LinkSensor::Render();
     if(isRenderable())
     {
-        Renderable item;
-        item.type = RenderableType::SENSOR_CS;
-        item.model = glMatrixFromTransform(getSensorFrame() * out);
-        items.push_back(item);
+        Renderable item1;
+        item1.type = RenderableType::SENSOR_CS;
+        item1.model = glMatrixFromTransform(getSensorFrame() * out);
+        items.push_back(item1);
 
-        item.type = RenderableType::SENSOR_LINES;
-        item.model = glMatrixFromTransform(getSensorFrame());
-        item.points.push_back(glm::vec3(0.f));
-        item.points.push_back(glVectorFromVector(out.getOrigin()));
-        items.push_back(item);
+        Renderable item2;
+        item2.type = RenderableType::SENSOR_LINES;
+        item2.model = glMatrixFromTransform(getSensorFrame());
+        item2.data = std::make_shared<std::vector<glm::vec3>>();
+        auto points = item2.getDataAsPoints();
+        points->push_back(glm::vec3(0.f));
+        points->push_back(glVectorFromVector(out.getOrigin()));
+        items.push_back(item2);
     }
     return items;
 }

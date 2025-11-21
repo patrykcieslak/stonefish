@@ -183,8 +183,10 @@ std::vector<Renderable> Thruster::Render()
     items.push_back(item);
 
     item.type = RenderableType::ACTUATOR_LINES;
-    item.points.push_back(glm::vec3(0, 0, 0));
-    item.points.push_back(glm::vec3(0.1f * thrust, 0, 0));
+    item.data = std::make_shared<std::vector<glm::vec3>>();
+    auto points = item.getDataAsPoints();
+    points->push_back(glm::vec3(0, 0, 0));
+    points->push_back(glm::vec3(0.1f * thrust, 0, 0));
     items.push_back(item);
 
     return items;

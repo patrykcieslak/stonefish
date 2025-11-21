@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 2/3/13.
-//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/SphericalJoint.h"
@@ -136,16 +136,18 @@ std::vector<Renderable> SphericalJoint::Render()
         Renderable item;
         item.model = glm::mat4(1.f);
         item.type = RenderableType::JOINT_LINES;
+        item.data = std::make_shared<std::vector<glm::vec3>>();
+        auto points = item.getDataAsPoints();
         
         btPoint2PointConstraint* p2p = (btPoint2PointConstraint*)getConstraint();
         Vector3 pivot = p2p->getRigidBodyA().getCenterOfMassTransform()(p2p->getPivotInA());
         Vector3 A = p2p->getRigidBodyA().getCenterOfMassPosition();
         Vector3 B = p2p->getRigidBodyB().getCenterOfMassPosition();
         
-        item.points.push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
-        item.points.push_back(glm::vec3(pivot.getX(), pivot.getY(), pivot.getZ()));
-        item.points.push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
-        item.points.push_back(glm::vec3(pivot.getX(), pivot.getY(), pivot.getZ()));
+        points->push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));
+        points->push_back(glm::vec3(pivot.getX(), pivot.getY(), pivot.getZ()));
+        points->push_back(glm::vec3(B.getX(), B.getY(), B.getZ()));
+        points->push_back(glm::vec3(pivot.getX(), pivot.getY(), pivot.getZ()));
         
         items.push_back(item);
     }

@@ -23,8 +23,7 @@
 //  Copyright(c) 2025 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_MovingEntity__
-#define __Stonefish_MovingEntity__
+#pragma once
 
 #include "core/MaterialManager.h"
 #include "entities/Entity.h"
@@ -155,5 +154,3 @@ namespace sf
     private:
     };
 }
-
-#endif

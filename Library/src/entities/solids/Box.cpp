@@ -30,7 +30,7 @@
 namespace sf
 {
 
-Box::Box(std::string uniqueName, BodyPhysicsSettings phy, const Vector3& dimensions, const Transform& origin, std::string material, std::string look, Scalar thickness, unsigned int uvMode)
+Box::Box(std::string uniqueName, PhysicsSettings phy, const Vector3& dimensions, const Transform& origin, std::string material, std::string look, Scalar thickness, unsigned int uvMode)
          : SolidEntity(uniqueName, phy, material, look, thickness)
 {
     halfExtents = dimensions * Scalar(0.5);

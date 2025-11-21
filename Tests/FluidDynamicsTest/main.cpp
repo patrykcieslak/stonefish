@@ -20,10 +20,10 @@
 //  FluidDynamicsTest
 //
 //  Created by Patryk Cieslak on 01/07/2024.
-//  Copyright(c) 2024 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2024-2025 Patryk Cieslak. All rights reserved.
 //
 
-#include "FluidDynamicsTestApp.h"
+#include <core/GraphicalSimulationApp.h>
 #include "FluidDynamicsTestManager.h"
 #include <cfenv>
 
@@ -41,6 +41,7 @@ int main(int argc, const char * argv[])
     s.atmosphere = sf::RenderQuality::MEDIUM;
     s.ocean = sf::RenderQuality::HIGH;
     s.ssr = sf::RenderQuality::HIGH;
+    s.verticalSync = true;
     
     sf::HelperSettings h;
     h.showFluidDynamics = false;
@@ -52,7 +53,7 @@ int main(int argc, const char * argv[])
     
     FluidDynamicsTestManager simulationManager(500.0);
     simulationManager.setRealtimeFactor(1.0);
-    FluidDynamicsTestApp app(std::string(DATA_DIR_PATH), s, h, &simulationManager);
+    sf::GraphicalSimulationApp app("FluidDynamicsTest", std::string(DATA_DIR_PATH), s, h, &simulationManager);
     app.Run();
     
     return 0;

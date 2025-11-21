@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/03/2014.
-//  Copyright(c) 2014-2023 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2014-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "UnderwaterTestManager.h"
@@ -74,9 +74,11 @@
 #include <utils/UnitSystem.h>
 #include <core/ScenarioParser.h>
 #include <core/NED.h>
+#include <iostream>
+#include <format>
 
 UnderwaterTestManager::UnderwaterTestManager(sf::Scalar stepsPerSecond)
-: SimulationManager(stepsPerSecond, sf::SolverType::SOLVER_SI, sf::CollisionFilteringType::COLLISION_EXCLUSIVE)
+: SimulationManager(stepsPerSecond, sf::Solver::SI, sf::CollisionFilter::EXCLUSIVE)
 {
 }
 
@@ -85,6 +87,7 @@ void UnderwaterTestManager::BuildScenario()
 #ifdef PARSED_SCENARIO
     sf::ScenarioParser parser(this);
     bool success = parser.Parse(sf::GetDataPath() + "underwater_test.scn");
+    parser.SaveLog("underwater_test.log");
     if(!success)
         cCritical("Scenario parser: Parsing failed!");
 #else
@@ -133,8 +136,8 @@ void UnderwaterTestManager::BuildScenario()
 
     //Create underwater vehicle body
     //Externals
-    sf::BodyPhysicsSettings phy;
-    phy.mode = sf::BodyPhysicsMode::SUBMERGED;
+    sf::PhysicsSettings phy;
+    phy.mode = sf::PhysicsMode::SUBMERGED;
     phy.collisions = true;
     
     phy.buoyancy = false;
@@ -213,7 +216,7 @@ void UnderwaterTestManager::BuildScenario()
         rotorDynamics = std::make_shared<sf::MechanicalPI>(1.0, 10.0, 5.0, 5.0);
         std::shared_ptr<sf::FDThrust> thrustModel;
         thrustModel = std::make_shared<sf::FDThrust>(0.18, 0.48, 0.48, 0.05, true, getOcean()->getLiquid().density);
-        thrusters[i] = new sf::Thruster(thrusterNames[i], propeller, rotorDynamics, thrustModel, 0.18, true, 105.0, false, true);
+        thrusters[i] = new sf::Thruster(thrusterNames[i], propeller, rotorDynamics, thrustModel, 0.18, true, 105.0, true, true);
     }
 
     //Create VBS
@@ -293,27 +296,19 @@ void UnderwaterTestManager::BuildScenario()
     //auv->AddVisionSensor(cam, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 1.57), sf::Vector3(0.0,0.0,1.0)));
     //auv->AddVisionSensor(cam2, "Vehicle", sf::Transform(sf::Quaternion(1.57, 0.0, 1.57), sf::Vector3(0.0,0.0,2.0)));
     AddRobot(auv, sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(0.0,0.0,2.0)));
-    
-    //thSurgeP->setSetpoint(0.55);
-    //thSurgeS->setSetpoint(0.58);
-    
 #endif
 } 
 
 void UnderwaterTestManager::SimulationStepCompleted(sf::Scalar timeStep)
 {
-    //sf::Thruster* th = (sf::Thruster*)getRobot("GIRONA500")->getActuator("ThrusterSurgePort");
-    //printf("Setpoint: %1.3lf Thrust: %1.3lf Torque: %1.3lf\n", th->getSetpoint(), th->getThrust(), th->getTorque());
-
-    /*
-    sf::Comm* modem = getComm("Modem");
-    if(modem->isNewDataAvailable())
+#ifdef PARSED_SCENARIO
+    sf::Thruster* th = dynamic_cast<sf::Thruster*>(getRobot("GIRONA500")->getActuator("GIRONA500/ThrusterSurgePort"));
+#else
+    sf::Thruster* th = dynamic_cast<sf::Thruster*>(getRobot("GIRONA500")->getActuator("ThrusterSurgePort"));
+#endif
+    if (th)
     {
-        sf::Vector3 pos;
-        std::string frame;
-        ((sf::AcousticModem*)modem)->getPosition(pos, frame);
-        printf("%1.3lf %1.3lf %1.3lf\n", pos.getX(), pos.getY(), pos.getZ());
-        modem->MarkDataOld();
+        double rpm = th->getOmega() * sf::Scalar(60.0) / sf::Scalar(2.0 * M_PI);
+        std::cout << std::format("[{}] RPM: {:.3f}, Thrust: {:.3f}\n", th->getName(), rpm, th->getThrust());
     }
-    */
 }

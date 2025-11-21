@@ -36,6 +36,7 @@ int main(int argc, const char * argv[])
     s.ao = sf::RenderQuality::HIGH;
     s.atmosphere = sf::RenderQuality::HIGH;
     s.ocean = sf::RenderQuality::HIGH;
+    s.verticalSync = false;
     
     sf::HelperSettings h;
     h.showFluidDynamics = false;

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 07/11/2019.
-//  Copyright (c) 2019-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/VariableBuoyancy.h"
@@ -155,8 +155,10 @@ std::vector<Renderable> VariableBuoyancy::Render()
     Renderable item;
     item.type = RenderableType::ACTUATOR_LINES;
     item.model = glMatrixFromTransform(vbsTrans);
-    item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(0.1f * glm::vec3((GLfloat)force.x(), (GLfloat)force.y(), (GLfloat)force.z()));
+    item.data = std::make_shared<std::vector<glm::vec3>>();
+    auto points = item.getDataAsPoints();
+    points->push_back(glm::vec3(0,0,0));
+    points->push_back(0.1f * glm::vec3((GLfloat)force.x(), (GLfloat)force.y(), (GLfloat)force.z()));
     items.push_back(item);
     
     return items;

@@ -50,7 +50,7 @@ namespace sf
         /*!
          \param tau a value of the motor torque [Nm]
          */
-        virtual void setIntensity(Scalar tau);
+        virtual void setCommand(Scalar tau);
 
         //! A method used to set the torque limits.
         /*!

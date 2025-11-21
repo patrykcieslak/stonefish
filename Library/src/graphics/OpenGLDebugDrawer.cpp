@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 28/06/2014.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLDebugDrawer.h"
@@ -39,20 +39,20 @@ OpenGLDebugDrawer::OpenGLDebugDrawer(int debugMode)
 
 void OpenGLDebugDrawer::setDebugMode(int debugMode)
 {
-    mode = debugMode;
+    mode_ = debugMode;
 }
 
 int OpenGLDebugDrawer::getDebugMode() const
 {
-    return mode;
+    return mode_;
 }
 
 void OpenGLDebugDrawer::drawLine(const Vector3& from, const Vector3& to, const Vector3& color)
 {
-    glm::vec3 p1 = glm::vec3(from.getX(), from.getY(), from.getZ());
-    glm::vec3 p2 = glm::vec3(to.getX(), to.getY(), to.getZ());
-    lineVertices.push_back(p1);
-    lineVertices.push_back(p2);
+    glm::vec3 p1 = glm::vec3((GLfloat)from.getX(), (GLfloat)from.getY(), (GLfloat)from.getZ());
+    glm::vec3 p2 = glm::vec3((GLfloat)to.getX(), (GLfloat)to.getY(), (GLfloat)to.getZ());
+    lineVertices_.push_back(p1);
+    lineVertices_.push_back(p2);
 }
 
 void OpenGLDebugDrawer::drawLine(const Vector3& from, const Vector3& to, const Vector3& fromColor, const Vector3& toColor)
@@ -62,6 +62,8 @@ void OpenGLDebugDrawer::drawLine(const Vector3& from, const Vector3& to, const V
 
 void OpenGLDebugDrawer::drawContactPoint(const Vector3& PointOnB, const Vector3& normalOnB, Scalar distance, int lifeTime, const Vector3& color)
 {
+    glm::vec3 p = glm::vec3((GLfloat)PointOnB.getX(), (GLfloat)PointOnB.getY(), (GLfloat)PointOnB.getZ());
+    pointVertices_.push_back(p);
 }
 
 void OpenGLDebugDrawer::draw3dText(const Vector3& location, const char* textString)
@@ -75,9 +77,13 @@ void OpenGLDebugDrawer::reportErrorWarning(const char* warningString)
 
 void OpenGLDebugDrawer::Render()
 {
-    glm::vec4 glcolor(1.f, 1.f, 0.f, 1.f);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawPrimitives(PrimitiveType::LINES, lineVertices, glcolor);
-    lineVertices.clear();
+    glm::vec4 colorL(1.f, 1.f, 0.f, 1.f);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawPrimitives(PrimitiveType::LINES, &lineVertices_, colorL);
+    lineVertices_.clear();
+
+    glm::vec4 colorP(0.f, 1.f, 0.f, 1.f);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawPrimitives(PrimitiveType::POINTS, &pointVertices_, colorP);
+    pointVertices_.clear();
 }
 
 }

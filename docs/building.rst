@@ -92,8 +92,8 @@ Following the steps above should result in 3 new files: *main.cpp*, *MySimulatio
         AddStaticEntity(plane, sf::I4());
 
         //Create object
-        sf::BodyPhysicsSettings phy;
-        phy.mode = sf::BodyPhysicsMode::SURFACE;
+        sf::PhysicsSettings phy;
+        phy.mode = sf::PhysicsMode::SURFACE;
     
         sf::Sphere* sph = new sf::Sphere("Sphere", phy, 0.1, sf::I4(), "Aluminium",  "red");
         AddSolidEntity(sph, sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,-1.0)));

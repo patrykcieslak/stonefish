@@ -23,8 +23,7 @@
 //  Copyright (c) 2012-2021 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Entity__
-#define __Stonefish_Entity__
+#pragma once
 
 #define BIT(x) (1<<(x))
 
@@ -46,7 +45,29 @@ namespace sf
         MASK_ANIMATED_COLLIDING = BIT(4)
     }
     CollisionMask;
+
+    //! An enum defining what is the medium in which the entity moves (affects which forces are computed, needed because it is not possible to change mass during simulation).
+    /*!
+     DISABLED -> no computation of physics, zero mass and inertia
+     SURFACE -> no aerodynamics or hydrodynamics
+     FLOATING -> hydrodynamics with buoyancy
+     SUBMERGED -> hydrodynamics with buoyancy and added mass
+     AERODYNAMIC -> aerodynamics
+    */
+    enum class PhysicsMode {DISABLED, SURFACE, FLOATING, SUBMERGED, AERODYNAMIC};
     
+    //! A structure defining the physics computation settings for the body.
+    struct PhysicsSettings
+    {
+        PhysicsMode mode;
+        bool collisions;
+        bool buoyancy;
+
+        PhysicsSettings() : mode(PhysicsMode::SUBMERGED), collisions(true), buoyancy(true)
+        {
+        }
+    };
+
     //! An enum defining how the body is displayed.
     enum class DisplayMode {GRAPHICAL, PHYSICAL};
     
@@ -102,5 +123,3 @@ namespace sf
         std::string name;
     };
 }
-
-#endif

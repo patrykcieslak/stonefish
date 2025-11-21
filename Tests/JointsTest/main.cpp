@@ -20,7 +20,7 @@
 //  JointsTest
 //
 //  Created by Patryk Cieslak on 02/03/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include <core/GraphicalSimulationApp.h>
@@ -37,6 +37,7 @@ int main(int argc, const char * argv[])
     s.atmosphere = sf::RenderQuality::HIGH;
     s.ocean = sf::RenderQuality::DISABLED;
     s.aa = sf::RenderQuality::HIGH;
+    s.verticalSync = true;
     
     sf::HelperSettings h;
     h.showFluidDynamics = false;

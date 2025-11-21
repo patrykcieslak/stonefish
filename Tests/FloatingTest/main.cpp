@@ -20,7 +20,7 @@
 //  FloatingTest
 //
 //  Created by Patryk Cieslak on 02/05/2019.
-//  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include <core/GraphicalSimulationApp.h>
@@ -36,6 +36,7 @@ int main(int argc, const char * argv[])
     s.ao = sf::RenderQuality::HIGH;
     s.atmosphere = sf::RenderQuality::HIGH;
     s.ocean = sf::RenderQuality::HIGH;
+    s.verticalSync = true;
     
     sf::HelperSettings h;
     h.showFluidDynamics = false;

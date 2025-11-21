@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2025 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_SimulationManager__
@@ -31,6 +31,7 @@
 #include "entities/forcefields/Atmosphere.h"
 #include "entities/SolidEntity.h"
 #include "utils/PerformanceMonitor.h"
+#include "BulletSoftBody/btSoftMultiBodyDynamicsWorld.h"
 
 namespace sf
 {
@@ -39,7 +40,6 @@ namespace sf
     class Console;
     class NED;
     class Robot;
-    class ResearchConstraintSolver;
     class Entity;
     class StaticEntity;
     class AnimatedEntity;
@@ -53,10 +53,10 @@ namespace sf
     class OpenGLDebugDrawer;
     
     //! An enum designating the type of solver used for physics computation
-    typedef enum {SOLVER_SI, SOLVER_DANTZIG, SOLVER_PGS, SOLVER_LEMKE, SOLVER_NNCG} SolverType;
+    enum class Solver {SI, DANTZIG, PGS, LEMKE, NNCG};
     
     //! An enum designating the approach to collision detection
-    typedef enum {COLLISION_INCLUSIVE, COLLISION_EXCLUSIVE} CollisionFilteringType;
+    enum class CollisionFilter {INCLUSIVE, EXCLUSIVE};
     
     //! A structure used to define collision pairs
     struct Collision
@@ -78,7 +78,7 @@ namespace sf
          \param cft type of collision filtering used
          \param ht type of hydrodynamics computations
          */
-        SimulationManager(Scalar stepsPerSecond = Scalar(60), SolverType st = SOLVER_SI, CollisionFilteringType cft = COLLISION_EXCLUSIVE);
+        SimulationManager(Scalar stepsPerSecond = Scalar(60), Solver st = Solver::SI, CollisionFilter cft = CollisionFilter::EXCLUSIVE);
         
         //! A destructor.
         virtual ~SimulationManager();
@@ -331,10 +331,10 @@ namespace sf
         void getWorldAABB(Vector3& min, Vector3& max);
         
         //! A method returning the collision filtering used in simulation.
-        CollisionFilteringType getCollisionFilter() const;
+        CollisionFilter getCollisionFilter() const;
         
         //! A method returning the type of solver used.
-        SolverType getSolverType() const;
+        Solver getSolver() const;
 
         //! A method returning soft body world information.
         btSoftBodyWorldInfo& getSoftBodyWorldInfo();
@@ -589,8 +589,8 @@ namespace sf
         bool icProblemSolved;
 
         // Sover settings
-        SolverType solver;
-        CollisionFilteringType collisionFilter;
+        Solver solver;
+        CollisionFilter collisionFilter;
         Scalar sps;
         Scalar linSleepThreshold;
         Scalar angSleepThreshold;

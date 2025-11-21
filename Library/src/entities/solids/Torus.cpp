@@ -31,7 +31,7 @@
 namespace sf
 {
 
-Torus::Torus(std::string uniqueName, BodyPhysicsSettings phy, Scalar majorRadius, Scalar minorRadius, const Transform& origin, std::string material, std::string look, Scalar thickness)
+Torus::Torus(std::string uniqueName, PhysicsSettings phy, Scalar majorRadius, Scalar minorRadius, const Transform& origin, std::string material, std::string look, Scalar thickness)
     : SolidEntity(uniqueName, phy, material, look, thickness)
 {
     MR = majorRadius;

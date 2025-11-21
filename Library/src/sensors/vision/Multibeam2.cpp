@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 21/01/2019.
-//  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/vision/Multibeam2.h"
@@ -252,6 +252,8 @@ std::vector<Renderable> Multibeam2::Render()
         Renderable item;
         item.model = glMatrixFromTransform(getSensorFrame());
         item.type = RenderableType::SENSOR_LINES;
+        item.data = std::make_shared<std::vector<glm::vec3>>();
+        auto points = item.getDataAsPoints();
         
         unsigned int div = (unsigned int)ceil(fovH/5.0);
         GLfloat iconSize = 0.5f;
@@ -273,28 +275,28 @@ std::vector<Renderable> Multibeam2::Render()
             GLfloat x1 = sinf(theta1) * r;
             GLfloat x2 = sinf(theta2) * r;
             
-            item.points.push_back(glm::vec3(x1,y,z1));
-            item.points.push_back(glm::vec3(x2,y,z2));
-            item.points.push_back(glm::vec3(x1,-y,z1));
-            item.points.push_back(glm::vec3(x2,-y,z2));
+            points->push_back(glm::vec3(x1,y,z1));
+            points->push_back(glm::vec3(x2,y,z2));
+            points->push_back(glm::vec3(x1,-y,z1));
+            points->push_back(glm::vec3(x2,-y,z2));
             
             if(i == 0) //End 1
             {
-                item.points.push_back(glm::vec3(x1,y,z1));
-                item.points.push_back(glm::vec3(x1,-y,z1));
-                item.points.push_back(glm::vec3(x1,y,z1));
-                item.points.push_back(glm::vec3(0,0,0));
-                item.points.push_back(glm::vec3(x1,-y,z1));
-                item.points.push_back(glm::vec3(0,0,0));
+                points->push_back(glm::vec3(x1,y,z1));
+                points->push_back(glm::vec3(x1,-y,z1));
+                points->push_back(glm::vec3(x1,y,z1));
+                points->push_back(glm::vec3(0,0,0));
+                points->push_back(glm::vec3(x1,-y,z1));
+                points->push_back(glm::vec3(0,0,0));
             }
             else if(i == div-1) //End 2
             {
-                item.points.push_back(glm::vec3(x2,y,z2));
-                item.points.push_back(glm::vec3(x2,-y,z2));
-                item.points.push_back(glm::vec3(x2,y,z2));
-                item.points.push_back(glm::vec3(0,0,0));
-                item.points.push_back(glm::vec3(x2,-y,z2));
-                item.points.push_back(glm::vec3(0,0,0));
+                points->push_back(glm::vec3(x2,y,z2));
+                points->push_back(glm::vec3(x2,-y,z2));
+                points->push_back(glm::vec3(x2,y,z2));
+                points->push_back(glm::vec3(0,0,0));
+                points->push_back(glm::vec3(x2,-y,z2));
+                points->push_back(glm::vec3(0,0,0));
             }
         }
         

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/07/2023.
-//  Copyright (c) 2023-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2023-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Push.h"
@@ -94,8 +94,10 @@ std::vector<Renderable> Push::Render()
     Renderable item;
     item.model = glMatrixFromTransform(pushTrans);  
     item.type = RenderableType::ACTUATOR_LINES;
-    item.points.push_back(glm::vec3(0,0,0));
-    item.points.push_back(glm::vec3(0.1f*(inv ? -setpoint : setpoint),0,0));
+    item.data = std::make_shared<std::vector<glm::vec3>>();
+    auto points = item.getDataAsPoints();
+    points->push_back(glm::vec3(0,0,0));
+    points->push_back(glm::vec3(0.1f*(inv ? -setpoint : setpoint),0,0));
     items.push_back(item);
     
     return items;

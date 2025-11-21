@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/07/18.
-//  Copyright(c) 2018-2021 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/forcefields/Jet.h"
@@ -39,6 +39,11 @@ Jet::Jet(const Vector3& point, const Vector3& direction, Scalar radius, Scalar o
 void Jet::setOutletVelocity(Scalar x)
 {
     vout = x;
+}
+
+Scalar Jet::getOutletVelocity() const
+{
+    return vout;
 }
 
 VelocityFieldType Jet::getType() const
@@ -87,20 +92,24 @@ std::vector<Renderable> Jet::Render(VelocityFieldUBO& ubo)
     Renderable orifice;
     orifice.type = RenderableType::HYDRO_LINE_STRIP;
     orifice.model = model;
+    orifice.data = std::make_shared<std::vector<glm::vec3>>();
+    auto orificePoints = orifice.getDataAsPoints();
     
     for(unsigned int i=0; i<=12; ++i)
     {
         Scalar alpha = Scalar(i)/Scalar(12) * M_PI * Scalar(2);
         Vector3 v(btCos(alpha)*r, btSin(alpha)*r, 0);
-        orifice.points.push_back(glm::vec3(v.x(), v.y(), v.z()));
+        orificePoints->push_back(glm::vec3(v.x(), v.y(), v.z()));
     }
     
     //Cone
     Renderable cone;
     cone.type = RenderableType::HYDRO_LINES;
     cone.model = orifice.model;
-    cone.points.push_back(glm::vec3(0, 0, 0));
-    cone.points.push_back(glm::vec3(0, 0, vout));
+    cone.data = std::make_shared<std::vector<glm::vec3>>();
+    auto conePoints = cone.getDataAsPoints();
+    conePoints->push_back(glm::vec3(0, 0, 0));
+    conePoints->push_back(glm::vec3(0, 0, vout));
     
     Scalar r_ = Scalar(1)/Scalar(5)*(Scalar(10)*r + Scalar(5)*r);
     
@@ -109,8 +118,8 @@ std::vector<Renderable> Jet::Render(VelocityFieldUBO& ubo)
         Scalar alpha = Scalar(i)/Scalar(12) * M_PI * Scalar(2);
         Vector3 v1(btCos(alpha)*r, btSin(alpha)*r, 0);
         Vector3 v2(v1.x()*r_/r, v1.y()*r_/r, Scalar(10)*r);
-        cone.points.push_back(glm::vec3(v1.x(), v1.y(), v1.z()));
-        cone.points.push_back(glm::vec3(v2.x(), v2.y(), v2.z()));
+        conePoints->push_back(glm::vec3(v1.x(), v1.y(), v1.z()));
+        conePoints->push_back(glm::vec3(v2.x(), v2.y(), v2.z()));
     }
     
     //Build

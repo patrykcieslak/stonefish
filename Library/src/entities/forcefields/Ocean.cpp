@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/10/17.
-//  Copyright(c) 2017-2023 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2017-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/forcefields/Ocean.h"
@@ -29,6 +29,7 @@
 #include "utils/SystemUtil.hpp"
 #include "entities/forcefields/VelocityField.h"
 #include "entities/SolidEntity.h"
+#include "entities/CableEntity.h"
 #include "graphics/OpenGLFlatOcean.h"
 #include "graphics/OpenGLRealOcean.h"
 #include "actuators/Thruster.h"
@@ -55,6 +56,7 @@ Ocean::Ocean(std::string uniqueName, Scalar waves, Fluid l) : ForcefieldEntity(u
     liquid = l;
     wavesDebug.type = RenderableType::HYDRO_POINTS;
     wavesDebug.model = glm::mat4(1.f);
+    wavesDebug.data = std::make_shared<std::vector<glm::vec3>>();
     waterType = Scalar(0.0);
     glOcean = nullptr;
 }
@@ -105,7 +107,7 @@ Fluid Ocean::getLiquid() const
     return liquid;
 }
 
-VelocityField* Ocean::getCurrent(unsigned int index)
+VelocityField* Ocean::getVelocityField(size_t index)
 {
     if(index < currents.size())
         return currents[index];
@@ -151,7 +153,7 @@ float Ocean::GetDepth(const glm::vec3& point)
         GLfloat waveHeight = glOcean->ComputeWaveHeight(point.x, point.y);
         glm::vec3 wavePoint(point.x, point.y, waveHeight);
 #ifdef DEBUG_WAVES
-        wavesDebug.points.push_back(wavePoint);
+        wavesDebug.getDataAsPoints()->push_back(wavePoint);
 #endif
         return point.z - waveHeight;
     }
@@ -159,7 +161,7 @@ float Ocean::GetDepth(const glm::vec3& point)
     {
         glm::vec3 wavePoint(point.x, point.y, 0.f);
 #ifdef DEBUG_WAVES  
-        wavesDebug.points.push_back(wavePoint);
+        wavesDebug.getDataAsPoints()->push_back(wavePoint);
 #endif
         return point.z;
     }
@@ -217,29 +219,31 @@ void Ocean::UpdateCurrentsData()
 void Ocean::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co, bool recompute)
 {
     Entity* ent;
-    btRigidBody* rb = btRigidBody::upcast(co);
-    btMultiBodyLinkCollider* mbl = btMultiBodyLinkCollider::upcast(co);
     
-    if(rb != 0)
+    if (btRigidBody* rb = dynamic_cast<btRigidBody*>(co))
     {
-        if(rb->isStaticOrKinematicObject())
+        if (rb->isStaticOrKinematicObject())
             return;
         else
-            ent = (Entity*)rb->getUserPointer();
+            ent = static_cast<Entity*>(rb->getUserPointer());
     }
-    else if(mbl != 0)
+    else if (btMultiBodyLinkCollider* mbl = dynamic_cast<btMultiBodyLinkCollider*>(co))
     {
-        if(mbl->isStaticOrKinematicObject())
+        if (mbl->isStaticOrKinematicObject())
             return;
         else
-            ent = (Entity*)mbl->getUserPointer();
+            ent = static_cast<Entity*>(mbl->getUserPointer());
+    }
+    else if (btSoftBody* sb = dynamic_cast<btSoftBody*>(co))
+    {
+        ent = static_cast<Entity*>(sb->getUserPointer());
     }
     else
         return;
-    
+      
     HydrodynamicsSettings settings;
     
-    if(ent->getType() == EntityType::SOLID)
+    if (ent->getType() == EntityType::SOLID)
     {
         if(recompute)
         {
@@ -249,6 +253,17 @@ void Ocean::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co, bool
         }
         
         ((SolidEntity*)ent)->ApplyHydrodynamicForces();
+    }
+    else if (ent->getType() == EntityType::CABLE)
+    {
+        if(recompute)
+        {
+            settings.dampingForces = true;
+            settings.reallisticBuoyancy = true;
+            ((CableEntity*)ent)->ComputeHydrodynamicForces(settings, this);
+        }
+        
+        ((CableEntity*)ent)->ApplyHydrodynamicForces();
     }
 }
 
@@ -307,10 +322,10 @@ std::vector<Renderable> Ocean::Render(const std::vector<Actuator*>& act)
             ++glOceanCurrentsUBOData.numCurrents;
         }
 
-    if(wavesDebug.points.size() > 0)
+    if(wavesDebug.getDataAsPoints()->size() > 0)
     {
         items.push_back(wavesDebug);
-        wavesDebug.points.clear();
+        wavesDebug.getDataAsPoints()->clear();
     }
 
     return items;

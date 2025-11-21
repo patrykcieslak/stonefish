@@ -48,7 +48,7 @@ void Motor::setTorqueLimits(Scalar lower, Scalar upper)
     limits.second = upper;
 }
 
-void Motor::setIntensity(Scalar tau)
+void Motor::setCommand(Scalar tau)
 {
     torque = tau;
     if(limits.second > limits.first) // Limitted
@@ -117,7 +117,7 @@ void Motor::Update(Scalar dt)
 
 void Motor::WatchdogTimeout()
 {
-    setIntensity(Scalar(0));
+    setCommand(Scalar(0));
 }
 
 }

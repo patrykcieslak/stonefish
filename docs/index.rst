@@ -69,6 +69,7 @@ Currently there is no funding of this work. It is developed by the author follow
    environment
    animated
    bodies
+   cables
    robots
    sensors
    actuators

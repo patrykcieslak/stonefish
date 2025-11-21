@@ -45,7 +45,7 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the torus walls, if positive the torus is treated as shell
          */
-        Torus(std::string uniqueName, BodyPhysicsSettings phy, Scalar majorRadius, Scalar minorRadius, const Transform& origin,
+        Torus(std::string uniqueName, PhysicsSettings phy, Scalar majorRadius, Scalar minorRadius, const Transform& origin,
               std::string material, std::string look, Scalar thickness = Scalar(-1));
         
         //! A method that returns the type of body.

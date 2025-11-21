@@ -30,7 +30,7 @@
 namespace sf
 {
 
-Cylinder::Cylinder(std::string uniqueName, BodyPhysicsSettings phy, Scalar radius, Scalar height, const Transform& origin, std::string material, std::string look, Scalar thickness)
+Cylinder::Cylinder(std::string uniqueName, PhysicsSettings phy, Scalar radius, Scalar height, const Transform& origin, std::string material, std::string look, Scalar thickness)
     : SolidEntity(uniqueName, phy, material, look, thickness)
 {
     r = radius;

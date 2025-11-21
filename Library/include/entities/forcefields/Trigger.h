@@ -23,8 +23,7 @@
 //  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Trigger__
-#define __Stonefish_Trigger__
+#pragma once
 
 #include "entities/ForcefieldEntity.h"
 #include "entities/SolidEntity.h"
@@ -94,5 +93,3 @@ namespace sf
         int lookId;
     };
 }
-
-#endif

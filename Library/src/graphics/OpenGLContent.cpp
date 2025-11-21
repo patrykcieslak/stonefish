@@ -72,8 +72,7 @@ OpenGLContent::OpenGLContent()
     viewportSize = glm::vec2(800.f,600.f);
     mode = DrawingMode::FULL;
     currentLookName = "";
-    currentTexturable = false;
-    currentShaderMode = -1;
+    currentShaderMode = "plain";
 
     //Get OpenGL capabilities
     maxAnisotropy = 0.0f;
@@ -250,6 +249,8 @@ OpenGLContent::OpenGLContent()
     //Shaders common for all algorithms
     GLuint materialVertex = GLSLShader::LoadShader(GL_VERTEX_SHADER, "material.vert", "", &compiled);
     GLuint materialUvVertex = GLSLShader::LoadShader(GL_VERTEX_SHADER, "materialUv.vert", "", &compiled);
+    GLuint cableVertex = GLSLShader::LoadShader(GL_VERTEX_SHADER, "cable.vert", "", &compiled);
+    GLuint cableGeometry = GLSLShader::LoadShader(GL_GEOMETRY_SHADER, "cable.geom", "", &compiled);
     GLuint materialFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "material.frag", "", &compiled);
     GLuint materialUvFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "materialUv.frag", "", &compiled);
     GLuint materialUFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "materialU.frag", "", &compiled);
@@ -269,132 +270,188 @@ OpenGLContent::OpenGLContent()
         MaterialShader ms;
         ms.shadingAlgorithm = shadingAlgorithms[i];
         
-        //Plain
+        // Plain shaders
         precompiled.push_back(materialVertex);
         precompiled.push_back(materialFragment);
-        ms.shaders[0] = new GLSLShader(precompiled);
-        //Plain temperature
+        ms.shaders["plain"] = new GLSLShader(precompiled);
+        
         precompiled.pop_back();
         precompiled.push_back(materialTFragment);
-        ms.shaders[3] = new GLSLShader(precompiled);
-        ms.shaders[3]->AddUniform("temperature", ParameterType::FLOAT);
-        //Plain underwater
+        ms.shaders["plain_temperature"] = new GLSLShader(precompiled);
+        ms.shaders["plain_temperature"]->AddUniform("temperature", ParameterType::FLOAT);
+        
         precompiled.pop_back();
         precompiled.push_back(materialUFragment);
         precompiled.push_back(oceanOpticsFragment);
         precompiled.push_back(oceanFlatFragment);
-        ms.shaders[1] = new GLSLShader(precompiled);
-        ms.shaders[1]->AddUniform("cWater", ParameterType::VEC3);
-        ms.shaders[1]->AddUniform("bWater", ParameterType::VEC3);
-        //Plain underwater waves
+        ms.shaders["plain_underwater"] = new GLSLShader(precompiled);
+        ms.shaders["plain_underwater"]->AddUniform("cWater", ParameterType::VEC3);
+        ms.shaders["plain_underwater"]->AddUniform("bWater", ParameterType::VEC3);
+        
         precompiled.pop_back();
         precompiled.push_back(oceanWavesFragment);
-        ms.shaders[2] = new GLSLShader(precompiled);
-        ms.shaders[2]->AddUniform("cWater", ParameterType::VEC3);
-        ms.shaders[2]->AddUniform("bWater", ParameterType::VEC3);
-        ms.shaders[2]->AddUniform("texWaveFFT", ParameterType::INT);
-        ms.shaders[2]->AddUniform("gridSizes", ParameterType::VEC4);
+        ms.shaders["plain_underwater_waves"] = new GLSLShader(precompiled);
+        ms.shaders["plain_underwater_waves"]->AddUniform("cWater", ParameterType::VEC3);
+        ms.shaders["plain_underwater_waves"]->AddUniform("bWater", ParameterType::VEC3);
+        ms.shaders["plain_underwater_waves"]->AddUniform("texWaveFFT", ParameterType::INT);
+        ms.shaders["plain_underwater_waves"]->AddUniform("gridSizes", ParameterType::VEC4);
         
-        //Textured
+        // Textured shaders
         precompiled.clear();
         precompiled = commonMaterialShaders;
         precompiled.push_back(shadingFragment);
         precompiled.push_back(materialUvVertex);
         precompiled.push_back(materialUvFragment);
-        ms.shaders[4] = new GLSLShader(precompiled);
-        ms.shaders[4]->AddUniform("texAlbedo", ParameterType::INT);
-        ms.shaders[4]->AddUniform("texNormal", ParameterType::INT);
-        ms.shaders[4]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
-        ms.shaders[4]->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
-        //Textured temperature
+        ms.shaders["textured"] = new GLSLShader(precompiled);
+        ms.shaders["textured"]->AddUniform("texAlbedo", ParameterType::INT);
+        ms.shaders["textured"]->AddUniform("texNormal", ParameterType::INT);
+        ms.shaders["textured"]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
+        ms.shaders["textured"]->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
+        
         precompiled.pop_back();
         precompiled.push_back(materialTUvFragment);
-        ms.shaders[7] = new GLSLShader(precompiled);
-        ms.shaders[7]->AddUniform("texAlbedo", ParameterType::INT);
-        ms.shaders[7]->AddUniform("texNormal", ParameterType::INT);
-        ms.shaders[7]->AddUniform("texTemperature", ParameterType::INT);
-        ms.shaders[7]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
-        ms.shaders[7]->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
-        ms.shaders[7]->AddUniform("enableTemperatureTex", ParameterType::BOOLEAN);
-        ms.shaders[7]->AddUniform("temperatureRange", ParameterType::VEC2);
-        //Textured underwater
+        ms.shaders["textured_temperature"] = new GLSLShader(precompiled);
+        ms.shaders["textured_temperature"]->AddUniform("texAlbedo", ParameterType::INT);
+        ms.shaders["textured_temperature"]->AddUniform("texNormal", ParameterType::INT);
+        ms.shaders["textured_temperature"]->AddUniform("texTemperature", ParameterType::INT);
+        ms.shaders["textured_temperature"]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
+        ms.shaders["textured_temperature"]->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
+        ms.shaders["textured_temperature"]->AddUniform("enableTemperatureTex", ParameterType::BOOLEAN);
+        ms.shaders["textured_temperature"]->AddUniform("temperatureRange", ParameterType::VEC2);
+        
         precompiled.pop_back();
         precompiled.push_back(materialUUvFragment);
         precompiled.push_back(oceanOpticsFragment);
         precompiled.push_back(oceanFlatFragment);
-        ms.shaders[5] = new GLSLShader(precompiled);
-        ms.shaders[5]->AddUniform("texAlbedo", ParameterType::INT);
-        ms.shaders[5]->AddUniform("texNormal", ParameterType::INT);
-        ms.shaders[5]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
-        ms.shaders[5]->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
-        ms.shaders[5]->AddUniform("cWater", ParameterType::VEC3);
-        ms.shaders[5]->AddUniform("bWater", ParameterType::VEC3);
-        //Textured underwater waves
+        ms.shaders["textured_underwater"] = new GLSLShader(precompiled);
+        ms.shaders["textured_underwater"]->AddUniform("texAlbedo", ParameterType::INT);
+        ms.shaders["textured_underwater"]->AddUniform("texNormal", ParameterType::INT);
+        ms.shaders["textured_underwater"]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
+        ms.shaders["textured_underwater"]->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
+        ms.shaders["textured_underwater"]->AddUniform("cWater", ParameterType::VEC3);
+        ms.shaders["textured_underwater"]->AddUniform("bWater", ParameterType::VEC3);
+        
         precompiled.pop_back();
         precompiled.push_back(oceanWavesFragment);
-        ms.shaders[6] = new GLSLShader(precompiled);
-        ms.shaders[6]->AddUniform("texAlbedo", ParameterType::INT);
-        ms.shaders[6]->AddUniform("texNormal", ParameterType::INT);
-        ms.shaders[6]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
-        ms.shaders[6]->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
-        ms.shaders[6]->AddUniform("cWater", ParameterType::VEC3);
-        ms.shaders[6]->AddUniform("bWater", ParameterType::VEC3);
-        ms.shaders[6]->AddUniform("texWaveFFT", ParameterType::INT);
-        ms.shaders[6]->AddUniform("gridSizes", ParameterType::VEC4);
+        ms.shaders["textured_underwater_waves"] = new GLSLShader(precompiled);
+        ms.shaders["textured_underwater_waves"]->AddUniform("texAlbedo", ParameterType::INT);
+        ms.shaders["textured_underwater_waves"]->AddUniform("texNormal", ParameterType::INT);
+        ms.shaders["textured_underwater_waves"]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
+        ms.shaders["textured_underwater_waves"]->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
+        ms.shaders["textured_underwater_waves"]->AddUniform("cWater", ParameterType::VEC3);
+        ms.shaders["textured_underwater_waves"]->AddUniform("bWater", ParameterType::VEC3);
+        ms.shaders["textured_underwater_waves"]->AddUniform("texWaveFFT", ParameterType::INT);
+        ms.shaders["textured_underwater_waves"]->AddUniform("gridSizes", ParameterType::VEC4);
+
+        //Cable shaders
+        precompiled.clear();
+        precompiled = commonMaterialShaders;
+        precompiled.push_back(shadingFragment);
+        precompiled.push_back(cableVertex);
+        precompiled.push_back(cableGeometry);
+        precompiled.push_back(materialUvFragment);
+        ms.shaders["cable_textured"] = new GLSLShader(precompiled);
+        ms.shaders["cable_textured"]->AddUniform("texAlbedo", ParameterType::INT);
+        ms.shaders["cable_textured"]->AddUniform("texNormal", ParameterType::INT);
+        ms.shaders["cable_textured"]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
+        ms.shaders["cable_textured"]->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
+        ms.shaders["cable_textured"]->AddUniform("cableRadius", ParameterType::FLOAT);
+
+        precompiled.pop_back();
+        precompiled.push_back(materialUUvFragment);
+        precompiled.push_back(oceanOpticsFragment);
+        precompiled.push_back(oceanFlatFragment);
+        ms.shaders["cable_textured_underwater"] = new GLSLShader(precompiled);
+        ms.shaders["cable_textured_underwater"]->AddUniform("texAlbedo", ParameterType::INT);
+        ms.shaders["cable_textured_underwater"]->AddUniform("texNormal", ParameterType::INT);
+        ms.shaders["cable_textured_underwater"]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
+        ms.shaders["cable_textured_underwater"]->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
+        ms.shaders["cable_textured_underwater"]->AddUniform("cWater", ParameterType::VEC3);
+        ms.shaders["cable_textured_underwater"]->AddUniform("bWater", ParameterType::VEC3);
+        ms.shaders["cable_textured_underwater"]->AddUniform("cableRadius", ParameterType::FLOAT);
+
+        precompiled.pop_back();
+        precompiled.push_back(oceanWavesFragment);
+        ms.shaders["cable_textured_underwater_waves"] = new GLSLShader(precompiled);
+        ms.shaders["cable_textured_underwater_waves"]->AddUniform("texAlbedo", ParameterType::INT);
+        ms.shaders["cable_textured_underwater_waves"]->AddUniform("texNormal", ParameterType::INT);
+        ms.shaders["cable_textured_underwater_waves"]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
+        ms.shaders["cable_textured_underwater_waves"]->AddUniform("enableNormalTex", ParameterType::BOOLEAN);
+        ms.shaders["cable_textured_underwater_waves"]->AddUniform("cWater", ParameterType::VEC3);
+        ms.shaders["cable_textured_underwater_waves"]->AddUniform("bWater", ParameterType::VEC3);
+        ms.shaders["cable_textured_underwater_waves"]->AddUniform("texWaveFFT", ParameterType::INT);
+        ms.shaders["cable_textured_underwater_waves"]->AddUniform("gridSizes", ParameterType::VEC4);
+        ms.shaders["cable_textured_underwater_waves"]->AddUniform("cableRadius", ParameterType::FLOAT);
 
         //Add common uniforms
-        for(size_t h = 0; h<ms.shaders.size(); ++h)
+        for(auto& [key, shader] : ms.shaders)
         {
-            ms.shaders[h]->AddUniform("MVP", ParameterType::MAT4);
-            ms.shaders[h]->AddUniform("M", ParameterType::MAT4);
-            ms.shaders[h]->AddUniform("N", ParameterType::MAT3);
-            ms.shaders[h]->AddUniform("MV", ParameterType::MAT3);
-            ms.shaders[h]->AddUniform("FC", ParameterType::FLOAT);
-            ms.shaders[h]->AddUniform("eyePos", ParameterType::VEC3);
-            ms.shaders[h]->AddUniform("viewDir", ParameterType::VEC3);
-            ms.shaders[h]->AddUniform("color", ParameterType::VEC4);
-            ms.shaders[h]->AddUniform("spotLightsDepthMap", ParameterType::INT);
-            ms.shaders[h]->AddUniform("spotLightsShadowMap", ParameterType::INT);
-            ms.shaders[h]->AddUniform("sunShadowMap", ParameterType::INT);
-            ms.shaders[h]->AddUniform("sunDepthMap", ParameterType::INT);
-            ms.shaders[h]->AddUniform("transmittance_texture", ParameterType::INT);
-            ms.shaders[h]->AddUniform("scattering_texture", ParameterType::INT);
-            ms.shaders[h]->AddUniform("irradiance_texture", ParameterType::INT);
-            ms.shaders[h]->BindUniformBlock("SunSky", UBO_SUNSKY);
-            ms.shaders[h]->BindUniformBlock("Lights", UBO_LIGHTS);
+            shader->AddUniform("MVP", ParameterType::MAT4);
+            shader->AddUniform("M", ParameterType::MAT4);
+            shader->AddUniform("N", ParameterType::MAT3);
+            shader->AddUniform("MV", ParameterType::MAT3);
+            shader->AddUniform("FC", ParameterType::FLOAT);
+            shader->AddUniform("eyePos", ParameterType::VEC3);
+            shader->AddUniform("viewDir", ParameterType::VEC3);
+            shader->AddUniform("color", ParameterType::VEC4);
+            shader->AddUniform("spotLightsDepthMap", ParameterType::INT);
+            shader->AddUniform("spotLightsShadowMap", ParameterType::INT);
+            shader->AddUniform("sunShadowMap", ParameterType::INT);
+            shader->AddUniform("sunDepthMap", ParameterType::INT);
+            shader->AddUniform("transmittance_texture", ParameterType::INT);
+            shader->AddUniform("scattering_texture", ParameterType::INT);
+            shader->AddUniform("irradiance_texture", ParameterType::INT);
+            shader->BindUniformBlock("SunSky", UBO_SUNSKY);
+            shader->BindUniformBlock("Lights", UBO_LIGHTS);
 
-            ms.shaders[h]->Use();
-            ms.shaders[h]->SetUniform("spotLightsShadowMap", TEX_SPOT_SHADOW);
-            ms.shaders[h]->SetUniform("spotLightsDepthMap", TEX_SPOT_DEPTH);
-            ms.shaders[h]->SetUniform("sunDepthMap", TEX_SUN_DEPTH);
-            ms.shaders[h]->SetUniform("sunShadowMap", TEX_SUN_SHADOW);
-            ms.shaders[h]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
-            ms.shaders[h]->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
-            ms.shaders[h]->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
-            if(h > 3) //Textured?
-            {
-                ms.shaders[h]->SetUniform("texAlbedo", TEX_MAT_ALBEDO);
-                ms.shaders[h]->SetUniform("texNormal", TEX_MAT_NORMAL);
-            }
-            if(h == 7) //Temperature?
-            {
-                ms.shaders[h]->SetUniform("texTemperature", TEX_MAT_TEMPERATURE);
-            }
+            shader->Use();
+            shader->SetUniform("spotLightsShadowMap", TEX_SPOT_SHADOW);
+            shader->SetUniform("spotLightsDepthMap", TEX_SPOT_DEPTH);
+            shader->SetUniform("sunDepthMap", TEX_SUN_DEPTH);
+            shader->SetUniform("sunShadowMap", TEX_SUN_SHADOW);
+            shader->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
+            shader->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
+            shader->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
+            glUseProgram(0);
         }
+
+        // Textured common uniforms
+        for(auto s : {
+            "textured", 
+            "textured_temperature", 
+            "textured_underwater", 
+            "textured_underwater_waves",
+            "cable_textured",
+            "cable_textured_underwater",
+            "cable_textured_underwater_waves"
+        })
+        {
+            auto& shader = ms.shaders[s];
+            shader->Use();
+            shader->SetUniform("texAlbedo", TEX_MAT_ALBEDO);
+            shader->SetUniform("texNormal", TEX_MAT_NORMAL);
+            glUseProgram(0);
+        }
+
+        ms.shaders["textured_temperature"]->Use();
+        ms.shaders["textured_temperature"]->SetUniform("texTemperature", TEX_MAT_TEMPERATURE);
+        glUseProgram(0);
 
         materialShaders.push_back(ms);
 
         glDeleteShader(shadingFragment);
     }
 
-    for(size_t i=0; i<materialShaders[0].shaders.size(); ++i)
+    //Add material-specific uniforms
+    for (auto& [key, shader] : materialShaders[0].shaders)
     {
-        GLSLShader* shader;
-        shader = materialShaders[0].shaders[i];
         shader->AddUniform("shininess", ParameterType::FLOAT);
         shader->AddUniform("specularStrength", ParameterType::FLOAT);
         shader->AddUniform("reflectivity", ParameterType::FLOAT);
-        shader = materialShaders[1].shaders[i];
+    }
+
+    for (auto& [key, shader] : materialShaders[1].shaders)
+    {
         shader->AddUniform("roughness", ParameterType::FLOAT);
         shader->AddUniform("metallic", ParameterType::FLOAT);
         shader->AddUniform("reflectivity", ParameterType::FLOAT);
@@ -502,8 +559,8 @@ OpenGLContent::~OpenGLContent()
     //Material shaders
     for(size_t i=0; i<materialShaders.size(); ++i)
     {
-        for(size_t h=0; h<6; ++h)
-            delete materialShaders[i].shaders[h];
+        for(auto& [key, shader] : materialShaders[i].shaders)
+            delete shader;
     }
     
     //Views
@@ -741,9 +798,9 @@ void OpenGLContent::DrawEllipsoid(glm::mat4 M, glm::vec3 radii, glm::vec4 color)
     OpenGLState::UseProgram(0);
 }
 
-void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& vertices, glm::vec4 color, glm::mat4 M)
+void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>* vertices, glm::vec4 color, glm::mat4 M)
 {
-    if(vertices.size() == 0)
+    if(vertices == nullptr || vertices->size() == 0)
         return;
 
     GLuint vbo;
@@ -758,7 +815,7 @@ void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& v
     glDisableVertexAttribArray(1);
     
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3)*vertices.size(), &vertices[0].x, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vertices->size(), vertices->data(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
@@ -767,20 +824,20 @@ void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>& v
     switch(type)
     {
         case PrimitiveType::LINES:
-            glDrawArrays(GL_LINES, 0, (GLsizei)vertices.size());
+            glDrawArrays(GL_LINES, 0, (GLsizei)vertices->size());
             break;
         
         case PrimitiveType::LINE_STRIP:
-            glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)vertices.size());
+            glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)vertices->size());
             break;
 
         case PrimitiveType::TRIANGLES:
-            glDrawArrays(GL_TRIANGLES, 0, (GLsizei)vertices.size());
+            glDrawArrays(GL_TRIANGLES, 0, (GLsizei)vertices->size());
             break;
             
         case PrimitiveType::POINTS:
         default:
-            glDrawArrays(GL_POINTS, 0, (GLsizei)vertices.size());
+            glDrawArrays(GL_POINTS, 0, (GLsizei)vertices->size());
             break;
     }
     OpenGLState::BindVertexArray(0);
@@ -797,21 +854,10 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
     
     switch(mode)
     {
-        case DrawingMode::RAW:
-        {
-            OpenGLState::BindVertexArray(objects[objectId].vao);
-            glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
-            OpenGLState::BindVertexArray(0);
-        }
-        break;
-
         case DrawingMode::SHADOW:
         {
             basicShaders["shadow"]->Use();
             basicShaders["shadow"]->SetUniform("MVP", viewProjection*M);
-            OpenGLState::BindVertexArray(objects[objectId].vao);
-            glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
-            OpenGLState::BindVertexArray(0);
         }
         break;
         
@@ -820,9 +866,6 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
             basicShaders["flat"]->Use();
             basicShaders["flat"]->SetUniform("MVP", viewProjection*M);
             basicShaders["flat"]->SetUniform("FC", FC);
-            OpenGLState::BindVertexArray(objects[objectId].vao);
-            glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
-            OpenGLState::BindVertexArray(0);
         }
         break;
 
@@ -834,13 +877,16 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
                 UseLook(getLook(looks.size()-1), false, M); // Use default look
             else
                 UseLook(getLook(lookId), objects[objectId].texturable, M); // Use user defined look
-                
-            OpenGLState::BindVertexArray(objects[objectId].vao);
-            glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
-            OpenGLState::BindVertexArray(0);
         }
         break;
+
+        case DrawingMode::RAW:
+            break;
     }
+
+    OpenGLState::BindVertexArray(objects[objectId].vao);
+    glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
+    OpenGLState::BindVertexArray(0);
 }
 
 void OpenGLContent::DrawLightSource(unsigned int lightId)
@@ -891,6 +937,42 @@ void OpenGLContent::DrawLightSource(unsigned int lightId)
     }
 }
 
+void OpenGLContent::DrawCable(size_t cableId, GLfloat radius, const std::vector<CableNode>& nodeData, int lookId)
+{
+    if (cableId >= cables.size())
+        return;
+
+    if (nodeData.size() == 0 || nodeData.size() != cables[cableId].nodeCount)
+        return;
+        
+    //Update cable VBO
+    glBindBuffer(GL_ARRAY_BUFFER, cables[cableId].vboVertex);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(CableNode) * cables[cableId].nodeCount, nodeData.data(), GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    switch (mode)
+    {
+        case DrawingMode::FULL:
+        case DrawingMode::UNDERWATER:
+        case DrawingMode::TEMPERATURE:
+        {
+            if (lookId < 0)
+                UseCableLook(getLook(looks.size() - 1), radius); // Use default look
+            else
+                UseCableLook(getLook(lookId), radius); // Use user defined look
+        }
+            break;
+    
+        default:
+            break;
+    }
+
+    //Draw cable
+    OpenGLState::BindVertexArray(cables[cableId].vao);
+    glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)cables[cableId].nodeCount);
+    OpenGLState::BindVertexArray(0);   
+}
+
 void OpenGLContent::SetupLights()
 {
     int pointId = 0;
@@ -928,21 +1010,52 @@ void OpenGLContent::UseLook(const Look& look, bool texturable, const glm::mat4& 
     if(ocean != NULL && ocean->hasWaves()) waves = true;
     
     texturable = texturable && (look.albedoTexture > 0 || look.normalMap > 0 || look.temperatureMap > 0);
-    int shaderMode = 0; // Above water/on surface
-    if(mode == DrawingMode::UNDERWATER)
-        shaderMode = (waves ? 2 : 1);
-    else if(mode == DrawingMode::TEMPERATURE)
-        shaderMode = 3;
     
-    bool updateMaterial = (look.name != currentLookName) 
-                          || (currentTexturable != texturable)
-                          || (currentShaderMode != shaderMode);
-    currentLookName = look.name;
-    currentTexturable = texturable;
-    currentShaderMode = shaderMode;
+    std::string shaderMode;
+    switch (mode)
+    {
+        case DrawingMode::FULL:
+            if (texturable)
+                shaderMode = "textured";
+            else
+                shaderMode = "plain";
+            break;
+    
+        case DrawingMode::UNDERWATER:
+            if (waves)
+            {
+                if (texturable)
+                    shaderMode = "textured_underwater_waves";
+                else
+                    shaderMode = "plain_underwater_waves";
+            }
+            else
+            {
+                if (texturable)
+                    shaderMode = "textured_underwater";
+                else
+                    shaderMode = "plain_underwater";
+            }
+            break;
 
-    size_t shaderId = (currentTexturable ? 4 : 0) + (size_t)currentShaderMode;
-    GLSLShader* shader = materialShaders[look.type == LookType::SIMPLE ? 0 : 1].shaders[shaderId];
+        case DrawingMode::TEMPERATURE:
+            if (texturable)
+                shaderMode = "textured_temperature";
+            else
+                shaderMode = "plain_temperature";
+            break;
+
+        default:
+            shaderMode = "plain";
+            break;
+    }
+    
+    bool updateMaterial = (look.name != currentLookName) || (currentShaderMode != shaderMode);
+    currentLookName = look.name;
+    currentShaderMode = shaderMode;
+    
+    GLSLShader* shader = materialShaders[look.type == LookType::SIMPLE ? 0 : 1].shaders[currentShaderMode];
+
     shader->Use();
     shader->SetUniform("MVP", viewProjection*M);
     shader->SetUniform("M", M);
@@ -976,7 +1089,7 @@ void OpenGLContent::UseLook(const Look& look, bool texturable, const glm::mat4& 
             break;
         }
 
-        if(currentTexturable)
+        if(texturable)
         {
             if(look.albedoTexture > 0)
             {
@@ -1000,7 +1113,7 @@ void OpenGLContent::UseLook(const Look& look, bool texturable, const glm::mat4& 
                 OpenGLState::UnbindTexture(TEX_MAT_NORMAL);
             }
 
-            if(shaderMode == 3)
+            if(currentShaderMode == "textured_temperature")
             {
                 if(look.temperatureMap > 0)
                 {
@@ -1018,9 +1131,135 @@ void OpenGLContent::UseLook(const Look& look, bool texturable, const glm::mat4& 
         }
         else
         {
-            if(shaderMode == 3)
+            if(currentShaderMode == "plain_temperature")
                 shader->SetUniform("temperature", look.temperatureRange.x);
         }
+    }
+
+    if(mode == DrawingMode::UNDERWATER)
+    {
+        shader->SetUniform("cWater", ocean->getOpenGLOcean()->getLightAttenuation());
+        shader->SetUniform("bWater", ocean->getOpenGLOcean()->getLightScattering());
+        if(waves)
+        {
+            OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, ocean->getOpenGLOcean()->getWaveTexture());
+            shader->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
+            shader->SetUniform("gridSizes", ocean->getOpenGLOcean()->getWaveGridSizes());
+        }
+    }
+}
+
+void OpenGLContent::UseCableLook(const Look& look, GLfloat radius)
+{
+    bool waves = false;
+    Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
+    if(ocean != NULL && ocean->hasWaves()) waves = true;
+    
+    std::string shaderMode;
+    switch (mode)
+    {
+        case DrawingMode::FULL:
+            shaderMode = "cable_textured";
+            break;
+    
+        case DrawingMode::UNDERWATER:
+            if (waves)
+                shaderMode = "cable_textured_underwater_waves";
+            else
+                shaderMode = "cable_textured_underwater";
+            break;
+
+        case DrawingMode::TEMPERATURE:
+            shaderMode = "cable_textured_temperature";
+            break;
+
+        default:
+            shaderMode = "cable_textured";
+            break;
+    }
+    
+    bool updateMaterial = (look.name != currentLookName) || (currentShaderMode != shaderMode);
+    currentLookName = look.name;
+    currentShaderMode = shaderMode;
+    
+    GLSLShader* shader = materialShaders[look.type == LookType::SIMPLE ? 0 : 1].shaders[currentShaderMode];
+
+    shader->Use();
+    shader->SetUniform("MVP", viewProjection);
+    shader->SetUniform("M", glm::mat4(1.f));
+    shader->SetUniform("N", glm::mat3(1.f));
+    shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view))));
+    shader->SetUniform("FC", FC);
+    shader->SetUniform("cableRadius", radius);
+    shader->SetUniform("eyePos", eyePos);
+    shader->SetUniform("viewDir", viewDir);
+
+    if(updateMaterial)
+    {
+        switch(look.type)
+        {		
+            default:
+            case LookType::SIMPLE: //Blinn-Phong
+            {
+                shader->SetUniform("specularStrength", look.params[0]);
+                shader->SetUniform("shininess", look.params[1]);
+                shader->SetUniform("reflectivity", look.reflectivity);
+                shader->SetUniform("color", glm::vec4(look.color.rgb, 1.f));
+            }
+            break;
+            
+            case LookType::PHYSICAL: //Cook-Torrance
+            {
+                shader->SetUniform("roughness", look.params[0]);
+                shader->SetUniform("metallic", look.params[1]);
+                shader->SetUniform("reflectivity", look.reflectivity);
+                shader->SetUniform("color", glm::vec4(look.color.rgb, 1.f));
+            }
+            break;
+        }
+
+        if(look.albedoTexture > 0)
+        {
+            shader->SetUniform("enableAlbedoTex", true);
+            OpenGLState::BindTexture(TEX_MAT_ALBEDO, GL_TEXTURE_2D, look.albedoTexture);
+        }
+        else
+        {
+            shader->SetUniform("enableAlbedoTex", false);
+            OpenGLState::UnbindTexture(TEX_MAT_ALBEDO);
+        }
+
+        if(look.normalMap > 0)
+        {
+            shader->SetUniform("enableNormalTex", true);
+            OpenGLState::BindTexture(TEX_MAT_NORMAL, GL_TEXTURE_2D, look.normalMap);
+        }
+        else
+        {
+            shader->SetUniform("enableNormalTex", false);
+            OpenGLState::UnbindTexture(TEX_MAT_NORMAL);
+        }
+
+        //     if(currentShaderMode == "cable_textured_temperature")
+        //     {
+        //         if(look.temperatureMap > 0)
+        //         {
+        //             OpenGLState::BindTexture(TEX_MAT_TEMPERATURE, GL_TEXTURE_2D, look.temperatureMap);
+        //             shader->SetUniform("enableTemperatureTex", true);
+        //             shader->SetUniform("texTemperature", TEX_MAT_TEMPERATURE);
+        //         }
+        //         else
+        //         {
+        //             shader->SetUniform("enableTemperatureTex", false);
+        //             OpenGLState::UnbindTexture(TEX_MAT_TEMPERATURE);
+        //         }
+        //         shader->SetUniform("temperatureRange", look.temperatureRange);
+        //     }
+        // }
+        // else
+        // {
+        //     if(currentShaderMode == "cable_plain_temperature")
+        //         shader->SetUniform("temperature", look.temperatureRange.x);
     }
 
     if(mode == DrawingMode::UNDERWATER)
@@ -1073,6 +1312,29 @@ unsigned int OpenGLContent::BuildObject(Mesh* mesh)
     
     objects.push_back(obj);
     return (unsigned int)objects.size()-1;
+}
+
+size_t OpenGLContent::BuildCable(size_t numNodes)
+{
+    Cable cable;
+    
+    glGenVertexArrays(1, &cable.vao);
+    glGenBuffers(1, &cable.vboVertex);
+    cable.nodeCount = (GLsizei)numNodes;
+    
+    OpenGLState::BindVertexArray(cable.vao);	
+    glEnableVertexAttribArray(0); //Position 3D + coordinate along cable
+    glEnableVertexAttribArray(1); //Normal
+    
+    glBindBuffer(GL_ARRAY_BUFFER, cable.vboVertex);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(CableNode) * cable.nodeCount, NULL, GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(CableNode), 0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE,  sizeof(CableNode), (void*)sizeof(glm::vec4));
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    OpenGLState::BindVertexArray(0);
+    
+    cables.push_back(cable);
+    return cables.size()-1;
 }
 
 std::string OpenGLContent::CreateSimpleLook(const std::string& name, glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, 
@@ -1148,11 +1410,16 @@ size_t OpenGLContent::getLightsCount()
 
 int OpenGLContent::getLookId(const std::string& name)
 {
-    for(size_t i=0; i<looks.size(); ++i)
-        if(looks[i].name == name)
-            return (int)i;
-            
-    return -1;
+    if (name.empty()) return -1; // No name specified --> default look
+
+    // Find look by name
+    auto it = std::find_if(looks.begin(), looks.end(), [&](const Look& l) {
+        return l.name == name;
+    });
+    if (it != looks.end())
+        return static_cast<int>(std::distance(looks.begin(), it));
+    else
+        return -1; // Default look
 }
 
 const Object& OpenGLContent::getObject(size_t id)
