@@ -26,7 +26,7 @@
 #include "CableTestManager.h"
 
 #include <iostream>
-#include <format>
+#include <iomanip>
 #include <utils/SystemUtil.hpp>
 #include <utils/UnitSystem.h>
 #include <entities/statics/Plane.h>
@@ -132,6 +132,6 @@ void CableTestManager::SimulationStepCompleted(sf::Scalar timeStep)
         sf::Scalar length = cable->getLength();
         sf::Scalar restLength = cable->getRestLength();
         sf::Scalar stretch = (length - restLength) / restLength;
-        std::cout << std::format("[{}] Length: {:.3f} m, Stretch: {:.2f} %\n", cable->getName(), length, stretch * 100.0);
+        std::cout << std::setprecision(3) << "[" << cable->getName() << "] Length: " << length << " m, Stretch: " << stretch * 100 << " %" << std::endl;
     }
 }

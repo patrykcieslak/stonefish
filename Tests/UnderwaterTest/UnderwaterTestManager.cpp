@@ -75,7 +75,7 @@
 #include <core/ScenarioParser.h>
 #include <core/NED.h>
 #include <iostream>
-#include <format>
+#include <iomanip>
 
 UnderwaterTestManager::UnderwaterTestManager(sf::Scalar stepsPerSecond)
 : SimulationManager(stepsPerSecond, sf::Solver::SI, sf::CollisionFilter::EXCLUSIVE)
@@ -309,6 +309,6 @@ void UnderwaterTestManager::SimulationStepCompleted(sf::Scalar timeStep)
     if (th)
     {
         double rpm = th->getOmega() * sf::Scalar(60.0) / sf::Scalar(2.0 * M_PI);
-        std::cout << std::format("[{}] RPM: {:.3f}, Thrust: {:.3f}\n", th->getName(), rpm, th->getThrust());
+        std::cout << std::setprecision(3) << "[" << th->getName() << "] RPM: " << rpm << ", Thrust: " << th->getThrust() << std::endl;
     }
 }
