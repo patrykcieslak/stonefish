@@ -20,7 +20,7 @@
 //  SlidingTest
 //
 //  Created by Patryk Cieslak on 02/03/2014.
-//  Copyright (c) 2018-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "SlidingTestApp.h"
@@ -36,6 +36,7 @@ int main(int argc, const char * argv[])
     s.ao = sf::RenderQuality::HIGH;
     s.atmosphere = sf::RenderQuality::HIGH;
     s.ocean = sf::RenderQuality::DISABLED;
+    s.verticalSync = true;
     
     sf::HelperSettings h;
     h.showFluidDynamics = false;

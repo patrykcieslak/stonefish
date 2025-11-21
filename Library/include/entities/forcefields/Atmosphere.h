@@ -23,8 +23,7 @@
 //  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Atmosphere__
-#define __Stonefish_Atmosphere__
+#pragma once
 
 #include <ctime>
 #include "core/MaterialManager.h"
@@ -144,4 +143,3 @@ namespace sf
     };
 }
 
-#endif

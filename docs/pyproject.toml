@@ -1,0 +1,2 @@
+[tool.esbonio.sphinx]
+pythonCommand = ["${venv:../.venv}"]

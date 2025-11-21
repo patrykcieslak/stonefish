@@ -23,8 +23,7 @@
 //  Copyright (c) 2018-2025 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLDataStructs__
-#define __Stonefish_OpenGLDataStructs__
+#pragma once
 
 #include "glad.h"
 #define GLM_FORCE_RADIANS
@@ -34,6 +33,7 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <vector>
 #include <memory>
+#include <variant>
 
 #define Max(a, b)   (((a) > (b)) ? (a) : (b))
 
@@ -530,8 +530,9 @@ namespace sf
         glm::vec3 cor;
         glm::vec3 vel;
         glm::vec3 avel;
-        std::shared_ptr<void> data;
-		
+        std::variant< std::shared_ptr<std::vector<glm::vec3>>,
+                      std::shared_ptr<std::vector<CableNode>> > data;
+        
         Renderable() 
         {
             type = RenderableType::SOLID;
@@ -542,12 +543,16 @@ namespace sf
             cor = glm::vec3(0.f);
             vel = glm::vec3(0.f);
             avel = glm::vec3(0.f);
-            data.reset();
         }
 
-        std::vector<glm::vec3>* getDataAsPoints() const
+        std::shared_ptr<std::vector<glm::vec3>> getDataAsPoints() const
         {
-            return std::static_pointer_cast<std::vector<glm::vec3>>(data).get();
+            return std::get<std::shared_ptr<std::vector<glm::vec3>>>(data);
+        }
+
+        std::shared_ptr<std::vector<CableNode>> getDataAsCableNodes() const
+        {
+            return std::get<std::shared_ptr<std::vector<CableNode>>>(data);
         }
 
 		static bool SortByMaterial(const Renderable& r1, const Renderable& r2) 
@@ -630,5 +635,3 @@ namespace sf
      */
     glm::vec3 glVectorFromVector(const Vector3& v);
 }
-
-#endif

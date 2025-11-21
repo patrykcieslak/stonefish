@@ -23,8 +23,7 @@
 //  Copyright(c) 2013-2019 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_FeatherstoneEntity__
-#define __Stonefish_FeatherstoneEntity__
+#pragma once
 
 #include "BulletDynamics/Featherstone/btMultiBody.h"
 #include "BulletDynamics/Featherstone/btMultiBodyLinkCollider.h"
@@ -403,5 +402,3 @@ namespace sf
         bool baseRenderable;
     };
 }
-
-#endif

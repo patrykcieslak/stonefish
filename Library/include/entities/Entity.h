@@ -23,8 +23,7 @@
 //  Copyright (c) 2012-2021 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Entity__
-#define __Stonefish_Entity__
+#pragma once
 
 #define BIT(x) (1<<(x))
 
@@ -124,5 +123,3 @@ namespace sf
         std::string name;
     };
 }
-
-#endif

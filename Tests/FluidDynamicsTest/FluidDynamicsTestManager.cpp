@@ -25,7 +25,6 @@
 
 #include "FluidDynamicsTestManager.h"
 
-#include "FluidDynamicsTestApp.h"
 #include <entities/solids/Polyhedron.h>
 #include <entities/solids/Box.h>
 #include <entities/solids/Sphere.h>

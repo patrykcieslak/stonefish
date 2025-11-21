@@ -824,6 +824,9 @@ void SimulationManager::InitializeSolver()
     dynamicsWorld->getSolverInfo().m_singleAxisRollingFrictionThreshold = Scalar(1e30); //single axis rolling velocity threshold
     dynamicsWorld->getSolverInfo().m_linearSlop = Scalar(0.); //position bias
     
+    dynamicsWorld->getWorldInfo().m_sparsesdf.setDefaultVoxelsz(Scalar(0.25));
+    dynamicsWorld->getWorldInfo().m_sparsesdf.Reset();
+
     //Override default callbacks
     dynamicsWorld->setWorldUserInfo(this);
     dynamicsWorld->getPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
@@ -835,10 +838,10 @@ void SimulationManager::InitializeSolver()
     //Set default params
     g = Scalar(9.81);
 
-    sbInfo.m_broadphase = dwBroadphase;
-    sbInfo.m_dispatcher = dwDispatcher;
+    sbInfo = dynamicsWorld->getWorldInfo();
     sbInfo.m_sparsesdf.Initialize();
-    sbInfo.m_sparsesdf.Reset(); 
+    sbInfo.m_sparsesdf.setDefaultVoxelsz(Scalar(0.1));
+    sbInfo.m_sparsesdf.Reset();
     sbInfo.air_density = 0.0;
     sbInfo.water_density = 0.0;
     sbInfo.water_normal = Vector3(0.0, 0.0, -1.0);

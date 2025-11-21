@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/11/2018.
-//  Copyright(c) 2018-2022 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2025 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Robot__
-#define __Stonefish_Robot__
+#pragma once
 
 #include <utility>
 #include "StonefishCommon.h"
@@ -173,10 +172,10 @@ namespace sf
 
         //! A method returning a pointer to the actuator with a given name.
         /*!
-         \param name the name of the actuator
+         \param aname the name of the actuator
          \return a pointer to the actuator object
          */
-        Actuator* getActuator(std::string name);
+        Actuator* getActuator(std::string aname);
         
         //! A method returning a pointer to the actuator by index.
         /*!
@@ -187,10 +186,10 @@ namespace sf
         
         //! A method returning a pointer to the sensor with a given name.
         /*!
-         \param name the name of the sensor
+         \param sname the name of the sensor
          \return a pointer to the sensor object
          */
-        Sensor* getSensor(std::string name);
+        Sensor* getSensor(std::string sname);
         
         //! A method returning a pointer to the sensor by index.
         /*!
@@ -201,10 +200,10 @@ namespace sf
         
         //! A method returning a pointer to the communication device with a given name.
         /*!
-         \param name the name of the communication device
+         \param cname the name of the communication device
          \return a pointer to the comm object
          */
-        Comm* getComm(std::string name);
+        Comm* getComm(std::string cname);
         
         //! A method returning a pointer to the communication device by index.
         /*!
@@ -218,10 +217,10 @@ namespace sf
         
         //! A method returning a pointer to the link.
         /*!
-         \param name a name of the link
+         \param lname a name of the link
          \return a pointer to the link solid
          */
-        SolidEntity* getLink(const std::string& name);
+        SolidEntity* getLink(const std::string& lname);
 
         //! A method returning a pointer to the link by index.
         /*!
@@ -251,16 +250,14 @@ namespace sf
             std::pair<Scalar, Scalar> posLim;
             Scalar damping;
         };
-        std::vector<JointData> jointsData; // For construction
+        std::vector<JointData> jointsData_; // For construction
 
-        std::vector<SolidEntity*> detachedLinks;
-        std::vector<SolidEntity*> links;
-        std::vector<Sensor*> sensors;
-        std::vector<Actuator*> actuators;
-        std::vector<Comm*> comms;
-        std::string name;
-        bool fixed;
+        std::vector<SolidEntity*> detachedLinks_;
+        std::vector<SolidEntity*> links_;
+        std::vector<Sensor*> sensors_;
+        std::vector<Actuator*> actuators_;
+        std::vector<Comm*> comms_;
+        std::string name_;
+        bool fixed_;
     };
-}
-
-#endif
+} // namespace sf

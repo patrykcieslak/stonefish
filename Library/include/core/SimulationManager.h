@@ -31,6 +31,7 @@
 #include "entities/forcefields/Atmosphere.h"
 #include "entities/SolidEntity.h"
 #include "utils/PerformanceMonitor.h"
+#include "BulletSoftBody/btSoftMultiBodyDynamicsWorld.h"
 
 namespace sf
 {

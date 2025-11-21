@@ -23,9 +23,9 @@
 //  Copyright(c) 2012-2025 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_SolidEntity__
-#define __Stonefish_SolidEntity__
+#pragma once
 
+#include "BulletSoftBody/btSoftMultiBodyDynamicsWorld.h"
 #include "BulletDynamics/Featherstone/btMultiBodyLinkCollider.h"
 #include "core/MaterialManager.h"
 #include "entities/MovingEntity.h"
@@ -392,7 +392,7 @@ namespace sf
         
         Scalar LambKFactor(Scalar r1, Scalar r2);
         virtual void BuildRigidBody(btDynamicsWorld* world);
-        void BuildMultibodyLinkCollider(btMultiBody* mb, unsigned int child, btMultiBodyDynamicsWorld* world);
+        void BuildMultibodyLinkCollider(btMultiBody* mb, unsigned int child, btSoftMultiBodyDynamicsWorld* world);
         
         //Body
         btMultiBodyLinkCollider* multibodyCollider;
@@ -459,5 +459,3 @@ namespace sf
         friend class BeltJoint;
     };
 }
-
-#endif

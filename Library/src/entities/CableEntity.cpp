@@ -52,7 +52,7 @@ CableEntity::CableEntity(std::string uniqueName, PhysicsSettings phy, Vector3 fi
     restLength_ = (secondEnd - firstEnd).safeNorm();
 
     // Material properties
-    cableBody_->m_materials[0]->m_kLST = lerp(Scalar(1.0), Scalar(0.02), btClamped(stretching, Scalar(0), Scalar(1)));
+    cableBody_->m_materials[0]->m_kLST = lerp(Scalar(1.2), Scalar(0.02), btClamped(stretching, Scalar(0), Scalar(1)));
     cableBody_->m_materials[0]->m_kAST = Scalar(1);
     cableBody_->m_materials[0]->m_kVST = Scalar(1);
     radius_ = diameter / Scalar(2);
@@ -324,7 +324,7 @@ void CableEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
         }
 
         // Apply buoyancy force
-        if (settings.reallisticBuoyancy)
+        if (phy_.buoyancy && settings.reallisticBuoyancy)
         {
             // !!! Here it is an approximation because the buoyancy force should be applied at the buoyancy center and then it will generate torque 
             // which will result in asymmetrical forces on both ends of the segment !!!
@@ -418,7 +418,7 @@ std::vector<Renderable> CableEntity::Render()
 
         // Populate cable node data
         item.data = std::make_shared<std::vector<CableNode>>(numGraphicalNodes_);
-        std::vector<CableNode>* cableNodes = std::static_pointer_cast<std::vector<CableNode>>(item.data).get();
+        auto cableNodes = item.getDataAsCableNodes();
 
         for (size_t i = 0; i < numGraphicalNodes_; ++i)
         {
@@ -470,19 +470,19 @@ std::vector<Renderable> CableEntity::Render()
             itemFb.type = RenderableType::FORCE_BUOYANCY;
             itemFb.model = glm::mat4(1.f);
             itemFb.data = std::make_shared<std::vector<glm::vec3>>();
-            std::vector<glm::vec3>* pointsFb = itemFb.getDataAsPoints();
+            auto pointsFb = itemFb.getDataAsPoints();
 
             Renderable itemFdq;
             itemFdq.type = RenderableType::FORCE_QUADRATIC_DRAG;
             itemFdq.model = glm::mat4(1.f);
             itemFdq.data = std::make_shared<std::vector<glm::vec3>>();
-            std::vector<glm::vec3>* pointsFdq = itemFdq.getDataAsPoints();
+            auto pointsFdq = itemFdq.getDataAsPoints();
 
             Renderable itemFdf;
             itemFdf.type = RenderableType::FORCE_LINEAR_DRAG;
             itemFdf.model = glm::mat4(1.f);
             itemFdf.data = std::make_shared<std::vector<glm::vec3>>();
-            std::vector<glm::vec3>* pointsFdf = itemFdf.getDataAsPoints();
+            auto pointsFdf = itemFdf.getDataAsPoints();
 
             for (size_t i = 0; i < cableBody_->m_nodes.size(); ++i)
             {
@@ -503,7 +503,5 @@ std::vector<Renderable> CableEntity::Render()
 
     return items;
 }
-
-
 
 } // namespace sf

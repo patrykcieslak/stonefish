@@ -63,7 +63,7 @@ int learning(void* data)
         sf::Scalar command = btCos(angle1 * angle2) * 15;
 
         // Apply actuator commands
-        static_cast<sf::Motor*>(simManager->getActuator("Motor"))->setIntensity(command);
+        static_cast<sf::Motor*>(simManager->getActuator("Motor"))->setCommand(command);
     }
     
     return 0;
@@ -80,6 +80,7 @@ int main(int argc, const char * argv[])
     s.ao = sf::RenderQuality::HIGH;
     s.atmosphere = sf::RenderQuality::HIGH;
     s.ocean = sf::RenderQuality::DISABLED;
+    s.verticalSync = false;
     
     sf::HelperSettings h;
     h.showFluidDynamics = false;

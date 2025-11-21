@@ -20,7 +20,7 @@
 //  UnderwaterTest
 //
 //  Created by Patryk Cieslak on 02/03/2014.
-//  Copyright(c) 2014-2020 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2014-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "UnderwaterTestApp.h"
@@ -41,6 +41,7 @@ int main(int argc, const char * argv[])
     s.atmosphere = sf::RenderQuality::MEDIUM;
     s.ocean = sf::RenderQuality::HIGH;
     s.ssr = sf::RenderQuality::HIGH;
+    s.verticalSync = true;
     
     sf::HelperSettings h;
     h.showFluidDynamics = false;

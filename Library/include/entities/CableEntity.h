@@ -23,8 +23,7 @@
 //  Copyright(c) 2025 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_CableEntity__
-#define __Stonefish_CableEntity__
+#pragma once
 
 #include "BulletSoftBody/btSoftBody.h"
 #include "core/MaterialManager.h"
@@ -155,5 +154,3 @@ namespace sf
         size_t numGraphicalNodes_;
     };
 }
-
-#endif /* defined(__Stonefish_CableEntity__) */

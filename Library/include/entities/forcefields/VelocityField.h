@@ -23,8 +23,7 @@
 //  Copyright (c) 2018-2025 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_VelocityField__
-#define __Stonefish_VelocityField__
+#pragma once
 
 #include "StonefishCommon.h"
 #include "graphics/OpenGLContent.h"
@@ -68,4 +67,3 @@ namespace sf
     };
 }
 
-#endif

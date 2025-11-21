@@ -23,8 +23,7 @@
 //  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Ocean__
-#define __Stonefish_Ocean__
+#pragma once
 
 #include <SDL2/SDL_mutex.h>
 #include "core/MaterialManager.h"
@@ -176,5 +175,3 @@ namespace sf
         Renderable wavesDebug;
     };
 }
-
-#endif

@@ -1410,11 +1410,16 @@ size_t OpenGLContent::getLightsCount()
 
 int OpenGLContent::getLookId(const std::string& name)
 {
-    for(size_t i=0; i<looks.size(); ++i)
-        if(looks[i].name == name)
-            return (int)i;
-            
-    return -1;
+    if (name.empty()) return -1; // No name specified --> default look
+
+    // Find look by name
+    auto it = std::find_if(looks.begin(), looks.end(), [&](const Look& l) {
+        return l.name == name;
+    });
+    if (it != looks.end())
+        return static_cast<int>(std::distance(looks.begin(), it));
+    else
+        return -1; // Default look
 }
 
 const Object& OpenGLContent::getObject(size_t id)

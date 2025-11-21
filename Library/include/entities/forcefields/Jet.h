@@ -23,8 +23,7 @@
 //  Copyright(c) 2018-2025 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Jet__
-#define __Stonefish_Jet__
+#pragma once
 
 #include "entities/forcefields/VelocityField.h"
 
@@ -77,4 +76,3 @@ namespace sf
     };
 }
 
-#endif

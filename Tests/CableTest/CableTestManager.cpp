@@ -117,11 +117,11 @@ void CableTestManager::BuildScenario()
     cable2->AttachToSolid(sf::CableEnds::FIRST, sphere);
     AddEntity(cable2);
 
-    sf::CableEntity* cable3 = new sf::CableEntity("Cable3", phy, sf::Vector3(2.0, -1.5, -2.0), sf::Vector3(2.0, 1.5, -2.0), 50, 0.05, "Wood", "Rope", 0.0, 80.f);
+    sf::CableEntity* cable3 = new sf::CableEntity("Cable3", phy, sf::Vector3(4.0, -1.5, -2.0), sf::Vector3(4.0, 1.5, -2.0), 50, 0.05, "Wood", "Rope", 0.0, 80.f);
     AddEntity(cable3);
 
     sf::Obstacle* obs = new sf::Obstacle("Obstacle", 0.25, 2.0, sf::I4(), "Steel", "Red");
-    AddStaticEntity(obs, sf::Transform(sf::IQ(), sf::Vector3(5.0, 0.0, 0.0)));
+    AddStaticEntity(obs, sf::Transform(sf::IQ(), sf::Vector3(7.0, 0.0, 0.0)));
 }
 
 void CableTestManager::SimulationStepCompleted(sf::Scalar timeStep)
@@ -132,6 +132,6 @@ void CableTestManager::SimulationStepCompleted(sf::Scalar timeStep)
         sf::Scalar length = cable->getLength();
         sf::Scalar restLength = cable->getRestLength();
         sf::Scalar stretch = (length - restLength) / restLength;
-        std::cout << std::format("[Cable1] Length: {:.3f} m, Stretch: {:.2f} %\n", length, stretch * 100.0);
+        std::cout << std::format("[{}] Length: {:.3f} m, Stretch: {:.2f} %\n", cable->getName(), length, stretch * 100.0);
     }
 }

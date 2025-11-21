@@ -1626,7 +1626,6 @@ bool ScenarioParser::ParseCable(XMLElement* element)
 {
     //---- Basic ----
     const char* name = nullptr;
-    bool collides = false;
     if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
     {
         log.Print(MessageType::ERROR, "Name of cable missing!");
@@ -1655,6 +1654,7 @@ bool ScenarioParser::ParseCable(XMLElement* element)
             return false;
         }
     }
+    element->QueryAttribute("buoyant", &phy.buoyancy);
     element->QueryAttribute("collisions", &phy.collisions);
 
     //---- Cable specific ----
@@ -1664,12 +1664,15 @@ bool ScenarioParser::ParseCable(XMLElement* element)
     float uvScale = 1.f;
     
     //Material
+    Scalar stretchFactor {0};
     if((item = element->FirstChildElement("material")) == nullptr
        || item->QueryStringAttribute("name", &mat) != XML_SUCCESS)
     {
         log.Print(MessageType::ERROR, "Material of cable '%s' not properly defined!", cableName.c_str());
         return false;
     }
+    item->QueryAttribute("stretch_factor", &stretchFactor); //Optional
+
     //Look
     if((item = element->FirstChildElement("look")) == nullptr
        || item->QueryStringAttribute("name", &look) != XML_SUCCESS)
@@ -1677,10 +1680,7 @@ bool ScenarioParser::ParseCable(XMLElement* element)
         log.Print(MessageType::ERROR, "Look of cable '%s' not properly defined!", cableName.c_str());
         return false;
     }
-    else
-    {
-        item->QueryAttribute("uv_scale", &uvScale); //Optional
-    }
+    item->QueryAttribute("uv_scale", &uvScale); //Optional
 
     //Dimensions
     Scalar diameter;
@@ -1692,11 +1692,6 @@ bool ScenarioParser::ParseCable(XMLElement* element)
         log.Print(MessageType::ERROR, "Geometry of cable '%s' not properly defined!", cableName.c_str());
         return false;
     }
-
-    //Stretching
-    Scalar stretching {0};
-    if ((item = element->FirstChildElement("stretching")) != nullptr)
-        item->QueryAttribute("factor", &stretching); //Optional
     
     //Ends
     const char* firstPosition = nullptr;
@@ -1734,7 +1729,7 @@ bool ScenarioParser::ParseCable(XMLElement* element)
     }
 
     //---- Add to world ----
-    CableEntity* cable = new CableEntity(cableName, phy, first, second, numSegments, diameter, std::string(mat), std::string(look), stretching, uvScale);
+    CableEntity* cable = new CableEntity(cableName, phy, first, second, numSegments, diameter, std::string(mat), std::string(look), stretchFactor, uvScale);
     sm->AddEntity(cable);
 
     //---- Anchors ----
@@ -1770,68 +1765,15 @@ bool ScenarioParser::ParseCable(XMLElement* element)
                 return false;
             }
         }
-        else if (anchorTypeStr == "link")
+        else if (anchorTypeStr == "free")
         {
-            XMLElement* childItem;
-            const char* robotName;
-            const char* linkName;
-            if ((childItem = anchorItem->FirstChildElement("robot")) != nullptr
-                && childItem->QueryStringAttribute("name", &robotName) == XML_SUCCESS
-                && (childItem = anchorItem->FirstChildElement("link")) != nullptr
-                && childItem->QueryStringAttribute("name", &linkName) == XML_SUCCESS)
-            {
-                Robot* robot = sm->getRobot(std::string(robotName));
-                if (robot != nullptr)
-                {
-                    SolidEntity* link = robot->getLink(std::string(linkName));
-                    if (link != nullptr)
-                    {
-                        if (robot->getType() == RobotType::GENERAL)
-                        {
-                            cable->AttachToSolid(anchorEnd, link);
-                            return true;
-                        }
-                        else 
-                        // Featherstone
-                        // !!! Cannot attach directly to Featherstone robot link, a virtual solid entity and a fixed joint are needed !!!
-                        {
-                            FeatherstoneRobot* fsRobot = static_cast<FeatherstoneRobot*>(robot);
-
-                            PhysicsSettings attachPhy;
-                            attachPhy.mode = PhysicsMode::SURFACE;
-                            attachPhy.buoyancy = false;
-                            attachPhy.collisions = false;
-                            Sphere* attachment = new Sphere(cableName + "_attachment_body", attachPhy, Scalar(0.01), I4(), "default", "default");
-                            attachment->setRenderable(false);
-                            sm->AddSolidEntity(attachment, link->getCGTransform());
-
-                            FixedJoint* fix = new FixedJoint(cableName + "_attachment_joint", attachment, fsRobot->getDynamics(), fsRobot->getLinkIndex(std::string(linkName)));
-                            sm->AddJoint(fix);
-
-                            cable->AttachToSolid(anchorEnd, attachment);
-                            return true;
-                        }
-                    } 
-                    else
-                    {
-                        log.Print(MessageType::ERROR, "Link '%s' of robot '%s', to which the first end of cable '%s' is anchored, not found!", linkName, robotName, cableName.c_str());
-                        return false;
-                    }
-                }
-                else
-                {
-                    log.Print(MessageType::ERROR, "Robot '%s', to which the first end of cable '%s' is anchored, not found!", robotName, cableName.c_str());
-                    return false;
-                }
-            }
-            else
-            {
-                log.Print(MessageType::ERROR, "Robot link, to which the first end of cable '%s' is anchored, not properly defined!", cableName.c_str());
-                return false;
-            }
+            return true;
         }
         else
+        {
+            log.Print(MessageType::ERROR, "Incorrect anchor type for cable '%s'!", cableName.c_str());
             return false;
+        }
     };
     
     parseAnchor(element->FirstChildElement("first_end"), std::string(firstAnchorType), sf::CableEnds::FIRST);
@@ -2345,7 +2287,7 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
                 delete robot;
                 return false;
             }
-            robot->AddLinkActuator(l, robotName + "/" + std::string(linkName), origin);
+            robot->AddLinkActuator(l, robot->getName() + "/" + std::string(linkName), origin);
         }
         item = item->NextSiblingElement("light");
     }
@@ -2374,7 +2316,7 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
                 delete robot;
                 return false;
             }
-            robot->AddComm(comm, robotName + "/" + std::string(linkName), origin);
+            robot->AddComm(comm, robot->getName() + "/" + std::string(linkName), origin);
         }
         item = item->NextSiblingElement("comm");
     }

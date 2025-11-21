@@ -4,6 +4,13 @@ Changelog
 
 The changelog of the library code is presented below. **Breaking changes** were marked with *italics*.
 
+1.6
+===
+
+- Implemented soft body cables
+- Added support for glueing dynamic bodies to robot links
+- *Renamed multiple symbols in the library*
+
 1.5
 ===
 

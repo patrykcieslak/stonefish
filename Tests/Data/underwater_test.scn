@@ -4,7 +4,7 @@
 		<ned latitude="40.0" longitude="3.0"/>
 		
 		<ocean>
-			<water density="1025.0" jerlov="0.25"/>
+			<water density="1000.0" jerlov="0.25"/>
 			<waves height="0.0"/>
 			<current type="uniform">
 				<velocity xyz="1.0 0.0 0.0"/>
@@ -56,8 +56,26 @@
 		<world_transform rpy="0.0 0.0 0.0" xyz="0.0 0.0 40.0"/>
 	</static>
 
+	<dynamic name="Buoy" type="sphere" physics="submerged" buoyant="true">
+		<dimensions radius="0.3"/>
+		<origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+		<material name="Neutral"/>
+		<look name="yellow"/>
+		<world_transform rpy="0.0 0.0 0.0" xyz="5.0 0.0 1.0"/>
+	</dynamic>
+
     <include file="girona500auv_full.scn">
 		<arg name="robot_name" value="GIRONA500"/>
 		<arg name="robot_position" value="0.0 0.0 1.0"/>
 	</include>
+
+	<cable name="Cable1" physics="submerged" buoyant="false">
+		<geometry diameter="0.02" number_of_segments="100"/>
+		<material name="Fiberglass"/>
+		<look name="pipe"/>
+		<first_end position="2.0 0.0 -1.0" anchor="world"/>
+		<second_end position="10.0 0.0 -1.0" anchor="dynamic">
+			<body name="Buoy"/>
+		</second_end>
+	</cable>
 </scenario>

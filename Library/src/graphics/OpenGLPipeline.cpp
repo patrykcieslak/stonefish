@@ -213,7 +213,7 @@ void OpenGLPipeline::DrawObjects()
         }
         else if(drawingQueueCopy[i].type == RenderableType::CABLE)
         {
-            std::vector<CableNode>* nodes = std::static_pointer_cast<std::vector<CableNode>>(drawingQueueCopy[i].data).get();
+            auto nodes = drawingQueueCopy[i].getDataAsCableNodes();
             content->DrawCable(drawingQueueCopy[i].objectId, drawingQueueCopy[i].model[0][0], *nodes, drawingQueueCopy[i].lookId);
         }
     }
@@ -245,13 +245,13 @@ void OpenGLPipeline::DrawHelpers()
         for(size_t h=0; h<drawingQueueCopy.size(); ++h)
         {
             if(drawingQueueCopy[h].type == RenderableType::MULTIBODY_AXIS)
-                content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints(), glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy[h].model);
+                content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy[h].model);
             else if(drawingQueueCopy[h].type == RenderableType::JOINT_LINES)
-                content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints(), glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy[h].model);
+                content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy[h].model);
             else if(drawingQueueCopy[h].type == RenderableType::PATH_POINTS)
-                content->DrawPrimitives(PrimitiveType::POINTS, drawingQueueCopy[h].getDataAsPoints(), glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy[h].model);
+                content->DrawPrimitives(PrimitiveType::POINTS, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy[h].model);
             else if(drawingQueueCopy[h].type == RenderableType::PATH_LINE_STRIP)
-                content->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy[h].getDataAsPoints(), glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy[h].model);
+                content->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy[h].model);
         }
     }
     
@@ -263,11 +263,11 @@ void OpenGLPipeline::DrawHelpers()
             if(drawingQueueCopy[h].type == RenderableType::SENSOR_CS)
                 content->DrawCoordSystem(drawingQueueCopy[h].model, 0.25f);
             else if(drawingQueueCopy[h].type == RenderableType::SENSOR_POINTS)
-                content->DrawPrimitives(PrimitiveType::POINTS, drawingQueueCopy[h].getDataAsPoints(), glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy[h].model);
+                content->DrawPrimitives(PrimitiveType::POINTS, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy[h].model);
             else if(drawingQueueCopy[h].type == RenderableType::SENSOR_LINES)
-                content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints(), glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy[h].model);
+                content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy[h].model);
             else if(drawingQueueCopy[h].type == RenderableType::SENSOR_LINE_STRIP)
-                content->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy[h].getDataAsPoints(), glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy[h].model);
+                content->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy[h].model);
         }
     }
     
@@ -277,7 +277,7 @@ void OpenGLPipeline::DrawHelpers()
         for(size_t h=0; h<drawingQueueCopy.size(); ++h)
         {
             if(drawingQueueCopy[h].type == RenderableType::ACTUATOR_LINES)
-                content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints(), glm::vec4(1.f,0.5f,0,1.f), drawingQueueCopy[h].model);
+                content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(1.f,0.5f,0,1.f), drawingQueueCopy[h].model);
         }
     }
     
@@ -293,27 +293,27 @@ void OpenGLPipeline::DrawHelpers()
                     break;
                     
                 case RenderableType::HYDRO_CYLINDER:
-                    content->DrawCylinder(drawingQueueCopy[h].model, drawingQueueCopy[h].getDataAsPoints()->at(0), glm::vec4(0.2f, 0.5f, 1.f, 1.f));
+                    content->DrawCylinder(drawingQueueCopy[h].model, drawingQueueCopy[h].getDataAsPoints().get()->at(0), glm::vec4(0.2f, 0.5f, 1.f, 1.f));
                     break;
                     
                 case RenderableType::HYDRO_ELLIPSOID:
-                    content->DrawEllipsoid(drawingQueueCopy[h].model, drawingQueueCopy[h].getDataAsPoints()->at(0), glm::vec4(0.2f, 0.5f, 1.f, 1.f));
+                    content->DrawEllipsoid(drawingQueueCopy[h].model, drawingQueueCopy[h].getDataAsPoints().get()->at(0), glm::vec4(0.2f, 0.5f, 1.f, 1.f));
                     break;
                     
                 case RenderableType::HYDRO_POINTS:
-                    content->DrawPrimitives(PrimitiveType::POINTS, drawingQueueCopy[h].getDataAsPoints(), glm::vec4(0.3f, 0.7f, 1.f, 1.f), drawingQueueCopy[h].model);
+                    content->DrawPrimitives(PrimitiveType::POINTS, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(0.3f, 0.7f, 1.f, 1.f), drawingQueueCopy[h].model);
                     break;
                     
                 case RenderableType::HYDRO_LINES:
-                    content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints(), glm::vec4(0.2f, 0.5f, 1.f, 1.f), drawingQueueCopy[h].model);
+                    content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(0.2f, 0.5f, 1.f, 1.f), drawingQueueCopy[h].model);
                     break;
                     
                 case RenderableType::HYDRO_LINE_STRIP:
-                    content->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy[h].getDataAsPoints(), glm::vec4(0.2f, 0.5f, 1.f, 1.f), drawingQueueCopy[h].model);
+                    content->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(0.2f, 0.5f, 1.f, 1.f), drawingQueueCopy[h].model);
                     break;
 
                 case RenderableType::HYDRO_TRIANGLES:
-                    content->DrawPrimitives(PrimitiveType::TRIANGLES, drawingQueueCopy[h].getDataAsPoints(), glm::vec4(0.2f, 0.5f, 1.f, 1.f), drawingQueueCopy[h].model);
+                    content->DrawPrimitives(PrimitiveType::TRIANGLES, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(0.2f, 0.5f, 1.f, 1.f), drawingQueueCopy[h].model);
                     break;
                     
                 default:
@@ -330,15 +330,15 @@ void OpenGLPipeline::DrawHelpers()
             switch(drawingQueueCopy[h].type)
             {
                 case RenderableType::FORCE_BUOYANCY:
-                    content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints(), glm::vec4(0.f,0.f,1.f,1.f), drawingQueueCopy[h].model);
+                    content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(0.f,0.f,1.f,1.f), drawingQueueCopy[h].model);
                     break;
         
                 case RenderableType::FORCE_LINEAR_DRAG:
-                    content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints(), glm::vec4(0.f,1.f,1.f,1.f), drawingQueueCopy[h].model);
+                    content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(0.f,1.f,1.f,1.f), drawingQueueCopy[h].model);
                     break;
                     
                 case RenderableType::FORCE_QUADRATIC_DRAG:
-                    content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints(), glm::vec4(1.f,0.f,1.f,1.f), drawingQueueCopy[h].model);
+                    content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(1.f,0.f,1.f,1.f), drawingQueueCopy[h].model);
                     break;
         
                 default:

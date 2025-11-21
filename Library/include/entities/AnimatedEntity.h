@@ -40,8 +40,7 @@
 //  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_AnimatedEntity__
-#define __Stonefish_AnimatedEntity__
+#pragma once
 
 #include "entities/MovingEntity.h"
 #include "entities/animation/Trajectory.h"
@@ -196,5 +195,3 @@ namespace sf
         int phyObjectId;
     };
 }
-
-#endif

@@ -55,6 +55,24 @@ The joint actuators are attached to the robot's joints and they apply forces or 
        <joint name="{3}"/>
     </sensor>
 
+Motor
+-----
+
+A motor is a simple actuator that applies desired torque to the joint.
+
+.. code-block:: xml
+
+    <actuator name="Motor" type="motor">
+        <joint name="Joint1"/>
+    </actuator>
+
+.. code-block:: cpp
+
+    #include <Stonefish/actuators/Motor.h>
+    sf::Motor* motor = new sf::Motor("Motor");
+    motor->setCommand(1.0);
+    robot->AddJointActuator(motor, "Joint1");
+
 Servomotor
 ----------
 

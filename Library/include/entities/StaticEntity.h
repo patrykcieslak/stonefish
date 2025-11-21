@@ -23,8 +23,7 @@
 //  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_StaticEntity__
-#define __Stonefish_StaticEntity__
+#pragma once
 
 #include "core/MaterialManager.h"
 #include "entities/Entity.h"
@@ -122,5 +121,3 @@ namespace sf
         DisplayMode dm;
     };
 }
-
-#endif

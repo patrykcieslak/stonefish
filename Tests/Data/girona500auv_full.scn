@@ -135,15 +135,6 @@
 			</internal_part>
 		</base_link>
         
-		<!-- <comm name="USBL" type="usbl2" device_id="1">
-        	<link name="Vehicle"/>
-        	<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 1.0"/>
-        	<specs min_vertical_fov="100.0" max_vertical_fov="220.0" range="1000.0" frequency="25000" baseline="0.1"/>
-        	<connect device_id="2"/>
-			<autoping rate="0.5"/>
-        	<noise tof="0.0015" sound_velocity="0.0133" phase="0.07" baseline_error="0.0008" depth="0.003"/>
-        </comm>
-		
 		
         <comm name="USBL" type="usbl" device_id="1">
         	<connect device_id="2"/>
@@ -155,7 +146,6 @@
 			<resolution range="0.1" angle="0.1"/>
         </comm>
 		
-
 		<sensor name="dynamics" type="odometry" rate="30.0">
 			<link name="Vehicle"/>
 			<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
@@ -182,7 +172,7 @@
 			<link name="Vehicle"/>
 			<origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
 		</sensor>
-
+-
 		<sensor name="imu_filter" type="imu" rate="20.0">
 			<history samples="1000"/>
 			<link name="Vehicle"/>
@@ -194,7 +184,7 @@
 			<origin rpy="0.0 0.0 0.0" xyz="-0.54 -0.35 -0.74"/>
 			<noise ned_position="0.5"/>
 		</sensor>
--->
+
 		<sensor name="proscilica" type="camera" rate="10.0">
 			<link name="Vehicle"/>
 			<origin rpy="0.0 0.0 1.571" xyz="0.5 -0.12 0.5"/>

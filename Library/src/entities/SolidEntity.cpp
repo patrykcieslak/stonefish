@@ -1097,7 +1097,7 @@ void SolidEntity::BuildRigidBody(btDynamicsWorld* world)
     }
 }
 
-void SolidEntity::BuildMultibodyLinkCollider(btMultiBody *mb, unsigned int child, btMultiBodyDynamicsWorld *world)
+void SolidEntity::BuildMultibodyLinkCollider(btMultiBody *mb, unsigned int child, btSoftMultiBodyDynamicsWorld* world)
 {
     if(multibodyCollider == nullptr)
     {

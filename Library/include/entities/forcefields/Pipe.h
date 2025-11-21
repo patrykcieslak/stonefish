@@ -23,8 +23,7 @@
 //  Copyright(c) 2018-2025 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Pipe__
-#define __Stonefish_Pipe__
+#pragma once
 
 #include "entities/forcefields/VelocityField.h"
 
@@ -79,5 +78,3 @@ namespace sf
         Scalar gamma;
     };
 }
-
-#endif

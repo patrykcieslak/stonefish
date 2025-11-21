@@ -223,8 +223,7 @@ std::vector<Renderable> DVL::Render()
             for(unsigned int i=0; i<4; ++i)
             {
                 Scalar alpha = M_PI_4 + i * M_PI_2;
-                dir[i] = Vector3(0,0,1) * btCos(beamAngle) 
-                         + (Vector3(1,0,0) * btCos(alpha) + Vector3(0,1,0) * btSin(alpha)) * btSin(beamAngle);
+                dir[i] = (Vector3(0,0,1) * btCos(beamAngle) + (Vector3(1,0,0) * btCos(alpha) + Vector3(0,1,0) * btSin(alpha)) * btSin(beamAngle)).safeNormalize();
             }
             
             if(!beamPosZ)
@@ -265,12 +264,12 @@ std::vector<Renderable> DVL::Render()
             Scalar layerSize = btClamped(Scalar(0.8) * getLastValue(3) - waterLayer.getY(), waterLayer.getX(), waterLayer.getZ()-waterLayer.getY());        
             GLfloat a1 = (GLfloat)waterLayer.getY();
             GLfloat a2 = (GLfloat)(waterLayer.getY() + layerSize);
-            GLfloat r1 = a1 * btSin(beamAngle);
-            GLfloat r2 = a2 * btSin(beamAngle);
+            GLfloat r1 = a1 * glm::tan((GLfloat)beamAngle);
+            GLfloat r2 = a2 * glm::tan((GLfloat)beamAngle);
             for(unsigned int i=0; i<4; ++i)
             {
-                GLfloat ang1 = (GLfloat)i/2.f * glm::pi<GLfloat>();
-                GLfloat ang2 = (GLfloat)(i+1)/2.f * glm::pi<GLfloat>();
+                GLfloat ang1 = (GLfloat)i/2.f * glm::pi<GLfloat>() + glm::quarter_pi<GLfloat>();
+                GLfloat ang2 = (GLfloat)(i+1)/2.f * glm::pi<GLfloat>() + glm::quarter_pi<GLfloat>();
                 glm::vec3 d1(glm::sin(ang1), glm::cos(ang1), 0.f);
                 glm::vec3 d2(glm::sin(ang2), glm::cos(ang2), 0.f);
                 points->push_back(r1 * d1 + glm::vec3(0.f, 0.f, -a1));

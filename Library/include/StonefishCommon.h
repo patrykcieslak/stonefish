@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 25/01/13.
-//  Copyright (c) 2013-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2025 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_StonefishCommon__
-#define __Stonefish_StonefishCommon__
+#pragma once
 
 //STL
 #include <cstdint>
@@ -37,8 +36,6 @@
 //Bullet Physics
 #include "btBulletDynamicsCommon.h"
 #include "btBulletCollisionCommon.h"
-//#include "BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h"
-#include "BulletSoftBody/btSoftMultiBodyDynamicsWorld.h"
 
 //Stonefish
 #include <version.h>
@@ -66,5 +63,3 @@ namespace sf
     const Scalar SOUND_VELOCITY_WATER = Scalar(1531);
     const Scalar COLLISION_MARGIN = Scalar(0.001);
 }
-
-#endif
