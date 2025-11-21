@@ -40,7 +40,11 @@ FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid)
 {
     btRigidBody* body = solid->rigidBody;
     
-    btFixedConstraint* fixed = new btFixedConstraint(*body, Transform::getIdentity());
+    btGeneric6DofConstraint* fixed = new btGeneric6DofConstraint(*body, Transform::getIdentity(), true);
+    fixed->setAngularLowerLimit(Vector3(0,0,0));
+    fixed->setAngularUpperLimit(Vector3(0,0,0));
+    fixed->setLinearLowerLimit(Vector3(0,0,0));
+    fixed->setLinearUpperLimit(Vector3(0,0,0));
     setConstraint(fixed);
 
     jSolidA = nullptr;
@@ -118,7 +122,12 @@ void FixedJoint::UpdateDefinition()
         delete constraint;
         if(jSolidA == nullptr)
         {
-            setConstraint(new btFixedConstraint(*jSolidB->getRigidBody(), Transform::getIdentity()));
+            btGeneric6DofConstraint* fixed = new btGeneric6DofConstraint(*jSolidB->getRigidBody(), Transform::getIdentity(), true);
+            fixed->setAngularLowerLimit(Vector3(0,0,0));
+            fixed->setAngularUpperLimit(Vector3(0,0,0));
+            fixed->setLinearLowerLimit(Vector3(0,0,0));
+            fixed->setLinearUpperLimit(Vector3(0,0,0));
+            setConstraint(fixed);
         }
         else
         {
