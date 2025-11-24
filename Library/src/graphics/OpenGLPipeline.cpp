@@ -735,11 +735,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     ((OpenGLTrackball*)camera)->DrawSelection(selectedDrawingQueueCopy, screenFBO);
                     
                     //Graphics debugging
-                    //if(ocean != NULL)
-                    //{
-                        //ocean->getOpenGLOcean()->ShowSpectrum(glm::vec2(512.f,512.f), glm::vec4(0.f,0.f,512.f,512.f));
+                    if(ocean != NULL)
+                    {
+                        ocean->getOpenGLOcean()->ShowSpectrum(glm::vec2(512.f, 0.f), 256.f);
                         //ocean->getOpenGLOcean()->ShowTexture(3, glm::vec4(0,0,512,512));
-                    //}
+                    }
             
                     //atm->getOpenGLAtmosphere()->ShowSunShadowmaps(0, 0, 0.1f);
                     

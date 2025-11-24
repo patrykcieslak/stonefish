@@ -349,6 +349,9 @@ namespace sf
          \param id the id of the look
          */
         const Look& getLook(size_t id);
+
+        //! A method returning the size of the viewport.
+        glm::vec2 getViewportSize() const;
         
         //! A static method to load a texture.
         /*!

@@ -40,9 +40,9 @@ namespace sf
 OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrodynamics) : OpenGLOcean(size)
 {
     hydroMutex = hydrodynamics;
-    params.wind = state*5.f + 2.f;
-    params.A = 1.f;
-    params.omega = 5.f*expf(-state) + 0.2f;
+    // params.wind = state*5.f + 2.f;
+    // params.A = 1.f;
+    // params.omega = 5.f*expf(-state) + 0.2f;
     GLint layers = 4;    
     qtGridTessFactor = 8; // Patch tessellation [2, 256]
     qtGPUTessFactor = 0;  // GPU tessellation factor [0,5]
@@ -188,20 +188,20 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
     oceanShaders["mask"]->BindShaderStorageBlock("QTreeCull", SSBO_QTREE_CULL);
 
     //FFT data transfer
-    size_t fftDataSize = params.fftSize * params.fftSize * 4 * layers;
+    size_t fftDataSize = fftSize_ * fftSize_ * 4 * layers;
     fftData = new GLfloat[fftDataSize];
     memset(fftData, 0, sizeof(GLfloat) * fftDataSize);
     
     glGenBuffers(1, &fftPBO);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, fftPBO);
-    glBufferData(GL_PIXEL_PACK_BUFFER, params.fftSize * params.fftSize * 4 * layers * sizeof(GLfloat), fftData, GL_STREAM_READ);
+    glBufferData(GL_PIXEL_PACK_BUFFER, fftSize_ * fftSize_ * 4 * layers * sizeof(GLfloat), fftData, GL_STREAM_READ);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
     //Quad tree buffers
     glGenBuffers(2, oceanBuffers);
 	//Grid vertex data (ARRAY) x2
-	size_t vertices_byte_size = sizeof(glm::vec2) * sqr(qtGridTessFactor);
-	size_t indexes_byte_size = sizeof(uint16_t) * sqr(qtGridTessFactor - 1) * 4;
+	size_t vertices_byte_size = sizeof(glm::vec2) * qtGridTessFactor * qtGridTessFactor;
+	size_t indexes_byte_size = sizeof(uint16_t) * (qtGridTessFactor - 1) * (qtGridTessFactor - 1) * 4;
 	glm::vec2 *vertices = (glm::vec2*)malloc(vertices_byte_size);
 	uint16_t *indexes = (uint16_t*)malloc(indexes_byte_size);
 	int i, j;
@@ -247,8 +247,6 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
 	glVertexAttribPointer(0, 2, GL_FLOAT, 0, 0, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, oceanBuffers[1]);
 	OpenGLState::BindVertexArray(0);
-
-    InitializeSimulation();
 }
 
 OpenGLRealOcean::~OpenGLRealOcean()
@@ -272,11 +270,6 @@ void OpenGLRealOcean::setWireframe(bool enabled)
     wireframe = enabled;
 }
 
-void OpenGLRealOcean::InitializeSimulation()
-{
-    OpenGLOcean::InitializeSimulation();
-}
-
 GLfloat OpenGLRealOcean::ComputeInterpolatedWaveData(GLfloat x, GLfloat y, GLuint channel)
 {
     //BILINEAR INTERPOLATION ACCORDING TO OPENGL SPECIFICATION (4.5)
@@ -286,31 +279,31 @@ GLfloat OpenGLRealOcean::ComputeInterpolatedWaveData(GLfloat x, GLfloat y, GLuin
     float tmp;
     
     //First coordinate pair
-    float i0f = modff(x - 0.5f/(float)params.fftSize, &tmp);
-    float j0f = modff(y - 0.5f/(float)params.fftSize, &tmp);
+    float i0f = modff(x - 0.5f/(float)fftSize_, &tmp);
+    float j0f = modff(y - 0.5f/(float)fftSize_, &tmp);
     if(i0f < 0.f) i0f = 1.f - fabsf(i0f);
     if(j0f < 0.f) j0f = 1.f - fabsf(j0f);
-    int i0 = (int)truncf(i0f * (float)params.fftSize);
-    int j0 = (int)truncf(j0f * (float)params.fftSize);
+    int i0 = (int)truncf(i0f * (float)fftSize_);
+    int j0 = (int)truncf(j0f * (float)fftSize_);
     
     //Second coordinate pair
-    float i1f = modff(x + 0.5f/(float)params.fftSize, &tmp);
-    float j1f = modff(y + 0.5f/(float)params.fftSize, &tmp);
+    float i1f = modff(x + 0.5f/(float)fftSize_, &tmp);
+    float j1f = modff(y + 0.5f/(float)fftSize_, &tmp);
     if(i1f < 0.f) i1f = 1.f - fabsf(i1f);
     if(j1f < 0.f) j1f = 1.f - fabsf(j1f);
-    int i1 = (int)truncf(i1f * (float)params.fftSize);
-    int j1 = (int)truncf(j1f * (float)params.fftSize);
+    int i1 = (int)truncf(i1f * (float)fftSize_);
+    int j1 = (int)truncf(j1f * (float)fftSize_);
     
     //Calculate weigths
-    float alpha = modff(i0f * (float)params.fftSize, &tmp);
-    float beta = modff(j0f * (float)params.fftSize, &tmp);
+    float alpha = modff(i0f * (float)fftSize_, &tmp);
+    float beta = modff(j0f * (float)fftSize_, &tmp);
     
     //Get texel values
     float t[4];
-    t[0] = fftData[(j0 * params.fftSize + i0) * 4 + channel];
-    t[1] = fftData[(j0 * params.fftSize + i1) * 4 + channel];
-    t[2] = fftData[(j1 * params.fftSize + i0) * 4 + channel];
-    t[3] = fftData[(j1 * params.fftSize + i1) * 4 + channel];
+    t[0] = fftData[(j0 * fftSize_ + i0) * 4 + channel];
+    t[1] = fftData[(j0 * fftSize_ + i1) * 4 + channel];
+    t[2] = fftData[(j1 * fftSize_ + i0) * 4 + channel];
+    t[3] = fftData[(j1 * fftSize_ + i1) * 4 + channel];
     
     //Interpolate
     float h = (1.f - alpha)*(1.f - beta)*t[0] + alpha*(1.f - beta)*t[1] + (1.f - alpha)*beta*t[2] + alpha*beta*t[3];
@@ -322,8 +315,8 @@ GLfloat OpenGLRealOcean::ComputeWaveHeight(GLfloat x, GLfloat y)
 {
     //Z,X are reversed because the coordinate system used to draw ocean has Z axis pointing up!
     GLfloat z = 0.f;
-    z -= ComputeInterpolatedWaveData(x/params.gridSizes.x, y/params.gridSizes.x, 0);
-    z -= ComputeInterpolatedWaveData(x/params.gridSizes.y, y/params.gridSizes.y, 1);
+    z -= ComputeInterpolatedWaveData(x/gridSizes_.x, y/gridSizes_.x, 0);
+    z -= ComputeInterpolatedWaveData(x/gridSizes_.y, y/gridSizes_.y, 1);
     //The components below have low importance and were excluded to lower the computational cost
     //z -= ComputeInterpolatedWaveData(x/params.gridSizes.z, y/params.gridSizes.z, 2);
     //z -= ComputeInterpolatedWaveData(x/params.gridSizes.w, y/params.gridSizes.w, 3);
@@ -338,7 +331,7 @@ void OpenGLRealOcean::Simulate(GLfloat dt)
         GLfloat* src = (GLfloat*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
         if(src)
         {
-            memcpy(fftData, src, params.fftSize * params.fftSize * 4 * 4 * sizeof(GLfloat));
+            memcpy(fftData, src, fftSize_ * fftSize_ * 4 * 4 * sizeof(GLfloat));
             glUnmapBuffer(GL_PIXEL_PACK_BUFFER); //Release pointer to the mapped buffer
         }
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
@@ -452,7 +445,7 @@ void OpenGLRealOcean::UpdateSurface(OpenGLView* view)
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
 	oceanShaders["lod"]->Use();
     oceanShaders["lod"]->SetUniform("sceneSize", oceanSize);
-	oceanShaders["lod"]->SetUniform("gridSizes", params.gridSizes);
+	oceanShaders["lod"]->SetUniform("gridSizes", gridSizes_);
 	oceanShaders["lod"]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
     glBindBuffer(GL_DISPATCH_INDIRECT_BUFFER, tree->patchDI);
     glDispatchComputeIndirect(0);
@@ -486,7 +479,7 @@ void OpenGLRealOcean::DrawSurface(OpenGLView* view)
     oceanShaders["surface"]->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
     oceanShaders["surface"]->SetUniform("eyePos", view->GetEyePosition());
     oceanShaders["surface"]->SetUniform("viewDir", view->GetLookingDirection());
-    oceanShaders["surface"]->SetUniform("gridSizes", params.gridSizes);
+    oceanShaders["surface"]->SetUniform("gridSizes", gridSizes_);
     oceanShaders["surface"]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
     oceanShaders["surface"]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);
     oceanShaders["surface"]->SetUniform("u_scene_size", oceanSize);
@@ -525,7 +518,7 @@ void OpenGLRealOcean::DrawSurfaceTemperature(OpenGLView* view)
     oceanShaders["surfaceTemp"]->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
     oceanShaders["surfaceTemp"]->SetUniform("eyePos", view->GetEyePosition());
     oceanShaders["surfaceTemp"]->SetUniform("viewDir", view->GetLookingDirection());
-    oceanShaders["surfaceTemp"]->SetUniform("gridSizes", params.gridSizes);
+    oceanShaders["surfaceTemp"]->SetUniform("gridSizes", gridSizes_);
     oceanShaders["surfaceTemp"]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
     oceanShaders["surfaceTemp"]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);
     oceanShaders["surfaceTemp"]->SetUniform("u_scene_size", oceanSize);
@@ -555,7 +548,7 @@ void OpenGLRealOcean::DrawBacksurface(OpenGLView* view)
     oceanShaders["backsurface"]->SetUniform("FC", view->GetLogDepthConstant());
     oceanShaders["backsurface"]->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
     oceanShaders["backsurface"]->SetUniform("eyePos", view->GetEyePosition());
-    oceanShaders["backsurface"]->SetUniform("gridSizes", params.gridSizes);
+    oceanShaders["backsurface"]->SetUniform("gridSizes", gridSizes_);
     oceanShaders["backsurface"]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
     oceanShaders["backsurface"]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);
     oceanShaders["backsurface"]->SetUniform("u_scene_size", oceanSize);
@@ -595,7 +588,7 @@ void OpenGLRealOcean::DrawUnderwaterMask(OpenGLView* view)
     oceanShaders["mask"]->Use();
     oceanShaders["mask"]->SetUniform("MVP", view->GetProjectionMatrix() * view->GetViewMatrix());
     oceanShaders["mask"]->SetUniform("FC", view->GetLogDepthConstant());
-    oceanShaders["mask"]->SetUniform("gridSizes", params.gridSizes);
+    oceanShaders["mask"]->SetUniform("gridSizes", gridSizes_);
     oceanShaders["mask"]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
     oceanShaders["mask"]->SetUniform("eyePos", view->GetEyePosition());
     oceanShaders["mask"]->SetUniform("u_scene_size", oceanSize);

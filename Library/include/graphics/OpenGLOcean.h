@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/07/2017.
-//  Copyright (c) 2017-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLOcean__
@@ -29,25 +29,27 @@
 #include "graphics/OpenGLContent.h"
 #include <SDL2/SDL_mutex.h>
 #include <map>
+#include <random>
 
 namespace sf
 {
-    //! A structure holding parameters of ocean generation and rendering.
+    //! A structure holding parameters of ocean generation and rendering (JONSWAP model).
     struct OceanParams
     {
-        unsigned int passes;
-        unsigned int slopeVarianceSize;
-        int fftSize;
-        glm::vec4 gridSizes;
-        float* spectrum12;
-        float* spectrum34;
-        bool propagate; //wave propagation
-        float wind; //wind speed in meters per second (at 10m above surface)
-        float omega; //sea state (inverse wave age)
-        float A; //wave amplitude
-        float km;
-        float cm;
-        float t;
+        GLfloat scale {1.f};
+        GLfloat spreadBlend {0.0f};
+        GLfloat swell {0.0f};
+        GLfloat gamma {3.3f};
+        GLfloat shortWavesFade {0.0f};
+        GLfloat windDirection {0.0f}; // [0, 2pi]
+        GLfloat fetchLength {10000.f}; // [m]
+        GLfloat windSpeed {10.0f}; // [m/s]
+        GLfloat depth {10.f}; // [m]
+        GLfloat g {9.81f}; // gravity [m/s^2]
+        GLfloat peakOmega;
+        GLfloat alpha;
+        GLfloat t;
+        bool propagate; // Propagatate waves?
     };
 
     #pragma pack(1)
@@ -84,6 +86,12 @@ namespace sf
 		 \param dt time since last update
 		 */
         virtual void Simulate(GLfloat dt);
+
+        //! A method to set ocean parameters.
+        /*!
+        \param p the ocean parameters
+        */
+        void UpdateOceanParams(const OceanParams& p);
         
         //! A method that updates the wave mesh.
         /*!
@@ -149,10 +157,10 @@ namespace sf
         
         //! A method that drawsd the spectrum of waves.
         /*!
-         \param viewportSize size of the active viewport
-         \param rect a rectangle in which to draw the spectrum on screen
+         \param origin the origin point of the spectrum display
+         \param size the size of the spectrum display
          */
-        void ShowSpectrum(glm::vec2 viewportSize, glm::vec4 rect);
+        void ShowSpectrum(glm::vec2 origin, GLfloat size);
         
         //! A method used to display a specified texture.
         /*!
@@ -224,17 +232,21 @@ namespace sf
         	
         //! A method calculating Henyey-Greenstein scattering factor.
         glm::vec3 getLightScattering();
+
+        //! A method return the ocean parameters.
+        OceanParams getOceanParams() const;
         
     protected:
-        virtual void InitializeSimulation();
-        float sqr(float x);
+        void InitializeSimulation();
         
         std::map<OpenGLView*, OpenGLOceanParticles*> oceanParticles;
         glm::vec3 absorption[64];
         glm::vec3 scattering[64];
         OceanCurrentsUBO oceanCurrentsUBOData;
         GLfloat oceanSize;
-        OceanParams params;
+        glm::vec4 gridSizes_;
+        int fftSize_;
+        OceanParams params_;
         glm::vec3 lightAbsorption;
         glm::vec3 lightScattering;
         GLfloat waterTemperature;
@@ -245,18 +257,40 @@ namespace sf
         GLuint oceanCurrentsUBO;
         
     private:
-        GLfloat* ComputeButterflyLookupTable(unsigned int size, unsigned int passes);
         int bitReverse(int i, int N);
-        void computeWeight(int N, int k, float &Wr, float &Wi);
-        float ComputeSlopeVariance();
+        void computeWeight(int N, int k, float &Wr, float &Wi);    
+        GLfloat* ComputeButterflyLookupTable(unsigned int size, unsigned int passes);
+        
         float GetSlopeVariance(float kx, float ky, float *spectrumSample);
+        void GetSpectrumSample(int i, int j, GLfloat lengthScale, GLfloat kMin, GLfloat* result);
+        float ComputeSlopeVariance();
         void GenerateWavesSpectrum();
-        void GetSpectrumSample(int i, int j, float lengthScale, float kMin, float *result);
-        float spectrum(float kx, float ky, bool omnispectrum = false);
-        float omega(float k);
+        void UpdateOceanParams();
+
+        GLfloat DispertionRelation(GLfloat kMag);
+        GLfloat DispertionRelationDerivative(GLfloat kMag);
+        GLfloat TMACorrection(GLfloat omega);
+        GLfloat NormalizationFactor(GLfloat s);
+        GLfloat Cosine2s(GLfloat theta, GLfloat s);
+        GLfloat SpreadPower(GLfloat omega, GLfloat peakOmega);
+        GLfloat ShortWavesFade(GLfloat kLength);
+
+        GLfloat JONSWAPSpectrum(GLfloat omega);
+        GLfloat DirectionalSpectrum(GLfloat theta, GLfloat omega);
+        GLfloat FullSpectrum(glm::vec2 k, GLfloat kLength);
 
         int oceanBoxObj;
         bool particlesEnabled;
+
+        // FFT ocean waves generation
+        unsigned int fftPasses_;
+        unsigned int slopeVarianceSize_;
+        GLfloat* spectrum12_;
+        GLfloat* spectrum34_;
+        std::random_device rd_;
+        std::mt19937 gen_;
+        std::normal_distribution<GLfloat> randomGaussian_;
+        std::uniform_real_distribution<GLfloat> randomUniform_;
     };
 }
 

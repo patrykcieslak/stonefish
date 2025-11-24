@@ -113,7 +113,6 @@ namespace sf
         void setWireframe(bool enabled);
         
     private:
-        void InitializeSimulation() override;
         GLfloat ComputeInterpolatedWaveData(GLfloat x, GLfloat y, GLuint channel);
 
         GLuint vao;

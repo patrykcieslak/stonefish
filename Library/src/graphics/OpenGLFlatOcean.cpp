@@ -37,10 +37,6 @@ namespace sf
 
 OpenGLFlatOcean::OpenGLFlatOcean(GLfloat size) : OpenGLOcean(200000.f)
 {
-    params.wind = 5.f;
-    params.A = 1.0f;
-    params.omega = 2.f;
-
     GLint compiled;
     GLuint pcssFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lighting.frag", "", &compiled);
 	std::vector<GLuint> precompiled;
@@ -173,8 +169,6 @@ OpenGLFlatOcean::OpenGLFlatOcean(GLfloat size) : OpenGLOcean(200000.f)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     OpenGLState::BindVertexArray(0);
-
-    InitializeSimulation();
 }
 
 OpenGLFlatOcean::~OpenGLFlatOcean()
@@ -201,7 +195,7 @@ void OpenGLFlatOcean::DrawSurface(OpenGLView* view)
     oceanShaders["surface"]->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
     oceanShaders["surface"]->SetUniform("eyePos", view->GetEyePosition());
     oceanShaders["surface"]->SetUniform("viewDir", view->GetLookingDirection());
-    oceanShaders["surface"]->SetUniform("gridSizes", params.gridSizes);
+    oceanShaders["surface"]->SetUniform("gridSizes", gridSizes_);
     oceanShaders["surface"]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
     oceanShaders["surface"]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);
     OpenGLState::BindVertexArray(vao);
@@ -228,7 +222,7 @@ void OpenGLFlatOcean::DrawSurfaceTemperature(OpenGLView* view)
     oceanShaders["surfaceTemp"]->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
     oceanShaders["surfaceTemp"]->SetUniform("eyePos", view->GetEyePosition());
     oceanShaders["surfaceTemp"]->SetUniform("viewDir", view->GetLookingDirection());
-    oceanShaders["surfaceTemp"]->SetUniform("gridSizes", params.gridSizes);
+    oceanShaders["surfaceTemp"]->SetUniform("gridSizes", gridSizes_);
     oceanShaders["surfaceTemp"]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
     oceanShaders["surfaceTemp"]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);
     oceanShaders["surfaceTemp"]->SetUniform("waterTemperature", waterTemperature);
@@ -255,7 +249,7 @@ void OpenGLFlatOcean::DrawBacksurface(OpenGLView* view)
     oceanShaders["backsurface"]->SetUniform("FC", view->GetLogDepthConstant());
     oceanShaders["backsurface"]->SetUniform("size", oceanSize);
     oceanShaders["backsurface"]->SetUniform("eyePos", view->GetEyePosition());
-    oceanShaders["backsurface"]->SetUniform("gridSizes", params.gridSizes);
+    oceanShaders["backsurface"]->SetUniform("gridSizes", gridSizes_);
     oceanShaders["backsurface"]->SetUniform("cWater", getLightAttenuation());
     oceanShaders["backsurface"]->SetUniform("bWater", getLightScattering());
     oceanShaders["backsurface"]->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));

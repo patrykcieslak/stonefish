@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/07/17.
-//  Copyright (c) 2017-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLOcean.h"
@@ -50,7 +50,7 @@
 namespace sf
 {
 
-OpenGLOcean::OpenGLOcean(GLfloat size)
+OpenGLOcean::OpenGLOcean(GLfloat size) : gen_{rd_()}, randomGaussian_{0.f, 1.f}, randomUniform_{0.f, 1.f}
 {
     cInfo("Generating ocean waves...");
     
@@ -59,28 +59,25 @@ OpenGLOcean::OpenGLOcean(GLfloat size)
     lightScattering = glm::vec3(0.f);
   
     //Params
-    params.passes = 8;
-    params.slopeVarianceSize = 4;
-    params.fftSize = 1 << params.passes;
-    params.propagate = true;
-    params.km = 370.f;
-    params.cm = 0.23f;
-    params.t = 0.f;
-    params.gridSizes = glm::vec4(893.f, 101.f, 21.f, 11.f);
-    params.spectrum12 = NULL;
-    params.spectrum34 = NULL;
+    fftPasses_ = 8;
+    slopeVarianceSize_ = 4;
+    fftSize_ = 1 << fftPasses_;
+    gridSizes_ = glm::vec4(893.f, 101.f, 21.f, 11.f);
+    spectrum12_ = NULL;
+    spectrum34_ = NULL;
+    
     GLint layers = 4;
     oceanSize = size;
     particlesEnabled = true;
     waterTemperature = 15.f;
 
     //Create simulation textures
-    oceanTextures[3] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D_ARRAY, glm::uvec3(params.fftSize, params.fftSize, layers), 
+    oceanTextures[3] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D_ARRAY, glm::uvec3(fftSize_, fftSize_, layers), 
                                                  GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::TRILINEAR, true, true);
-    oceanTextures[4] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D_ARRAY, glm::uvec3(params.fftSize, params.fftSize, layers), 
+    oceanTextures[4] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D_ARRAY, glm::uvec3(fftSize_, fftSize_, layers), 
                                                  GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::TRILINEAR, true, true);
-    GLfloat* data = ComputeButterflyLookupTable(params.fftSize, params.passes);
-    oceanTextures[5] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(params.fftSize, params.passes, 0), 
+    GLfloat* data = ComputeButterflyLookupTable(fftSize_, fftPasses_);
+    oceanTextures[5] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(fftSize_, fftPasses_, 0), 
                                                  GL_RGBA16F, GL_RGBA, GL_FLOAT, data, FilteringMode::NEAREST, false);
     delete[] data;
 
@@ -328,6 +325,12 @@ OpenGLOcean::OpenGLOcean(GLfloat size)
     dataFile.read((char*)scattering, sizeof(scattering));
     dataFile.close();
 #endif
+
+
+    params_.g = SimulationApp::getApp()->getSimulationManager()->getGravity().getZ();
+    params_.t = 0.f;
+    params_.propagate = false;
+    UpdateOceanParams(params_);
 }
 
 OpenGLOcean::~OpenGLOcean()
@@ -339,8 +342,8 @@ OpenGLOcean::~OpenGLOcean()
     glDeleteTextures(6, oceanTextures);
     glDeleteBuffers(1, &oceanCurrentsUBO);
     
-    if(params.spectrum12 != NULL) delete [] params.spectrum12;
-    if(params.spectrum34 != NULL) delete [] params.spectrum34;
+    if(spectrum12_ != NULL) delete [] spectrum12_;
+    if(spectrum34_ != NULL) delete [] spectrum34_;
 
     for(const auto& particles : oceanParticles)
         delete particles.second;
@@ -403,7 +406,20 @@ GLuint OpenGLOcean::getWaveTexture()
 
 glm::vec4 OpenGLOcean::getWaveGridSizes()
 {
-    return params.gridSizes;
+    return gridSizes_;
+}
+
+OceanParams OpenGLOcean::getOceanParams() const
+{
+    return params_;
+}
+
+void OpenGLOcean::UpdateOceanParams(const OceanParams& p)
+{
+    params_ = p;
+    params_.alpha = 0.076f * glm::pow(params_.g * params_.fetchLength / (params_.windSpeed * params_.windSpeed), -0.22f);
+    params_.peakOmega = 22.f * glm::pow(params_.windSpeed * params_.fetchLength / (params_.g * params_.g), -0.33f);
+    InitializeSimulation();
 }
 
 void OpenGLOcean::UpdateOceanCurrentsData(const OceanCurrentsUBO& data)
@@ -416,31 +432,31 @@ void OpenGLOcean::InitializeSimulation()
     GenerateWavesSpectrum();
       
     //Create textures
-    oceanTextures[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(params.fftSize, params.fftSize, 0), 
-                                                 GL_RGBA16F, GL_RGBA, GL_FLOAT, params.spectrum12, FilteringMode::NEAREST, true);
-    oceanTextures[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(params.fftSize, params.fftSize, 0), 
-                                                 GL_RGBA16F, GL_RGBA, GL_FLOAT, params.spectrum34, FilteringMode::NEAREST, true);
-    oceanTextures[2] = OpenGLContent::GenerateTexture(GL_TEXTURE_3D, glm::uvec3(params.slopeVarianceSize, params.slopeVarianceSize, params.slopeVarianceSize), 
+    oceanTextures[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(fftSize_, fftSize_, 0), 
+                                                 GL_RGBA16F, GL_RGBA, GL_FLOAT, spectrum12_, FilteringMode::NEAREST, true);
+    oceanTextures[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(fftSize_, fftSize_, 0), 
+                                                 GL_RGBA16F, GL_RGBA, GL_FLOAT, spectrum34_, FilteringMode::NEAREST, true);
+    oceanTextures[2] = OpenGLContent::GenerateTexture(GL_TEXTURE_3D, glm::uvec3(slopeVarianceSize_, slopeVarianceSize_, slopeVarianceSize_), 
                                                  GL_RG16F, GL_RG, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
     
     //Generate variances
     float slopeVarianceDelta = ComputeSlopeVariance();
     
     OpenGLState::BindFramebuffer(oceanFBOs[2]);
-    OpenGLState::Viewport(0, 0, params.slopeVarianceSize, params.slopeVarianceSize);
+    OpenGLState::Viewport(0, 0, slopeVarianceSize_, slopeVarianceSize_);
     
     oceanShaders["variance"]->Use();
     oceanShaders["variance"]->SetUniform("texSpectrum12", TEX_POSTPROCESS1);
     oceanShaders["variance"]->SetUniform("texSpectrum34", TEX_POSTPROCESS2);
-    oceanShaders["variance"]->SetUniform("varianceSize", (GLfloat)params.slopeVarianceSize);
-    oceanShaders["variance"]->SetUniform("fftSize", params.fftSize);
-    oceanShaders["variance"]->SetUniform("gridSizes", params.gridSizes);
+    oceanShaders["variance"]->SetUniform("varianceSize", (GLfloat)slopeVarianceSize_);
+    oceanShaders["variance"]->SetUniform("fftSize", fftSize_);
+    oceanShaders["variance"]->SetUniform("gridSizes", gridSizes_);
     oceanShaders["variance"]->SetUniform("slopeVarianceDelta", slopeVarianceDelta);
     
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, oceanTextures[0]);
     OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, oceanTextures[1]);
     
-    for(unsigned int layer = 0; layer < params.slopeVarianceSize; ++layer)
+    for(unsigned int layer = 0; layer < slopeVarianceSize_; ++layer)
     {
         glFramebufferTexture3D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_3D, oceanTextures[2], 0, layer);
         oceanShaders["variance"]->SetUniform("c", (GLfloat)layer);
@@ -461,24 +477,24 @@ void OpenGLOcean::Simulate(GLfloat dt)
     
     //Init -> one triangle -> multiple outputs
     OpenGLState::BindFramebuffer(oceanFBOs[0]);
-    OpenGLState::Viewport(0, 0, params.fftSize, params.fftSize);
+    OpenGLState::Viewport(0, 0, fftSize_, fftSize_);
     oceanShaders["init"]->Use();
     oceanShaders["init"]->SetUniform("texSpectrum12", TEX_POSTPROCESS1);
     oceanShaders["init"]->SetUniform("texSpectrum34", TEX_POSTPROCESS2);
-    oceanShaders["init"]->SetUniform("fftSize", (GLfloat)params.fftSize);
-    oceanShaders["init"]->SetUniform("inverseGridSizes", glm::vec4(2.f*M_PI*(GLfloat)params.fftSize/params.gridSizes[0],
-                                                              2.f*M_PI*(GLfloat)params.fftSize/params.gridSizes[1],
-                                                              2.f*M_PI*(GLfloat)params.fftSize/params.gridSizes[2],
-                                                              2.f*M_PI*(GLfloat)params.fftSize/params.gridSizes[3]));
-    oceanShaders["init"]->SetUniform("t", params.t);
-    params.t += dt;
+    oceanShaders["init"]->SetUniform("fftSize", (GLfloat)fftSize_);
+    oceanShaders["init"]->SetUniform("inverseGridSizes", glm::vec4(2.f*M_PI*(GLfloat)fftSize_/gridSizes_[0],
+                                                              2.f*M_PI*(GLfloat)fftSize_/gridSizes_[1],
+                                                              2.f*M_PI*(GLfloat)fftSize_/gridSizes_[2],
+                                                              2.f*M_PI*(GLfloat)fftSize_/gridSizes_[3]));
+    oceanShaders["init"]->SetUniform("t", params_.t);
+    params_.t += dt;
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, oceanTextures[0]);
     OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, oceanTextures[1]);
     glDrawArrays(GL_TRIANGLES, 0, 3); //1 Layer
     
     //FFT passes -> multiple triangles -> multiple layers
     OpenGLState::BindFramebuffer(oceanFBOs[1]);
-    OpenGLState::Viewport(0, 0, params.fftSize, params.fftSize);
+    OpenGLState::Viewport(0, 0, fftSize_, fftSize_);
     
     oceanShaders["fftx"]->Use();
     oceanShaders["fftx"]->SetUniform("texButterfly", TEX_POSTPROCESS1);
@@ -487,9 +503,9 @@ void OpenGLOcean::Simulate(GLfloat dt)
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, oceanTextures[5]);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
     
-    for(unsigned int i = 0; i < params.passes; ++i)
+    for(unsigned int i = 0; i < fftPasses_; ++i)
     {
-        oceanShaders["fftx"]->SetUniform("pass", ((float)i + 0.5f)/(float)params.passes);
+        oceanShaders["fftx"]->SetUniform("pass", ((float)i + 0.5f)/(float)fftPasses_);
         if(i%2 == 0)
         {
             OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
@@ -507,9 +523,9 @@ void OpenGLOcean::Simulate(GLfloat dt)
     oceanShaders["ffty"]->SetUniform("texButterfly", TEX_POSTPROCESS1);
     oceanShaders["ffty"]->SetUniform("texSource", TEX_POSTPROCESS2);
     
-    for(unsigned int i = params.passes; i < 2 * params.passes; ++i)
+    for(unsigned int i = fftPasses_; i < 2 * fftPasses_; ++i)
     {
-        oceanShaders["ffty"]->SetUniform("pass", ((float)i - params.passes + 0.5f)/(float)params.passes);
+        oceanShaders["ffty"]->SetUniform("pass", ((float)i - fftPasses_ + 0.5f)/(float)fftPasses_);
         if (i%2 == 0)
         {
             OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
@@ -764,54 +780,41 @@ void OpenGLOcean::ApplySpecialEffects(OpenGLCamera* cam)
     */
 }
 
-void OpenGLOcean::ShowSpectrum(glm::vec2 viewportSize, glm::vec4 rect)
+void OpenGLOcean::ShowSpectrum(glm::vec2 origin, GLfloat size)
 {
-    GLfloat x = rect.x;
-    GLfloat y = rect.y;
-    GLfloat width = rect.z;
-    GLfloat height = rect.w;
+    auto content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
+    glm::vec2 viewportSize = content->getViewportSize();
+
+    GLfloat x = origin.x;
+    GLfloat y = origin.y;
+    GLfloat width = size;
+    GLfloat height = size;
         
     y = viewportSize.y-y-height;
 
     oceanShaders["spectrum"]->Use();
     oceanShaders["spectrum"]->SetUniform("texSpectrum12", TEX_POSTPROCESS1);
     oceanShaders["spectrum"]->SetUniform("texSpectrum34", TEX_POSTPROCESS2);
-    oceanShaders["spectrum"]->SetUniform("invGridSizes", glm::vec4(M_PI * params.fftSize / params.gridSizes.x,
-                                                          M_PI * params.fftSize / params.gridSizes.y,
-                                                          M_PI * params.fftSize / params.gridSizes.z,
-                                                          M_PI * params.fftSize / params.gridSizes.w));
-    oceanShaders["spectrum"]->SetUniform("fftSize", (GLfloat)params.fftSize);
+    oceanShaders["spectrum"]->SetUniform("invGridSizes", glm::vec4(M_PI * fftSize_ / gridSizes_.x,
+                                                          M_PI * fftSize_ / gridSizes_.y,
+                                                          M_PI * fftSize_ / gridSizes_.z,
+                                                          M_PI * fftSize_ / gridSizes_.w));
+    oceanShaders["spectrum"]->SetUniform("fftSize", (GLfloat)fftSize_);
     oceanShaders["spectrum"]->SetUniform("zoom", 0.5f);
     oceanShaders["spectrum"]->SetUniform("linear", 0.f);
     oceanShaders["spectrum"]->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
         
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, oceanTextures[0]);
     OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, oceanTextures[1]);
-    
-    //Build quad texture VBO
-    GLfloat quadData[4][4] = {{-1.f, -1.f, 0.f, 0.f},
-                              {-1.f,  1.f, 0.f, 1.f},
-                              { 1.f, -1.f, 1.f, 0.f},
-                              { 1.f,  1.f, 1.f, 1.f}};
-                              
-    GLuint quadBuf = 0;
-    glGenBuffers(1, &quadBuf);
-    glBindBuffer(GL_ARRAY_BUFFER, quadBuf);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadData), quadData, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-        
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BindBaseVertexArray();
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, quadBuf);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    glDisableVertexAttribArray(0);
+     
+    OpenGLState::Viewport(0, 0, viewportSize.x, viewportSize.y);
+    content->SetViewportSize(viewportSize.x, viewportSize.y);
+    content->BindBaseVertexArray();
+    glDrawArrays(GL_TRIANGLES, 0, 6);
     OpenGLState::BindVertexArray(0);
-    
+
     OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
-    OpenGLState::UseProgram(0);
 }
 
 void OpenGLOcean::ShowTexture(int id, glm::vec4 rect)
@@ -919,124 +922,139 @@ GLfloat* OpenGLOcean::ComputeButterflyLookupTable(unsigned int size, unsigned in
     return data;
 }
 
-//Wave generation
-float OpenGLOcean::sqr(float x)
+// Dispertion relation describes angular frequency for any given wave number,
+// which tell us how fast a wave of a given waelength propagates.
+GLfloat OpenGLOcean::DispertionRelation(GLfloat kMag)
 {
-    return x * x;
+    return glm::sqrt(params_.g * kMag * glm::tanh(kMag * params_.depth));
 }
 
-float OpenGLOcean::omega(float k)
+// Derivative of the dispertion relation for a finite depth
+GLfloat OpenGLOcean::DispertionRelationDerivative(GLfloat kMag)
 {
-    return sqrt(9.81 * k * (1.0 + sqr(k / params.km))); // Eq 24
+    GLfloat kh = kMag * params_.depth;
+    GLfloat tanhKH = glm::tanh(kh);
+    GLfloat sechKH = glm::sech(glm::clamp(kh, -9.f, 9.f)); // approx sech(x) = 1/cosh(x) (to maintain precision)
+    return params_.g * (tanhKH + kh * sechKH * sechKH) / (2.f * glm::sqrt(params_.g * kMag * tanhKH));
 }
 
-// 1/kx and 1/ky in meters
-float OpenGLOcean::spectrum(float kx, float ky, bool omnispectrum)
+// Texel-Marsel-Arsloe (TMA) correction to JONSWAP spectrum for finite depth
+GLfloat OpenGLOcean::TMACorrection(GLfloat omega) 
 {
-    float U10 = params.wind;
-    float Omega = params.omega;
-
-    // phase speed
-    float k = sqrt(kx * kx + ky * ky);
-    float c = omega(k) / k;
-
-    // spectral peak
-    float kp = 9.81 * sqr(Omega / U10); // after Eq 3
-    float cp = omega(kp) / kp;
-
-    // friction velocity
-    float z0 = 3.7e-5 * sqr(U10) / 9.81 * pow(U10 / cp, 0.9f); // Eq 66
-    float u_star = 0.41 * U10 / log(10.0 / z0); // Eq 60
-
-    float Lpm = exp(- 5.0 / 4.0 * sqr(kp / k)); // after Eq 3
-    float gamma = Omega < 1.0 ? 1.7 : 1.7 + 6.0 * log(Omega); // after Eq 3 // log10 or log??
-    float sigma = 0.08 * (1.0 + 4.0 / pow(Omega, 3.0f)); // after Eq 3
-    float Gamma = exp(-1.0 / (2.0 * sqr(sigma)) * sqr(sqrt(k / kp) - 1.0));
-    float Jp = pow(gamma, Gamma); // Eq 3
-    float Fp = Lpm * Jp * exp(- Omega / sqrt(10.0) * (sqrt(k / kp) - 1.0)); // Eq 32
-    float alphap = 0.006 * sqrt(Omega); // Eq 34
-    float Bl = 0.5 * alphap * cp / c * Fp; // Eq 31
-
-    float alpham = 0.01 * (u_star < params.cm ? 1.0 + log(u_star / params.cm) : 1.0 + 3.0 * log(u_star / params.cm)); // Eq 44
-    float Fm = exp(-0.25 * sqr(k / params.km - 1.0)); // Eq 41
-    float Bh = 0.5 * alpham * params.cm / c * Fm; // Eq 40
-
-    Bh *= Lpm; 
-
-    if (omnispectrum)
-    {
-        return params.A * (Bl + Bh) / (k * sqr(k)); // Eq 30
-    }
-
-    float a0 = log(2.0) / 4.0;
-    float ap = 4.0;
-    float am = 0.13 * u_star / params.cm; // Eq 59
-    float Delta = tanh(a0 + ap * pow(c / cp, 2.5f) + am * pow(params.cm / c, 2.5f)); // Eq 57
-
-    float phi = atan2(ky, kx);
-
-    if(params.propagate)
-    {
-        if (kx < 0.0)
-        {
-            return 0.0;
-        }
-        else
-        {
-            Bl *= 2.0;
-            Bh *= 2.0;
-        }
-    }
-
-    // remove waves perpendicular to wind dir
-    float tweak = sqrtf( std::max( kx/sqrtf(kx*kx+ky*ky), 0.f) );
-    tweak = 1.0f;
-    return params.A * (Bl + Bh) * (1.0 + Delta * cos(2.0 * phi)) / (2.0 * M_PI * sqr(sqr(k))) * tweak; // Eq 67
+    GLfloat omegaH = omega * glm::sqrt(params_.depth / params_.g);
+	if (omegaH <= 1.0f)
+		return 0.5f * omegaH * omegaH;
+	else // omegaH > 1.0f
+		return 1.0f - 0.5f * (2.0f - omegaH) * (2.0f - omegaH);
 }
 
-void OpenGLOcean::GetSpectrumSample(int i, int j, float lengthScale, float kMin, float *result)
+// Joint North Sea Wave Observation Project (JONSWAP) spectrum
+GLfloat OpenGLOcean::JONSWAPSpectrum(GLfloat omega)
 {
-    static long seed = 1234;
-    float dk = 2.0 * M_PI / lengthScale;
-    float kx = i * dk;
-    float ky = j * dk;
-    if(fabsf(kx) < kMin && fabsf(ky) < kMin)
+    // alpa and peakOmega computed once when parameters are set
+    GLfloat sigma = (omega <= params_.peakOmega) ? 0.07f : 0.09f; // Surface tension coefficient [N]
+	GLfloat r = glm::exp(- (omega - params_.peakOmega) * (omega - params_.peakOmega) 
+                            / (2.0f * sigma * sigma * params_.peakOmega * params_.peakOmega));
+
+	// Divisions & powers
+	GLfloat oneOverOmega = 1.0f / (omega + 1e-6f);
+	GLfloat peakOmegaOverOmega = params_.peakOmega / omega;
+	GLfloat oneOverOmega5 = oneOverOmega * oneOverOmega * oneOverOmega * oneOverOmega * oneOverOmega;
+    GLfloat peakOmegaOverOmega4 = peakOmegaOverOmega * peakOmegaOverOmega * peakOmegaOverOmega * peakOmegaOverOmega;
+
+    // Final spectrum
+    return params_.scale * TMACorrection(omega) 
+        * params_.alpha * params_.g * params_.g * oneOverOmega5 * glm::exp(-1.25f * peakOmegaOverOmega4) * glm::pow(params_.gamma, r);
+}
+
+// Directional spreading
+GLfloat OpenGLOcean::NormalizationFactor(GLfloat s) 
+{
+    GLfloat s2 = s * s;
+    GLfloat s3 = s2 * s;
+    GLfloat s4 = s3 * s;
+    if (s < 5) 
+        return -0.000564f * s4 + 0.00776f * s3 - 0.044f * s2 + 0.192f * s + 0.163f;
+    else 
+        return -4.80e-08f * s4 + 1.07e-05f * s3 - 9.53e-04f * s2 + 5.90e-02f * s + 3.93e-01f;
+}
+
+GLfloat OpenGLOcean::Cosine2s(GLfloat theta, GLfloat s) 
+{
+	return NormalizationFactor(s) * glm::pow(glm::abs(glm::cos(0.5f * theta)), 2.0f * s);
+}
+
+GLfloat OpenGLOcean::SpreadPower(GLfloat omega, GLfloat peakOmega) 
+{
+	if (omega > peakOmega)
+		return 9.77f * glm::pow(glm::abs(omega / peakOmega), -2.5f);
+	else
+		return 6.97f * glm::pow(glm::abs(omega / peakOmega), 5.0f);
+}
+
+GLfloat OpenGLOcean::DirectionalSpectrum(GLfloat theta, GLfloat omega) 
+{
+	float s = SpreadPower(omega, params_.peakOmega) + 16.f * glm::tanh(glm::min(omega / params_.peakOmega, 20.f)) * params_.swell * params_.swell;
+	
+	return glm::lerp(2.0f / 3.1415f * glm::cos(theta) * glm::cos(theta), Cosine2s(theta - params_.windDirection, s), params_.spreadBlend);
+}
+
+GLfloat OpenGLOcean::ShortWavesFade(GLfloat kLength) 
+{
+	return glm::exp(-params_.shortWavesFade * params_.shortWavesFade * kLength * kLength);
+}
+
+GLfloat OpenGLOcean::FullSpectrum(glm::vec2 k, GLfloat kLength)
+{
+    GLfloat kAngle = glm::atan(k.y, k.x);
+    GLfloat omega = DispertionRelation(kLength);
+    return JONSWAPSpectrum(omega) * DirectionalSpectrum(kAngle, omega) * ShortWavesFade(kLength);
+}
+
+void OpenGLOcean::GetSpectrumSample(int i, int j, GLfloat lengthScale, GLfloat kMin, GLfloat* result)
+{
+    GLfloat dk = 2.0 * M_PI / lengthScale; // Used to discretize the frequency domain
+    glm::vec2 k(i * dk, j * dk); // wave number
+    GLfloat kLength = glm::length(k);
+    if(kLength >= kMin)
     {
-        result[0] = 0.0;
-        result[1] = 0.0;
+        GLfloat dOmegadk = DispertionRelationDerivative(kLength);
+        GLfloat S = glm::sqrt(2.f * FullSpectrum(k, kLength) * glm::abs(dOmegadk) / kLength * dk * dk); // Spectrum
+        GLfloat A = randomGaussian_(gen_); // Amplitude
+        GLfloat phi = glm::two_pi<GLfloat>() * randomUniform_(gen_); // Phase
+        glm::vec2 variate = A * glm::vec2(glm::cos(phi), glm::sin(phi));
+        result[0] = variate.x * S;
+        result[1] = variate.y * S;
     }
     else
     {
-        float S = spectrum(kx, ky);
-        float h = sqrtf(S / 2.0) * dk;
-        float phi = frandom(&seed) * 2.0 * M_PI;
-        result[0] = h * cos(phi);
-        result[1] = h * sin(phi);
+        result[0] = 0.f;
+        result[1] = 0.f;
     }
 }
 
 // generates the waves spectrum
 void OpenGLOcean::GenerateWavesSpectrum()
 {
-    if(params.spectrum12 != NULL)
+    if(spectrum12_ != NULL)
     {
-        delete[] params.spectrum12;
-        delete[] params.spectrum34;
+        delete[] spectrum12_;
+        delete[] spectrum34_;
     }
-    params.spectrum12 = new float[params.fftSize * params.fftSize * 4];
-    params.spectrum34 = new float[params.fftSize * params.fftSize * 4];
+    spectrum12_ = new float[fftSize_ * fftSize_ * 4];
+    spectrum34_ = new float[fftSize_ * fftSize_ * 4];
 
-    for (int y = 0; y < params.fftSize; ++y)
+    for (int y = 0; y < fftSize_; ++y)
     {
-        for (int x = 0; x < params.fftSize; ++x)
+        for (int x = 0; x < fftSize_; ++x)
         {
-            int offset = 4 * (x + y * params.fftSize);
-            int i = x >= params.fftSize / 2 ? x - params.fftSize : x;
-            int j = y >= params.fftSize / 2 ? y - params.fftSize : y;
-            GetSpectrumSample(i, j, params.gridSizes[0], M_PI / params.gridSizes[0], params.spectrum12 + offset);
-            GetSpectrumSample(i, j, params.gridSizes[1], M_PI * params.fftSize / params.gridSizes[0], params.spectrum12 + offset + 2);
-            GetSpectrumSample(i, j, params.gridSizes[2], M_PI * params.fftSize / params.gridSizes[1], params.spectrum34 + offset);
-            GetSpectrumSample(i, j, params.gridSizes[3], M_PI * params.fftSize / params.gridSizes[2], params.spectrum34 + offset + 2);
+            int offset = 4 * (x + y * fftSize_);
+            int i = x >= fftSize_ / 2 ? x - fftSize_ : x;
+            int j = y >= fftSize_ / 2 ? y - fftSize_ : y;
+            GetSpectrumSample(i, j, gridSizes_[0], M_PI / gridSizes_[0], spectrum12_ + offset);
+            GetSpectrumSample(i, j, gridSizes_[1], M_PI * fftSize_ / gridSizes_[0], spectrum12_ + offset + 2);
+            GetSpectrumSample(i, j, gridSizes_[2], M_PI * fftSize_ / gridSizes_[1], spectrum34_ + offset);
+            GetSpectrumSample(i, j, gridSizes_[3], M_PI * fftSize_ / gridSizes_[2], spectrum34_ + offset + 2);
         }
     }
 }
@@ -1059,7 +1077,7 @@ float OpenGLOcean::ComputeSlopeVariance()
     while (k < 1e3)
     {
         float nextK = k * 1.001;
-        theoreticSlopeVariance += k * k * spectrum(k, 0, true) * (nextK - k);
+        theoreticSlopeVariance += k * k * FullSpectrum(glm::vec2(k, 0), k) * (nextK - k);
         k = nextK;
     }
 
@@ -1071,17 +1089,17 @@ float OpenGLOcean::ComputeSlopeVariance()
     // to be sure not to lose the variance due to missing wave frequencies in
     // the four nested grids
     float totalSlopeVariance = 0.0;
-    for (int y = 0; y < params.fftSize; ++y)
+    for (int y = 0; y < fftSize_; ++y)
     {
-        for (int x = 0; x < params.fftSize; ++x)
+        for (int x = 0; x < fftSize_; ++x)
         {
-            int offset = 4 * (x + y * params.fftSize);
-            float i = 2.f * M_PI * (x >= params.fftSize / 2 ? x - params.fftSize : x);
-            float j = 2.f * M_PI * (y >= params.fftSize / 2 ? y - params.fftSize : y);
-            totalSlopeVariance += GetSlopeVariance(i / params.gridSizes[0], j / params.gridSizes[0], params.spectrum12 + offset);
-            totalSlopeVariance += GetSlopeVariance(i / params.gridSizes[1], j / params.gridSizes[1], params.spectrum12 + offset + 2);
-            totalSlopeVariance += GetSlopeVariance(i / params.gridSizes[2], j / params.gridSizes[2], params.spectrum34 + offset);
-            totalSlopeVariance += GetSlopeVariance(i / params.gridSizes[3], j / params.gridSizes[3], params.spectrum34 + offset + 2);
+            int offset = 4 * (x + y * fftSize_);
+            float i = 2.f * M_PI * (x >= fftSize_ / 2 ? x - fftSize_ : x);
+            float j = 2.f * M_PI * (y >= fftSize_ / 2 ? y - fftSize_ : y);
+            totalSlopeVariance += GetSlopeVariance(i / gridSizes_[0], j / gridSizes_[0], spectrum12_ + offset);
+            totalSlopeVariance += GetSlopeVariance(i / gridSizes_[1], j / gridSizes_[1], spectrum12_ + offset + 2);
+            totalSlopeVariance += GetSlopeVariance(i / gridSizes_[2], j / gridSizes_[2], spectrum34_ + offset);
+            totalSlopeVariance += GetSlopeVariance(i / gridSizes_[3], j / gridSizes_[3], spectrum34_ + offset + 2);
         }
     }
     

@@ -1434,6 +1434,11 @@ const Look& OpenGLContent::getLook(size_t id)
         
     return looks[id];
 }
+
+glm::vec2 OpenGLContent::getViewportSize() const
+{
+    return viewportSize;
+}
     
 //Static methods
 GLuint OpenGLContent::LoadTexture(const std::string& filename, bool srgb, bool alpha, GLfloat anisotropy, bool internal)

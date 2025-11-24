@@ -70,7 +70,7 @@ void CableTestManager::BuildScenario()
     CreateLook("Red", sf::Color::RGB(1.0f, 0.3f, 0.3f), 0.5f, 0.0f);
     CreateLook("Rope", sf::Color::Gray(1.f), 1.f, 0.f, 0.f, sf::GetDataPath() + "rope_color.jpg", sf::GetDataPath() + "rope_normal.png");
 
-    EnableOcean();
+    EnableOcean(0.0);
     getOcean()->setWaterType(0.2);
     getOcean()->AddVelocityField(new sf::Uniform(sf::Vector3(0.0,0.0,0.0)));
     getOcean()->EnableCurrents();
