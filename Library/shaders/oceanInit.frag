@@ -25,7 +25,7 @@
 
 #version 330
 
-layout(location = 0,index=0) out vec4 fragColor[3];
+layout(location = 0, index=0) out vec4 fragColor[5];
 in vec2 texcoord;
 
 uniform sampler2D texSpectrum12;
@@ -73,6 +73,12 @@ void main()
 	float K3 = length(k3);
 	float K4 = length(k4);
 
+	// inverse k magnitude
+	float IK1 = K1 == 0.0 ? 0.0 : 1.0 / K1;
+    float IK2 = K2 == 0.0 ? 0.0 : 1.0 / K2;
+    float IK3 = K3 == 0.0 ? 0.0 : 1.0 / K3;
+    float IK4 = K4 == 0.0 ? 0.0 : 1.0 / K4;
+
 	// h(k,t)
 	vec2 h1 = getSpectrum(K1, s12.xy, s12c.xy);
 	vec2 h2 = getSpectrum(K2, s12.zw, s12c.zw);
@@ -85,4 +91,6 @@ void main()
 	// slopes (for normal computation)
 	fragColor[1] = vec4(i(k1.x * h1) - (k1.y * h1), i(k2.x * h2) - (k2.y * h2)); // Tes01 eq20
 	fragColor[2] = vec4(i(k3.x * h3) - (k3.y * h3), i(k4.x * h4) - (k4.y * h4)); // Tes01 eq20
+	fragColor[3] = fragColor[1] * vec4(IK1, IK1, IK2, IK2); // slopes divided by k magnitude
+	fragColor[4] = fragColor[2] * vec4(IK3, IK3, IK4, IK4); // slopes divided by k magnitude 
 }

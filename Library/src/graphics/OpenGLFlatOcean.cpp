@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/05/2020.
-//  Copyright (c) 2020-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2025 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLFlatOcean.h"
@@ -184,8 +184,8 @@ void OpenGLFlatOcean::UpdateSurface(OpenGLView* view)
 void OpenGLFlatOcean::DrawSurface(OpenGLView* view)
 {
     GLint* viewport = view->GetViewport();
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
-    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures[2]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures_["fft12"]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures_["slope_variance"]);
 
     oceanShaders["surface"]->Use();
     oceanShaders["surface"]->SetUniform("MVP", view->GetProjectionMatrix() * view->GetViewMatrix());
@@ -211,8 +211,8 @@ void OpenGLFlatOcean::DrawSurface(OpenGLView* view)
 void OpenGLFlatOcean::DrawSurfaceTemperature(OpenGLView* view)
 {
     GLint* viewport = view->GetViewport();
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
-    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures[2]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures_["fft12"]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures_["slope_variance"]);
 
     oceanShaders["surfaceTemp"]->Use();
     oceanShaders["surfaceTemp"]->SetUniform("MVP", view->GetProjectionMatrix() * view->GetViewMatrix());
@@ -240,8 +240,8 @@ void OpenGLFlatOcean::DrawSurfaceTemperature(OpenGLView* view)
 void OpenGLFlatOcean::DrawBacksurface(OpenGLView* view)
 {
     GLint* viewport = view->GetViewport();
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
-    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures[2]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures_["fft12"]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures_["slope_variance"]);
 
     oceanShaders["backsurface"]->Use();
     oceanShaders["backsurface"]->SetUniform("MVP", view->GetProjectionMatrix() * view->GetViewMatrix());

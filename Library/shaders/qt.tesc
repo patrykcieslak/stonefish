@@ -40,14 +40,14 @@ layout(std140, binding = 0) uniform ViewFrustumPlanes
 #inject "ltree.glsl"
 
 //Implementation dependent heightfield function
-float displace(vec2 p);
+vec3 displace(vec2 p);
 
 void main() 
 {
 	// get edge data
 	vec4 edge = 0.5 * gl_in[gl_InvocationID].gl_Position
 	          + 0.5 * gl_in[(gl_InvocationID+1)%4].gl_Position;
-	vec3 p  = vec3(edge.xy, displace(eyePos.xy)).xyz;
+    vec3 p = vec3(edge.xy, 0.0) + displace(eyePos.xy);
 	float s = 2.0 * distance(eyePos, p);
 	float tess_level = edge.w * 8.0 * SQRT_2 / s;
 

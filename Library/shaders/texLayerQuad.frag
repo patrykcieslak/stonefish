@@ -23,8 +23,9 @@ in vec2 texcoord;
 out vec4 fragColor;
 uniform sampler2DArray tex;
 uniform int layer;
+uniform vec4 color;
 
 void main(void) 
 {
-    fragColor = texture(tex, vec3(texcoord, float(layer)));
+    fragColor = texture(tex, vec3(texcoord, float(layer))) * color;
 }

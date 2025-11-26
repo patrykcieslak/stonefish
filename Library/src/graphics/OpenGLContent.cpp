@@ -218,6 +218,7 @@ OpenGLContent::OpenGLContent()
     basicShaders["tex_layer_quad"]->AddUniform("rect", ParameterType::VEC4);
     basicShaders["tex_layer_quad"]->AddUniform("tex", ParameterType::INT);
     basicShaders["tex_layer_quad"]->AddUniform("layer", ParameterType::INT);
+    basicShaders["tex_layer_quad"]->AddUniform("color", ParameterType::VEC4);
     
     basicShaders["tex_level_quad"] = new GLSLShader("texLevelQuad.frag", "texQuad.vert");
     basicShaders["tex_level_quad"]->AddUniform("rect", ParameterType::VEC4);
@@ -695,7 +696,7 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
     OpenGLState::UseProgram(0);
 }
 
-void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, GLint z, bool array)
+void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, GLint z, bool array, glm::vec4 color)
 {
     y = viewportSize.y-y-height;
     
@@ -705,6 +706,7 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
         basicShaders["tex_layer_quad"]->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
         basicShaders["tex_layer_quad"]->SetUniform("tex", TEX_BASE);
         basicShaders["tex_layer_quad"]->SetUniform("layer", z);
+        basicShaders["tex_layer_quad"]->SetUniform("color", color);
     }
     else
     {

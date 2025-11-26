@@ -174,8 +174,9 @@ namespace sf
          \param texture the id of the texture
          \param z the layer of the texture
          \param array has to be set to true if texture is an array texture
+         \param color a color that is multiplied with the texture color
          */
-        void DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, GLint z, bool array = true);
+        void DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, GLint z, bool array = true, glm::vec4 color = glm::vec4(1.f));
          
         //! A method to display a cubemap texture.
         /*!

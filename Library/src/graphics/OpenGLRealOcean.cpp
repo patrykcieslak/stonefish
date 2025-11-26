@@ -42,8 +42,7 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
     hydroMutex = hydrodynamics;
     // params.wind = state*5.f + 2.f;
     // params.A = 1.f;
-    // params.omega = 5.f*expf(-state) + 0.2f;
-    GLint layers = 4;    
+    // params.omega = 5.f*expf(-state) + 0.2f;    
     qtGridTessFactor = 8; // Patch tessellation [2, 256]
     qtGPUTessFactor = 0;  // GPU tessellation factor [0,5]
     qtPatchIndexCount = 0;
@@ -188,13 +187,13 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
     oceanShaders["mask"]->BindShaderStorageBlock("QTreeCull", SSBO_QTREE_CULL);
 
     //FFT data transfer
-    size_t fftDataSize = fftSize_ * fftSize_ * 4 * layers;
+    size_t fftDataSize = fftSize_ * fftSize_ * 4 * fftLayers_;
     fftData = new GLfloat[fftDataSize];
     memset(fftData, 0, sizeof(GLfloat) * fftDataSize);
     
     glGenBuffers(1, &fftPBO);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, fftPBO);
-    glBufferData(GL_PIXEL_PACK_BUFFER, fftSize_ * fftSize_ * 4 * layers * sizeof(GLfloat), fftData, GL_STREAM_READ);
+    glBufferData(GL_PIXEL_PACK_BUFFER, fftSize_ * fftSize_ * 4 * fftLayers_ * sizeof(GLfloat), fftData, GL_STREAM_READ);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
     //Quad tree buffers
@@ -331,7 +330,7 @@ void OpenGLRealOcean::Simulate(GLfloat dt)
         GLfloat* src = (GLfloat*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
         if(src)
         {
-            memcpy(fftData, src, fftSize_ * fftSize_ * 4 * 4 * sizeof(GLfloat));
+            memcpy(fftData, src, fftSize_ * fftSize_ * 4 * fftLayers_ * sizeof(GLfloat));
             glUnmapBuffer(GL_PIXEL_PACK_BUFFER); //Release pointer to the mapped buffer
         }
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
@@ -341,7 +340,7 @@ void OpenGLRealOcean::Simulate(GLfloat dt)
     OpenGLOcean::Simulate(dt);
 
     //Copy wave data to RAM for hydrodynamic computations
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures_["fft12"]);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, fftPBO);
     glGetTexImage(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA, GL_FLOAT, NULL);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
@@ -442,7 +441,7 @@ void OpenGLRealOcean::UpdateSurface(OpenGLView* view)
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
     tree->pingpong = 1 - tree->pingpong;
 
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures_["fft12"]);
 	oceanShaders["lod"]->Use();
     oceanShaders["lod"]->SetUniform("sceneSize", oceanSize);
 	oceanShaders["lod"]->SetUniform("gridSizes", gridSizes_);
@@ -470,8 +469,8 @@ void OpenGLRealOcean::DrawSurface(OpenGLView* view)
     OceanQT& tree = oceanTrees[view];
     GLint* viewport = view->GetViewport();
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_QTREE_CULL, tree.patchSSBO[2]);
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
-    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures[2]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures_["fft12"]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures_["slope_variance"]);
     oceanShaders["surface"]->Use();
     oceanShaders["surface"]->SetUniform("MVP", view->GetProjectionMatrix() * view->GetViewMatrix());
     oceanShaders["surface"]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view->GetViewMatrix()))));
@@ -509,8 +508,8 @@ void OpenGLRealOcean::DrawSurfaceTemperature(OpenGLView* view)
     OceanQT& tree = oceanTrees[view];
     GLint* viewport = view->GetViewport();
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_QTREE_CULL, tree.patchSSBO[2]);
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
-    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures[2]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures_["fft12"]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures_["slope_variance"]);
     oceanShaders["surfaceTemp"]->Use();
     oceanShaders["surfaceTemp"]->SetUniform("MVP", view->GetProjectionMatrix() * view->GetViewMatrix());
     oceanShaders["surfaceTemp"]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view->GetViewMatrix()))));
@@ -540,8 +539,8 @@ void OpenGLRealOcean::DrawBacksurface(OpenGLView* view)
     OceanQT& tree = oceanTrees[view];
     GLint* viewport = view->GetViewport();
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_QTREE_CULL, tree.patchSSBO[2]);
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
-    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures[2]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures_["fft12"]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures_["slope_variance"]);
     oceanShaders["backsurface"]->Use();
     oceanShaders["backsurface"]->SetUniform("MVP", view->GetProjectionMatrix() * view->GetViewMatrix());
     oceanShaders["backsurface"]->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view->GetViewMatrix()))));
@@ -582,7 +581,7 @@ void OpenGLRealOcean::DrawUnderwaterMask(OpenGLView* view)
     OceanQT& tree = oceanTrees[view];
     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_QTREE_CULL, tree.patchSSBO[2]);
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures[3]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures_["fft12"]);
     OpenGLState::BindVertexArray(vao);
 
     oceanShaders["mask"]->Use();

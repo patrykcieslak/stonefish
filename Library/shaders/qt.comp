@@ -61,7 +61,7 @@ layout(binding = 6) uniform atomic_uint qTreeCullCounter;
 #inject "ltree.glsl"
 
 //Implementation dependent heightfield function
-float displace(vec2 p);
+vec3 displace(vec2 p);
 
 vec3 nvertex(vec3 m, vec3 M, vec3 n) 
 {
@@ -85,16 +85,16 @@ void writeNode(uvec2 nn)
 	nodeSize *= sceneSize;
 
     vec2 nextNode = vec2(node.x + nodeSize, node.y + nodeSize);
-    float displace1 = displace(node);
-    float displace2 =  displace(nextNode);
-    if(displace2 < displace1)
+    vec3 displace1 = displace(node);
+    vec3 displace2 =  displace(nextNode);
+    if(displace2.z < displace1.z)
     {
-        float tmp = displace1;
+        vec3 tmp = displace1;
         displace1 = displace2;
         displace2 = tmp;
     }
-	vec3 nodeMin = vec3(node.x, node.y, displace1);
-	vec3 nodeMax = vec3(nextNode.x, nextNode.y, displace2);
+	vec3 nodeMin = vec3(node.x, node.y, 0.0) + displace1;
+	vec3 nodeMax = vec3(nextNode.x, nextNode.y, 0.0) + displace2;
 
 	// Cull http://www.lighthouse3d.com/tutorials/view-frustum-culling/geometric-approach-testing-boxes-ii/
 	int i = 0;
@@ -127,21 +127,15 @@ void main()
     float nodeSize;
     lt_cell_2_30(nodesIn[nid].xy, node.xy, nodeSize, parent.xy);
 
-	node.xy-= 0.5;
-	parent.xy-= 0.5;
-	nodeSize*= sceneSize;
+	node.xy -= 0.5;
+	parent.xy -= 0.5;
+	nodeSize *= sceneSize;
     
     node = vec3(sceneSize * node.xy + 0.5 * nodeSize, 0.0);
 	parent = vec3(sceneSize * parent.xy + nodeSize, 0.0);
-    node.z = displace(node.xy);
-    parent.z = displace(parent.xy);
-    /* 
-    //Original
-    float altitude = displace(eye.xy);
-    node = vec3(sceneSize * node.xy + 0.5 * nodeSize, altitude);
-	parent = vec3(sceneSize * parent.xy + nodeSize, altitude);
-    */
-    
+    node += displace(node.xy);
+    parent += displace(parent.xy);
+
     //Distance from node centers
 	float dn = distance(eye, node) + 0.5;
 	float dp = distance(eye, parent) + 0.5;

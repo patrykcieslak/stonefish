@@ -28,14 +28,21 @@
 uniform sampler2DArray texWaveFFT;
 uniform vec4 gridSizes;
 
-float displace(vec2 p)
+vec3 displace(vec2 p)
 {
-	float dz = 0.0;
-    dz -= texture(texWaveFFT, vec3(p/gridSizes.x, 0.0)).x;
-    dz -= texture(texWaveFFT, vec3(p/gridSizes.y, 0.0)).y;
-    dz -= texture(texWaveFFT, vec3(p/gridSizes.z, 0.0)).z;
-    dz -= texture(texWaveFFT, vec3(p/gridSizes.w, 0.0)).w;
-    return dz;
+	vec3 dP = vec3(0.0);
+    dP.z -= texture(texWaveFFT, vec3(p / gridSizes.x, 0.0)).x;
+    dP.z -= texture(texWaveFFT, vec3(p / gridSizes.y, 0.0)).y;
+    dP.z -= texture(texWaveFFT, vec3(p / gridSizes.z, 0.0)).z;
+    dP.z -= texture(texWaveFFT, vec3(p / gridSizes.w, 0.0)).w;
+
+    dP.xy += texture(texWaveFFT, vec3(p / gridSizes.x, 1.0)).xy;
+    dP.xy += texture(texWaveFFT, vec3(p / gridSizes.y, 1.0)).zw;
+    dP.xy += texture(texWaveFFT, vec3(p / gridSizes.z, 2.0)).xy;
+    dP.xy += texture(texWaveFFT, vec3(p / gridSizes.w, 2.0)).zw;
+
+    dP.y = - dP.y; //Flip Y axis to maintain right-handed coordinate system
+    return dP;
 }
 
 float displaceGrad(vec2 p, vec2 dx, vec2 dy)

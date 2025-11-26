@@ -149,8 +149,6 @@ void main()
 	vec3 Tx = cross(Ty, normal);
 
     float fresnel = 0.02 + 0.98 * meanFresnel(toEye, normal, sigmaSq);
-    //vec3 H = normalize(toEye + normal);
-    //float fresnel = 0.02 + 0.98 * pow(1.0 - dot(toEye, normal), 5.0);
     
 	vec3 Isky;
 	vec3 Isun = GetSunAndSkyIlluminance(Psky - center, normal, sunDirection, Isky);
@@ -171,7 +169,7 @@ void main()
     //outColor = trans * outColor + L2P;
 	
 	//Sea contribution
-    fragColor = vec4(outColor, fresnel);
+    fragColor =  vec4(outColor, fresnel); // vec4((normalize(MV * normal) * 0.5 + 0.5)*1000.0, 1.0);
     fragNormal = vec4(normalize(MV * normal) * 0.5 + 0.5, 1.0);  
     //fragNormal = vec4(normalize(MV * normal), 1.0);
     //fragColor = vec4(outColor, 1.0);

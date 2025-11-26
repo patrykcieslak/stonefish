@@ -57,7 +57,7 @@ vec3 BeerLambert(float d);
 vec3 InScatteringSun(vec3 L, vec3 D, vec3 V, float z, float d);
 vec3 InScatteringPointLight(vec3 O, vec3 L, vec3 X, vec3 V, vec3 P, float d, float dw);
 vec3 InScatteringSpotLight(vec3 O, vec3 D, float w, float fn, vec3 L, vec3 X, vec3 V, vec3 P, float d, float dw);
-float displace(vec2 p);
+vec3 displace(vec2 p);
 
 void main()
 {	
@@ -72,7 +72,7 @@ void main()
 	vec3 V = toEye/d;
 	vec3 S = RefractToWater(-sunDirection, waterSurfaceN);
 	float dw = d;
-	float waterLevel = displace(P.xy);
+	float waterLevel = displace(P.xy).z;
 	float depth = P.z - waterLevel;
 
 	if(eyePos.z < waterLevel)

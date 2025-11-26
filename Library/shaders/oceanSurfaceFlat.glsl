@@ -19,7 +19,7 @@
 
 #version 330
 
-float displace(vec2 p)
+vec3 displace(vec2 p)
 {
-    return 0.0;
+    return vec3(0.0);
 }

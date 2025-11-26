@@ -28,7 +28,7 @@ out vec4 fragPos;
 out float logz;
 
 //Implementation dependent heightfield function
-float displace(vec2 p);
+vec3 displace(vec2 p);
 
 vec2 interpolate(in vec4 v0, in vec4 v1, in vec4 v2, in vec4 v3)
 {
@@ -46,20 +46,8 @@ void main()
 	vec2 P = mix(b, a, gl_TessCoord.y);
 
     //Basic wave height (layer 0)
-    fragPos = vec4(P, displace(P), 1.0); //Position of deformed vertex in world space
+    fragPos = vec4(vec3(P.x, P.y, 0.0) + displace(P), 1.0); //Position of deformed vertex in world space
 	gl_Position = MVP * fragPos; //Screen space position
     gl_Position.z = log2(max(1e-6, 1.0 + gl_Position.w)) * 2.0 * FC - 1.0;
     logz = 1.0 + gl_Position.w;
-    
-    /*
-    //Make use of anisotropic filtering -> not working properly -> cracks!
-    //Calculate derivatives of position
-    vec2 dy = (gl_in[1].gl_Position.xy - gl_in[0].gl_Position.xy)/tessDiv;
-    vec2 dx = (gl_in[3].gl_Position.xy - gl_in[0].gl_Position.xy)/tessDiv;
-
-    dz += textureGrad(texWaveFFT, vec3(P.xy/gridSizes.x, 0.0), dx/gridSizes.x, dy/gridSizes.x).x;
-    dz += textureGrad(texWaveFFT, vec3(P.xy/gridSizes.y, 0.0), dx/gridSizes.y, dy/gridSizes.y).y;
-    dz += textureGrad(texWaveFFT, vec3(P.xy/gridSizes.z, 0.0), dx/gridSizes.z, dy/gridSizes.z).z;
-    dz += textureGrad(texWaveFFT, vec3(P.xy/gridSizes.w, 0.0), dx/gridSizes.w, dy/gridSizes.w).w;
-    */
 }

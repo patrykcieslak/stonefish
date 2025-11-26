@@ -735,10 +735,15 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     ((OpenGLTrackball*)camera)->DrawSelection(selectedDrawingQueueCopy, screenFBO);
                     
                     //Graphics debugging
-                    if(ocean != NULL)
+                    if(ocean != nullptr)
                     {
-                        ocean->getOpenGLOcean()->ShowSpectrum(glm::vec2(512.f, 0.f), 256.f);
-                        //ocean->getOpenGLOcean()->ShowTexture(3, glm::vec4(0,0,512,512));
+                        GLfloat offset = 700.f;
+                        ocean->getOpenGLOcean()->ShowSpectrum(glm::vec2(0, offset), 128);
+                        ocean->getOpenGLOcean()->ShowFFTLayer("fft12", 0, glm::vec4(128, offset, 128, 128));
+                        ocean->getOpenGLOcean()->ShowFFTLayer("fft12", 1, glm::vec4(256, offset, 128, 128));
+                        ocean->getOpenGLOcean()->ShowFFTLayer("fft12", 2, glm::vec4(384, offset, 128, 128));
+                        ocean->getOpenGLOcean()->ShowFFTLayer("fft12", 3, glm::vec4(512, offset, 128, 128));
+                        ocean->getOpenGLOcean()->ShowFFTLayer("fft12", 4, glm::vec4(640, offset, 128, 128));
                     }
             
                     //atm->getOpenGLAtmosphere()->ShowSunShadowmaps(0, 0, 0.1f);

@@ -36,20 +36,22 @@ namespace sf
     //! A structure holding parameters of ocean generation and rendering (JONSWAP model).
     struct OceanParams
     {
-        GLfloat scale {1.f};
-        GLfloat spreadBlend {0.0f};
-        GLfloat swell {0.0f};
-        GLfloat gamma {3.3f};
-        GLfloat shortWavesFade {0.0f};
-        GLfloat windDirection {0.0f}; // [0, 2pi]
-        GLfloat fetchLength {10000.f}; // [m]
-        GLfloat windSpeed {10.0f}; // [m/s]
-        GLfloat depth {10.f}; // [m]
-        GLfloat g {9.81f}; // gravity [m/s^2]
-        GLfloat peakOmega;
-        GLfloat alpha;
-        GLfloat t;
-        bool propagate; // Propagatate waves?
+        GLfloat scale {0.5f};           // [0, +inf)
+        GLfloat spreadBlend {0.9f};     // [0,1]
+        GLfloat swell {0.9f};           // [0,1]
+        GLfloat gamma {3.3f};           // Peak enhancement factor [1,7]
+        GLfloat shortWavesFade {0.2f};  // [0,1]
+        GLfloat windDirection {0.0f};   // [0, 2pi]
+        GLfloat fetchLength {1000.f};   // [m]
+        GLfloat windSpeed {10.0f};      // [m/s]
+        GLfloat depth {10.f};           // [m]
+        GLfloat g {9.81f};              // gravity [m/s^2]
+        GLfloat peakOmega;              // calculated based on JONSWAP
+        GLfloat alpha;                  // calculated based on JONSWAP
+        GLfloat t {0.f};                // time [s]
+        bool propagate {true};          // Propagatate waves?
+
+        bool operator==(const OceanParams& other) const = default;
     };
 
     #pragma pack(1)
@@ -165,9 +167,10 @@ namespace sf
         //! A method used to display a specified texture.
         /*!
          \param id the id of the texture to display
-         \param rect a rectangle in which to draw the tecture on screen
+         \param layer the layer of the texture to display
+         \param rect a rectangle in which to draw the texture on screen
          */
-        void ShowTexture(int id, glm::vec4 rect);
+        void ShowFFTLayer(const std::string& id, GLuint layer, glm::vec4 rect);
        
         //! A method that updates ocean currents information.
         void UpdateOceanCurrentsData(const OceanCurrentsUBO& data);
@@ -246,14 +249,15 @@ namespace sf
         GLfloat oceanSize;
         glm::vec4 gridSizes_;
         int fftSize_;
+        GLuint fftLayers_;
         OceanParams params_;
         glm::vec3 lightAbsorption;
         glm::vec3 lightScattering;
         GLfloat waterTemperature;
 
         std::map<std::string, GLSLShader*> oceanShaders;
+        std::map<std::string, GLuint> oceanTextures_;
         GLuint oceanFBOs[3];
-        GLuint oceanTextures[6];
         GLuint oceanCurrentsUBO;
         
     private:
@@ -283,8 +287,8 @@ namespace sf
         bool particlesEnabled;
 
         // FFT ocean waves generation
-        unsigned int fftPasses_;
-        unsigned int slopeVarianceSize_;
+        GLuint fftPasses_;
+        GLuint slopeVarianceSize_;
         GLfloat* spectrum12_;
         GLfloat* spectrum34_;
         std::random_device rd_;
