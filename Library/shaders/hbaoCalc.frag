@@ -73,8 +73,8 @@ layout(std140,binding=0) uniform controlBuffer
 	HBAOData control;
 };
 
-vec2 g_Float2Offset = control.float2Offsets[gl_PrimitiveID].xy;
-vec4 g_Jitter       = control.jitters[gl_PrimitiveID];
+vec2 g_Float2Offset = control.float2Offsets[gl_Layer].xy;
+vec4 g_Jitter       = control.jitters[gl_Layer];
   
 layout(binding=0) uniform sampler2DArray texLinearDepth;
 layout(binding=1) uniform sampler2D texViewNormal;
@@ -82,7 +82,7 @@ layout(location=0,index=0) out vec4 fragColor;
 
 vec3 getQuarterCoord(vec2 UV)
 {
-	return vec3(UV, float(gl_PrimitiveID));
+	return vec3(UV, float(gl_Layer));
 }
   
 void outputColor(vec4 color) 

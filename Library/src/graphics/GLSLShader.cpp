@@ -520,27 +520,24 @@ GLuint GLSLShader::LoadShader(GLenum shaderType, const std::string& filename, co
     sourceFile.close();
 #endif    
     const char* shaderSource = source.c_str();
-    if(shaderSource != NULL)
+    if(shaderSource != nullptr)
     {
         shader = glCreateShader(shaderType);
         glShaderSource(shader, 1, (const GLchar**)&shaderSource, NULL);
         glCompileShader(shader);
         glGetShaderiv(shader, GL_COMPILE_STATUS, shaderCompiled);
-        if(*shaderCompiled == 0)
+        if(*shaderCompiled == GL_FALSE)
         {
-            cError("Failed to compile shader: %s", sourcePath.c_str());
+            cError("Failed to compile shader: %s", sourcePath.c_str());          
+
+            GLint infoLogLength = 0;	
+            glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
+            std::vector<char> infoLog(infoLogLength);
+            glGetShaderInfoLog(shader, infoLogLength, &infoLogLength, &infoLog[0]);
+            cError("Shader compile log: %s", &infoLog[0]);
+            
             shader = 0;
         }
-#ifdef DEBUG	
-        GLint infoLogLength = 0;	
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
-        if(infoLogLength > 0)
-        {
-            std::vector<char> infoLog(infoLogLength+1);
-            glGetShaderInfoLog(shader, infoLogLength, NULL, &infoLog[0]);
-            cWarning("Shader compile log: %s", &infoLog[0]);
-        }
-#endif
     }
     else
         *shaderCompiled = 0;

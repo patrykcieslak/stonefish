@@ -72,7 +72,8 @@
 #define UBO_SUNSKY              ((GLuint)1)
 #define UBO_LIGHTS              ((GLuint)2)
 #define UBO_VIEW                ((GLuint)3)
-#define UBO_OCEAN_CURRENTS      ((GLuint)4)
+#define UBO_OCEAN_SPECTRUM      ((GLuint)4)
+#define UBO_OCEAN_CURRENTS      ((GLuint)5)
 
 //Standard SSBO bindings
 #define SSBO_HISTOGRAM          ((GLuint)1)

@@ -43,6 +43,7 @@
 #include <joints/RevoluteJoint.h>
 #include <joints/FixedJoint.h>
 #include <core/FeatherstoneRobot.h>
+#include <graphics/OpenGLRealOcean.h>
 
 CableTestManager::CableTestManager(sf::Scalar stepsPerSecond) 
     : SimulationManager(stepsPerSecond, sf::Solver::SI, sf::CollisionFilter::EXCLUSIVE)
@@ -70,7 +71,9 @@ void CableTestManager::BuildScenario()
     CreateLook("Red", sf::Color::RGB(1.0f, 0.3f, 0.3f), 0.5f, 0.0f);
     CreateLook("Rope", sf::Color::Gray(1.f), 1.f, 0.f, 0.f, sf::GetDataPath() + "rope_color.jpg", sf::GetDataPath() + "rope_normal.png");
 
-    EnableOcean(0.0);
+    EnableOcean(0.5);
+    sf::OpenGLRealOcean* ocean = dynamic_cast<sf::OpenGLRealOcean*>(getOcean()->getOpenGLOcean());
+    ocean->setWireframe(false);
     getOcean()->setWaterType(0.2);
     getOcean()->AddVelocityField(new sf::Uniform(sf::Vector3(0.0,0.0,0.0)));
     getOcean()->EnableCurrents();
@@ -132,6 +135,6 @@ void CableTestManager::SimulationStepCompleted(sf::Scalar timeStep)
         sf::Scalar length = cable->getLength();
         sf::Scalar restLength = cable->getRestLength();
         sf::Scalar stretch = (length - restLength) / restLength;
-        std::cout << std::setprecision(3) << "[" << cable->getName() << "] Length: " << length << " m, Stretch: " << stretch * 100 << " %" << std::endl;
+        //std::cout << std::setprecision(3) << "[" << cable->getName() << "] Length: " << length << " m, Stretch: " << stretch * 100 << " %" << std::endl;
     }
 }

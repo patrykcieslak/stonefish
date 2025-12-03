@@ -1,0 +1,124 @@
+/*   
+    Copyright (c) 2025 Patryk Cieslak. All rights reserved.
+
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+#version 430
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(rgba16f) uniform image2D spectrum12; // Initial spectrum (cascade 1 & 2) (out)
+layout(rgba16f) uniform image2D spectrum34; // Initial spectrum (cascade 3 & 4) (out)
+uniform vec4 lengthScales; // Length scales of the cascades
+
+const float PI = 3.14159265359;
+const float TWO_PI = 6.28318530718;
+const float TWO_OVER_PI = 0.63661977236;
+
+#inject "ocean/jonswap.glsl"
+
+float LengthScaleMin(int cascade, int spectrumSize)
+{
+    if (cascade == 0)
+        return PI / lengthScales.x; // Minimum wave number
+    else if (cascade == 1)
+        return PI * float(spectrumSize) / lengthScales.x; // Minimum wave number
+    else if (cascade == 2)
+        return PI * float(spectrumSize) / lengthScales.y; // Minimum wave number
+    else //if (cascade == 3)
+        return PI * float(spectrumSize) / lengthScales.z; // Minimum wave number
+}
+
+// https://www.pcg-random.org/
+// https://www.shadertoy.com/view/XlGcRh
+uint PCG(uint v)
+{
+	uint state = v * 747796405u + 2891336453u;
+	uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+	return (word >> 22u) ^ word;
+}
+
+// http://www.jcgt.org/published/0009/03/02/
+uvec3 PCG3D(uvec3 v) 
+{
+    v = v * 1664525u + 1013904223u;
+
+    v.x += v.y*v.z;
+    v.y += v.z*v.x;
+    v.z += v.x*v.y;
+
+    v ^= v >> 16u;
+
+    v.x += v.y*v.z;
+    v.y += v.z*v.x;
+    v.z += v.x*v.y;
+
+    return v;
+}
+
+float BoxMuller12(vec2 value)
+{
+    return cos(TWO_PI * value.x) * sqrt(-2.0 * log(value.y));
+}
+
+float RandomUniform(uvec3 rngState)
+{
+    const float NORMALIZATION_FACTOR = 1.0/float(0xffffffffu);
+    uvec3 rngState2 = PCG3D(rngState);
+    return NORMALIZATION_FACTOR * PCG(PCG(rngState2.x) + PCG(rngState2.y) + PCG(rngState2.z));
+}
+
+float RandomGaussian(uvec3 rngState)
+{
+    return BoxMuller12(vec2(RandomUniform(rngState), RandomUniform(rngState)));
+}
+
+/* 
+    Computes initial directional JONSWAP spectrum for all four length scale cascades
+*/
+void main()
+{
+    int spectrumSize = int(imageSize(spectrum12).x);
+    
+    if(gl_GlobalInvocationID.x < spectrumSize && gl_GlobalInvocationID.y < spectrumSize)
+    {
+        ivec2 coord;
+        coord.x = int(gl_GlobalInvocationID.x) >= spectrumSize / 2 ? int(gl_GlobalInvocationID.x) - spectrumSize : int(gl_GlobalInvocationID.x);
+        coord.y = int(gl_GlobalInvocationID.y) >= spectrumSize / 2 ? int(gl_GlobalInvocationID.y) - spectrumSize : int(gl_GlobalInvocationID.y);
+
+        vec2 spectrum[4] = vec2[4](vec2(0.0), vec2(0.0), vec2(0.0), vec2(0.0));
+        for(int cascade = 0; cascade < 4; ++cascade)
+        {
+            float dk = TWO_PI / lengthScales[cascade]; // Used to discretize the frequency domain    
+            vec2 k = vec2(coord) * dk; // wave vector
+            float kMag = length(k); // wave number
+            if (kMag >= LengthScaleMin(cascade, spectrumSize))
+            {
+                float dOmegadk = DispertionRelationDerivative(kMag);
+                float S = sqrt(2.0 * DirectionalSpectrum(k, kMag) * abs(dOmegadk) / kMag * dk * dk);
+
+                uvec3 rngState = uvec3(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y, cascade);
+                float A = RandomGaussian(rngState); // Amplitude
+                float phi = TWO_PI * RandomUniform(rngState); // Phase
+                spectrum[cascade] = A * vec2(cos(phi), -sin(phi)) * S;
+            }
+        }
+
+        imageStore(spectrum12, ivec2(gl_GlobalInvocationID.xy), vec4(spectrum[0], spectrum[1]));
+        imageStore(spectrum34, ivec2(gl_GlobalInvocationID.xy), vec4(spectrum[2], spectrum[3]));
+    }     
+}

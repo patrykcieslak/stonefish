@@ -524,7 +524,7 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, aoDepthArrayTex);
         glBindBufferBase(GL_UNIFORM_BUFFER, 0, aoDataUBO);
         glNamedBufferSubDataEXT(aoDataUBO, 0, sizeof(AOData), &aoData);
-        glDrawArrays(GL_TRIANGLES, 0, 3 * HBAO_RANDOM_ELEMENTS);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 3, HBAO_RANDOM_ELEMENTS);
         OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
         OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
                
@@ -830,7 +830,6 @@ void OpenGLCamera::Init(const RenderSettings& rSettings)
         
         std::vector<GLSLSource> sources;
         sources.push_back(GLSLSource(GL_VERTEX_SHADER, "saq.vert"));
-        sources.push_back(GLSLSource(GL_GEOMETRY_SHADER, "saq.geom"));
         sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "hbaoCalc.frag"));
         aoCalcShader = new GLSLShader(sources);
         aoCalcShader->AddUniform("texLinearDepth", ParameterType::INT);

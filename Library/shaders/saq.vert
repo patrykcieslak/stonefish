@@ -1,5 +1,5 @@
 /*    
-    Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+    Copyright (c) 2019-2025 Patryk Cieslak. All rights reserved.
 
     This file is a part of Stonefish.
 
@@ -17,14 +17,20 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#version 330
+#version 430
+
+#extension GL_ARB_shader_viewport_layer_array : enable
 
 out vec2 texcoord;
 
 void main()
 {
+    // Compute screen covering triangle
 	int idx = gl_VertexID % 3;
 	vec4 pos =  vec4((float(idx&1))*4.0-1.0, (float((idx>>1)&1))*4.0-1.0, 1.0, 1.0);
-	gl_Position = pos;
-	texcoord = pos.xy * 0.5 + 0.5;
+    
+    // Outputs
+    texcoord = pos.xy * 0.5 + 0.5;
+    gl_Layer = gl_InstanceID;
+    gl_Position = pos;
 }

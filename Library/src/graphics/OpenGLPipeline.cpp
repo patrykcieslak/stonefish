@@ -739,11 +739,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     {
                         GLfloat offset = 700.f;
                         ocean->getOpenGLOcean()->ShowSpectrum(glm::vec2(0, offset), 128);
-                        ocean->getOpenGLOcean()->ShowFFTLayer("fft12", 0, glm::vec4(128, offset, 128, 128));
-                        ocean->getOpenGLOcean()->ShowFFTLayer("fft12", 1, glm::vec4(256, offset, 128, 128));
-                        ocean->getOpenGLOcean()->ShowFFTLayer("fft12", 2, glm::vec4(384, offset, 128, 128));
-                        ocean->getOpenGLOcean()->ShowFFTLayer("fft12", 3, glm::vec4(512, offset, 128, 128));
-                        ocean->getOpenGLOcean()->ShowFFTLayer("fft12", 4, glm::vec4(640, offset, 128, 128));
+                        ocean->getOpenGLOcean()->ShowFFTLayer(0, glm::vec4(128, offset, 128, 128));
+                        ocean->getOpenGLOcean()->ShowFFTLayer(1, glm::vec4(256, offset, 128, 128));
+                        ocean->getOpenGLOcean()->ShowFFTLayer(2, glm::vec4(384, offset, 128, 128));
+                        ocean->getOpenGLOcean()->ShowFFTLayer(3, glm::vec4(512, offset, 128, 128));
+                        ocean->getOpenGLOcean()->ShowFFTLayer(4, glm::vec4(640, offset, 128, 128));
                     }
             
                     //atm->getOpenGLAtmosphere()->ShowSunShadowmaps(0, 0, 0.1f);

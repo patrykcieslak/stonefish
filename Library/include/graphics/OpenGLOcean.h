@@ -33,36 +33,42 @@
 
 namespace sf
 {
+    #pragma pack(1)
     //! A structure holding parameters of ocean generation and rendering (JONSWAP model).
-    struct OceanParams
+    struct OceanSpectrumUBO
     {
-        GLfloat scale {0.5f};           // [0, +inf)
-        GLfloat spreadBlend {0.9f};     // [0,1]
-        GLfloat swell {0.9f};           // [0,1]
-        GLfloat gamma {3.3f};           // Peak enhancement factor [1,7]
-        GLfloat shortWavesFade {0.2f};  // [0,1]
-        GLfloat windDirection {0.0f};   // [0, 2pi]
-        GLfloat fetchLength {1000.f};   // [m]
-        GLfloat windSpeed {10.0f};      // [m/s]
-        GLfloat depth {10.f};           // [m]
-        GLfloat g {9.81f};              // gravity [m/s^2]
-        GLfloat peakOmega;              // calculated based on JONSWAP
-        GLfloat alpha;                  // calculated based on JONSWAP
-        GLfloat t {0.f};                // time [s]
-        bool propagate {true};          // Propagatate waves?
+        GLfloat scale {1.f};                // Overall scale factor
+        GLfloat windSpeed {1.f};            // Wind speed [m/s]
+        GLfloat windDirection {0.f};        // Wind direction [rad]
+        GLfloat windFetchLength {1000.f};   // Wind fetch length [m]
+        GLfloat depth {10.f};               // Water depth [m]
+        GLfloat peakOmega {0.f};            // Peak angular frequency [rad/s]
+        GLfloat alpha {0.f};                // Phillips spectrum constant
+        GLfloat gamma {3.3f};               // Peak enhancement factor
+        GLfloat swell {1.f};                // Swell factor
+        GLfloat spreadBlend {0.5f};         // Spreading blend factor
+        GLfloat shortWavesFade {0.2f};      // Short waves fade factor
+        GLfloat g {9.81f};                  // Gravitational acceleration [m/s^2]
 
-        bool operator==(const OceanParams& other) const = default;
+        bool operator==(const OceanSpectrumUBO& other) const = default;
     };
 
-    #pragma pack(1)
     //! A structure representing the ocean currents UBO.
     struct OceanCurrentsUBO
     {
-        VelocityFieldUBO currents[MAX_OCEAN_CURRENTS]; //REMARK: type -> 0=uniform,1=jet,2=pipe,10=thruster
+        std::array<VelocityFieldUBO, MAX_OCEAN_CURRENTS> currents; //REMARK: type -> 0=uniform,1=jet,2=pipe,10=thruster
         glm::vec3 gravity;
         GLuint numCurrents;
+
+        bool operator==(const OceanCurrentsUBO& other) const = default;
     };
     #pragma pack(0)
+
+    struct OceanParams
+    {
+        OceanSpectrumUBO spectrumParams;
+        bool propagateWaves;
+    };
 
     class GLSLShader;
 	class OpenGLView;
@@ -166,11 +172,10 @@ namespace sf
         
         //! A method used to display a specified texture.
         /*!
-         \param id the id of the texture to display
          \param layer the layer of the texture to display
          \param rect a rectangle in which to draw the texture on screen
          */
-        void ShowFFTLayer(const std::string& id, GLuint layer, glm::vec4 rect);
+        void ShowFFTLayer(GLuint layer, glm::vec4 rect);
        
         //! A method that updates ocean currents information.
         void UpdateOceanCurrentsData(const OceanCurrentsUBO& data);
@@ -251,6 +256,7 @@ namespace sf
         int fftSize_;
         GLuint fftLayers_;
         OceanParams params_;
+        GLfloat propagationTime_;
         glm::vec3 lightAbsorption;
         glm::vec3 lightScattering;
         GLfloat waterTemperature;
@@ -258,6 +264,7 @@ namespace sf
         std::map<std::string, GLSLShader*> oceanShaders;
         std::map<std::string, GLuint> oceanTextures_;
         GLuint oceanFBOs[3];
+        GLuint oceanSpectrumUBO_;
         GLuint oceanCurrentsUBO;
         
     private:
@@ -266,22 +273,7 @@ namespace sf
         GLfloat* ComputeButterflyLookupTable(unsigned int size, unsigned int passes);
         
         float GetSlopeVariance(float kx, float ky, float *spectrumSample);
-        void GetSpectrumSample(int i, int j, GLfloat lengthScale, GLfloat kMin, GLfloat* result);
         float ComputeSlopeVariance();
-        void GenerateWavesSpectrum();
-        void UpdateOceanParams();
-
-        GLfloat DispertionRelation(GLfloat kMag);
-        GLfloat DispertionRelationDerivative(GLfloat kMag);
-        GLfloat TMACorrection(GLfloat omega);
-        GLfloat NormalizationFactor(GLfloat s);
-        GLfloat Cosine2s(GLfloat theta, GLfloat s);
-        GLfloat SpreadPower(GLfloat omega, GLfloat peakOmega);
-        GLfloat ShortWavesFade(GLfloat kLength);
-
-        GLfloat JONSWAPSpectrum(GLfloat omega);
-        GLfloat DirectionalSpectrum(GLfloat theta, GLfloat omega);
-        GLfloat FullSpectrum(glm::vec2 k, GLfloat kLength);
 
         int oceanBoxObj;
         bool particlesEnabled;

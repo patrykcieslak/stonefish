@@ -69,6 +69,8 @@ namespace sf
         glm::vec4 dirV;   //Direction and velocity value
         glm::vec3 params; //Additional params
         GLuint type;      //Type of velocity field
+
+        bool operator==(const VelocityFieldUBO& other) const = default;
     };
     #pragma pack(0)
 
