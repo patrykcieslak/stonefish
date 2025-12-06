@@ -28,6 +28,7 @@
 #include "core/MaterialManager.h"
 #include "entities/Entity.h"
 #include "graphics/OpenGLDataStructs.h"
+#include <memory>
 
 namespace sf
 {
@@ -129,7 +130,7 @@ namespace sf
         int getGraphicalObject() const;
 
         //! A method returning the associated particles system.
-        OpenGLOceanParticles* getOceanParticles();
+        std::shared_ptr<OpenGLOceanParticles> getOceanParticles();
 
         //! A method returning the rigid body associated with the entity.
         btRigidBody* getRigidBody();
@@ -144,13 +145,13 @@ namespace sf
         Vector3 filteredAngularVel;
         Vector3 linearAcc;
         Vector3 angularAcc;
-        
+
         //Display
         int lookId;
         int graObjectId;
         DisplayMode dm;
-        OpenGLOceanParticles* particles;
-        
+        std::shared_ptr<OpenGLOceanParticles> particles;
+
     private:
     };
 }
