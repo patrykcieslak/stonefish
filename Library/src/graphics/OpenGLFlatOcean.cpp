@@ -45,6 +45,7 @@ OpenGLFlatOcean::OpenGLFlatOcean(GLfloat size) : OpenGLOcean(200000.f)
     GLuint pcssFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lighting.frag", "", &compiled);
 	std::vector<GLuint> precompiled;
     precompiled.push_back(OpenGLAtmosphere::getAtmosphereAPI());
+    precompiled.push_back(GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "cookTorrance.frag", "", &compiled));
     precompiled.push_back(pcssFragment);
 
     //Surface rendering
