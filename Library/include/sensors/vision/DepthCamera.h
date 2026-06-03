@@ -47,9 +47,10 @@ namespace sf
          \param minDepth the minimum measured depth [m]
          \param maxDepth the maximum measured depth [m]
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
+         \param vFOVDeg the vertical field of view [deg] (-1 means derived from resolution aspect ratio)
          */
         DepthCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg,
-                    Scalar minDepth, Scalar maxDepth, Scalar frequency = Scalar(-1));
+                    Scalar minDepth, Scalar maxDepth, Scalar frequency = Scalar(-1), Scalar vFOVDeg = Scalar(-1));
        
         //! A destructor.
         ~DepthCamera();
@@ -88,6 +89,9 @@ namespace sf
 
         //! A method returning the depth range of the camera.
         glm::vec2 getDepthRange() const;
+
+        //! A method returning the vertical field of view of the camera [deg] (-1 if derived from aspect ratio).
+        Scalar getVerticalFOV() const;
         
         //! A method returning the pointer to the image data.
         /*!
@@ -108,6 +112,7 @@ namespace sf
         OpenGLDepthCamera* glCamera;
         GLfloat* imageData;
         glm::vec2 depthRange;
+        Scalar fovV;
         GLfloat noiseStdDev;
         std::function<void(DepthCamera*)> newDataCallback;
     };
