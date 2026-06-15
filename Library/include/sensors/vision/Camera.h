@@ -102,6 +102,9 @@ namespace sf
          \return pointer to the image data buffer
          */
         virtual void* getImageDataPointer(unsigned int index = 0) = 0;
+
+        //! A method returning the simulation time [s] of the last captured frame.
+        Scalar getLastCaptureTime() const;
         
     protected:
         Scalar fovH;

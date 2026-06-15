@@ -136,6 +136,7 @@ void OpenGLSegmentationCamera::SetupCamera(glm::vec3 _eye, glm::vec3 _dir, glm::
 
 void OpenGLSegmentationCamera::UpdateTransform()
 {
+    pendingCaptureTime_ = tempCaptureTime_;
     eye = tempEye;
     dir = tempDir;
     up = tempUp;
@@ -341,6 +342,7 @@ void OpenGLSegmentationCamera::DrawLDR(GLuint destinationFBO, bool updated)
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
         OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
+        captureTime_ = pendingCaptureTime_;
         newData = true;
     }
 }
