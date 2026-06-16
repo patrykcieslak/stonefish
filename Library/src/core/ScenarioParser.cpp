@@ -4042,7 +4042,10 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             return nullptr;
         }
         
-        DepthCamera* dcam = new DepthCamera(sensorName, resX, resY, hFov, depthMin, depthMax, rate);
+        Scalar vFov(-1);
+        item->QueryAttribute("vertical_fov", &vFov);
+
+        DepthCamera* dcam = new DepthCamera(sensorName, resX, resY, hFov, depthMin, depthMax, rate, vFov);
 
         //Optional noise definition
         if((item = element->FirstChildElement("noise")) != nullptr)    
