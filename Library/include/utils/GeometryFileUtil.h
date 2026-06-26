@@ -64,7 +64,23 @@ namespace sf
      \return a pointer to an allocated mesh structure
      */
     Mesh* LoadOBJ(const std::string& path, GLfloat scale);
-    
+
+    //! A function to load geometry from a text-based GLTF2 file.
+    /*!
+     \param path a path to the file
+     \param scale a scale to apply to the data
+     \return a pointer to an allocated mesh structure
+     */
+    Mesh* LoadGLTF2ASCII(const std::string& path, GLfloat scale);
+
+    //! A function to load geometry from a binary GLTF2 file.
+    /*!
+     \param path a path to the file
+     \param scale a scale to apply to the data
+     \return a pointer to an allocated mesh structure
+     */
+    Mesh* LoadGLTF2Binary(const std::string& path, GLfloat scale);
+
     //! A function to compute all physical properties of a mesh.
     /*!
      \param mesh a pointer to the mesh structure

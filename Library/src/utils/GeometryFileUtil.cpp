@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 22/11/2018.
-//  Copyright (c) 2018-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "utils/GeometryFileUtil.h"
@@ -28,6 +28,8 @@
 #include <algorithm>
 #include "core/SimulationApp.h"
 #include "utils/SystemUtil.hpp"
+#include "rapidobj.hpp"
+#include "tiny_gltf_v3.h"
 
 namespace sf
 {
@@ -41,6 +43,10 @@ Mesh* LoadGeometryFromFile(const std::string& path, GLfloat scale)
         mesh = LoadSTL(path, scale);
     else if(extension == "obj" || extension == "OBJ")
         mesh = LoadOBJ(path, scale);
+    else if(extension == "gltf" || extension == "GLTF")
+        mesh = LoadGLTF2ASCII(path, scale);
+    else if(extension == "glb" || extension == "GLB")
+        mesh = LoadGLTF2Binary(path, scale);
     else
         cError("Unsupported geometry file type: %s!", extension.c_str());
     
@@ -49,200 +55,203 @@ Mesh* LoadGeometryFromFile(const std::string& path, GLfloat scale)
 
 Mesh* LoadOBJ(const std::string& path, GLfloat scale)
 {
-    //Read OBJ data
-    FILE* file = fopen(path.c_str(), "rb");
-    
-    if(file == NULL)
-    {
-        cCritical("Failed to open geometry file: %s", path.c_str());
-        return nullptr;
-    }
-    
+    Mesh* mesh = nullptr;
+
     cInfo("Loading geometry from: %s", path.c_str());
     
-    char line[1024];
-    std::vector<glm::vec3> positions;
-    std::vector<glm::vec3> normals;
-    std::vector<glm::vec2> uvs;
-    Mesh* mesh_ = nullptr;
     int64_t start = GetTimeInMicroseconds();
+    rapidobj::Result objData = rapidobj::ParseFile(path);
     
-    //Read vertices
-    while(fgets(line, 1024, file))
+    if (objData.error)
     {
-        if(line[0] == 'v')
-        {
-            if(line[1] == ' ')
-            {
-                glm::vec3 v;
-                sscanf(line, "v %f %f %f\n", &v.x, &v.y, &v.z);
-                v *= scale; //Scaling
-                positions.push_back(v);
-            }
-            else if(line[1] == 'n')
-            {
-                glm::vec3 n;
-                sscanf(line, "vn %f %f %f\n", &n.x, &n.y, &n.z);
-                normals.push_back(n);
-            }
-            else if(line[1] == 't')
-            {
-                glm::vec2 uv;
-                sscanf(line, "vt %f %f\n", &uv.x, &uv.y);
-                uvs.push_back(uv);
-            }
-        }
+        cCritical("Failed to load geometry! (error: %s)", objData.error.code.message().c_str());
+        return nullptr;
     }
-    fseek(file, 0, SEEK_SET); //Go back to beginning of file
-    
-    size_t genVStart = positions.size();
-    bool hasNormals = normals.size() > 0;
-    bool hasUVs = uvs.size() > 0;
 
+    bool success = rapidobj::Triangulate(objData);
+    if (!success)
+    {
+        cCritical("Failed to triangulate geometry!", path.c_str());
+        return nullptr;
+    }
+
+    size_t genVStart = objData.attributes.positions.size()/3;
+    bool hasNormals = !objData.attributes.normals.empty();
+    bool hasUVs = !objData.attributes.texcoords.empty();
+    
 #ifdef DEBUG
-    printf("Vertices: %ld Normals: %ld\n", genVStart, normals.size());
+    printf("Vertices: %ld Normals: %ld\n", genVStart, objData.attributes.normals.size()/3);
 #endif
     
-    if(hasUVs)
+    if(hasUVs && hasNormals)
     {
-        TexturableMesh* mesh = new TexturableMesh;
+        TexturableMesh* tmesh = new TexturableMesh;
+        mesh = tmesh;
 
-        //Initialize positions
-        for(size_t i=0; i<positions.size(); ++i)
-        {
-            TexturableVertex v;
-            v.pos = positions[i];
-            mesh->vertices.push_back(v);
-        }
+        // Initialize positions (there will be at least one new vertex per each new position)
+        tmesh->vertices.resize(objData.attributes.positions.size()/3);
+        for (size_t i=0; i<tmesh->vertices.size(); ++i)
+            memcpy(&tmesh->vertices[i].pos.x, &objData.attributes.positions[i*3], sizeof(glm::vec3));
 
         //Read faces
-        while(fgets(line, 1024, file))
+        for (size_t i=0; i<objData.shapes.size(); ++i) // Fuse all shapes together
         {
-            if(line[0] != 'f')
-                continue;
-        
-            Face face;
-            unsigned int vID[3];
-            unsigned int uvID[3];
-            unsigned int nID[3];
-            sscanf(line, "f %u/%u/%u %u/%u/%u %u/%u/%u\n", &vID[0], &uvID[0], &nID[0], &vID[1], &uvID[1], &nID[1], &vID[2], &uvID[2], &nID[2]);
-        
-            for(short unsigned int i=0; i<3; ++i)
+            for (size_t h=0; h<objData.shapes[i].mesh.indices.size()/3; ++h) // 3 vertices per face
             {
-                TexturableVertex v = mesh->vertices[vID[i]-1]; //Vertex from previously read pool
+                int pID[3];
+                int nID[3];
+                int uvID[3];
+                
+                for (size_t k=0; k<3; ++k)
+                {
+                    pID[k] = objData.shapes[i].mesh.indices[h*3+k].position_index;
+                    nID[k] = objData.shapes[i].mesh.indices[h*3+k].normal_index;
+                    uvID[k] = objData.shapes[i].mesh.indices[h*3+k].texcoord_index;
+                }
+
+                Face face;
+
+                for(size_t k=0; k<3; ++k)
+                {
+                    TexturableVertex v = tmesh->vertices[pID[k]]; //Vertex from previously read pool
             
-                if(glm::length2(v.normal) == 0.f) //Is it a fresh vertex?
-                {
-                    mesh->vertices[vID[i]-1].normal = normals[nID[i]-1];
-                    mesh->vertices[vID[i]-1].uv = uvs[uvID[i]-1];
-                    face.vertexID[i] = vID[i]-1;
-                }
-                else if((v.normal == normals[nID[i]-1]) && (v.uv == uvs[uvID[i]-1])) //Does it have the same normal and UV?
-                {
-                    face.vertexID[i] = vID[i]-1;
-                }
-                else //Otherwise search the generated pool
-                {
-                    v.normal = normals[nID[i]-1];
-                    v.uv = uvs[uvID[i]-1];
-                
-                    std::vector<TexturableVertex>::iterator it;
-                    if((it = std::find(mesh->vertices.begin()+genVStart, mesh->vertices.end(), v)) != mesh->vertices.end()) //If vertex exists
-                    {
-                        face.vertexID[i] = (GLuint)(it - mesh->vertices.begin());
-                    }
-                    else
-                    {
-                        mesh->vertices.push_back(v);
-                        face.vertexID[i] = (GLuint)mesh->vertices.size()-1;
-                    }
-                }
-            }
-
-            mesh->faces.push_back(face);
-        }
-        mesh_ = mesh;
-    }
-    else    
-    {
-        PlainMesh* mesh = new PlainMesh;
-
-        //Initialize positions
-        for(size_t i=0; i<positions.size(); ++i)
-        {
-            Vertex v;
-            v.pos = positions[i];
-            mesh->vertices.push_back(v);
-        }
-
-        //Read faces
-        while(fgets(line, 1024, file))
-        {
-            if(line[0] != 'f')
-                continue;
-        
-            Face face;
-
-            if(hasNormals)
-            {
-                unsigned int vID[3];
-                unsigned int nID[3];
-                sscanf(line, "f %u//%u %u//%u %u//%u\n", &vID[0], &nID[0], &vID[1], &nID[1], &vID[2], &nID[2]);
-                
-                for(short unsigned int i=0; i<3; ++i)
-                {
-                    Vertex v = mesh->vertices[vID[i]-1]; //Vertex from previously read pool
-                    
                     if(glm::length2(v.normal) == 0.f) //Is it a fresh vertex?
                     {
-                        mesh->vertices[vID[i]-1].normal = normals[nID[i]-1];
-                        face.vertexID[i] = vID[i]-1;
+                        tmesh->vertices[pID[k]].normal.x = objData.attributes.normals[nID[k]*3+0];
+                        tmesh->vertices[pID[k]].normal.y = objData.attributes.normals[nID[k]*3+1];
+                        tmesh->vertices[pID[k]].normal.z = objData.attributes.normals[nID[k]*3+2];
+                        tmesh->vertices[pID[k]].uv.x = objData.attributes.texcoords[uvID[k]*2+0];
+                        tmesh->vertices[pID[k]].uv.y = objData.attributes.texcoords[uvID[k]*2+1];
+                        face.vertexID[k] = pID[k];
                     }
-                    else if(v.normal == normals[nID[i]-1]) //Does it have the same normal?
+                    else if((v.normal.x == objData.attributes.normals[nID[k]*3+0]) 
+                        && (v.normal.y == objData.attributes.normals[nID[k]*3+1])
+                        && (v.normal.z == objData.attributes.normals[nID[k]*3+2])
+                        && (v.uv.x == objData.attributes.texcoords[uvID[k]*2+0])
+                        && (v.uv.y == objData.attributes.texcoords[uvID[k]*2+1])) //Does it have the same normal and UV?
                     {
-                        face.vertexID[i] = vID[i]-1;
+                        face.vertexID[k] = pID[k];
                     }
                     else //Otherwise search the generated pool
                     {
-                        v.normal = normals[nID[i]-1];
+                        v.normal.x = objData.attributes.normals[nID[k]*3+0];
+                        v.normal.y = objData.attributes.normals[nID[k]*3+1];
+                        v.normal.z = objData.attributes.normals[nID[k]*3+2];
+                        v.uv.x = objData.attributes.texcoords[uvID[k]*2+0];
+                        v.uv.y = objData.attributes.texcoords[uvID[k]*2+1];
                         
-                        std::vector<Vertex>::iterator it;
-                        if((it = std::find(mesh->vertices.begin()+genVStart, mesh->vertices.end(), v)) != mesh->vertices.end()) //If vertex exists
+                        std::vector<TexturableVertex>::iterator it;
+                        if((it = std::find(tmesh->vertices.begin()+genVStart, tmesh->vertices.end(), v)) != tmesh->vertices.end()) //If vertex exists
                         {
-                            face.vertexID[i] = (GLuint)(it - mesh->vertices.begin());
+                            face.vertexID[k] = (GLuint)(it - tmesh->vertices.begin());
                         }
                         else
                         {
-                            mesh->vertices.push_back(v);
-                            face.vertexID[i] = (GLuint)mesh->vertices.size()-1;
+                            tmesh->vertices.push_back(v);
+                            face.vertexID[k] = (GLuint)tmesh->vertices.size()-1;
                         }
                     }
                 }
+
+                tmesh->faces.push_back(face);
             }
-            else
-            {
-                unsigned int vID[3];
-                sscanf(line, "f %u %u %u\n", &vID[0], &vID[1], &vID[2]);
-                
-                face.vertexID[0] = vID[0]-1;
-                face.vertexID[1] = vID[1]-1;
-                face.vertexID[2] = vID[2]-1;
-            }
-        
-            mesh->faces.push_back(face);
         }
-        mesh_ = mesh;
     }
-    fclose(file);
+    else    
+    {
+        PlainMesh* pmesh = new PlainMesh;
+        mesh = pmesh;
+        
+        // Initialize positions
+        pmesh->vertices.resize(objData.attributes.positions.size()/3);
+        
+        if (hasNormals)
+        {
+            for (size_t i=0; i<pmesh->vertices.size(); ++i)
+                memcpy(&pmesh->vertices[i].pos.x, &objData.attributes.positions[i*3], sizeof(glm::vec3));
+
+            for (size_t i=0; i<objData.shapes.size(); ++i) // Fuse all shapes together
+            {
+                for (size_t h=0; h<objData.shapes[i].mesh.indices.size()/3; ++h) // 3 vertices per face
+                {
+                    GLuint pID[3];
+                    GLuint nID[3];
+                    
+                    for (size_t k=0; k<3; ++k)
+                    {
+                        pID[k] = (GLuint)objData.shapes[i].mesh.indices[h*3+k].position_index;
+                        nID[k] = (GLuint)objData.shapes[i].mesh.indices[h*3+k].normal_index;
+                    }
+
+                    Face face;
+
+                    for(size_t k=0; k<3; ++k)
+                    {
+                        Vertex v = pmesh->vertices[pID[k]]; //Vertex from previously read pool
+                    
+                        if(glm::length2(v.normal) == 0.f) //Is it a fresh vertex?
+                        {
+                            pmesh->vertices[pID[k]].normal.x = objData.attributes.normals[nID[k]*3+0];
+                            pmesh->vertices[pID[k]].normal.y = objData.attributes.normals[nID[k]*3+1];
+                            pmesh->vertices[pID[k]].normal.z = objData.attributes.normals[nID[k]*3+2];
+                            face.vertexID[k] = pID[k];
+                        }
+                        else if((v.normal.x == objData.attributes.normals[nID[k]*3+0]) 
+                                && (v.normal.y == objData.attributes.normals[nID[k]*3+1])
+                                && (v.normal.z == objData.attributes.normals[nID[k]*3+2])) //Does it have the same normal?
+                        {
+                            face.vertexID[k] = pID[k];
+                        }
+                        else // Otherwise search the generated pool
+                        {
+                            v.normal.x = objData.attributes.normals[nID[k]*3+0];
+                            v.normal.y = objData.attributes.normals[nID[k]*3+1];
+                            v.normal.z = objData.attributes.normals[nID[k]*3+2];
+
+                            std::vector<Vertex>::iterator it;
+                            if((it = std::find(pmesh->vertices.begin()+genVStart, pmesh->vertices.end(), v)) != pmesh->vertices.end()) //If vertex exists
+                            {
+                                face.vertexID[k] = (GLuint)(it - pmesh->vertices.begin());
+                            }
+                            else
+                            {
+                                pmesh->vertices.push_back(v);
+                                face.vertexID[k] = (GLuint)pmesh->vertices.size()-1;
+                            }
+                        }
+                    }
+
+                    pmesh->faces.push_back(face);
+                }
+            }
+        }
+        else // No normals
+        {
+            for (size_t i=0; i<pmesh->vertices.size(); ++i)
+                memcpy(&pmesh->vertices[i].pos.x, &objData.attributes.positions[i*3], sizeof(glm::vec3));
+                
+            for (size_t i=0; i<objData.shapes.size(); ++i) // Fuse all shapes together
+            {
+                for (size_t h=0; h<objData.shapes[i].mesh.indices.size()/3; ++h) // 3 vertices per face
+                {
+                    Face face;
+                    for (size_t k=0; k<3; ++k)
+                        face.vertexID[k] = objData.shapes[i].mesh.indices[h*3+k].position_index;
+                    
+                    pmesh->faces.push_back(face);
+                }
+            }
+        }
+    }
     
     int64_t end = GetTimeInMicroseconds();
     
 #ifdef DEBUG
-    printf("Loaded: %ld Generated: %ld\n", genVStart, mesh_->getNumOfVertices()-genVStart);
+    printf("Loaded: %ld Generated: %ld\n", genVStart, mesh->getNumOfVertices()-genVStart);
     printf("Total time: %ld\n", (long int)(end-start));
 #endif
-    cInfo("Loaded mesh with %ld faces in %ld ms.", mesh_->faces.size(), (end-start)/1000);
-    return mesh_;
+    cInfo("Loaded mesh with %ld faces in %ld ms.", mesh->faces.size(), (end-start)/1000);
+    return mesh;
 }
 
 Mesh* LoadSTL(const std::string& path, GLfloat scale)
@@ -294,6 +303,22 @@ Mesh* LoadSTL(const std::string& path, GLfloat scale)
     //Remove duplicates (so that it becomes equivalent to OBJ file representation)
     
     return mesh;
+}
+
+Mesh* LoadGLTF2ASCII(const std::string& path, GLfloat scale)
+{
+
+
+
+    //return mesh;
+}
+
+Mesh* LoadGLTF2Binary(const std::string& path, GLfloat scale)
+{
+
+
+
+    //return mesh
 }
 
 void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar density, Scalar& mass, Vector3& CG, Scalar& volume, Scalar& surface, Vector3& Ipri, Matrix3& Irot)
