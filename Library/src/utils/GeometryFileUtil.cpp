@@ -26,6 +26,7 @@
 #include "utils/GeometryFileUtil.h"
 
 #include <algorithm>
+#include <unordered_set>
 #include "core/SimulationApp.h"
 #include "utils/SystemUtil.hpp"
 #include "rapidobj.hpp"
@@ -82,7 +83,7 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
 #ifdef DEBUG
     printf("Vertices: %ld Normals: %ld\n", genVStart, objData.attributes.normals.size()/3);
 #endif
-    
+
     if(hasUVs && hasNormals)
     {
         TexturableMesh* tmesh = new TexturableMesh;
@@ -91,7 +92,14 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
         // Initialize positions (there will be at least one new vertex per each new position)
         tmesh->vertices.resize(objData.attributes.positions.size()/3);
         for (size_t i=0; i<tmesh->vertices.size(); ++i)
-            memcpy(&tmesh->vertices[i].pos.x, &objData.attributes.positions[i*3], sizeof(glm::vec3));
+        {
+            tmesh->vertices[i].pos.x = scale * objData.attributes.positions[i*3+0];
+            tmesh->vertices[i].pos.y = scale * objData.attributes.positions[i*3+1];
+            tmesh->vertices[i].pos.z = scale * objData.attributes.positions[i*3+2];
+        }
+
+        std::unordered_set<IndexedTexturableVertex, IndexedTexturableVertexHash> generatedVertices;
+        GLuint index = 0;
 
         //Read faces
         for (size_t i=0; i<objData.shapes.size(); ++i) // Fuse all shapes together
@@ -140,15 +148,16 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
                         v.uv.x = objData.attributes.texcoords[uvID[k]*2+0];
                         v.uv.y = objData.attributes.texcoords[uvID[k]*2+1];
                         
-                        std::vector<TexturableVertex>::iterator it;
-                        if((it = std::find(tmesh->vertices.begin()+genVStart, tmesh->vertices.end(), v)) != tmesh->vertices.end()) //If vertex exists
+                        auto it = generatedVertices.find(IndexedTexturableVertex(0, v));
+                        if (it != generatedVertices.end())
                         {
-                            face.vertexID[k] = (GLuint)(it - tmesh->vertices.begin());
+                            face.vertexID[k] = it->index + genVStart;
                         }
                         else
                         {
-                            tmesh->vertices.push_back(v);
-                            face.vertexID[k] = (GLuint)tmesh->vertices.size()-1;
+                            generatedVertices.insert(IndexedTexturableVertex(index, v));
+                            face.vertexID[k] = index + genVStart;
+                            ++index;
                         }
                     }
                 }
@@ -156,19 +165,33 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
                 tmesh->faces.push_back(face);
             }
         }
+
+        // Append generated vertices to mesh vertices
+        std::vector<IndexedTexturableVertex> sortedGeneratedVertices(generatedVertices.begin(), generatedVertices.end());
+        std::sort(sortedGeneratedVertices.begin(), sortedGeneratedVertices.end());
+
+        tmesh->vertices.resize(tmesh->vertices.size() + sortedGeneratedVertices.size());
+        for (size_t i=0; i<sortedGeneratedVertices.size(); ++i)
+            tmesh->vertices[genVStart + i] = sortedGeneratedVertices[i].vertex;
     }
-    else    
+    else
     {
         PlainMesh* pmesh = new PlainMesh;
         mesh = pmesh;
         
         // Initialize positions
         pmesh->vertices.resize(objData.attributes.positions.size()/3);
-        
+        for (size_t i=0; i<pmesh->vertices.size(); ++i)
+        {
+            pmesh->vertices[i].pos.x = scale * objData.attributes.positions[i*3+0];
+            pmesh->vertices[i].pos.y = scale * objData.attributes.positions[i*3+1];
+            pmesh->vertices[i].pos.z = scale * objData.attributes.positions[i*3+2];
+        }
+
         if (hasNormals)
         {
-            for (size_t i=0; i<pmesh->vertices.size(); ++i)
-                memcpy(&pmesh->vertices[i].pos.x, &objData.attributes.positions[i*3], sizeof(glm::vec3));
+            std::unordered_set<IndexedVertex, IndexedVertexHash> generatedVertices;
+            GLuint index = 0;
 
             for (size_t i=0; i<objData.shapes.size(); ++i) // Fuse all shapes together
             {
@@ -208,15 +231,16 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
                             v.normal.y = objData.attributes.normals[nID[k]*3+1];
                             v.normal.z = objData.attributes.normals[nID[k]*3+2];
 
-                            std::vector<Vertex>::iterator it;
-                            if((it = std::find(pmesh->vertices.begin()+genVStart, pmesh->vertices.end(), v)) != pmesh->vertices.end()) //If vertex exists
+                            auto it = generatedVertices.find(IndexedVertex(0, v));
+                            if (it != generatedVertices.end())
                             {
-                                face.vertexID[k] = (GLuint)(it - pmesh->vertices.begin());
+                                face.vertexID[k] = it->index + genVStart;
                             }
                             else
                             {
-                                pmesh->vertices.push_back(v);
-                                face.vertexID[k] = (GLuint)pmesh->vertices.size()-1;
+                                generatedVertices.insert(IndexedVertex(index, v));
+                                face.vertexID[k] = index + genVStart;
+                                ++index;
                             }
                         }
                     }
@@ -224,6 +248,14 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
                     pmesh->faces.push_back(face);
                 }
             }
+
+            // Append generated vertices to mesh vertices
+            std::vector<IndexedVertex> sortedGeneratedVertices(generatedVertices.begin(), generatedVertices.end());
+            std::sort(sortedGeneratedVertices.begin(), sortedGeneratedVertices.end());
+
+            pmesh->vertices.resize(pmesh->vertices.size() + sortedGeneratedVertices.size());
+            for (size_t i=0; i<sortedGeneratedVertices.size(); ++i)
+                pmesh->vertices[genVStart + i] = sortedGeneratedVertices[i].vertex;
         }
         else // No normals
         {

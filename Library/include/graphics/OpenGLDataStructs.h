@@ -128,13 +128,7 @@ namespace sf
             normal = glm::vec3(0.f);
         }
 
-        friend bool operator==(const Vertex& lhs, const Vertex& rhs)
-        {
-            if(lhs.pos == rhs.pos 
-                && lhs.normal == rhs.normal)
-                return true;
-            return false;
-        };
+        bool operator==(const Vertex& other) const = default;
     };
 
     //! A structure containing single vertex data.
@@ -149,14 +143,7 @@ namespace sf
             tangent = glm::vec3(0.f);
         }
         
-        friend bool operator==(const TexturableVertex& lhs, const TexturableVertex& rhs)
-        {
-            if(lhs.pos == rhs.pos 
-               && lhs.normal == rhs.normal 
-               && lhs.uv == rhs.uv)
-               return true;
-            return false;
-        };
+        bool operator==(const TexturableVertex& other) const = default;
     };
 
     //! A structure containing single face data.
@@ -164,12 +151,7 @@ namespace sf
     {
         GLuint vertexID[3];
         
-        friend bool operator==(const Face& lhs, const Face& rhs)
-        {
-            if(lhs.vertexID[0] == rhs.vertexID[0] && lhs.vertexID[1] == rhs.vertexID[1] && lhs.vertexID[2] == rhs.vertexID[2])
-                return true;
-            return false;
-        };
+        bool operator==(const Face& other) const = default;
     };
     
     //! A structure containing mesh data.
