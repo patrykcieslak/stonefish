@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 17/11/2018.
-//  Copyright (c) 2018-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -128,7 +128,10 @@ namespace sf
             normal = glm::vec3(0.f);
         }
 
-        bool operator==(const Vertex& other) const = default;
+        bool operator==(const Vertex& other) const
+        {
+            return pos == other.pos && normal == other.normal;
+        }
     };
 
     //! A structure containing single vertex data.
@@ -143,7 +146,11 @@ namespace sf
             tangent = glm::vec3(0.f);
         }
         
-        bool operator==(const TexturableVertex& other) const = default;
+        bool operator==(const TexturableVertex& other) const
+        {
+            return pos == other.pos && normal == other.normal 
+                && uv == other.uv && tangent == other.tangent;
+        }
     };
 
     //! A structure containing single face data.
@@ -151,7 +158,12 @@ namespace sf
     {
         GLuint vertexID[3];
         
-        bool operator==(const Face& other) const = default;
+        bool operator==(const Face& other) const
+        {
+            return vertexID[0] == other.vertexID[0]
+                && vertexID[1] == other.vertexID[1]
+                && vertexID[2] == other.vertexID[2];
+        }
     };
     
     //! A structure containing mesh data.
