@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 22/11/2018.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_GeometryFileUtil__
@@ -148,22 +148,6 @@ namespace sf
      \return a pointer to an allocated mesh structure
      */
     Mesh* LoadOBJ(const std::string& path, GLfloat scale);
-
-    //! A function to load geometry from a text-based GLTF2 file.
-    /*!
-     \param path a path to the file
-     \param scale a scale to apply to the data
-     \return a pointer to an allocated mesh structure
-     */
-    Mesh* LoadGLTF2ASCII(const std::string& path, GLfloat scale);
-
-    //! A function to load geometry from a binary GLTF2 file.
-    /*!
-     \param path a path to the file
-     \param scale a scale to apply to the data
-     \return a pointer to an allocated mesh structure
-     */
-    Mesh* LoadGLTF2Binary(const std::string& path, GLfloat scale);
 
     //! A function to compute all physical properties of a mesh.
     /*!

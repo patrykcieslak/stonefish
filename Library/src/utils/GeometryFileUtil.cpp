@@ -30,7 +30,6 @@
 #include "core/SimulationApp.h"
 #include "utils/SystemUtil.hpp"
 #include "rapidobj.hpp"
-#include "tiny_gltf_v3.h"
 
 namespace sf
 {
@@ -44,10 +43,6 @@ Mesh* LoadGeometryFromFile(const std::string& path, GLfloat scale)
         mesh = LoadSTL(path, scale);
     else if(extension == "obj" || extension == "OBJ")
         mesh = LoadOBJ(path, scale);
-    else if(extension == "gltf" || extension == "GLTF")
-        mesh = LoadGLTF2ASCII(path, scale);
-    else if(extension == "glb" || extension == "GLB")
-        mesh = LoadGLTF2Binary(path, scale);
     else
         cError("Unsupported geometry file type: %s!", extension.c_str());
     
@@ -335,22 +330,6 @@ Mesh* LoadSTL(const std::string& path, GLfloat scale)
     //Remove duplicates (so that it becomes equivalent to OBJ file representation)
     
     return mesh;
-}
-
-Mesh* LoadGLTF2ASCII(const std::string& path, GLfloat scale)
-{
-
-
-
-    //return mesh;
-}
-
-Mesh* LoadGLTF2Binary(const std::string& path, GLfloat scale)
-{
-
-
-
-    //return mesh
 }
 
 void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar density, Scalar& mass, Vector3& CG, Scalar& volume, Scalar& surface, Vector3& Ipri, Matrix3& Irot)
