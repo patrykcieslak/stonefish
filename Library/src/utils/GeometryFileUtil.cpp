@@ -143,14 +143,14 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
                         v.uv.x = objData.attributes.texcoords[uvID[k]*2+0];
                         v.uv.y = objData.attributes.texcoords[uvID[k]*2+1];
                         
-                        auto it = generatedVertices.find(IndexedTexturableVertex(0, v));
+                        auto it = generatedVertices.find(IndexedTexturableVertex{0, v});
                         if (it != generatedVertices.end())
                         {
                             face.vertexID[k] = it->index + genVStart;
                         }
                         else
                         {
-                            generatedVertices.insert(IndexedTexturableVertex(index, v));
+                            generatedVertices.insert(IndexedTexturableVertex{index, v});
                             face.vertexID[k] = index + genVStart;
                             ++index;
                         }
@@ -226,14 +226,14 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
                             v.normal.y = objData.attributes.normals[nID[k]*3+1];
                             v.normal.z = objData.attributes.normals[nID[k]*3+2];
 
-                            auto it = generatedVertices.find(IndexedVertex(0, v));
+                            auto it = generatedVertices.find(IndexedVertex{0, v});
                             if (it != generatedVertices.end())
                             {
                                 face.vertexID[k] = it->index + genVStart;
                             }
                             else
                             {
-                                generatedVertices.insert(IndexedVertex(index, v));
+                                generatedVertices.insert(IndexedVertex{index, v});
                                 face.vertexID[k] = index + genVStart;
                                 ++index;
                             }

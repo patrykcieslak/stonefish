@@ -57,9 +57,9 @@ namespace sf
             return vertex == other.vertex;
         }
 
-        std::weak_ordering operator<=>(const IndexedVertex& other) const
+        bool operator<(const IndexedVertex& other) const 
         {
-            return index <=> other.index;
+            return index < other.index;
         }
     };
 
@@ -94,9 +94,9 @@ namespace sf
             return vertex == other.vertex;
         }
 
-        std::weak_ordering operator<=>(const IndexedTexturableVertex& other) const
+        bool operator<(const IndexedTexturableVertex& other) const
         {
-            return index <=> other.index;
+            return index < other.index;
         }
     };
 

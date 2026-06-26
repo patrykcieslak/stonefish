@@ -52,7 +52,8 @@ CableEntity::CableEntity(std::string uniqueName, PhysicsSettings phy, Vector3 fi
     restLength_ = (secondEnd - firstEnd).safeNorm();
 
     // Material properties
-    cableBody_->m_materials[0]->m_kLST = lerp(Scalar(1.2), Scalar(0.02), btClamped(stretching, Scalar(0), Scalar(1)));
+    Scalar clampedStretching = btClamped(stretching, Scalar(0), Scalar(1));
+    cableBody_->m_materials[0]->m_kLST = (Scalar(1) - clampedStretching) * Scalar(1.2) + clampedStretching * Scalar(0.02);
     cableBody_->m_materials[0]->m_kAST = Scalar(1);
     cableBody_->m_materials[0]->m_kVST = Scalar(1);
     radius_ = diameter / Scalar(2);
