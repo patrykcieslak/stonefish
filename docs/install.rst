@@ -73,5 +73,6 @@ The following 3rd party code is included in the source of the library and will b
 -  `TinyExpr <https://github.com/codeplea/tinyexpr>`_ (C library)
 -  `stb_image <https://github.com/nothings/stb>`_ (C library)
 -  `stb_image_write <https://github.com/nothings/stb>`_ (C library)
+-  `rapidobj <https://github.com/guybrush77/rapidobj>`_ (C++ library)
 -  `ResourceManager <https://github.com/Johnnyborov/ResourceManager>`_ (C++ class and tool)
 -  OpenGL 4.6 functions loader generated with `GLAD2 <https://gen.glad.sh>`_

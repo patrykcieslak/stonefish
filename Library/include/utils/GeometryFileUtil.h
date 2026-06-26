@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 22/11/2018.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_GeometryFileUtil__
@@ -31,6 +31,12 @@
 
 namespace sf
 {
+    inline void hashCombine(std::size_t& seed, std::size_t value) 
+    {
+        // 0x9e3779b9 is the golden ratio; it prevents sequential numbers from colliding
+        seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    }
+
     struct MeshProperties
     {
         Scalar mass;
@@ -40,7 +46,85 @@ namespace sf
         Vector3 Ipri;
         Matrix3 Irot;
     };
-    
+
+    struct IndexedVertex
+    {
+        GLuint index;
+        Vertex vertex;
+
+        bool operator==(const IndexedVertex& other) const 
+        {
+            return vertex == other.vertex;
+        }
+
+        std::weak_ordering operator<=>(const IndexedVertex& other) const
+        {
+            return index <=> other.index;
+        }
+    };
+
+    struct IndexedVertexHash
+    {
+        std::size_t operator()(const IndexedVertex& s) const
+        {
+            std::size_t h1 = std::hash<GLfloat>{}(s.vertex.pos.x);
+            std::size_t h2 = std::hash<GLfloat>{}(s.vertex.pos.y);
+            std::size_t h3 = std::hash<GLfloat>{}(s.vertex.pos.z);
+            std::size_t h4 = std::hash<GLfloat>{}(s.vertex.normal.x);
+            std::size_t h5 = std::hash<GLfloat>{}(s.vertex.normal.y);
+            std::size_t h6 = std::hash<GLfloat>{}(s.vertex.normal.z);
+            std::size_t seed = 0;
+            hashCombine(seed, h1);
+            hashCombine(seed, h2);
+            hashCombine(seed, h3);
+            hashCombine(seed, h4);
+            hashCombine(seed, h5);
+            hashCombine(seed, h6);
+            return seed;
+        }
+    };
+
+    struct IndexedTexturableVertex
+    {
+        GLuint index;
+        TexturableVertex vertex;
+
+        bool operator==(const IndexedTexturableVertex& other) const 
+        {
+            return vertex == other.vertex;
+        }
+
+        std::weak_ordering operator<=>(const IndexedTexturableVertex& other) const
+        {
+            return index <=> other.index;
+        }
+    };
+
+    struct IndexedTexturableVertexHash
+    {
+        std::size_t operator()(const IndexedTexturableVertex& s) const
+        {
+            std::size_t h1 = std::hash<GLfloat>{}(s.vertex.pos.x);
+            std::size_t h2 = std::hash<GLfloat>{}(s.vertex.pos.y);
+            std::size_t h3 = std::hash<GLfloat>{}(s.vertex.pos.z);
+            std::size_t h4 = std::hash<GLfloat>{}(s.vertex.normal.x);
+            std::size_t h5 = std::hash<GLfloat>{}(s.vertex.normal.y);
+            std::size_t h6 = std::hash<GLfloat>{}(s.vertex.normal.z);
+            std::size_t h7 = std::hash<GLfloat>{}(s.vertex.uv.x);
+            std::size_t h8 = std::hash<GLfloat>{}(s.vertex.uv.y);
+            std::size_t seed = 0;
+            hashCombine(seed, h1);
+            hashCombine(seed, h2);
+            hashCombine(seed, h3);
+            hashCombine(seed, h4);
+            hashCombine(seed, h5);
+            hashCombine(seed, h6);
+            hashCombine(seed, h7);
+            hashCombine(seed, h8);
+            return seed;
+        }
+    };
+
     //! A function to load geometry from a file.
     /*!
      \param path a path to the file
@@ -64,7 +148,7 @@ namespace sf
      \return a pointer to an allocated mesh structure
      */
     Mesh* LoadOBJ(const std::string& path, GLfloat scale);
-    
+
     //! A function to compute all physical properties of a mesh.
     /*!
      \param mesh a pointer to the mesh structure

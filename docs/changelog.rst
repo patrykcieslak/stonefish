@@ -11,6 +11,7 @@ The changelog of the library code is presented below. **Breaking changes** were 
 - Added support for glueing dynamic bodies to robot links
 - Added an option to define the output data format for all sonar types
 - Disabled selection of static planes in the 3D view
+- Significantly improved the speed of loading OBJ files
 - *Renamed multiple symbols in the library*
 
 1.5
