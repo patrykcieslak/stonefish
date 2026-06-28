@@ -41,6 +41,10 @@
 #include <sensors/vision/SegmentationCamera.h>
 #include <iostream>
 
+#ifdef DEBUG
+#include <iostream>
+#endif
+
 CameraTestManager::CameraTestManager(sf::Scalar stepsPerSecond)
    : SimulationManager(stepsPerSecond, sf::Solver::SI, sf::CollisionFilter::EXCLUSIVE)
 {

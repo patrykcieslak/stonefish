@@ -27,6 +27,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <memory>
 #include "stb_image_write.h"
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
@@ -341,9 +342,6 @@ OpenGLOcean::~OpenGLOcean()
     
     if(params.spectrum12 != NULL) delete [] params.spectrum12;
     if(params.spectrum34 != NULL) delete [] params.spectrum34;
-
-    for(const auto& particles : oceanParticles)
-        delete particles.second;
 }
 
 void OpenGLOcean::setWaterType(GLfloat t)
@@ -545,8 +543,9 @@ void OpenGLOcean::Simulate(GLfloat dt)
     //Simulate particles (this is done every frame becasue even if the camera is not updated the particels need to move)
     if(particlesEnabled)
     {
-        for(std::map<OpenGLView*, OpenGLOceanParticles*>::iterator it=oceanParticles.begin(); it!=oceanParticles.end(); ++it)
-            it->second->Update(it->first, dt);
+        for (const std::pair<OpenGLView*, std::shared_ptr<OpenGLOceanParticles>> particle: oceanParticles) {
+            particle.second->Update(particle.first, dt);
+        }
     }
 }
 
@@ -579,18 +578,18 @@ void OpenGLOcean::DrawBackground(OpenGLView* view)
     OpenGLState::UseProgram(0);
 }
 
-OpenGLOceanParticles* OpenGLOcean::AllocateParticles(OpenGLView* view)
+std::shared_ptr<OpenGLOceanParticles> OpenGLOcean::AllocateParticles(OpenGLView* view)
 {
     //Check if particles are already allocated for this view
     if(oceanParticles.find(view) != oceanParticles.end())
         return oceanParticles.at(view);
 
-    OpenGLOceanParticles* particles = new OpenGLOceanParticles(STD_OCEAN_PARTICLES_COUNT, STD_OCEAN_PARTICLES_RADIUS);
-    oceanParticles.insert(std::pair<OpenGLView*, OpenGLOceanParticles*>(view, particles));
+    std::shared_ptr<OpenGLOceanParticles> particles = std::make_shared<OpenGLOceanParticles>(STD_OCEAN_PARTICLES_COUNT, STD_OCEAN_PARTICLES_RADIUS);
+    oceanParticles.insert(std::pair<OpenGLView*, std::shared_ptr<OpenGLOceanParticles>>(view, particles));
     return particles;
 }
 
-void OpenGLOcean::AssignParticles(OpenGLView* view, OpenGLOceanParticles* particles)
+void OpenGLOcean::AssignParticles(OpenGLView* view, std::shared_ptr<OpenGLOceanParticles> particles)
 {
     oceanParticles[view] = particles;
 }

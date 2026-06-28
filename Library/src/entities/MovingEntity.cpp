@@ -30,6 +30,7 @@
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLOceanParticles.h"
+#include <memory>
 
 namespace sf
 {
@@ -49,8 +50,6 @@ MovingEntity::MovingEntity(std::string uniqueName, std::string material, std::st
 
 MovingEntity::~MovingEntity()
 {
-    if(particles != nullptr)
-        delete particles;
 }
 
 Material MovingEntity::getMaterial() const
@@ -88,13 +87,13 @@ int MovingEntity::getGraphicalObject() const
     return graObjectId;
 }
 
-OpenGLOceanParticles* MovingEntity::getOceanParticles()
+std::shared_ptr<OpenGLOceanParticles> MovingEntity::getOceanParticles()
 {
-    if(particles == nullptr 
-        && SimulationApp::getApp()->hasGraphics() 
+    if(particles == nullptr
+        && SimulationApp::getApp()->hasGraphics()
         && SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
     {
-        particles = new OpenGLOceanParticles(STD_OCEAN_PARTICLES_COUNT, STD_OCEAN_PARTICLES_RADIUS);
+        particles = std::make_shared<OpenGLOceanParticles>(STD_OCEAN_PARTICLES_COUNT, STD_OCEAN_PARTICLES_RADIUS);
     }
 
     return particles;
