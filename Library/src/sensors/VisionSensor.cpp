@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 21/11/2018.
-//  Copyright (c) 2018-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/VisionSensor.h"
@@ -87,9 +87,10 @@ void VisionSensor::AttachToWorld(const Transform& origin)
 {
     attach = nullptr;
     o2s = origin;
-    InitGraphics();
-    if(SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
-            SimulationApp::getApp()->getSimulationManager()->getOcean()->getOpenGLOcean()->AllocateParticles(getOpenGLView());
+    bool seesParticles = false;
+    InitGraphics(seesParticles);
+    if(seesParticles && SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
+        SimulationApp::getApp()->getSimulationManager()->getOcean()->getOpenGLOcean()->AllocateParticles(getOpenGLView());
 }
 
 void VisionSensor::AttachToStatic(StaticEntity* body, const Transform& origin)
@@ -98,8 +99,9 @@ void VisionSensor::AttachToStatic(StaticEntity* body, const Transform& origin)
     {
         attach = body;
         o2s = origin;
-        InitGraphics();
-        if(SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
+        bool seesParticles = false;
+        InitGraphics(seesParticles);
+        if(seesParticles && SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
             SimulationApp::getApp()->getSimulationManager()->getOcean()->getOpenGLOcean()->AllocateParticles(getOpenGLView());
     }
 }
@@ -110,8 +112,10 @@ void VisionSensor::AttachToSolid(MovingEntity* body, const Transform& origin)
     {
         attach = body;
         o2s = origin;
-        InitGraphics();
-        if(SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
+        bool seesParticles = false;
+        InitGraphics(seesParticles);
+
+        if(seesParticles && SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
             SimulationApp::getApp()->getSimulationManager()->getOcean()->getOpenGLOcean()->AssignParticles(getOpenGLView(), body->getOceanParticles());
     }
 }

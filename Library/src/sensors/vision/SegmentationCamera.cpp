@@ -68,8 +68,10 @@ OpenGLView* SegmentationCamera::getOpenGLView() const
     return glCamera;
 }
 
-void SegmentationCamera::InitGraphics()
+void SegmentationCamera::InitGraphics(bool& seesParticles)
 {
+    seesParticles = true;
+
     glCamera = new OpenGLSegmentationCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, depthRange, freq < Scalar(0));
     glCamera->setCamera(this);
     UpdateTransform();

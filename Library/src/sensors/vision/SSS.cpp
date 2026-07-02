@@ -132,8 +132,10 @@ OpenGLView* SSS::getOpenGLView() const
     return glSSS;
 }
 
-void SSS::InitGraphics()
+void SSS::InitGraphics(bool& seesParticles)
 {
+    seesParticles = false;
+
     glSSS = new OpenGLSSS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),
                           (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, (GLfloat)tilt, range, outputFormat_);
     glSSS->setNoise(noise);

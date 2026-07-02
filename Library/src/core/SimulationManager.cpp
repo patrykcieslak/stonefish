@@ -970,7 +970,7 @@ void SimulationManager::DestroyScenario()
 
     if(SimulationApp::getApp() != nullptr && SimulationApp::getApp()->hasGraphics())
 	{
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DestroyContent();
+        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DestroyContent();
 		trackball = nullptr;
 	}
 }
@@ -1483,7 +1483,7 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, Scalar timeS
                 else if(simManager->entities[i]->getType() == EntityType::CABLE)
                 {
                     btSoftBody* cableBody = static_cast<CableEntity*>(simManager->entities[i])->getSoftBody();
-                    for (size_t h = 0; h < cableBody->m_nodes.size(); ++h)
+                    for (int h = 0; h < cableBody->m_nodes.size(); ++h)
                     {
                         if (cableBody->m_nodes[h].m_v.length() > simManager->icLinTolerance * Scalar(100.))
                         {
@@ -1577,7 +1577,7 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
             }
         }
     }
-    
+
     //Geometry-based forces
     bool recompute = simManager->fdCounter % simManager->fdPrescaler == 0;
     ++simManager->fdCounter;
@@ -1707,9 +1707,26 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
     //Update simulation time
     simManager->simulationTime += timeStep;
     
+    //Update drawing of graphical simulation app
+    if (SimulationApp::getApp()->hasGraphics())
+    {
+        OpenGLPipeline* pipeline = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline();
+        if(pipeline != nullptr && pipeline->isDrawingQueueEmpty())
+        {
+            if (SDL_TryLockMutex(pipeline->getDrawingQueueMutex()) == 0)
+            {
+                simManager->UpdateDrawingQueue();
+                SDL_UnlockMutex(pipeline->getDrawingQueueMutex());
+            }
+        }
+    }
+  
     //Optional method to update some post simulation data (like ROS messages...)
     if (simManager->getCallSimulationStepCompleted())
+    {
+        ////cInfo("PostTickCallback %ld", simManager->getSimulationClock());
         simManager->SimulationStepCompleted(timeStep);
+    }
 }
 
 //Used to save contact information, including contact forces

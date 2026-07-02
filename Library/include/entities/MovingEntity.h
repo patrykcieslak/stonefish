@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 15/07/20.
-//  Copyright(c) 2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -129,7 +129,7 @@ namespace sf
         int getGraphicalObject() const;
 
         //! A method returning the associated particles system.
-        OpenGLOceanParticles* getOceanParticles();
+        const std::shared_ptr<OpenGLOceanParticles>& getOceanParticles();
 
         //! A method returning the rigid body associated with the entity.
         btRigidBody* getRigidBody();
@@ -149,7 +149,7 @@ namespace sf
         int lookId;
         int graObjectId;
         DisplayMode dm;
-        OpenGLOceanParticles* particles;
+        std::shared_ptr<OpenGLOceanParticles> particles;
         
     private:
     };

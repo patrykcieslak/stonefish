@@ -130,7 +130,7 @@ namespace sf
         OpenGLView* getOpenGLView() const override;
         
     private:
-        void InitGraphics();
+        void InitGraphics(bool& seesParticles);
         
         std::vector<CamData> cameras;
         GLfloat* imageData;

@@ -50,10 +50,8 @@ file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/Library/src/*.cpp")
 file(GLOB_RECURSE SOURCES_3RD "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/*.c")
 
 # List dependecies
-set(LIBRARIES ${FREETYPE_LIBRARIES} ${OPENGL_LIBRARIES} ${SDL2_LIBRARIES})
-if(OpenMP_CXX_FOUND)
-    set(LIBRARIES ${LIBRARIES} ${OpenMP_CXX_LIBRARIES})
-endif()
+set(LIBRARIES ${FREETYPE_LIBRARIES} ${OPENGL_LIBRARIES} ${SDL2_LIBRARIES} OpenMP::OpenMP_CXX)
+set(BULLET_FLAGS BT_EULER_DEFAULT_ZYX BT_USE_DOUBLE_PRECISION)
 
 # Define targets
 if(BUILD_TESTS)
@@ -67,8 +65,7 @@ if(BUILD_TESTS)
         ${LIBRARIES}
     )
     target_compile_definitions(Stonefish_test PUBLIC 
-        BT_EULER_DEFAULT_ZYX 
-        BT_USE_DOUBLE_PRECISION
+        ${BULLET_FLAGS}
     )
     if(NOT EMBED_RESOURCES)
         #Sets shader path for the library
@@ -92,8 +89,7 @@ else()
         "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include/${CMAKE_PROJECT_NAME}>"
     )
     target_compile_definitions(Stonefish PUBLIC 
-        BT_EULER_DEFAULT_ZYX 
-        BT_USE_DOUBLE_PRECISION
+        ${BULLET_FLAGS}
     )
     if(NOT EMBED_RESOURCES)
         #Sets shader path for the library

@@ -133,8 +133,10 @@ OpenGLView* FLS::getOpenGLView() const
     return glFLS;
 }
 
-void FLS::InitGraphics()
+void FLS::InitGraphics(bool& seesParticles)
 {
+    seesParticles = false;
+
     glFLS = new OpenGLFLS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 
                           (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, range, outputFormat_);
     glFLS->setNoise(noise);

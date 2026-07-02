@@ -97,7 +97,7 @@ namespace sf
         OpenGLView* getOpenGLView() const override;
         
     private:
-        void InitGraphics();
+        void InitGraphics(bool& seesParticles);
         
         OpenGLSegmentationCamera* glCamera;
         GLushort* segmentationData;

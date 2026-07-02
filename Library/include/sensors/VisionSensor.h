@@ -108,7 +108,7 @@ namespace sf
         virtual OpenGLView* getOpenGLView() const = 0;
         
     protected:
-        virtual void InitGraphics() = 0;
+        virtual void InitGraphics(bool& seesParticles) = 0;
         
     private:
         Entity* attach;

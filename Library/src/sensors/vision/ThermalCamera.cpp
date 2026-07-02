@@ -101,8 +101,10 @@ OpenGLView* ThermalCamera::getOpenGLView() const
     return glCamera;
 }
 
-void ThermalCamera::InitGraphics()
+void ThermalCamera::InitGraphics(bool& seesParticles)
 {
+    seesParticles = false;
+
     glCamera = new OpenGLThermalCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, measurementRange, depthRange, freq < Scalar(0));
     glCamera->setNoise(noiseStdDev);
     glCamera->setColorMap(colorMap);

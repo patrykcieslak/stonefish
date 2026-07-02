@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/07/2017.
-//  Copyright (c) 2017-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLOcean__
@@ -169,14 +169,14 @@ namespace sf
          \param view a pointer to the view.
          \return a pointer to the allocated particle system
          */
-        OpenGLOceanParticles* AllocateParticles(OpenGLView* view);
+        std::shared_ptr<OpenGLOceanParticles> AllocateParticles(OpenGLView* view);
 
         //! A method to assign particle system to a view.
         /*!
          \param view a pointer to the view.
          \param particles a pointer to the particle system
          */
-        void AssignParticles(OpenGLView* view, OpenGLOceanParticles* particles);
+        void AssignParticles(OpenGLView* view, const std::shared_ptr<OpenGLOceanParticles>& particles);
 
         //! A method to set the type of ocean water.
         /*!
@@ -229,7 +229,7 @@ namespace sf
         virtual void InitializeSimulation();
         float sqr(float x);
         
-        std::map<OpenGLView*, OpenGLOceanParticles*> oceanParticles;
+        std::map<OpenGLView*, std::shared_ptr<OpenGLOceanParticles>> oceanParticles;
         glm::vec3 absorption[64];
         glm::vec3 scattering[64];
         OceanCurrentsUBO oceanCurrentsUBOData;

@@ -180,8 +180,10 @@ OpenGLView* MSIS::getOpenGLView() const
     return glMSIS;
 }
 
-void MSIS::InitGraphics()
+void MSIS::InitGraphics(bool& seesParticles)
 {
+    seesParticles = false;
+
     glMSIS = new OpenGLMSIS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),
                            (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, range, outputFormat_);
     glMSIS->setNoise(noise);

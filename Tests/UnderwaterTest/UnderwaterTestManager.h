@@ -29,7 +29,7 @@
 #include <core/SimulationManager.h>
 #include <iostream>
 
-#define PARSED_SCENARIO
+//#define PARSED_SCENARIO
 
 namespace sf
 {

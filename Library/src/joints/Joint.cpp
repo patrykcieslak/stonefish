@@ -130,6 +130,15 @@ void Joint::AddToSimulation(SimulationManager* sm)
                 constraint->setParam(BT_CONSTRAINT_STOP_CFM, 0.0, i);
             }
         }
+        else if (constraint->getConstraintType() == D6_CONSTRAINT_TYPE) // Generic 6DOF constraint does not support ERP
+        {
+            for(int i=0; i<6; ++i) // Go through all axes
+            {
+                constraint->setParam(BT_CONSTRAINT_STOP_ERP, stopErp, i);
+                constraint->setParam(BT_CONSTRAINT_CFM, 0.0, i);
+                constraint->setParam(BT_CONSTRAINT_STOP_CFM, 0.0, i);
+            }
+        }
         else // Use default axis
         {
             constraint->setParam(BT_CONSTRAINT_ERP, erp);

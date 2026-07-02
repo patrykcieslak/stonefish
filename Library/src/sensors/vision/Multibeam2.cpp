@@ -92,8 +92,10 @@ OpenGLView* Multibeam2::getOpenGLView() const
         return nullptr;
 }
     
-void Multibeam2::InitGraphics()
+void Multibeam2::InitGraphics(bool& seesParticles)
 {
+    seesParticles = false;
+
     if(fovH <= Scalar(MULTIBEAM_MAX_SINGLE_FOV))
     {
         CamData cd;

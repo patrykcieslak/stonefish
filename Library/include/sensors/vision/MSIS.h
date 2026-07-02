@@ -173,7 +173,7 @@ namespace sf
         OpenGLView* getOpenGLView() const override;
         
     private:
-        void InitGraphics();
+        void InitGraphics(bool& seesParticles);
         
         OpenGLMSIS* glMSIS;
         void* sonarData;

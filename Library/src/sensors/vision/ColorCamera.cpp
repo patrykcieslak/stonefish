@@ -75,8 +75,10 @@ OpenGLView* ColorCamera::getOpenGLView() const
     return glCamera;
 }
 
-void ColorCamera::InitGraphics()
+void ColorCamera::InitGraphics(bool& seesParticles)
 {
+    seesParticles = true;
+    
     glCamera = new OpenGLRealCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, depthRange, freq < Scalar(0));
     glCamera->setCamera(this);
     UpdateTransform();

@@ -113,7 +113,7 @@ namespace sf
         OpenGLView* getOpenGLView() const override;
 
     private:
-        void InitGraphics();
+        void InitGraphics(bool& seesParticles);
         
         OpenGLThermalCamera* glCamera;
         GLfloat* temperatureData;

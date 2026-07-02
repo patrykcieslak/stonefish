@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 15/07/2020.
-//  Copyright (c) 2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/MovingEntity.h"
@@ -44,13 +44,11 @@ MovingEntity::MovingEntity(std::string uniqueName, std::string material, std::st
         lookId = -1;
     graObjectId = -1;
     dm = DisplayMode::GRAPHICAL;
-    particles = nullptr;
+    particles.reset();
 }
 
 MovingEntity::~MovingEntity()
-{
-    if(particles != nullptr)
-        delete particles;
+{ 
 }
 
 Material MovingEntity::getMaterial() const
@@ -88,13 +86,13 @@ int MovingEntity::getGraphicalObject() const
     return graObjectId;
 }
 
-OpenGLOceanParticles* MovingEntity::getOceanParticles()
+const std::shared_ptr<OpenGLOceanParticles>& MovingEntity::getOceanParticles()
 {
     if(particles == nullptr 
         && SimulationApp::getApp()->hasGraphics() 
         && SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
     {
-        particles = new OpenGLOceanParticles(STD_OCEAN_PARTICLES_COUNT, STD_OCEAN_PARTICLES_RADIUS);
+        particles = std::make_shared<OpenGLOceanParticles>(STD_OCEAN_PARTICLES_COUNT, STD_OCEAN_PARTICLES_RADIUS);
     }
 
     return particles;

@@ -12,6 +12,8 @@ The changelog of the library code is presented below. **Breaking changes** were 
 - Added an option to define the output data format for all sonar types
 - Disabled selection of static planes in the 3D view
 - Significantly improved the speed of loading OBJ files
+- Fixed rendering freezeing with high physics computation load
+- Fixed segmentation fault on exit, caused by particle systems
 - *Renamed multiple symbols in the library*
 
 1.5

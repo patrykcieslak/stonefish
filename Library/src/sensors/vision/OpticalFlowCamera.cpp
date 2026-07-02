@@ -85,8 +85,10 @@ OpenGLView* OpticalFlowCamera::getOpenGLView() const
     return glCamera;
 }
 
-void OpticalFlowCamera::InitGraphics()
+void OpticalFlowCamera::InitGraphics(bool& seesParticles)
 {
+    seesParticles = false;
+
     glCamera = new OpenGLOpticalFlowCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, depthRange, freq < Scalar(0));
     glCamera->setNoise(noiseStdDev);
     glCamera->setMaxVelocity(displayMaxVelocity);

@@ -103,7 +103,7 @@ namespace sf
         OpenGLView* getOpenGLView() const override;
 
     private:
-        void InitGraphics();
+        void InitGraphics(bool& seesParticles);
         
         OpenGLRealCamera* glCamera;
         glm::vec2 depthRange;
