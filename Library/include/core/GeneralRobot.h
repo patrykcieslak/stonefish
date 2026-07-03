@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 27/01/2023.
-//  Copyright(c) 2023 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2023-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_GeneralRobot__
@@ -86,9 +86,9 @@ namespace sf
         
     private:
         Joint* getJoint(const std::string& name);
-        std::vector<Joint*> joints;
-        std::vector<std::pair<JointSensor*, std::string>> jsAttachments;
-        std::vector<std::pair<JointActuator*, std::string>> jaAttachments;
+        std::vector<Joint*> joints_;
+        std::vector<std::pair<JointSensor*, std::string>> jsAttachments_;
+        std::vector<std::pair<JointActuator*, std::string>> jaAttachments_;
     };
 }
 

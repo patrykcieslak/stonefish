@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 13/02/2023.
-//  Copyright (c) 2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2023-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_SuctionCup__
@@ -80,10 +80,10 @@ namespace sf
         ActuatorType getType() const;
         
     private:
-        bool pump;
-        Joint* joint;
-        FeatherstoneEntity* attachFe;
-        unsigned int attachLinkId;
+        bool pump_;
+        Joint* joint_;
+        FeatherstoneEntity* attachFE_;
+        unsigned int attachLinkId_;
     };
 }
 

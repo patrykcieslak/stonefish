@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 17/07/19.
-//  Copyright (c) 2019-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/ScenarioParser.h"
@@ -297,7 +297,7 @@ bool ScenarioParser::Parse(std::string filename)
     element = root->FirstChildElement("light");
     while(element != nullptr)
     {
-        Light* l = ParseLight(element, "");
+        std::unique_ptr<Light> l = ParseLight(element, "");
         if(l == nullptr)
         {
             log.Print(MessageType::ERROR, "Light not properly defined!");
@@ -310,11 +310,10 @@ bool ScenarioParser::Parse(std::string filename)
             if((item = element->FirstChildElement("world_transform")) == nullptr || !ParseTransform(item, origin))
             {
                 log.Print(MessageType::ERROR, "Light not properly defined!");
-                delete l;
                 return false;
             }
             l->AttachToWorld(origin);
-            sm->AddActuator(l);
+            sm->AddActuator(std::move(l));
         }
         element = element->NextSiblingElement("light");
     }
@@ -323,7 +322,7 @@ bool ScenarioParser::Parse(std::string filename)
     element = root->FirstChildElement("comm");
     while(element != nullptr)
     {
-        Comm* comm = ParseComm(element, "");
+        std::unique_ptr<Comm> comm = ParseComm(element, "");
         if(comm == nullptr)
         {
             log.Print(MessageType::ERROR, "Communication device not properly defined!");
@@ -336,11 +335,10 @@ bool ScenarioParser::Parse(std::string filename)
             if((item = element->FirstChildElement("world_transform")) == nullptr || !ParseTransform(item, origin))
             {
                 log.Print(MessageType::ERROR, "Communication device not properly defined!");
-                delete comm;
                 return false;
             }
             comm->AttachToWorld(origin);
-            sm->AddComm(comm);
+            sm->AddComm(std::move(comm));
         }
         element = element->NextSiblingElement("comm");
     }
@@ -993,8 +991,8 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
     }
   
     //---- Object specific ----
-    StaticEntity* object;
-        
+    std::unique_ptr<StaticEntity> object {};
+
     if(typestr == "box")
     {
         const char* dims = nullptr;
@@ -1009,7 +1007,7 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
         Transform origin = I4();
         if((item = element->FirstChildElement("origin")) != nullptr) 
             ParseTransform(item, origin);
-        object = new Obstacle(objectName, dim, origin, std::string(mat), std::string(look), uvMode);
+        object = std::make_unique<Obstacle>(objectName, dim, origin, std::string(mat), std::string(look), uvMode);
     }
     else if(typestr == "cylinder")
     {
@@ -1024,7 +1022,7 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
         Transform origin = I4();
         if((item = element->FirstChildElement("origin")) != nullptr) 
             ParseTransform(item, origin);
-        object = new Obstacle(objectName, radius, height, origin, std::string(mat), std::string(look));
+        object = std::make_unique<Obstacle>(objectName, radius, height, origin, std::string(mat), std::string(look));
     }
     else if(typestr == "sphere")
     {
@@ -1038,7 +1036,7 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
         Transform origin = I4();
         if((item = element->FirstChildElement("origin")) != nullptr) 
             ParseTransform(item, origin);
-        object = new Obstacle(objectName, radius, origin, std::string(mat), std::string(look));
+        object = std::make_unique<Obstacle>(objectName, radius, origin, std::string(mat), std::string(look));
     }
     else if(typestr == "model")
     {
@@ -1084,16 +1082,16 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
                 log.Print(MessageType::ERROR, "Visual mesh of static body '%s' not properly defined!", objectName.c_str());
                 return false;
             }
-            object = new Obstacle(objectName, GetFullPath(std::string(graMesh)), graScale, graOrigin, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, convex, std::string(mat), std::string(look));
+            object = std::make_unique<Obstacle>(objectName, GetFullPath(std::string(graMesh)), graScale, graOrigin, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, convex, std::string(mat), std::string(look));
         }
         else
         {
-            object = new Obstacle(objectName, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, convex, std::string(mat), std::string(look));
+            object = std::make_unique<Obstacle>(objectName, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, convex, std::string(mat), std::string(look));
         }
     }
     else if(typestr == "plane")
     {
-        object = new Plane(objectName, Scalar(10000), std::string(mat), std::string(look), uvScale);
+        object = std::make_unique<Plane>(objectName, Scalar(10000), std::string(mat), std::string(look), uvScale);
     } 
     else if(typestr == "terrain")
     {
@@ -1114,7 +1112,7 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
             log.Print(MessageType::ERROR, "Dimensions of terrain '%s' not properly defined!", objectName.c_str());
             return false;
         }   
-        object = new Terrain(objectName, GetFullPath(std::string(heightmap)), scaleX, scaleY, height, std::string(mat), std::string(look), uvScale);
+        object = std::make_unique<Terrain>(objectName, GetFullPath(std::string(heightmap)), scaleX, scaleY, height, std::string(mat), std::string(look), uvScale);
     }
     else
     {
@@ -1126,10 +1124,9 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
     item = element->FirstChildElement("sensor");
     while(item != nullptr)
     {
-        if(!ParseSensor(item, (Entity*)object))
+        if(!ParseSensor(item, static_cast<Entity*>(object.get())))
         {
             log.Print(MessageType::ERROR, "Sensor of static body '%s' not properly defined!", objectName.c_str());
-            delete object;
             return false;
         }
         item = item->NextSiblingElement("sensor");
@@ -1139,11 +1136,10 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
     item = element->FirstChildElement("light");
     while(item != nullptr)
     {
-        Light* l = ParseLight(item, object->getName());
+        std::unique_ptr<Light> l = ParseLight(item, object->getName());
         if(l == nullptr)
         {
             log.Print(MessageType::ERROR, "Light of static body '%s' not properly defined!", objectName.c_str());
-            delete object;
             return false;
         }
         else
@@ -1153,12 +1149,10 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
             if( (item2 = item->FirstChildElement("origin")) == nullptr || !ParseTransform(item2, origin) )
             {
                 log.Print(MessageType::ERROR, "Light of static body '%s' not properly defined!", objectName.c_str());
-                delete l;
-                delete object;
                 return false;
             }
-            l->AttachToStatic(object, origin);
-            sm->AddActuator(l);
+            l->AttachToStatic(object.get(), origin);
+            sm->AddActuator(std::move(l));
         }
         item = item->NextSiblingElement("light");
     }
@@ -1167,11 +1161,10 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
     item = element->FirstChildElement("comm");
     while(item != nullptr)
     {
-        Comm* comm = ParseComm(item, object->getName());
+        std::unique_ptr<Comm> comm = ParseComm(item, object->getName());
         if(comm == nullptr)
         {
             log.Print(MessageType::ERROR, "Communication device of static body '%s' not properly defined!", objectName.c_str());
-            delete object;
             return false;
         }
         else
@@ -1181,18 +1174,16 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
             if( (item2 = item->FirstChildElement("origin")) == nullptr || !ParseTransform(item2, origin) )
             {
                 log.Print(MessageType::ERROR, "Communication device of static body '%s' not properly defined!", objectName.c_str());
-                delete comm;
-                delete object;
                 return false;
             }
-            comm->AttachToStatic(object, origin);
-            sm->AddComm(comm);
+            comm->AttachToStatic(object.get(), origin);
+            sm->AddComm(std::move(comm));
         }
         item = item->NextSiblingElement("comm");
     }
 
     //---- Add to world ----
-    sm->AddStaticEntity(object, trans);
+    sm->AddStaticEntity(std::move(object), trans);
 
     return true;
 }
@@ -1334,11 +1325,11 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
     }
 
     //---- Object specific ----
-    AnimatedEntity* object;
+     std::unique_ptr<AnimatedEntity> object {};
         
     if(typestr == "empty")
     {
-        object = new AnimatedEntity(objectName, tr);
+        object = std::make_unique<AnimatedEntity>(objectName, tr);
     }
     else if(typestr == "box")
     {
@@ -1358,7 +1349,7 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
             log.Print(MessageType::ERROR, "Origin frame of animated body '%s' not properly defined!", objectName.c_str());
             return false;        
         }
-        object = new AnimatedEntity(objectName, tr, dim, origin, std::string(mat), std::string(look), collides);
+        object = std::make_unique<AnimatedEntity>(objectName, tr, dim, origin, std::string(mat), std::string(look), collides);
     }
     else if(typestr == "cylinder")
     {
@@ -1378,7 +1369,7 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
             log.Print(MessageType::ERROR, "Origin frame of animated body '%s' not properly defined!", objectName.c_str());
             return false;
         }            
-        object = new AnimatedEntity(objectName, tr, radius, height, origin, std::string(mat), std::string(look), collides);
+        object = std::make_unique<AnimatedEntity>(objectName, tr, radius, height, origin, std::string(mat), std::string(look), collides);
     }
     else if(typestr == "sphere")
     {
@@ -1396,7 +1387,7 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
             log.Print(MessageType::ERROR, "Origin frame of animated body '%s' not properly defined!", objectName.c_str());
             return false;
         }
-        object = new AnimatedEntity(objectName, tr, radius, origin, std::string(mat), std::string(look), collides);
+        object = std::make_unique<AnimatedEntity>(objectName, tr, radius, origin, std::string(mat), std::string(look), collides);
     }
     else if(typestr == "model")
     {
@@ -1442,11 +1433,11 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
                 log.Print(MessageType::ERROR, "Visual mesh of animated body '%s' not properly defined!", objectName.c_str());
                 return false;
             }
-            object = new AnimatedEntity(objectName, tr, GetFullPath(std::string(graMesh)), graScale, graOrigin, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, std::string(mat), std::string(look), collides);
+            object = std::make_unique<AnimatedEntity>(objectName, tr, GetFullPath(std::string(graMesh)), graScale, graOrigin, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, std::string(mat), std::string(look), collides);
         }
         else
         {
-            object = new AnimatedEntity(objectName, tr, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, std::string(mat), std::string(look), collides);
+            object = std::make_unique<AnimatedEntity>(objectName, tr, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, std::string(mat), std::string(look), collides);
         }
     }
     else
@@ -1460,10 +1451,9 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
     item = element->FirstChildElement("sensor");
     while(item != nullptr)
     {
-        if(!ParseSensor(item, (Entity*)object))
+        if(!ParseSensor(item, static_cast<Entity*>(object.get())))
         {
             log.Print(MessageType::ERROR, "Sensor of animated body '%s' not properly defined!", objectName.c_str());
-            delete object;
             return false;
         }
         item = item->NextSiblingElement("sensor");
@@ -1473,11 +1463,10 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
     item = element->FirstChildElement("light");
     while(item != nullptr)
     {
-        Light* l = ParseLight(item, object->getName());
+        std::unique_ptr<Light> l = ParseLight(item, object->getName());
         if(l == nullptr)
         {
             log.Print(MessageType::ERROR, "Light of animated body '%s' not properly defined!", objectName.c_str());
-            delete object;
             return false;
         }
         else
@@ -1487,12 +1476,10 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
             if( (item2 = item->FirstChildElement("origin")) == nullptr || !ParseTransform(item2, origin) )
             {
                 log.Print(MessageType::ERROR, "Light of animated body '%s' not properly defined!", objectName.c_str());
-                delete l;
-                delete object;
                 return false;
             }
-            l->AttachToAnimated(object, origin);
-            sm->AddActuator(l);
+            l->AttachToAnimated(object.get(), origin);
+            sm->AddActuator(std::move(l));
         }
         item = item->NextSiblingElement("light");
     }
@@ -1501,11 +1488,10 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
     item = element->FirstChildElement("comm");
     while(item != nullptr)
     {
-        Comm* comm = ParseComm(item, object->getName());
+        std::unique_ptr<Comm> comm = ParseComm(item, object->getName());
         if(comm == nullptr)
         {
             log.Print(MessageType::ERROR, "Communication device of animated body '%s' not properly defined!", objectName.c_str());
-            delete object;
             return false;
         }
         else
@@ -1515,18 +1501,16 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
             if( (item2 = item->FirstChildElement("origin")) == nullptr || !ParseTransform(item2, origin) )
             {
                 log.Print(MessageType::ERROR, "Communication device of animated body '%s' not properly defined!", objectName.c_str());
-                delete comm;
-                delete object;
                 return false;
             }
-            comm->AttachToSolid(object, origin);
-            sm->AddComm(comm);
+            comm->AttachToSolid(object.get(), origin);
+            sm->AddComm(std::move(comm));
         }
         item = item->NextSiblingElement("comm");
     }
 
     //---- Add to world ----
-    sm->AddAnimatedEntity(object);
+    sm->AddAnimatedEntity(std::move(object));
 
     return true;
 }
@@ -1534,8 +1518,8 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
 bool ScenarioParser::ParseDynamic(XMLElement* element)
 {
     //---- Solid ----
-    SolidEntity* solid;
-    if(!ParseSolid(element, solid))
+    std::unique_ptr<SolidEntity> solid {};
+    if(!ParseSolid(element, solid.get()))
         return false;
     
     XMLElement* item;
@@ -1543,7 +1527,6 @@ bool ScenarioParser::ParseDynamic(XMLElement* element)
     if((item = element->FirstChildElement("world_transform")) == nullptr || !ParseTransform(item, trans))
     {
         log.Print(MessageType::ERROR, "Initial pose of dynamic object '%s', in the world frame, missing!", solid->getName().c_str());
-        delete solid;
         return false;
     }
 
@@ -1551,10 +1534,9 @@ bool ScenarioParser::ParseDynamic(XMLElement* element)
     item = element->FirstChildElement("sensor");
     while(item != nullptr)
     {
-        if(!ParseSensor(item, (Entity*)solid))
+        if(!ParseSensor(item, static_cast<Entity*>(solid.get())))
         {
             log.Print(MessageType::ERROR, "Sensor of dynamic body '%s' not properly defined!", solid->getName().c_str());
-            delete solid;
             return false;
         }
         item = item->NextSiblingElement("sensor");
@@ -1564,11 +1546,10 @@ bool ScenarioParser::ParseDynamic(XMLElement* element)
     item = element->FirstChildElement("light");
     while(item != nullptr)
     {
-        Light* l = ParseLight(item, solid->getName());
+        std::unique_ptr<Light> l = ParseLight(item, solid->getName());
         if(l == nullptr)
         {
             log.Print(MessageType::ERROR, "Light of dynamic body '%s' not properly defined!", solid->getName().c_str());
-            delete solid;
             return false;
         }
         else
@@ -1578,12 +1559,10 @@ bool ScenarioParser::ParseDynamic(XMLElement* element)
             if( (item2 = item->FirstChildElement("origin")) == nullptr || !ParseTransform(item2, origin) )
             {
                 log.Print(MessageType::ERROR, "Lght of dynamic body '%s' not properly defined!", solid->getName().c_str());
-                delete l;
-                delete solid;
                 return false;
             }
-            l->AttachToSolid(solid, origin);
-            sm->AddActuator(l);
+            l->AttachToSolid(solid.get(), origin);
+            sm->AddActuator(std::move(l));
         }
         item = item->NextSiblingElement("light");
     }
@@ -1592,11 +1571,10 @@ bool ScenarioParser::ParseDynamic(XMLElement* element)
     item = element->FirstChildElement("comm");
     while(item != nullptr)
     {
-        Comm* comm = ParseComm(item, solid->getName());
+        std::unique_ptr<Comm> comm = ParseComm(item, solid->getName());
         if(comm == nullptr)
         {
             log.Print(MessageType::ERROR, "Communication device of dynamic body '%s' not properly defined!", solid->getName().c_str());
-            delete solid;
             return false;
         }
         else
@@ -1606,18 +1584,16 @@ bool ScenarioParser::ParseDynamic(XMLElement* element)
             if( (item2 = item->FirstChildElement("origin")) == nullptr || !ParseTransform(item2, origin) )
             {
                 log.Print(MessageType::ERROR, "Communication device of dynamic body '%s' not properly defined!", solid->getName().c_str());
-                delete comm;
-                delete solid;
                 return false;
             }
-            comm->AttachToSolid(solid, origin);
-            sm->AddComm(comm);
+            comm->AttachToSolid(solid.get(), origin);
+            sm->AddComm(std::move(comm));
         }
         item = item->NextSiblingElement("comm");
     }
 
     //---- Add to world ----
-    sm->AddSolidEntity(solid, trans);
+    sm->AddSolidEntity(std::move(solid), trans);
 
     return true;
 }
@@ -3260,10 +3236,10 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         return nullptr;
 }
 
-Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& namePrefix)
+std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const std::string& namePrefix)
 {
     //---- Common ----
-    Sensor* sens = nullptr;
+    std::unique_ptr<Sensor> sens {};
     const char* name = nullptr;
     const char* type = nullptr;
     Scalar rate;
@@ -4615,7 +4591,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
     return sens;
 }
 
-Light* ScenarioParser::ParseLight(XMLElement* element, const std::string& namePrefix)
+ std::unique_ptr<Light> ScenarioParser::ParseLight(XMLElement* element, const std::string& namePrefix)
 {
     if(!isGraphicalSim())
     {
@@ -4661,15 +4637,13 @@ Light* ScenarioParser::ParseLight(XMLElement* element, const std::string& namePr
         return nullptr;
     }
         
-    Light* light;
     if(cone > Scalar(0))
-        light = new Light(lightName, radius, cone, color, illu);
+        return std::make_unique<Light>(lightName, radius, cone, color, illu);
     else
-        light = new Light(lightName, radius, color, illu);
-    return light;
+        return std::make_unique<Light>(lightName, radius, color, illu);
 }
 
-Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePrefix)
+std::unique_ptr<Comm> ScenarioParser::ParseComm(XMLElement* element, const std::string& namePrefix)
 {
     const char* name = nullptr;
     const char* type = nullptr;
@@ -4698,7 +4672,7 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
     }
      
     XMLElement* item;
-    Comm* comm;
+    std::unique_ptr<Comm> comm;
     if(typeStr == "acoustic_modem")
     {
         Scalar minFovDeg;
@@ -4723,9 +4697,9 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
         }
         item->QueryAttribute("occlusion_test", &occlusion);
     
-        comm = new AcousticModem(commName, devId, minFovDeg, maxFovDeg, range);
+        comm = std::make_unique<AcousticModem>(commName, devId, minFovDeg, maxFovDeg, range);
         comm->Connect(cId);
-        ((AcousticModem*)comm)->setOcclusionTest(occlusion);
+        static_cast<AcousticModem*>(comm.get())->setOcclusionTest(occlusion);
         return comm;
     }
     else if(typeStr == "usbl")
@@ -4753,13 +4727,13 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
         }
         item->QueryAttribute("occlusion_test", &occlusion);
 
-        comm = new USBLSimple(commName, devId, minFovDeg, maxFovDeg, range);
+        comm = std::make_unique<USBLSimple>(commName, devId, minFovDeg, maxFovDeg, range);
         comm->Connect(cId);
-        ((AcousticModem*)comm)->setOcclusionTest(occlusion);
+        static_cast<AcousticModem*>(comm.get())->setOcclusionTest(occlusion);
         
         if((item = element->FirstChildElement("autoping")) != nullptr
             && item->QueryAttribute("rate", &pingRate) == XML_SUCCESS)
-            ((USBL*)comm)->EnableAutoPing(pingRate);
+            static_cast<USBL*>(comm.get())->EnableAutoPing(pingRate);
         
         //Optional noise definitions
         if((item = element->FirstChildElement("noise")) != nullptr)
@@ -4777,7 +4751,7 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
             if(c == 0)
                 log.Print(MessageType::WARNING, "Noise of communication device '%s' not properly defined - using defaults.", commName.c_str());
             else
-                ((USBLSimple*)comm)->setNoise(rangeDev, hAngleDevDeg, vAngleDevDeg);
+                static_cast<USBLSimple*>(comm.get())->setNoise(rangeDev, hAngleDevDeg, vAngleDevDeg);
         }
         //Optional resolution definitions
         if((item = element->FirstChildElement("resolution")) != nullptr)
@@ -4792,7 +4766,7 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
             if(c == 0)
                 log.Print(MessageType::WARNING, "Resolution of communication device '%s' not properly defined - using defaults.", commName.c_str());
             else
-                ((USBLSimple*)comm)->setResolution(rangeRes, angleResDeg);
+                static_cast<USBLSimple*>(comm.get())->setResolution(rangeRes, angleResDeg);
         }
         return comm;
     }
@@ -4825,13 +4799,13 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
         }
         item->QueryAttribute("occlusion_test", &occlusion);
 
-        comm = new USBLReal(commName, devId, minFovDeg, maxFovDeg, range, freq, baseline);
+        comm = std::make_unique<USBLReal>(commName, devId, minFovDeg, maxFovDeg, range, freq, baseline);
         comm->Connect(cId);
-        ((AcousticModem*)comm)->setOcclusionTest(occlusion);
+        static_cast<AcousticModem*>(comm.get())->setOcclusionTest(occlusion);
         
         if((item = element->FirstChildElement("autoping")) != nullptr
             && item->QueryAttribute("rate", &pingRate) == XML_SUCCESS)
-            ((USBL*)comm)->EnableAutoPing(pingRate);
+            static_cast<USBL*>(comm.get())->EnableAutoPing(pingRate);
         
         //Optional noise definitions
         if((item = element->FirstChildElement("noise")) != nullptr)
@@ -4855,7 +4829,7 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
             if(c == 0)
                 log.Print(MessageType::WARNING, "Noise of communication device '%s' not properly defined - using defaults.", commName.c_str());
             else
-                ((USBLReal*)comm)->setNoise(timeDev, svDev, phaseDev, blError, depthDev);
+                static_cast<USBLReal*>(comm.get())->setNoise(timeDev, svDev, phaseDev, blError, depthDev);
         }
         return comm;
     }
@@ -4882,7 +4856,7 @@ Comm* ScenarioParser::ParseComm(XMLElement* element, const std::string& namePref
             return nullptr;
         }
         
-        comm = new OpticalModem(commName, devId, fovDeg, range, ambientLightSensitivity);
+        comm = std::make_unique<OpticalModem>(commName, devId, fovDeg, range, ambientLightSensitivity);
         comm->Connect(cId);
         return comm;
     }
@@ -4983,9 +4957,9 @@ bool ScenarioParser::ParseContact(XMLElement* element)
     if((itemA = element->FirstChildElement("history")) != nullptr)
         itemA->QueryAttribute("points", &history);
     
-    Contact* cnt = new Contact(contactName, entA, entB, history);
+    std::unique_ptr<Contact> cnt = std::make_unique<Contact>(contactName, entA, entB, history);
     cnt->setDisplayMask(displayMask);
-    sm->AddContact(cnt);
+    sm->AddContact(std::move(cnt));
     
     return true;
 }
@@ -5079,16 +5053,16 @@ FixedJoint* ScenarioParser::ParseGlue(XMLElement* element)
         }
     }
 
-    FixedJoint* fix = nullptr;
+    std::unique_ptr<FixedJoint> fix {};
 
     if(entA != nullptr && entB != nullptr) //Glue two independent bodies
     {
         if(entA->getType() == EntityType::SOLID && entB->getType() == EntityType::SOLID)
-            fix = new FixedJoint(std::string(glueName), (SolidEntity*)entA, (SolidEntity*)entB); // Attach two dynamic bodies
+            fix = std::make_unique<FixedJoint>(std::string(glueName), (SolidEntity*)entA, (SolidEntity*)entB); // Attach two dynamic bodies
         else if(entA->getType() == EntityType::SOLID && entB->getType() == EntityType::STATIC) 
-            fix = new FixedJoint(std::string(glueName), (SolidEntity*)entA); // Attach to world
+            fix = std::make_unique<FixedJoint>(std::string(glueName), (SolidEntity*)entA); // Attach to world
         else if(entA->getType() == EntityType::STATIC && entB->getType() == EntityType::SOLID)
-            fix = new FixedJoint(std::string(glueName), (SolidEntity*)entB); // Attach to world
+            fix = std::make_unique<FixedJoint>(std::string(glueName), (SolidEntity*)entB); // Attach to world
         else
         {
             log.Print(MessageType::ERROR, "Only two dynamic bodies or a static and dynamic body can be glued together (glue '%s')!", glueName.c_str()); 
@@ -5097,15 +5071,15 @@ FixedJoint* ScenarioParser::ParseGlue(XMLElement* element)
     }
     else if(robotA != nullptr && robotB != nullptr) //Glue together links of two robots
     {
-        fix = new FixedJoint(std::string(glueName), robotA->getDynamics(), robotB->getDynamics(), linkIdA, linkIdB);
+        fix = std::make_unique<FixedJoint>(std::string(glueName), robotA->getDynamics(), robotB->getDynamics(), linkIdA, linkIdB);
     }
     else if(entA != nullptr && entA->getType() == EntityType::SOLID && robotB != nullptr) //Glue robot link to dynamic body
     {
-        fix = new FixedJoint(std::string(glueName), static_cast<SolidEntity*>(entA), robotB->getDynamics(), linkIdB);
+        fix = std::make_unique<FixedJoint>(std::string(glueName), static_cast<SolidEntity*>(entA), robotB->getDynamics(), linkIdB);
     }
     else if(robotA != nullptr && entB != nullptr && entB->getType() == EntityType::SOLID) //Glue robot link to dynamic body
     {
-        fix = new FixedJoint(std::string(glueName), static_cast<SolidEntity*>(entB), robotA->getDynamics(), linkIdA);
+        fix = std::make_unique<FixedJoint>(std::string(glueName), static_cast<SolidEntity*>(entB), robotA->getDynamics(), linkIdA);
     }
     else
     {
@@ -5115,12 +5089,15 @@ FixedJoint* ScenarioParser::ParseGlue(XMLElement* element)
     
     if(fix != nullptr)
     {
-        sm->AddJoint(fix);
+        FixedJoint* fixPtr = fix.get();
+        sm->AddJoint(std::move(fix));
         if(!activated)
-            fix->RemoveFromSimulation(sm);
+            fixPtr->RemoveFromSimulation(sm);
         log.Print(MessageType::INFO, "Glue created between '%s' and '%s'.", nameA, nameB);
+        return fixPtr;
     }
-    return fix;
+    else 
+        return nullptr;
 }
 
 std::string ScenarioParser::GetFullPath(const std::string& path)

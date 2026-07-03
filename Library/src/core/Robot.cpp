@@ -220,11 +220,11 @@ void Robot::AddComm(Comm* c, const std::string& attachmentLinkName, const Transf
 void Robot::AddToSimulation(SimulationManager* sm, const Transform& origin)
 {
     for(size_t i=0; i<sensors_.size(); ++i)
-        sm->AddSensor(sensors_[i]);
+        sm->AddSensor(std::make_unique<Sensor>(sensors_[i]));
     for(size_t i=0; i<actuators_.size(); ++i)
-        sm->AddActuator(actuators_[i]);
+        sm->AddActuator(std::make_unique<Actuator>(actuators_[i]));
     for(size_t i=0; i<comms_.size(); ++i)
-        sm->AddComm(comms_[i]);
+        sm->AddComm(std::make_unique<Comm>(comms_[i]));
 }
 
 void Robot::Respawn(SimulationManager* sm, const Transform& origin)

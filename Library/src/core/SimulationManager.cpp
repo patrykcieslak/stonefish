@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/SimulationManager.h"
@@ -79,103 +79,90 @@ namespace sf
 {
 
 SimulationManager::SimulationManager(Scalar stepsPerSecond, Solver st, CollisionFilter cft) 
-    : perfMon(PerformanceMonitor(100))
+    : perfMon_(PerformanceMonitor(100))
 {
     //Initialize simulation world
-    realtimeFactor = Scalar(1);
-    cpuUsage = Scalar(0);
-    solver = st;
-    collisionFilter = cft;
-    jointErp = Scalar(0.1);
-    jointLimitErp = Scalar(0.2);
-    linSleepThreshold = Scalar(0);
-    angSleepThreshold = Scalar(0);
-    fdCounter = 0;
-    currentTime = 0;
-    timeOffset = 0;
-    simulationTime = 0;
-    mlcpFallbacks = 0;
-    callSimulationStepCompleted = true;
-    dynamicsWorld = nullptr;
-    mbSolver = nullptr;
-    sbSolver = nullptr;
-    dwBroadphase = nullptr;
-    dwCollisionConfig = nullptr;
-    dwDispatcher = nullptr;
-    ocean = nullptr;
-    atmosphere = nullptr;
-    trackball = nullptr;
-    sdm = DisplayMode::GRAPHICAL;
-    simHydroMutex = SDL_CreateMutex();
-    simSettingsMutex = SDL_CreateMutex();
-    simInfoMutex = SDL_CreateMutex();
+    realtimeFactor_ = Scalar(1);
+    cpuUsage_ = Scalar(0);
+    solver_ = st;
+    collisionFilter_ = cft;
+    jointErp_ = Scalar(0.1);
+    jointLimitErp_ = Scalar(0.2);
+    linSleepThreshold_ = Scalar(0);
+    angSleepThreshold_ = Scalar(0);
+    fdCounter_ = 0;
+    currentTime_ = 0;
+    timeOffset_ = 0;
+    simulationTime_ = 0;
+    mlcpFallbacks_ = 0;
+    callSimulationStepCompleted_ = true;
+    sdm_ = DisplayMode::GRAPHICAL;
+    simHydroMutex_ = SDL_CreateMutex();
+    simSettingsMutex_ = SDL_CreateMutex();
+    simInfoMutex_ = SDL_CreateMutex();
     setStepsPerSecond(stepsPerSecond);
     
     //Set IC solver params
-    icProblemSolved = false;
+    icProblemSolved_ = false;
     setICSolverParams(false);
-    simulationFresh = false;
+    simulationFresh_ = false;
     
     //Create managers
-    nameManager = new NameManager();
-    materialManager = new MaterialManager();
-    ned = new NED();
+    nameManager_ = std::make_unique<NameManager>();
+    materialManager_ = std::make_unique<MaterialManager>();
+    ned_ = std::make_unique<NED>();
 }
 
 SimulationManager::~SimulationManager()
 {
     DestroyScenario();
-    if(atmosphere != nullptr) delete atmosphere;
-    SDL_DestroyMutex(simSettingsMutex);
-    SDL_DestroyMutex(simInfoMutex);
-    SDL_DestroyMutex(simHydroMutex);
-    delete materialManager;
-    delete nameManager;
-    delete ned;
+    SDL_DestroyMutex(simSettingsMutex_);
+    SDL_DestroyMutex(simInfoMutex_);
+    SDL_DestroyMutex(simHydroMutex_);
 }
 
-void SimulationManager::AddRobot(Robot* robot, const Transform& worldTransform)
+void SimulationManager::AddRobot(std::unique_ptr<Robot> robot, const Transform& worldTransform)
 {
     if(robot != nullptr)
     {
-        robots.push_back(robot);
-        robot->AddToSimulation(this, worldTransform);
+        robots_.push_back(std::move(robot));
+        robots_.back()->AddToSimulation(this, worldTransform);
     }
 }
 
-void SimulationManager::AddEntity(Entity *ent)
+void SimulationManager::AddEntity(std::unique_ptr<Entity> ent)
 {
     if(ent != nullptr)
     {
-        entities.push_back(ent);
-        ent->AddToSimulation(this);
+        entities_.push_back(std::move(ent));
+        entities_.back()->AddToSimulation(this);
     }
 }
 
-void SimulationManager::AddStaticEntity(StaticEntity* ent, const Transform& origin)
+void SimulationManager::AddStaticEntity(std::unique_ptr<StaticEntity> ent, const Transform& origin)
 {
     if(ent != nullptr)
     {
-        entities.push_back(ent);
-        ent->AddToSimulation(this, origin);
+        entities_.push_back(std::move(ent));
+        static_cast<StaticEntity*>(entities_.back().get())->AddToSimulation(this, origin);
     }
 }
 
-void SimulationManager::AddAnimatedEntity(AnimatedEntity* ent)
+void SimulationManager::AddAnimatedEntity(std::unique_ptr<AnimatedEntity> ent)
 {
     if(ent != nullptr)
     {
-        entities.push_back(ent);
-        ent->AddToSimulation(this);
+        entities_.push_back(std::move(ent));
+        entities_.back()->AddToSimulation(this);
     }
 }
 
-void SimulationManager::AddSolidEntity(SolidEntity* ent, const Transform& origin)
+void SimulationManager::AddSolidEntity(std::unique_ptr<SolidEntity> ent, const Transform& origin)
 {
     if(ent != nullptr)
     {
-        entities.push_back(ent);
-        ent->AddToSimulation(this, origin);
+        entities_.push_back(std::move(ent));
+        static_cast<SolidEntity*>(entities_.back().get())->AddToSimulation(this, origin);
     }
 }
 
@@ -183,22 +170,21 @@ void SimulationManager::RemoveSolidEntity(SolidEntity* ent)
 {
     if(ent != nullptr)
     {
-        auto it = std::find(entities.begin(), entities.end(), ent);
-        if(it != entities.end() && (*it)->getType() == EntityType::SOLID)
+        auto it = std::find(entities_.begin(), entities_.end(), ent);
+        if(it != entities_.end() && (*it)->getType() == EntityType::SOLID)
         {
-            SolidEntity* solid = static_cast<SolidEntity*>(*it);
-            solid->RemoveFromSimulation(this);
-            entities.erase(it);
+            static_cast<SolidEntity*>(it->get())->RemoveFromSimulation(this);
+            entities_.erase(it);
         }
     }
 }
 
-void SimulationManager::AddFeatherstoneEntity(FeatherstoneEntity* ent, const Transform& origin)
+void SimulationManager::AddFeatherstoneEntity(std::unique_ptr<FeatherstoneEntity> ent, const Transform& origin)
 {
     if(ent != nullptr)
     {
-        entities.push_back(ent);
-        ent->AddToSimulation(this, origin);
+        entities_.push_back(std::move(ent));
+        static_cast<FeatherstoneEntity*>(entities_.back().get())->AddToSimulation(this, origin);
     }
 }
 
@@ -206,19 +192,18 @@ void SimulationManager::RemoveFeatherstoneEntity(FeatherstoneEntity* ent)
 {
     if(ent != nullptr)
     {
-        auto it = std::find(entities.begin(), entities.end(), ent);
-        if(it != entities.end() && (*it)->getType() == EntityType::FEATHERSTONE)
+        auto it = std::find(entities_.begin(), entities_.end(), ent);
+        if(it != entities_.end() && (*it)->getType() == EntityType::FEATHERSTONE)
         {
-            FeatherstoneEntity* fe = static_cast<FeatherstoneEntity*>(*it);
-            fe->RemoveFromSimulation(this);
-            entities.erase(it);
+            static_cast<FeatherstoneEntity*>(it->get())->RemoveFromSimulation(this);
+            entities_.erase(it);
         }
     }
 }
     
 void SimulationManager::EnableOcean(Scalar waves, Fluid f)
 {
-    if(ocean != nullptr)
+    if(ocean_ != nullptr)
         return;
     
     if(f.name == "")
@@ -229,52 +214,52 @@ void SimulationManager::EnableOcean(Scalar waves, Fluid f)
     
     bool hasGraphics = SimulationApp::getApp()->hasGraphics();
 
-    ocean = new Ocean("Ocean", hasGraphics ? waves : 0.0, f);
-    ocean->AddToSimulation(this);
+    ocean_ = std::make_unique<Ocean>("Ocean", hasGraphics ? waves : 0.0, f);
+    ocean_->AddToSimulation(this);
     
     if(hasGraphics)
     {
-        ocean->InitGraphics(simHydroMutex);
-        ocean->setRenderable(true);
+        ocean_->InitGraphics(simHydroMutex_);
+        ocean_->setRenderable(true);
     }
 }
     
 void SimulationManager::EnableAtmosphere()
 {
-    if(atmosphere != nullptr)
+    if(atmosphere_ != nullptr)
         return;
     
     std::string air = getMaterialManager()->CreateFluid("Air", 1.0, 1e-6, 1.0);
     Fluid f = getMaterialManager()->getFluid(air);
     
-    atmosphere = new Atmosphere("Atmosphere", f);
-    atmosphere->AddToSimulation(this);
+    atmosphere_ = std::make_unique<Atmosphere>("Atmosphere", f);
+    atmosphere_->AddToSimulation(this);
     
     if(SimulationApp::getApp()->hasGraphics())
     {
-        atmosphere->InitGraphics(((GraphicalSimulationApp*)SimulationApp::getApp())->getRenderSettings());
-        atmosphere->setRenderable(true);
+        atmosphere_->InitGraphics(((GraphicalSimulationApp*)SimulationApp::getApp())->getRenderSettings());
+        atmosphere_->setRenderable(true);
     }
 }
 
-void SimulationManager::AddSensor(Sensor* sens)
+void SimulationManager::AddSensor(std::unique_ptr<Sensor> sens)
 {
     if(sens != nullptr)
-        sensors.push_back(sens);
+        sensors_.push_back(std::move(sens));
 }
 
-void SimulationManager::AddComm(Comm* comm)
+void SimulationManager::AddComm(std::unique_ptr<Comm> comm)
 {
     if(comm != nullptr)
-        comms.push_back(comm);
+        comms_.push_back(std::move(comm));
 }
 
-void SimulationManager::AddJoint(Joint* jnt)
+void SimulationManager::AddJoint(std::unique_ptr<Joint> jnt)
 {
     if(jnt != nullptr)
     {
-        joints.push_back(jnt);
-        jnt->AddToSimulation(this);
+        joints_.push_back(std::move(jnt));
+        joints_.back()->AddToSimulation(this);
     }
 }
 
@@ -282,37 +267,36 @@ void SimulationManager::RemoveJoint(Joint* jnt)
 {
     if(jnt != nullptr)
     {
-        auto it = std::find(joints.begin(), joints.end(), jnt);
-        if(it != joints.end())
+        auto it = std::find(joints_.begin(), joints_.end(), jnt);
+        if(it != joints_.end())
         {
             (*it)->RemoveFromSimulation(this);
-            delete *it;
-            joints.erase(it);
+            joints_.erase(it);
         }
     }
 }
 
-void SimulationManager::AddActuator(Actuator *act)
+void SimulationManager::AddActuator(std::unique_ptr<Actuator> act)
 {
     if(act != nullptr)
-        actuators.push_back(act);
+        actuators_.push_back(std::move(act));
 }
 
-void SimulationManager::AddContact(Contact* cnt)
+void SimulationManager::AddContact(std::unique_ptr<Contact> cnt)
 {
     if(cnt != nullptr)
     {
-        contacts.push_back(cnt);
+        contacts_.push_back(std::move(cnt));
         EnableCollision(cnt->getEntityA(), cnt->getEntityB());
     }
 }
 
 int SimulationManager::CheckCollision(const Entity *entA, const Entity *entB)
 {
-    for(size_t i = 0; i < collisions.size(); ++i)
+    for(size_t i = 0; i < collisions_.size(); ++i)
     {
-        if((collisions[i].A == entA && collisions[i].B == entB) 
-            || (collisions[i].B == entA && collisions[i].A == entB))
+        if((collisions_[i].A == entA && collisions_[i].B == entB) 
+            || (collisions_[i].B == entA && collisions_[i].A == entB))
                 return (int)i;
     }
     
@@ -323,50 +307,50 @@ void SimulationManager::EnableCollision(const Entity* entA, const Entity* entB)
 {
     int colId = CheckCollision(entA, entB);
     
-    if(collisionFilter == CollisionFilter::INCLUSIVE && colId == -1)
+    if(collisionFilter_ == CollisionFilter::INCLUSIVE && colId == -1)
     {
         Collision c;
         c.A = const_cast<Entity*>(entA);
         c.B = const_cast<Entity*>(entB);
-        collisions.push_back(c);
+        collisions_.push_back(c);
     }
-    else if(collisionFilter == CollisionFilter::EXCLUSIVE && colId > -1)
+    else if(collisionFilter_ == CollisionFilter::EXCLUSIVE && colId > -1)
     {
-        collisions.erase(collisions.begin() + colId);
+        collisions_.erase(collisions_.begin() + colId);
     }
 }
     
 void SimulationManager::DisableCollision(const Entity* entA, const Entity* entB)
 {
     int colId = CheckCollision(entA, entB);
-    if(collisionFilter == CollisionFilter::EXCLUSIVE && colId == -1)
+    if(collisionFilter_ == CollisionFilter::EXCLUSIVE && colId == -1)
     {
         Collision c;
         c.A = const_cast<Entity*>(entA);
         c.B = const_cast<Entity*>(entB);
-        collisions.push_back(c);
+        collisions_.push_back(c);
         cInfo("Disabling collisions between '%s' and '%s'.", entA->getName().c_str(), entB->getName().c_str());
     }
-    else if(collisionFilter == CollisionFilter::INCLUSIVE && colId > -1)
+    else if(collisionFilter_ == CollisionFilter::INCLUSIVE && colId > -1)
     {
-        collisions.erase(collisions.begin() + colId);
+        collisions_.erase(collisions_.begin() + colId);
         cInfo("Disabling collisions between '%s' and '%s'.", entA->getName().c_str(), entB->getName().c_str());
     }
 }
 
 Contact* SimulationManager::getContact(Entity* entA, Entity* entB)
 {
-    for(size_t i = 0; i < contacts.size(); ++i)
+    for(size_t i = 0; i < contacts_.size(); ++i)
     {
-        if(contacts[i]->getEntityA() == entA)
+        if(contacts_[i]->getEntityA() == entA)
         {
-            if(contacts[i]->getEntityB() == entB)
-                return contacts[i];
+            if(contacts_[i]->getEntityB() == entB)
+                return contacts_[i].get();
         }
-        else if(contacts[i]->getEntityB() == entA)
+        else if(contacts_[i]->getEntityB() == entA)
         {
-            if(contacts[i]->getEntityA() == entB)
-                return contacts[i];
+            if(contacts_[i]->getEntityA() == entB)
+                return contacts_[i].get();
         }
     }
     
@@ -375,260 +359,260 @@ Contact* SimulationManager::getContact(Entity* entA, Entity* entB)
 
 Contact* SimulationManager::getContact(unsigned int index)
 {
-    if(index < contacts.size())
-        return contacts[index];
+    if(index < contacts_.size())
+        return contacts_[index].get();
     else
         return nullptr;
 }
 
 Contact* SimulationManager::getContact(const std::string& name)
 {
-    for(size_t i = 0; i < contacts.size(); ++i)
-        if(contacts[i]->getName() == name)
-            return contacts[i];
+    for(size_t i = 0; i < contacts_.size(); ++i)
+        if(contacts_[i]->getName() == name)
+            return contacts_[i].get();
     
     return nullptr;
 }
 
 CollisionFilter SimulationManager::getCollisionFilter() const
 {
-    return collisionFilter;
+    return collisionFilter_;
 }
 
 Solver SimulationManager::getSolver() const
 {
-    return solver;
+    return solver_;
 }
 
 Robot* SimulationManager::getRobot(unsigned int index)
 {
-    if(index < robots.size())
-        return robots[index];
+    if(index < robots_.size())
+        return robots_[index].get();
     else
         return nullptr;
 }
 
 Robot* SimulationManager::getRobot(const std::string& name)
 {
-    for(size_t i = 0; i < robots.size(); ++i)
-        if(robots[i]->getName() == name)
-            return robots[i];
+    for(size_t i = 0; i < robots_.size(); ++i)
+        if(robots_[i]->getName() == name)
+            return robots_[i].get();
     
     return nullptr;
 }
 
 Entity* SimulationManager::getEntity(unsigned int index)
 {
-    if(index < entities.size())
-        return entities[index];
+    if(index < entities_.size())
+        return entities_[index].get();
     else
         return nullptr;
 }
 
 Entity* SimulationManager::getEntity(const std::string& name)
 {
-    for(size_t i = 0; i < entities.size(); ++i)
-        if(entities[i]->getName() == name)
-            return entities[i];
+    for(size_t i = 0; i < entities_.size(); ++i)
+        if(entities_[i]->getName() == name)
+            return entities_[i].get();
     
     return nullptr;
 }
 
 Joint* SimulationManager::getJoint(unsigned int index)
 {
-    if(index < joints.size())
-        return joints[index];
+    if(index < joints_.size())
+        return joints_[index].get();
     else
         return nullptr;
 }
 
 Joint* SimulationManager::getJoint(const std::string& name)
 {
-    for(size_t i = 0; i < joints.size(); ++i)
-        if(joints[i]->getName() == name)
-            return joints[i];
+    for(size_t i = 0; i < joints_.size(); ++i)
+        if(joints_[i]->getName() == name)
+            return joints_[i].get();
     
     return nullptr;
 }
 
 Actuator* SimulationManager::getActuator(unsigned int index)
 {
-    if(index < actuators.size())
-        return actuators[index];
+    if(index < actuators_.size())
+        return actuators_[index].get();
     else
         return nullptr;
 }
 
 Actuator* SimulationManager::getActuator(const std::string& name)
 {
-    for(size_t i = 0; i < actuators.size(); ++i)
-        if(actuators[i]->getName() == name)
-            return actuators[i];
+    for(size_t i = 0; i < actuators_.size(); ++i)
+        if(actuators_[i]->getName() == name)
+            return actuators_[i].get();
     
     return nullptr;
 }
 
 Sensor* SimulationManager::getSensor(unsigned int index)
 {
-    if(index < sensors.size())
-        return sensors[index];
+    if(index < sensors_.size())
+        return sensors_[index].get();
     else
         return nullptr;
 }
 
 Sensor* SimulationManager::getSensor(const std::string& name)
 {
-    for(size_t i = 0; i < sensors.size(); ++i)
-        if(sensors[i]->getName() == name)
-            return sensors[i];
+    for(size_t i = 0; i < sensors_.size(); ++i)
+        if(sensors_[i]->getName() == name)
+            return sensors_[i].get();
     
     return nullptr;
 }
 
 Comm* SimulationManager::getComm(unsigned int index)
 {
-    if(index < comms.size())
-        return comms[index];
+    if(index < comms_.size())
+        return comms_[index].get();
     else
         return nullptr;
 }
 
 Comm* SimulationManager::getComm(const std::string& name)
 {
-    for(size_t i = 0; i < comms.size(); ++i)
-        if(comms[i]->getName() == name)
-            return comms[i];
+    for(size_t i = 0; i < comms_.size(); ++i)
+        if(comms_[i]->getName() == name)
+            return comms_[i].get();
     
     return nullptr;
 }
 
 NED* SimulationManager::getNED()
 {
-    return ned;
+    return ned_.get();
 }
 
 Ocean* SimulationManager::getOcean()
 {
-    return ocean;
+    return ocean_.get();
 }
 
 Atmosphere* SimulationManager::getAtmosphere()
 {
-    return atmosphere;
+    return atmosphere_.get();
 }
 
 btSoftMultiBodyDynamicsWorld* SimulationManager::getDynamicsWorld()
 {
-    return dynamicsWorld;
+    return dynamicsWorld_.get();
 }
 
 bool SimulationManager::isSimulationFresh() const
 {
-    return simulationFresh;
+    return simulationFresh_;
 }
 
 Scalar SimulationManager::getSimulationTime(bool applyOffset) const
 {
     // Thread safe access to simulation time
-    SDL_LockMutex(simInfoMutex);
-    Scalar st = simulationTime;
-    SDL_UnlockMutex(simInfoMutex);
+    SDL_LockMutex(simInfoMutex_);
+    Scalar st = simulationTime_;
+    SDL_UnlockMutex(simInfoMutex_);
     
     // Apply time offset in seconds
     if(applyOffset)
-        st += timeOffset/(Scalar)1e6;
+        st += timeOffset_/(Scalar)1e6;
 
     return st;
 }
 
 uint64_t SimulationManager::getSimulationClock() const
 {
-    return (uint64_t)ceil(realtimeFactor * (Scalar)GetTimeInMicroseconds());
+    return (uint64_t)ceil(realtimeFactor_ * (Scalar)GetTimeInMicroseconds());
 }
 
 void SimulationManager::SimulationClockSleep(uint64_t us)
 {
-    uint64_t t = (uint64_t)ceil((Scalar)us/realtimeFactor);
+    uint64_t t = (uint64_t)ceil((Scalar)us/realtimeFactor_);
     std::this_thread::sleep_for(std::chrono::microseconds(t));
 }
 
 MaterialManager* SimulationManager::getMaterialManager()
 {
-    return materialManager;
+    return materialManager_.get();
 }
 
 NameManager* SimulationManager::getNameManager()
 {
-    return nameManager;
+    return nameManager_.get();
 }
 
 PerformanceMonitor& SimulationManager::getPerformanceMonitor()
 {
-    return perfMon;
+    return perfMon_;
 }
 
 OpenGLTrackball* SimulationManager::getTrackball()
 {
-    return trackball;
+    return trackball_.get();
 }
 
 void SimulationManager::setStepsPerSecond(Scalar steps)
 {
-    if(sps == steps)
+    if(sps_ == steps)
         return;
     
-    SDL_LockMutex(simSettingsMutex);
-    sps = steps;
-    ssus = (uint64_t)(1000000.0/steps);
-    setFluidDynamicsPrescaler((unsigned int)round(sps/Scalar(50)));
-    SDL_UnlockMutex(simSettingsMutex);
+    SDL_LockMutex(simSettingsMutex_);
+    sps_ = steps;
+    ssus_ = (uint64_t)(1000000.0/steps);
+    setFluidDynamicsPrescaler((unsigned int)round(sps_/Scalar(50)));
+    SDL_UnlockMutex(simSettingsMutex_);
 }
 
 void SimulationManager::setFluidDynamicsPrescaler(unsigned int presc)
 {
     if(presc == 0)
-        fdPrescaler = 1;
+        fdPrescaler_ = 1;
     else
-        fdPrescaler = presc;
+        fdPrescaler_ = presc;
 }
 
 void SimulationManager::setRealtimeFactor(Scalar f)
 {
-    SDL_LockMutex(simInfoMutex);
-    realtimeFactor = f;
-    SDL_UnlockMutex(simInfoMutex);
+    SDL_LockMutex(simInfoMutex_);
+    realtimeFactor_ = f;
+    SDL_UnlockMutex(simInfoMutex_);
 }
 
 void SimulationManager::setCallSimulationStepCompleted(bool call)
 {
-    SDL_LockMutex(simSettingsMutex);
-    callSimulationStepCompleted = call;
-    SDL_UnlockMutex(simSettingsMutex);
+    SDL_LockMutex(simSettingsMutex_);
+    callSimulationStepCompleted_ = call;
+    SDL_UnlockMutex(simSettingsMutex_);
 }
 
 bool SimulationManager::getCallSimulationStepCompleted() const
 {
-    return callSimulationStepCompleted;
+    return callSimulationStepCompleted_;
 }
 
 Scalar SimulationManager::getStepsPerSecond() const
 {
-    return sps;
+    return sps_;
 }
 
 Scalar SimulationManager::getCpuUsage() const
 {
-    SDL_LockMutex(simInfoMutex);
-    Scalar cpu = cpuUsage;
-    SDL_UnlockMutex(simInfoMutex);
+    SDL_LockMutex(simInfoMutex_);
+    Scalar cpu = cpuUsage_;
+    SDL_UnlockMutex(simInfoMutex_);
     return cpu;
 }
 
 Scalar SimulationManager::getRealtimeFactor() const
 {
-    SDL_LockMutex(simInfoMutex);
-    Scalar rf = realtimeFactor;
-    SDL_UnlockMutex(simInfoMutex);
+    SDL_LockMutex(simInfoMutex_);
+    Scalar rf = realtimeFactor_;
+    SDL_UnlockMutex(simInfoMutex_);
     return rf;
 }
 
@@ -637,10 +621,10 @@ void SimulationManager::getWorldAABB(Vector3& min, Vector3& max)
     min.setValue(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);
     max.setValue(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);
     
-    for(unsigned int i = 0; i < entities.size(); i++)
+    for(unsigned int i = 0; i < entities_.size(); i++)
     {
         Vector3 entAabbMin, entAabbMax;
-        entities[i]->getAABB(entAabbMin, entAabbMax);
+        entities_[i]->getAABB(entAabbMin, entAabbMax);
         if(entAabbMin.x() < min.x()) min.setX(entAabbMin.x());
         if(entAabbMin.y() < min.y()) min.setY(entAabbMin.y());
         if(entAabbMin.z() < min.z()) min.setZ(entAabbMin.z());
@@ -657,112 +641,112 @@ btSoftBodyWorldInfo& SimulationManager::getSoftBodyWorldInfo()
 
 void SimulationManager::setGravity(Scalar gravityConstant)
 {
-    g = gravityConstant;
+    g_ = gravityConstant;
 }
 
 Vector3 SimulationManager::getGravity() const
 {
-    return Vector3(0,0,g);
+    return Vector3(0,0,g_);
 }
 
 void SimulationManager::setICSolverParams(bool useGravity, Scalar timeStep, unsigned int maxIterations, Scalar maxTime, Scalar linearTolerance, Scalar angularTolerance)
 {
-    icUseGravity = useGravity;
-    icTimeStep = timeStep > SIMD_EPSILON ? timeStep : Scalar(0.001);
-    icMaxIter = maxIterations > 0 ? maxIterations : INT_MAX;
-    icMaxTime = maxTime > SIMD_EPSILON ? maxTime : BT_LARGE_FLOAT;
-    icLinTolerance = linearTolerance > SIMD_EPSILON ? linearTolerance : Scalar(1e-6);
-    icAngTolerance = angularTolerance > SIMD_EPSILON ? angularTolerance : Scalar(1e-6);
+    icUseGravity_ = useGravity;
+    icTimeStep_ = timeStep > SIMD_EPSILON ? timeStep : Scalar(0.001);
+    icMaxIter_ = maxIterations > 0 ? maxIterations : INT_MAX;
+    icMaxTime_ = maxTime > SIMD_EPSILON ? maxTime : BT_LARGE_FLOAT;
+    icLinTolerance_ = linearTolerance > SIMD_EPSILON ? linearTolerance : Scalar(1e-6);
+    icAngTolerance_ = angularTolerance > SIMD_EPSILON ? angularTolerance : Scalar(1e-6);
 }
 
 void SimulationManager::setSolverParams(Scalar erp, Scalar stopErp, Scalar erp2, Scalar globalDamping, Scalar globalFriction,
                                             Scalar linearSleepingThreshold, Scalar angularSleepingThreshold)
 {
-    if(dynamicsWorld == nullptr)
+    if(dynamicsWorld_ == nullptr)
         return;
 
-    dynamicsWorld->getSolverInfo().m_erp = erp;
-    dynamicsWorld->getSolverInfo().m_erp2 = erp2;
-    dynamicsWorld->getSolverInfo().m_damping = globalDamping;
-    dynamicsWorld->getSolverInfo().m_friction = globalFriction;
+    dynamicsWorld_->getSolverInfo().m_erp = erp;
+    dynamicsWorld_->getSolverInfo().m_erp2 = erp2;
+    dynamicsWorld_->getSolverInfo().m_damping = globalDamping;
+    dynamicsWorld_->getSolverInfo().m_friction = globalFriction;
     
-    jointErp = erp;
-    jointLimitErp = stopErp;
-    linSleepThreshold = linearSleepingThreshold;
-    angSleepThreshold = angularSleepingThreshold;
+    jointErp_ = erp;
+    jointLimitErp_ = stopErp;
+    linSleepThreshold_ = linearSleepingThreshold;
+    angSleepThreshold_ = angularSleepingThreshold;
 }
 
 void SimulationManager::setSolidDisplayMode(DisplayMode m)
 {
-    if(sdm == m) 
+    if(sdm_ == m) 
         return;
-    sdm = m;
+    sdm_ = m;
 
-    for(size_t i=0; i<entities.size(); ++i)
+    for(size_t i=0; i<entities_.size(); ++i)
     {
-        if(entities[i]->getType() == EntityType::STATIC)
-            ((StaticEntity*)entities[i])->setDisplayMode(sdm);
-        else if(entities[i]->getType() == EntityType::SOLID || entities[i]->getType() == EntityType::ANIMATED)
-            ((MovingEntity*)entities[i])->setDisplayMode(sdm);
-        else if(entities[i]->getType() == EntityType::FEATHERSTONE)
-            ((FeatherstoneEntity*)entities[i])->setDisplayMode(sdm);
-        else if(entities[i]->getType() == EntityType::CABLE)
-            ((CableEntity*)entities[i])->setDisplayMode(sdm);
+        if(entities_[i]->getType() == EntityType::STATIC)
+            static_cast<StaticEntity*>(entities_[i].get())->setDisplayMode(sdm_);
+        else if(entities_[i]->getType() == EntityType::SOLID || entities_[i]->getType() == EntityType::ANIMATED)
+            static_cast<MovingEntity*>(entities_[i].get())->setDisplayMode(sdm_);
+        else if(entities_[i]->getType() == EntityType::FEATHERSTONE)
+            static_cast<FeatherstoneEntity*>(entities_[i].get())->setDisplayMode(sdm_);
+        else if(entities_[i]->getType() == EntityType::CABLE)
+            static_cast<CableEntity*>(entities_[i].get())->setDisplayMode(sdm_);
     }
 
-    for(size_t i=0; i<actuators.size(); ++i)
-        actuators[i]->setDisplayMode(sdm);
+    for(size_t i=0; i<actuators_.size(); ++i)
+        actuators_[i]->setDisplayMode(sdm_);
 }
 
 DisplayMode SimulationManager::getSolidDisplayMode() const
 {
-    return sdm;
+    return sdm_;
 }
     
 bool SimulationManager::isOceanEnabled() const
 {
-    return ocean != nullptr;
+    return ocean_ != nullptr;
 }
 
 void SimulationManager::getSleepingThresholds(Scalar& linear, Scalar& angular) const
 {
-    linear = linSleepThreshold;
-    angular = angSleepThreshold;
+    linear = linSleepThreshold_;
+    angular = angSleepThreshold_;
 }
 
 void SimulationManager::getJointErp(Scalar& erp, Scalar& stopErp) const
 {
-    erp = jointErp;
-    stopErp = jointLimitErp;
+    erp = jointErp_;
+    stopErp = jointLimitErp_;
 }
 
 void SimulationManager::InitializeSolver()
 {
-    dwBroadphase = new btDbvtBroadphase();
-    dwCollisionConfig = new btSoftBodyRigidBodyCollisionConfiguration();
+    dwBroadphase_ = std::make_unique<btDbvtBroadphase>();
+    dwCollisionConfig_ = std::make_unique<btSoftBodyRigidBodyCollisionConfiguration>();
     
     //Choose collision dispatcher
-    switch(collisionFilter)
+    switch(collisionFilter_)
     {
         case CollisionFilter::INCLUSIVE:
-            dwDispatcher = new FilteredCollisionDispatcher(dwCollisionConfig, true);
+            dwDispatcher_ = std::make_unique<FilteredCollisionDispatcher>(dwCollisionConfig_.get(), true);
             break;
 
         case CollisionFilter::EXCLUSIVE:
-            dwDispatcher = new FilteredCollisionDispatcher(dwCollisionConfig, false);
+            dwDispatcher_ = std::make_unique<FilteredCollisionDispatcher>(dwCollisionConfig_.get(), false);
             break;
     }
     
     //Choose constraint solver
-    if(solver == Solver::SI)
+    if(solver_ == Solver::SI)
     {
-        mbSolver = new btMultiBodyConstraintSolver();
+        mbSolver_ = std::make_unique<btMultiBodyConstraintSolver>();
     }
     else
     {
         btMLCPSolverInterface* mlcp;
     
-        switch(solver)
+        switch(solver_)
         {
             default:
             case Solver::DANTZIG:
@@ -779,66 +763,66 @@ void SimulationManager::InitializeSolver()
                 break;
         }
         
-        mbSolver = new btMultiBodyMLCPConstraintSolver(mlcp);
+        mbSolver_ = std::make_unique<btMultiBodyMLCPConstraintSolver>(mlcp);
     }
     
-    sbSolver = new btDefaultSoftBodySolver();
+    sbSolver_ = std::make_unique<btDefaultSoftBodySolver>();
 
     //Create dynamics world
-    dynamicsWorld = new btSoftMultiBodyDynamicsWorld(dwDispatcher, dwBroadphase, mbSolver, dwCollisionConfig, sbSolver);
+    dynamicsWorld_ = std::make_unique<btSoftMultiBodyDynamicsWorld>(dwDispatcher_.get(), dwBroadphase_.get(), mbSolver_.get(), dwCollisionConfig_.get(), sbSolver_.get());
     
     //Basic configuration
-    dynamicsWorld->getSolverInfo().m_solverMode = SOLVER_USE_WARMSTARTING | SOLVER_SIMD | SOLVER_USE_2_FRICTION_DIRECTIONS; //SOLVER_RANDMIZE_ORDER | SOLVER_ENABLE_FRICTION_DIRECTION_CACHING;
-    dynamicsWorld->getSolverInfo().m_warmstartingFactor = Scalar(1.);
-    dynamicsWorld->getSolverInfo().m_minimumSolverBatchSize = 256;
-    dynamicsWorld->getSolverInfo().m_timeStep = Scalar(1)/getStepsPerSecond();
+    dynamicsWorld_->getSolverInfo().m_solverMode = SOLVER_USE_WARMSTARTING | SOLVER_SIMD | SOLVER_USE_2_FRICTION_DIRECTIONS; //SOLVER_RANDMIZE_ORDER | SOLVER_ENABLE_FRICTION_DIRECTION_CACHING;
+    dynamicsWorld_->getSolverInfo().m_warmstartingFactor = Scalar(1.);
+    dynamicsWorld_->getSolverInfo().m_minimumSolverBatchSize = 256;
+    dynamicsWorld_->getSolverInfo().m_timeStep = Scalar(1)/getStepsPerSecond();
 	
     //Quality/stability
-    dynamicsWorld->getSolverInfo().m_tau = Scalar(1.);  //mass factor
-    dynamicsWorld->getSolverInfo().m_erp = jointErp; //non-contact constraint Baumgarte factor //0.25
-    dynamicsWorld->getSolverInfo().m_erp2 = Scalar(10)/getStepsPerSecond(); //contact constraint Baumgarte factor //0.75
-    dynamicsWorld->getSolverInfo().m_frictionERP = Scalar(0.1); //friction constraint Baumgarte factor //0.5
-    dynamicsWorld->getSolverInfo().m_numIterations = 100; //number of constraint iterations //100
-    dynamicsWorld->getSolverInfo().m_sor = Scalar(1.); //not used
-    dynamicsWorld->getSolverInfo().m_maxErrorReduction = Scalar(0.); //not used
+    dynamicsWorld_->getSolverInfo().m_tau = Scalar(1.);  //mass factor
+    dynamicsWorld_->getSolverInfo().m_erp = jointErp_; //non-contact constraint Baumgarte factor //0.25
+    dynamicsWorld_->getSolverInfo().m_erp2 = Scalar(10)/getStepsPerSecond(); //contact constraint Baumgarte factor //0.75
+    dynamicsWorld_->getSolverInfo().m_frictionERP = Scalar(0.1); //friction constraint Baumgarte factor //0.5
+    dynamicsWorld_->getSolverInfo().m_numIterations = 100; //number of constraint iterations //100
+    dynamicsWorld_->getSolverInfo().m_sor = Scalar(1.); //not used
+    dynamicsWorld_->getSolverInfo().m_maxErrorReduction = Scalar(0.); //not used
     
     //Collision
-    dynamicsWorld->getSolverInfo().m_splitImpulse = true; //avoid adding energy to the system
-    dynamicsWorld->getSolverInfo().m_splitImpulsePenetrationThreshold = Scalar(-COLLISION_MARGIN); //value close to zero needed for accurate friction // -0.001
-    dynamicsWorld->getSolverInfo().m_splitImpulseTurnErp = Scalar(0.1); //rigid body angular velocity Baumgarte factor //1.0
-    dynamicsWorld->getDispatchInfo().m_useContinuous = false;
-    dynamicsWorld->getDispatchInfo().m_allowedCcdPenetration = Scalar(0.0);
-    dynamicsWorld->getDispatchInfo().m_enableSPU = true;
-    dynamicsWorld->setApplySpeculativeContactRestitution(false); //to make it work one needs restitution in the m_restitution field
-    dynamicsWorld->getSolverInfo().m_restitutionVelocityThreshold = Scalar(0.05); //Velocity at which restitution is overwritten with 0 (bodies stick, stop vibrating)
+    dynamicsWorld_->getSolverInfo().m_splitImpulse = true; //avoid adding energy to the system
+    dynamicsWorld_->getSolverInfo().m_splitImpulsePenetrationThreshold = Scalar(-COLLISION_MARGIN); //value close to zero needed for accurate friction // -0.001
+    dynamicsWorld_->getSolverInfo().m_splitImpulseTurnErp = Scalar(0.1); //rigid body angular velocity Baumgarte factor //1.0
+    dynamicsWorld_->getDispatchInfo().m_useContinuous = false;
+    dynamicsWorld_->getDispatchInfo().m_allowedCcdPenetration = Scalar(0.0);
+    dynamicsWorld_->getDispatchInfo().m_enableSPU = true;
+    dynamicsWorld_->setApplySpeculativeContactRestitution(false); //to make it work one needs restitution in the m_restitution field
+    dynamicsWorld_->getSolverInfo().m_restitutionVelocityThreshold = Scalar(0.05); //Velocity at which restitution is overwritten with 0 (bodies stick, stop vibrating)
     
     //Special forces
-    dynamicsWorld->getSolverInfo().m_maxGyroscopicForce = Scalar(1e30); //gyroscopic effect
+    dynamicsWorld_->getSolverInfo().m_maxGyroscopicForce = Scalar(1e30); //gyroscopic effect
     
     //Unrealistic components
-    dynamicsWorld->getSolverInfo().m_globalCfm = Scalar(0.); //global constraint force mixing factor
-    dynamicsWorld->getSolverInfo().m_frictionCFM = Scalar(0.); //friction constraint force mixing factor
-    dynamicsWorld->getSolverInfo().m_damping = Scalar(0.); //global damping
-    dynamicsWorld->getSolverInfo().m_friction = Scalar(0.); //global friction
-    dynamicsWorld->getSolverInfo().m_restitution = Scalar(0.); // global restitution
-    dynamicsWorld->getSolverInfo().m_singleAxisRollingFrictionThreshold = Scalar(1e30); //single axis rolling velocity threshold
-    dynamicsWorld->getSolverInfo().m_linearSlop = Scalar(0.); //position bias
+    dynamicsWorld_->getSolverInfo().m_globalCfm = Scalar(0.); //global constraint force mixing factor
+    dynamicsWorld_->getSolverInfo().m_frictionCFM = Scalar(0.); //friction constraint force mixing factor
+    dynamicsWorld_->getSolverInfo().m_damping = Scalar(0.); //global damping
+    dynamicsWorld_->getSolverInfo().m_friction = Scalar(0.); //global friction
+    dynamicsWorld_->getSolverInfo().m_restitution = Scalar(0.); // global restitution
+    dynamicsWorld_->getSolverInfo().m_singleAxisRollingFrictionThreshold = Scalar(1e30); //single axis rolling velocity threshold
+    dynamicsWorld_->getSolverInfo().m_linearSlop = Scalar(0.); //position bias
     
-    dynamicsWorld->getWorldInfo().m_sparsesdf.setDefaultVoxelsz(Scalar(0.25));
-    dynamicsWorld->getWorldInfo().m_sparsesdf.Reset();
+    dynamicsWorld_->getWorldInfo().m_sparsesdf.setDefaultVoxelsz(Scalar(0.25));
+    dynamicsWorld_->getWorldInfo().m_sparsesdf.Reset();
 
     //Override default callbacks
-    dynamicsWorld->setWorldUserInfo(this);
-    dynamicsWorld->getPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
+    dynamicsWorld_->setWorldUserInfo(this);
+    dynamicsWorld_->getPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
     gContactAddedCallback = SimulationManager::CustomMaterialCombinerCallback; //Compute combined friction and restitution
     //gContactProcessedCallback = SimulationManager::ContactInfoUpdateCallback; //Update user data
     gContactDestroyedCallback = SimulationManager::ContactInfoDestroyCallback; //Clear user data allocated in contact points
-    dynamicsWorld->setSynchronizeAllMotionStates(false);
+    dynamicsWorld_->setSynchronizeAllMotionStates(false);
     
     //Set default params
-    g = Scalar(9.81);
+    g_ = Scalar(9.81);
 
-    sbInfo = dynamicsWorld->getWorldInfo();
+    sbInfo = dynamicsWorld_->getWorldInfo();
     sbInfo.m_sparsesdf.Initialize();
     sbInfo.m_sparsesdf.setDefaultVoxelsz(Scalar(0.1));
     sbInfo.m_sparsesdf.Reset();
@@ -849,8 +833,8 @@ void SimulationManager::InitializeSolver()
     sbInfo.m_gravity.setValue(0, 0, 0);
         
     //Debugging
-    debugDrawer = new OpenGLDebugDrawer();
-    dynamicsWorld->setDebugDrawer(debugDrawer);
+    debugDrawer_ = std::make_unique<OpenGLDebugDrawer>();
+    dynamicsWorld_->setDebugDrawer(debugDrawer_.get());
 }
 
 void SimulationManager::InitializeScenario()
@@ -862,10 +846,10 @@ void SimulationManager::InitializeScenario()
         OpenGLView* view = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getView(0);
         if(view == nullptr)
         {
-            GraphicalSimulationApp* gApp = (GraphicalSimulationApp*)SimulationApp::getApp();
-            trackball = new OpenGLTrackball(glm::vec3(0.f,0.f,-1.f), 5.0, glm::vec3(0.f,0.f,-1.f), 0, 0, gApp->getWindowWidth(), gApp->getWindowHeight(), 90.f, glm::vec2(STD_NEAR_PLANE_DISTANCE, STD_FAR_PLANE_DISTANCE));
-            trackball->Rotate(glm::quat(glm::eulerAngleYXZ(0.0, 0.0, 0.25)));
-            ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(trackball);
+            GraphicalSimulationApp* gApp = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp());
+            trackball_ = std::make_unique<OpenGLTrackball>(glm::vec3(0.f,0.f,-1.f), 5.0, glm::vec3(0.f,0.f,-1.f), 0, 0, gApp->getWindowWidth(), gApp->getWindowHeight(), 90.f, glm::vec2(STD_NEAR_PLANE_DISTANCE, STD_FAR_PLANE_DISTANCE));
+            trackball_->Rotate(glm::quat(glm::eulerAngleYXZ(0.0, 0.0, 0.25)));
+            gApp->getGLPipeline()->getContent()->AddView(trackball_.get());
         }
     }
 	
@@ -882,254 +866,223 @@ void SimulationManager::RestartScenario()
     if(SimulationApp::getApp()->hasGraphics())
     {    
         if(isOceanEnabled())
-            ocean->getOpenGLOcean()->AllocateParticles(((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getView(0));
+            ocean_->getOpenGLOcean()->AllocateParticles(((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getView(0));
 
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->Finalize();
     }
 
-    simulationFresh = true;
+    simulationFresh_ = true;
 }
 
 void SimulationManager::DestroyScenario()
 {
-    if(dynamicsWorld != nullptr)
+    //Destroy dynamics world
+    if(dynamicsWorld_ != nullptr)
     {
         //remove objects from dynamic world
-        for(int i = dynamicsWorld->getNumConstraints()-1; i >= 0; i--)
+        for(int i = dynamicsWorld_->getNumConstraints()-1; i >= 0; i--)
         {
-            btTypedConstraint* constraint = dynamicsWorld->getConstraint(i);
-            dynamicsWorld->removeConstraint(constraint);
+            btTypedConstraint* constraint = dynamicsWorld_->getConstraint(i);
+            dynamicsWorld_->removeConstraint(constraint);
             delete constraint;
         }
     
-        for(int i = dynamicsWorld->getNumCollisionObjects()-1; i >= 0; i--)
+        for(int i = dynamicsWorld_->getNumCollisionObjects()-1; i >= 0; i--)
         {
-            btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[i];
+            btCollisionObject* obj = dynamicsWorld_->getCollisionObjectArray()[i];
             btRigidBody* body = btRigidBody::upcast(obj);
             if (body && body->getMotionState())
                 delete body->getMotionState();
-            dynamicsWorld->removeCollisionObject(obj);
+            dynamicsWorld_->removeCollisionObject(obj);
             delete obj;
         }
     
-        delete dynamicsWorld;
-        delete mbSolver;
-        delete sbSolver;
-        delete dwBroadphase;
-        delete dwDispatcher;
-        delete dwCollisionConfig;
-        delete debugDrawer;
+        dynamicsWorld_.reset();
+        mbSolver_.reset();
+        sbSolver_.reset();
+        dwBroadphase_.reset();
+        dwDispatcher_.reset();
+        dwCollisionConfig_.reset();
+        debugDrawer_.reset();
     }
     
-    //remove sim manager objects
-    for(size_t i=0; i<robots.size(); ++i)
-        delete robots[i];
-    robots.clear();
+    //Remove simulation manager objects
+    robots_.clear();
+    entities_.clear();
+    joints_.clear();
+    contacts_.clear();
+    sensors_.clear();
+    comms_.clear();
+    actuators_.clear();
+
+    ocean_.reset();
+    atmosphere_.reset();
     
-    for(size_t i=0; i<entities.size(); ++i)
-        delete entities[i];
-    entities.clear();
-    
-    if(ocean != nullptr)
-    {
-        delete ocean;
-        ocean = nullptr;
-    }
-    
-    if(atmosphere != nullptr)
-    {
-        delete atmosphere;
-        atmosphere = nullptr;
-    }
-        
-    for(size_t i=0; i<joints.size(); ++i)
-        delete joints[i];
-    joints.clear();
-    
-    for(size_t i=0; i<contacts.size(); ++i)
-        delete contacts[i];
-    contacts.clear();
-    
-    for(size_t i=0; i<sensors.size(); ++i)
-        delete sensors[i];
-    sensors.clear();
-    
-    for(size_t i=0; i<comms.size(); ++i)
-        delete comms[i];
-    comms.clear();
-    
-    for(size_t i=0; i<actuators.size(); ++i)
-        delete actuators[i];
-    actuators.clear();
-    
-    if(nameManager != nullptr)
-        nameManager->ClearNames();
-        
-    if(materialManager != nullptr)
-        materialManager->ClearMaterialsAndFluids();
+    nameManager_->ClearNames();
+    materialManager_->ClearMaterialsAndFluids();
 
     if(SimulationApp::getApp() != nullptr && SimulationApp::getApp()->hasGraphics())
 	{
         static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DestroyContent();
-		trackball = nullptr;
+		trackball_.reset();
 	}
 }
 
 bool SimulationManager::StartSimulation()
 {
-    simulationFresh = false;
-    currentTime = 0;
-    simulationTime = 0;
-    mlcpFallbacks = 0;
-    fdCounter = 0;
+    simulationFresh_ = false;
+    currentTime_ = 0;
+    simulationTime_ = 0;
+    mlcpFallbacks_ = 0;
+    fdCounter_ = 0;
     
     //Solve initial conditions problem
     if(!SolveICProblem())
         return false;
     
     //Reset contacts
-    for(unsigned int i = 0; i < contacts.size(); i++)
-        contacts[i]->ClearHistory();
+    for(unsigned int i = 0; i < contacts_.size(); i++)
+        contacts_[i]->ClearHistory();
     
     //Reset sensors
-    for(unsigned int i = 0; i < sensors.size(); i++)
-        sensors[i]->Reset();
+    for(unsigned int i = 0; i < sensors_.size(); i++)
+        sensors_[i]->Reset();
 
-    perfMon.SimulationStarted();
+    perfMon_.SimulationStarted();
     
     return true;
 }
 
 void SimulationManager::ResumeSimulation()
 {
-    if(!icProblemSolved)
+    if(!icProblemSolved_)
         StartSimulation();
     else
-        currentTime = 0;
+        currentTime_ = 0;
 }
 
 void SimulationManager::StopSimulation()
 {
-    perfMon.SimulationFinished();
+    perfMon_.SimulationFinished();
 }
 
 bool SimulationManager::SolveICProblem()
 {
     //Solve for joint positions
-    icProblemSolved = false;
+    icProblemSolved_ = false;
     
     //Should use gravity?
-    if(icUseGravity)
-        dynamicsWorld->setGravity(Vector3(0,0,g));
+    if(icUseGravity_)
+        dynamicsWorld_->setGravity(Vector3(0,0,g_));
     else
-        dynamicsWorld->setGravity(Vector3(0,0,0));
+        dynamicsWorld_->setGravity(Vector3(0,0,0));
     
     //Set IC callback
-    dynamicsWorld->setInternalTickCallback(SolveICTickCallback, this, true); //Pre-tick
-    dynamicsWorld->setInternalTickCallback(nullptr, this, false); //Post-tick
+    dynamicsWorld_->setInternalTickCallback(SolveICTickCallback, this, true); //Pre-tick
+    dynamicsWorld_->setInternalTickCallback(nullptr, this, false); //Post-tick
     
     uint64_t icTime = GetTimeInMicroseconds();
     unsigned int iterations = 0;
     
     do
     {
-        if(iterations > icMaxIter) //Check iterations limit
+        if(iterations > icMaxIter_) //Check iterations limit
         {
             cError("IC problem not solved! Reached maximum interation count.");
             return false;
         }
-        else if((GetTimeInMicroseconds() - icTime)/(double)1e6 > icMaxTime) //Check time limit
+        else if((GetTimeInMicroseconds() - icTime)/(double)1e6 > icMaxTime_) //Check time limit
         {
             cError("IC problem not solved! Reached maximum time.");
             return false;
         }
         
         //Simulate world
-        dynamicsWorld->stepSimulation(icTimeStep, 1, icTimeStep);
+        dynamicsWorld_->stepSimulation(icTimeStep_, 1, icTimeStep_);
         iterations++;
     }
-    while(!icProblemSolved);
+    while(!icProblemSolved_);
     
     double solveTime = (GetTimeInMicroseconds() - icTime)/(double)1e6;
     
     //Synchronize body transforms
-    dynamicsWorld->synchronizeMotionStates();
-    simulationTime = Scalar(0.);
+    dynamicsWorld_->synchronizeMotionStates();
+    simulationTime_ = Scalar(0.);
 
     //Solving time
     cInfo("IC problem solved with %d iterations in %1.6lf s.", iterations, solveTime);
     
     //Set gravity
-    dynamicsWorld->setGravity(Vector3(0,0,g));
+    dynamicsWorld_->setGravity(Vector3(0,0,g_));
     
     //Set simulation tick
-    dynamicsWorld->setInternalTickCallback(SimulationTickCallback, this, true); //Pre-tick
-    dynamicsWorld->setInternalTickCallback(SimulationPostTickCallback, this, false); //Post-tick
+    dynamicsWorld_->setInternalTickCallback(SimulationTickCallback, this, true); //Pre-tick
+    dynamicsWorld_->setInternalTickCallback(SimulationPostTickCallback, this, false); //Post-tick
     return true;
 }
 
 void SimulationManager::AdvanceSimulation()
 {
     //Check if initial conditions solved
-    if(!icProblemSolved)
+    if(!icProblemSolved_)
         return;
 
     //Calculate eleapsed time
     uint64_t deltaTime;
 
-    if(currentTime == 0) //Start of simulation
+    if(currentTime_ == 0) //Start of simulation
     {
         deltaTime = 0.0;
-        simulationTime = 0.0;
-        currentTime = getSimulationClock();
-        timeOffset = currentTime;
+        simulationTime_ = 0.0;
+        currentTime_ = getSimulationClock();
+        timeOffset_ = currentTime_;
         return;
     }
 
     uint64_t timeInMicroseconds = getSimulationClock(); //Realtime factor included in clock
-    deltaTime = timeInMicroseconds - currentTime; 
-    currentTime = timeInMicroseconds;
+    deltaTime = timeInMicroseconds - currentTime_; 
+    currentTime_ = timeInMicroseconds;
 
-    if(deltaTime < ssus) //Sleep if clock did not tick one simulation step
+    if(deltaTime < ssus_) //Sleep if clock did not tick one simulation step
     {
-        SimulationClockSleep(ssus - deltaTime);
+        SimulationClockSleep(ssus_ - deltaTime);
         timeInMicroseconds = getSimulationClock();
-        deltaTime += timeInMicroseconds - currentTime;
-        currentTime = timeInMicroseconds;
+        deltaTime += timeInMicroseconds - currentTime_;
+        currentTime_ = timeInMicroseconds;
     }
     
     StepSimulation((Scalar)deltaTime/Scalar(1000000.0));
     
-    SDL_LockMutex(simInfoMutex);
-    Scalar cpuUsageNow = (Scalar)perfMon.getPhysicsTime()/(Scalar)deltaTime * Scalar(100);
+    SDL_LockMutex(simInfoMutex_);
+    Scalar cpuUsageNow = (Scalar)perfMon_.getPhysicsTime()/(Scalar)deltaTime * Scalar(100);
     Scalar filter(0.001);
-    cpuUsage = filter * cpuUsageNow + (Scalar(1)-filter) * cpuUsage;   
-    SDL_UnlockMutex(simInfoMutex);
+    cpuUsage_ = filter * cpuUsageNow + (Scalar(1)-filter) * cpuUsage_;   
+    SDL_UnlockMutex(simInfoMutex_);
 }
 
 void SimulationManager::StepSimulation(Scalar timeStep)
 {
-    SDL_LockMutex(simSettingsMutex);
-    perfMon.PhysicsStarted();
-    dynamicsWorld->stepSimulation((Scalar)timeStep, 1000000, (Scalar)ssus/Scalar(1000000.0));
-    perfMon.PhysicsFinished();
-    SDL_UnlockMutex(simSettingsMutex);
+    SDL_LockMutex(simSettingsMutex_);
+    perfMon_.PhysicsStarted();
+    dynamicsWorld_->stepSimulation((Scalar)timeStep, 1000000, (Scalar)ssus_/Scalar(1000000.0));
+    perfMon_.PhysicsFinished();
+    SDL_UnlockMutex(simSettingsMutex_);
 
     //Inform about MLCP failures
-    if(solver != Solver::SI)
+    if(solver_ != Solver::SI)
     {
-        SDL_LockMutex(simInfoMutex);
-        btMultiBodyMLCPConstraintSolver* mlcp = (btMultiBodyMLCPConstraintSolver*)mbSolver;
+        SDL_LockMutex(simInfoMutex_);
+        btMultiBodyMLCPConstraintSolver* mlcp = static_cast<btMultiBodyMLCPConstraintSolver*>(mbSolver_.get());
         int numFallbacks = mlcp->getNumFallbacks();
         if(numFallbacks)
         {
-            mlcpFallbacks += numFallbacks;
+            mlcpFallbacks_ += numFallbacks;
             mlcp->setNumFallbacks(0);
 #ifdef DEBUG
-            cWarning("MLCP solver failed %d times.\n", mlcpFallbacks);
+            cWarning("MLCP solver failed %d times.\n", mlcpFallbacks_);
 #endif
         }
-        SDL_UnlockMutex(simInfoMutex);
+        SDL_UnlockMutex(simInfoMutex_);
     }
 }
 
@@ -1147,8 +1100,8 @@ void SimulationManager::UpdateDrawingQueue()
     OpenGLPipeline* glPipeline = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline();
  
     //Solids, manipulators, systems....
-    for(size_t i=0; i<entities.size(); ++i)
-        glPipeline->AddToDrawingQueue(entities[i]->Render());
+    for(size_t i=0; i<entities_.size(); ++i)
+        glPipeline->AddToDrawingQueue(entities_[i]->Render());
 
     std::pair<Entity*, int> selected = ((GraphicalSimulationApp*)SimulationApp::getApp())->getSelectedEntity();
     if(selected.first != nullptr)
@@ -1160,40 +1113,40 @@ void SimulationManager::UpdateDrawingQueue()
     }
 
     //Joints
-    for(size_t i=0; i<joints.size(); ++i)
-        glPipeline->AddToDrawingQueue(joints[i]->Render());
+    for(size_t i=0; i<joints_.size(); ++i)
+        glPipeline->AddToDrawingQueue(joints_[i]->Render());
         
     //Actuators
-    for(size_t i=0; i<actuators.size(); ++i)
+    for(size_t i=0; i<actuators_.size(); ++i)
     {
-        glPipeline->AddToDrawingQueue(actuators[i]->Render());
-        if(actuators[i]->getType() == ActuatorType::LIGHT)
-            ((Light*)actuators[i])->UpdateTransform();
+        glPipeline->AddToDrawingQueue(actuators_[i]->Render());
+        if(actuators_[i]->getType() == ActuatorType::LIGHT)
+            (static_cast<Light*>(actuators_[i].get()))->UpdateTransform();
     }
     
     //Sensors
-    for(size_t i=0; i<sensors.size(); ++i)
+    for(size_t i=0; i<sensors_.size(); ++i)
     {
-        glPipeline->AddToDrawingQueue(sensors[i]->Render());
-        if(sensors[i]->getType() == SensorType::VISION)
-            ((VisionSensor*)sensors[i])->UpdateTransform();
+        glPipeline->AddToDrawingQueue(sensors_[i]->Render());
+        if(sensors_[i]->getType() == SensorType::VISION)
+            (static_cast<VisionSensor*>(sensors_[i].get()))->UpdateTransform();
     }
     
     //Comms
-    for(size_t i=0; i<comms.size(); ++i)
-        glPipeline->AddToDrawingQueue(comms[i]->Render());
+    for(size_t i=0; i<comms_.size(); ++i)
+        glPipeline->AddToDrawingQueue(comms_[i]->Render());
     
     //Trackball
-    if(trackball != nullptr)
-        trackball->UpdateCenterPos();
+    if(trackball_ != nullptr)
+        trackball_->UpdateCenterPos();
     
     //Contacts
-    for(size_t i=0; i<contacts.size(); ++i)
-        glPipeline->AddToDrawingQueue(contacts[i]->Render());
+    for(size_t i=0; i<contacts_.size(); ++i)
+        glPipeline->AddToDrawingQueue(contacts_[i]->Render());
     
     //Ocean currents
-    if(ocean != nullptr)
-        glPipeline->AddToDrawingQueue(ocean->Render(actuators));
+    if(ocean_ != nullptr)
+        glPipeline->AddToDrawingQueue(ocean_->Render(actuators_));
 }
 
 std::pair<Entity*, int>  SimulationManager::PickEntity(Vector3 eye, Vector3 ray)
@@ -1202,7 +1155,7 @@ std::pair<Entity*, int>  SimulationManager::PickEntity(Vector3 eye, Vector3 ray)
     DetailedRayResultCallback rayCallback(eye, eye+ray);
     rayCallback.m_collisionFilterGroup = MASK_DYNAMIC;
     rayCallback.m_collisionFilterMask = MASK_DYNAMIC | MASK_STATIC | MASK_ANIMATED_COLLIDING | MASK_ANIMATED_NONCOLLIDING;
-    dynamicsWorld->rayTest(eye, eye+ray, rayCallback);
+    dynamicsWorld_->rayTest(eye, eye+ray, rayCallback);
                 
     if(rayCallback.hasHit())
     {
@@ -1219,8 +1172,8 @@ std::pair<Entity*, int>  SimulationManager::PickEntity(Vector3 eye, Vector3 ray)
 
 void SimulationManager::RenderBulletDebug()
 {
-    dynamicsWorld->debugDrawWorld();
-    debugDrawer->Render();
+    dynamicsWorld_->debugDrawWorld();
+    debugDrawer_->Render();
 }
  
 std::string SimulationManager::CreateMaterial(const std::string& uniqueName, Scalar density, Scalar restitution)
@@ -1401,53 +1354,53 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, Scalar timeS
     //Solve for objects settling
     bool objectsSettled = true;
     
-    if(simManager->icUseGravity)
+    if(simManager->icUseGravity_)
     {
         //Apply gravity to bodies
-        for(size_t i = 0; i < simManager->entities.size(); ++i)
+        for(size_t i = 0; i < simManager->entities_.size(); ++i)
         {
-            if(simManager->entities[i]->getType() == EntityType::SOLID)
+            if(simManager->entities_[i]->getType() == EntityType::SOLID)
             {
-                SolidEntity* solid = (SolidEntity*)simManager->entities[i];
+                SolidEntity* solid = static_cast<SolidEntity*>(simManager->entities_[i].get());
                 solid->ApplyGravity(world->getGravity());
             }
-            else if(simManager->entities[i]->getType() == EntityType::FEATHERSTONE)
+            else if(simManager->entities_[i]->getType() == EntityType::FEATHERSTONE)
             {
-                FeatherstoneEntity* feather = (FeatherstoneEntity*)simManager->entities[i];
+                FeatherstoneEntity* feather = static_cast<FeatherstoneEntity*>(simManager->entities_[i].get());
                 feather->ApplyGravity(world->getGravity());
             }
-            else if(simManager->entities[i]->getType() == EntityType::CABLE)
+            else if(simManager->entities_[i]->getType() == EntityType::CABLE)
             {
-                CableEntity* cable = (CableEntity*)simManager->entities[i];
+                CableEntity* cable = static_cast<CableEntity*>(simManager->entities_[i].get());
                 cable->ApplyGravity(world->getGravity());
             }
         }
         
-        if(simManager->simulationTime < Scalar(0.01)) //Wait for a few cycles to ensure bodies started moving
+        if(simManager->simulationTime_ < Scalar(0.01)) //Wait for a few cycles to ensure bodies started moving
             objectsSettled = false;
         else
         {
             //Check if objects settled
-            for(size_t i = 0; i < simManager->entities.size(); ++i)
+            for(size_t i = 0; i < simManager->entities_.size(); ++i)
             {
-                if(simManager->entities[i]->getType() == EntityType::SOLID)
+                if(simManager->entities_[i]->getType() == EntityType::SOLID)
                 {
-                    SolidEntity* solid = (SolidEntity*)simManager->entities[i];
-                    if(solid->getLinearVelocity().length() > simManager->icLinTolerance * Scalar(100.) || solid->getAngularVelocity().length() > simManager->icAngTolerance * Scalar(100.))
+                    SolidEntity* solid = static_cast<SolidEntity*>(simManager->entities_[i].get());
+                    if(solid->getLinearVelocity().length() > simManager->icLinTolerance_ * Scalar(100.) || solid->getAngularVelocity().length() > simManager->icAngTolerance_ * Scalar(100.))
                     {
                         objectsSettled = false;
                         break;
                     }
                 }
-                else if(simManager->entities[i]->getType() == EntityType::FEATHERSTONE)
+                else if(simManager->entities_[i]->getType() == EntityType::FEATHERSTONE)
                 {
-                    FeatherstoneEntity* multibody = (FeatherstoneEntity*)simManager->entities[i];
+                    FeatherstoneEntity* multibody = static_cast<FeatherstoneEntity*>(simManager->entities_[i].get());
                     
                     //Check base velocity
                     Vector3 baseLinVel = multibody->getLinkLinearVelocity(0);
                     Vector3 baseAngVel = multibody->getLinkAngularVelocity(0);
                     
-                    if(baseLinVel.length() > simManager->icLinTolerance * Scalar(100.) || baseAngVel.length() > simManager->icAngTolerance * Scalar(100.0))
+                    if(baseLinVel.length() > simManager->icLinTolerance_ * Scalar(100.) || baseAngVel.length() > simManager->icAngTolerance_ * Scalar(100.0))
                     {
                         objectsSettled = false;
                         break;
@@ -1463,12 +1416,12 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, Scalar timeS
                         switch(jType)
                         {
                             case btMultibodyLink::eRevolute:
-                                if(Vector3(jVelocity,0,0).length() > simManager->icAngTolerance * Scalar(100.))
+                                if(Vector3(jVelocity,0,0).length() > simManager->icAngTolerance_ * Scalar(100.))
                                     objectsSettled = false;
                                 break;
                                 
                             case btMultibodyLink::ePrismatic:
-                                if(Vector3(jVelocity,0,0).length() > simManager->icLinTolerance * Scalar(100.))
+                                if(Vector3(jVelocity,0,0).length() > simManager->icLinTolerance_ * Scalar(100.))
                                     objectsSettled = false;
                                 break;
                                 
@@ -1480,12 +1433,12 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, Scalar timeS
                             break;
                     }
                 }
-                else if(simManager->entities[i]->getType() == EntityType::CABLE)
+                else if(simManager->entities_[i]->getType() == EntityType::CABLE)
                 {
-                    btSoftBody* cableBody = static_cast<CableEntity*>(simManager->entities[i])->getSoftBody();
+                    btSoftBody* cableBody = static_cast<CableEntity*>(simManager->entities_[i].get())->getSoftBody();
                     for (int h = 0; h < cableBody->m_nodes.size(); ++h)
                     {
-                        if (cableBody->m_nodes[h].m_v.length() > simManager->icLinTolerance * Scalar(100.))
+                        if (cableBody->m_nodes[h].m_v.length() > simManager->icLinTolerance_ * Scalar(100.))
                         {
                             objectsSettled = false;
                             break;
@@ -1499,16 +1452,16 @@ void SimulationManager::SolveICTickCallback(btDynamicsWorld* world, Scalar timeS
     //Solve for joint initial conditions
     bool jointsICSolved = true;
     
-    for(size_t i = 0; i < simManager->joints.size(); ++i)
-        if(!simManager->joints[i]->SolvePositionIC(simManager->icLinTolerance, simManager->icAngTolerance))
+    for(size_t i = 0; i < simManager->joints_.size(); ++i)
+        if(!simManager->joints_[i]->SolvePositionIC(simManager->icLinTolerance_, simManager->icAngTolerance_))
             jointsICSolved = false;
 
     //Check if everything solved
     if(objectsSettled && jointsICSolved)
-        simManager->icProblemSolved = true;
+        simManager->icProblemSolved_ = true;
     
     //Update time
-    simManager->simulationTime += timeStep;
+    simManager->simulationTime_ += timeStep;
 }
 
 //Used to apply and accumulate forces
@@ -1521,40 +1474,40 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
     dynamicsWorld->clearForces(); //Includes clearing of multibody forces!
         
     //loop through all actuators -> apply forces to bodies (free and connected by joints)
-    for(size_t i = 0; i < simManager->actuators.size(); ++i)
-        simManager->actuators[i]->Update(timeStep);
+    for(size_t i = 0; i < simManager->actuators_.size(); ++i)
+        simManager->actuators_[i]->Update(timeStep);
     
     //loop through all joints -> apply damping forces to bodies connected by joints
-    for(size_t i = 0; i < simManager->joints.size(); ++i)
-        simManager->joints[i]->ApplyDamping();
+    for(size_t i = 0; i < simManager->joints_.size(); ++i)
+        simManager->joints_[i]->ApplyDamping();
     
     //loop through all entities that may need special actions
-    for(size_t i = 0; i < simManager->entities.size(); ++i)
+    for(size_t i = 0; i < simManager->entities_.size(); ++i)
     {
-        Entity* ent = simManager->entities[i];
+        Entity* ent = simManager->entities_[i].get();
         
         if(ent->getType() == EntityType::SOLID)
         {
-            SolidEntity* solid = (SolidEntity*)ent;
+            SolidEntity* solid = static_cast<SolidEntity*>(ent);
             solid->ApplyGravity(dynamicsWorld->getGravity());
         }
         else if(ent->getType() == EntityType::FEATHERSTONE)
         {
-            FeatherstoneEntity* multibody = (FeatherstoneEntity*)ent;
+            FeatherstoneEntity* multibody = static_cast<FeatherstoneEntity*>(ent);
             multibody->ApplyGravity(dynamicsWorld->getGravity());
             multibody->ApplyDamping();
         }
         else if(ent->getType() == EntityType::CABLE)
         {
-            CableEntity* cable = (CableEntity*)ent;
+            CableEntity* cable = static_cast<CableEntity*>(ent);
             cable->ApplyGravity(dynamicsWorld->getGravity());
         }
         else if(ent->getType() == EntityType::FORCEFIELD)
         {
-            ForcefieldEntity* ff = (ForcefieldEntity*)ent;
+            ForcefieldEntity* ff = static_cast<ForcefieldEntity*>(ent);
             if(ff->getForcefieldType() == ForcefieldType::TRIGGER)
             {				
-                Trigger* trigger = (Trigger*)ff;
+                Trigger* trigger = static_cast<Trigger*>(ff);
                 trigger->Clear();
                 btBroadphasePairArray& pairArray = trigger->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
                 int numPairs = pairArray.size();
@@ -1579,13 +1532,13 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
     }
 
     //Geometry-based forces
-    bool recompute = simManager->fdCounter % simManager->fdPrescaler == 0;
-    ++simManager->fdCounter;
+    bool recompute = simManager->fdCounter_ % simManager->fdPrescaler_ == 0;
+    ++simManager->fdCounter_;
     
     //Aerodynamic forces
-    if(simManager->atmosphere != nullptr)
+    if(simManager->atmosphere_ != nullptr)
     {
-        btBroadphasePairArray& pairArray = simManager->atmosphere->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
+        btBroadphasePairArray& pairArray = simManager->atmosphere_->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
         int numPairs = pairArray.size();
         
         if(numPairs > 0)
@@ -1598,24 +1551,24 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
                 if (!colPair)
                     continue;
                     
-                btCollisionObject* co1 = (btCollisionObject*)colPair->m_pProxy0->m_clientObject;
-                btCollisionObject* co2 = (btCollisionObject*)colPair->m_pProxy1->m_clientObject;
+                btCollisionObject* co1 = static_cast<btCollisionObject*>(colPair->m_pProxy0->m_clientObject);
+                btCollisionObject* co2 = static_cast<btCollisionObject*>(colPair->m_pProxy1->m_clientObject);
                 
-                if(co1 == simManager->atmosphere->getGhost())
-                    simManager->atmosphere->ApplyFluidForces(world, co2, recompute);
-                else if(co2 == simManager->ocean->getGhost())
-                    simManager->atmosphere->ApplyFluidForces(world, co1, recompute);
+                if(co1 == simManager->atmosphere_->getGhost())
+                    simManager->atmosphere_->ApplyFluidForces(world, co2, recompute);
+                else if(co2 == simManager->ocean_->getGhost())
+                    simManager->atmosphere_->ApplyFluidForces(world, co1, recompute);
             }
         }
     }
     
     //Hydrodynamic forces
-    if(simManager->ocean != nullptr)
+    if(simManager->ocean_ != nullptr)
     {
-        if(recompute) SDL_LockMutex(simManager->simHydroMutex);
-        simManager->perfMon.HydrodynamicsStarted();
+        if(recompute) SDL_LockMutex(simManager->simHydroMutex_);
+        simManager->perfMon_.HydrodynamicsStarted();
         
-        btBroadphasePairArray& pairArray = simManager->ocean->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
+        btBroadphasePairArray& pairArray = simManager->ocean_->getGhost()->getOverlappingPairCache()->getOverlappingPairArray();
         int numPairs = pairArray.size();
         
         if(numPairs > 0)
@@ -1628,18 +1581,18 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
                 if (!colPair)
                     continue;
                     
-                btCollisionObject* co1 = (btCollisionObject*)colPair->m_pProxy0->m_clientObject;
-                btCollisionObject* co2 = (btCollisionObject*)colPair->m_pProxy1->m_clientObject;
+                btCollisionObject* co1 = static_cast<btCollisionObject*>(colPair->m_pProxy0->m_clientObject);
+                btCollisionObject* co2 = static_cast<btCollisionObject*>(colPair->m_pProxy1->m_clientObject);
                 
-                if(co1 == simManager->ocean->getGhost())
-                    simManager->ocean->ApplyFluidForces(world, co2, recompute);
-                else if(co2 == simManager->ocean->getGhost())
-                    simManager->ocean->ApplyFluidForces(world, co1, recompute);
+                if(co1 == simManager->ocean_->getGhost())
+                    simManager->ocean_->ApplyFluidForces(world, co2, recompute);
+                else if(co2 == simManager->ocean_->getGhost())
+                    simManager->ocean_->ApplyFluidForces(world, co1, recompute);
             }
         }
         
-        simManager->perfMon.HydrodynamicsFinished();
-        if(recompute) SDL_UnlockMutex(simManager->simHydroMutex);
+        simManager->perfMon_.HydrodynamicsFinished();
+        if(recompute) SDL_UnlockMutex(simManager->simHydroMutex_);
     }
 }
 
@@ -1649,43 +1602,43 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
     SimulationManager* simManager = (SimulationManager*)world->getWorldUserInfo();
     
     //Update motion data
-    for(size_t i = 0; i < simManager->entities.size(); ++i)
+    for(size_t i = 0; i < simManager->entities_.size(); ++i)
     {
-        Entity* ent = simManager->entities[i];
+        Entity* ent = simManager->entities_[i].get();
             
         if(ent->getType() == EntityType::SOLID)
         {
-            SolidEntity* solid = (SolidEntity*)ent;
+            SolidEntity* solid = static_cast<SolidEntity*>(ent);
             solid->UpdateAcceleration(timeStep);
         }
         else if(ent->getType() == EntityType::FEATHERSTONE)
         {
-            FeatherstoneEntity* fe = (FeatherstoneEntity*)ent;
+            FeatherstoneEntity* fe = static_cast<FeatherstoneEntity*>(ent);
             fe->UpdateAcceleration(timeStep);
         }
         else if(ent->getType() == EntityType::ANIMATED)
         {
-            AnimatedEntity* anim = (AnimatedEntity*)ent;
+            AnimatedEntity* anim = static_cast<AnimatedEntity*>(ent);
             anim->Update(timeStep);
         }
     }
 
     //Special treatment of suction cup actuator
-    for(size_t i = 0; i < simManager->actuators.size(); ++i)
-        if(simManager->actuators[i]->getType() == ActuatorType::SUCTION_CUP)
-            ((SuctionCup*)simManager->actuators[i])->Engage(simManager);
+    for(size_t i = 0; i < simManager->actuators_.size(); ++i)
+        if(simManager->actuators_[i]->getType() == ActuatorType::SUCTION_CUP)
+            (static_cast<SuctionCup*>(simManager->actuators_[i].get()))->Engage(simManager);
 
     //Loop through all sensors -> update measurements
-    for(size_t i = 0; i < simManager->sensors.size(); ++i)
-        simManager->sensors[i]->Update(timeStep);
+    for(size_t i = 0; i < simManager->sensors_.size(); ++i)
+        simManager->sensors_[i]->Update(timeStep);
         
     //Loop through all comms -> update state and measurements
-    for(size_t i = 0; i < simManager->comms.size(); ++i)
-        simManager->comms[i]->Update(timeStep);
+    for(size_t i = 0; i < simManager->comms_.size(); ++i)
+        simManager->comms_[i]->Update(timeStep);
     
     // Loop through all comms again to process messages (there can be a cross-influence between updates)
-    for(size_t i = 0; i < simManager->comms.size(); ++i)
-        simManager->comms[i]->ProcessMessages();
+    for(size_t i = 0; i < simManager->comms_.size(); ++i)
+        simManager->comms_[i]->ProcessMessages();
     
     //Loop through contact manifolds -> update contacts
     if(simManager->getContact(0) != nullptr) // If at least one contact is defined
@@ -1694,10 +1647,10 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
         for(int i=0; i<numManifolds; ++i)
         {
             btPersistentManifold* contactManifold = world->getDispatcher()->getManifoldByIndexInternal(i);
-            btCollisionObject* coA = (btCollisionObject*)contactManifold->getBody0();
-            btCollisionObject* coB = (btCollisionObject*)contactManifold->getBody1();
-            Entity* entA = (Entity*)coA->getUserPointer();
-            Entity* entB = (Entity*)coB->getUserPointer();
+            btCollisionObject* coA = const_cast<btCollisionObject*>(contactManifold->getBody0());
+            btCollisionObject* coB = const_cast<btCollisionObject*>(contactManifold->getBody1());
+            Entity* entA = static_cast<Entity*>(coA->getUserPointer());
+            Entity* entB = static_cast<Entity*>(coB->getUserPointer());
             Contact* contact = simManager->getContact(entA, entB);
             if(contact != nullptr && contactManifold->getNumContacts() > 0)
                 contact->AddContactPoint(contactManifold, contact->getEntityA() != entA, timeStep);        
@@ -1705,7 +1658,7 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
     }
 
     //Update simulation time
-    simManager->simulationTime += timeStep;
+    simManager->simulationTime_ += timeStep;
     
     //Update drawing of graphical simulation app
     if (SimulationApp::getApp()->hasGraphics())

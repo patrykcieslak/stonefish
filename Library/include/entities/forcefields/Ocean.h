@@ -160,7 +160,7 @@ namespace sf
         std::vector<Renderable> Render();
 
         //! A method implementing the rendering of the ocean force field.
-        std::vector<Renderable> Render(const std::vector<Actuator*>& act);
+        std::vector<Renderable> Render(const std::vector<std::unique_ptr<Actuator>>& act);
         
     private:
         Fluid liquid;

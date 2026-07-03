@@ -278,11 +278,11 @@ void Ocean::InitGraphics(SDL_mutex* hydrodynamics)
 
 std::vector<Renderable> Ocean::Render()
 {
-    std::vector<Actuator*> act;
+    std::vector<std::unique_ptr<Actuator>> act;
     return Render(act);
 }
 
-std::vector<Renderable> Ocean::Render(const std::vector<Actuator*>& act)
+std::vector<Renderable> Ocean::Render(const std::vector<std::unique_ptr<Actuator>>& act)
 {
     std::vector<Renderable> items(0);
     
@@ -304,7 +304,7 @@ std::vector<Renderable> Ocean::Render(const std::vector<Actuator*>& act)
     for(size_t i=0; i<act.size(); ++i)
         if(act[i]->getType() == ActuatorType::THRUSTER)
         {
-            Thruster* th = (Thruster*)act[i];
+            Thruster* th = static_cast<Thruster*>(act[i].get());
             Transform thFrame = th->getActuatorFrame();
             Vector3 thPos = thFrame.getOrigin();
             Vector3 thDir = -thFrame.getBasis().getColumn(0);

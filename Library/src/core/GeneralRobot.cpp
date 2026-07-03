@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 27/01/2023.
-//  Copyright(c) 2023-2025 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2023-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/GeneralRobot.h"
@@ -53,8 +53,8 @@ RobotType GeneralRobot::getType() const
 
 Joint* GeneralRobot::getJoint(const std::string& name)
 {
-    for(size_t i=0; i<joints.size(); ++i)
-        if(joints[i]->getName() == name) return joints[i];
+    for(size_t i=0; i<joints_.size(); ++i)
+        if(joints_[i]->getName() == name) return joints_[i];
  
     return nullptr;
 }
@@ -82,7 +82,7 @@ void GeneralRobot::AddJointSensor(JointSensor* s, const std::string& monitoredJo
     for(size_t i = 0; i < jointsData_.size(); ++i)
         if(jointsData_[i].name == monitoredJointName)
         {
-            jsAttachments.push_back(std::make_pair(s, monitoredJointName));
+            jsAttachments_.push_back(std::make_pair(s, monitoredJointName));
             sensors_.push_back(s);    
             break;
         }
@@ -93,7 +93,7 @@ void GeneralRobot::AddJointActuator(JointActuator* a, const std::string& actuate
     for(size_t i = 0; i < jointsData_.size(); ++i)
         if(jointsData_[i].name == actuatedJointName)
         {
-            jaAttachments.push_back(std::make_pair(a, actuatedJointName));
+            jaAttachments_.push_back(std::make_pair(a, actuatedJointName));
             actuators_.push_back(a);    
             break;
         }
@@ -104,17 +104,17 @@ void GeneralRobot::AddToSimulation(SimulationManager* sm, const Transform& origi
     Robot::AddToSimulation(sm, origin);   
     
     // Base link
-    sm->AddSolidEntity(links_[0], origin);
+    sm->AddSolidEntity(std::make_unique<SolidEntity>(links_[0]), origin);
     if(fixed_)
     {
         FixedJoint* fix = new FixedJoint(name_ + "_fix", links_[0]);
-        joints.push_back(fix);
+        joints_.push_back(fix);
     }
 
     // Rest of the links and joints
     for(size_t i = 1; i < links_.size(); ++i)
     {
-        sm->AddSolidEntity(links_[i], origin);       
+        sm->AddSolidEntity(std::make_unique<SolidEntity>(links_[i]), origin);       
     }
 
     for(size_t i = 0; i < jointsData_.size(); ++i)
@@ -141,7 +141,7 @@ void GeneralRobot::AddToSimulation(SimulationManager* sm, const Transform& origi
                 FixedJoint* fix = new FixedJoint(jointsData_[i].name, 
                                                     links_[parentId], 
                                                     links_[childId]);
-                joints.push_back(fix);
+                joints_.push_back(fix);
             }
                 break;
 
@@ -153,7 +153,7 @@ void GeneralRobot::AddToSimulation(SimulationManager* sm, const Transform& origi
                                                         (origin * jointsData_[i].origin).getOrigin(),
                                                         (origin * jointsData_[i].origin).getBasis() * jointsData_[i].axis, false);
                 rev->setLimits(jointsData_[i].posLim.first, jointsData_[i].posLim.second);
-                joints.push_back(rev);
+                joints_.push_back(rev);
             }
                 break;
 
@@ -164,7 +164,7 @@ void GeneralRobot::AddToSimulation(SimulationManager* sm, const Transform& origi
                                                             links_[childId],
                                                             (origin * jointsData_[i].origin).getBasis() * jointsData_[i].axis, false);
                 prism->setLimits(jointsData_[i].posLim.first, jointsData_[i].posLim.second);
-                joints.push_back(prism);
+                joints_.push_back(prism);
             }
                 break;
 
@@ -173,31 +173,31 @@ void GeneralRobot::AddToSimulation(SimulationManager* sm, const Transform& origi
         }
     }
 
-    for(size_t i = 0; i < joints.size(); ++i)
-        sm->AddJoint(joints[i]);
+    for(size_t i = 0; i < joints_.size(); ++i)
+        sm->AddJoint(std::make_unique<Joint>(joints_[i]));
 
     // Attach joint sensors
-    for(size_t i = 0; i < jsAttachments.size(); ++i)
+    for(size_t i = 0; i < jsAttachments_.size(); ++i)
     {
-        Joint* j = getJoint(jsAttachments[i].second);
+        Joint* j = getJoint(jsAttachments_[i].second);
         if(j != nullptr)
-            jsAttachments[i].first->AttachToJoint(j);
+            jsAttachments_[i].first->AttachToJoint(j);
         else
             cCritical("Joint '%s' doesn't exist. Sensor '%s' cannot be attached!", 
-                        jsAttachments[i].second.c_str(), 
-                        jsAttachments[i].first->getName().c_str());
+                        jsAttachments_[i].second.c_str(), 
+                        jsAttachments_[i].first->getName().c_str());
     }    
 
     // Attach joint actuators
-    for(size_t i = 0; i < jaAttachments.size(); ++i)
+    for(size_t i = 0; i < jaAttachments_.size(); ++i)
     {
-        Joint* j = getJoint(jaAttachments[i].second);
+        Joint* j = getJoint(jaAttachments_[i].second);
         if(j != nullptr)
-            jaAttachments[i].first->AttachToJoint(j);
+            jaAttachments_[i].first->AttachToJoint(j);
         else
             cCritical("Joint '%s' doesn't exist. Actuator '%s' cannot be attached!", 
-                        jaAttachments[i].second.c_str(), 
-                        jaAttachments[i].first->getName().c_str());
+                        jaAttachments_[i].second.c_str(), 
+                        jaAttachments_[i].first->getName().c_str());
     }
 }
 

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/11/2018.
-//  Copyright(c) 2018-2025 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/FeatherstoneRobot.h"
@@ -239,7 +239,7 @@ void FeatherstoneRobot::AddToSimulation(SimulationManager* sm, const Transform& 
         cCritical("Detected unconnected links!");
 
     Robot::AddToSimulation(sm, origin);
-    sm->AddFeatherstoneEntity(dynamics, origin);
+    sm->AddFeatherstoneEntity(std::make_unique<FeatherstoneEntity>(dynamics), origin);
 }
 
 void FeatherstoneRobot::Respawn(SimulationManager* sm, const Transform& origin)

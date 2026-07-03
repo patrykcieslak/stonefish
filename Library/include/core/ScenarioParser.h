@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 17/07/19.
-//  Copyright (c) 2019-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_ScenarioParser__
@@ -240,7 +240,7 @@ namespace sf
          \param namePrefix a string added at the beginning of the actuator name
          \return pointer to actuator
          */
-        virtual Actuator* ParseActuator(XMLElement* element, const std::string& namePrefix);
+        virtual std::unique_ptr<Actuator> ParseActuator(XMLElement* element, const std::string& namePrefix);
 
         //! A method used to parse a description of a sensor.
         /*!
@@ -248,7 +248,7 @@ namespace sf
          \param namePrefix a string added at the beginning of the sensor name
          \return pointer to sensor
          */
-        virtual Sensor* ParseSensor(XMLElement* element, const std::string& namePrefix);
+        virtual std::unique_ptr<Sensor> ParseSensor(XMLElement* element, const std::string& namePrefix);
         
         //! A method used to parse a description of a light source.
         /*!
@@ -256,7 +256,7 @@ namespace sf
          \param namePrefix a string added at the beginning of the light name
          \return pointer to light
          */
-        virtual Light* ParseLight(XMLElement* element, const std::string& namePrefix);
+        virtual std::unique_ptr<Light> ParseLight(XMLElement* element, const std::string& namePrefix);
 
         //! A method used to parse a communication device description.
         /*!
@@ -264,7 +264,7 @@ namespace sf
          \param namePrefix a string added at the beginning of the comm name
          \return pointer to the communication device
          */
-        virtual Comm* ParseComm(XMLElement* element, const std::string& namePrefix);
+        virtual std::unique_ptr<Comm> ParseComm(XMLElement* element, const std::string& namePrefix);
         
         //! A method used to parse a single contact description.
         /*!
