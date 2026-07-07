@@ -828,6 +828,8 @@ bool ScenarioParser::ParseLooks(XMLElement* element)
         std::string normalMapStr = "";
         const char* tempMap = nullptr;
         std::string tempMapStr = "";
+        const char* reflectivityMap = nullptr;
+        std::string reflectivityMapStr = "";
         
         if(look->QueryStringAttribute("name", &name) != XML_SUCCESS)
         {
@@ -854,21 +856,24 @@ bool ScenarioParser::ParseLooks(XMLElement* element)
             textureStr = GetFullPath(std::string(texture));
         if(look->QueryStringAttribute("normal_map", &normalMap) == XML_SUCCESS)
             normalMapStr = GetFullPath(std::string(normalMap));
+
+        if(look->QueryStringAttribute("reflectivity_map", &reflectivityMap) == XML_SUCCESS)
+            reflectivityMapStr = GetFullPath(std::string(reflectivityMap));
         
         if(look->QueryAttribute("temperature", &tempRange.first) == XML_SUCCESS)
         {
             tempRange.second = tempRange.first;
-            sm->CreateLook(lookName, color, roughness, metalness, reflectivity, textureStr, normalMapStr, "", tempRange);
+            sm->CreateLook(lookName, color, roughness, metalness, reflectivity, textureStr, normalMapStr, reflectivityMapStr, "", tempRange);
         }
         else if(look->QueryStringAttribute("temperature_map", &tempMap) == XML_SUCCESS
                 && look->QueryAttribute("temperature_min", &tempRange.first) == XML_SUCCESS
                 && look->QueryAttribute("temperature_max", &tempRange.second) == XML_SUCCESS)
         {
             tempMapStr = GetFullPath(std::string(tempMap));
-            sm->CreateLook(lookName, color, roughness, metalness, reflectivity, textureStr, normalMapStr, tempMapStr, tempRange);
+            sm->CreateLook(lookName, color, roughness, metalness, reflectivity, textureStr, normalMapStr, reflectivityMapStr, tempMapStr, tempRange);
         }
         else
-        sm->CreateLook(lookName, color, roughness, metalness, reflectivity, textureStr, normalMapStr);
+        sm->CreateLook(lookName, color, roughness, metalness, reflectivity, textureStr, normalMapStr, reflectivityMapStr);
         look = look->NextSiblingElement("look");
     }
     

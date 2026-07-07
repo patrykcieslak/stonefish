@@ -287,11 +287,13 @@ namespace sf
          \param normalMapPath a path to the texture file specifying surface normal (bump mapping)
          \param temperatureMapPath a path to the texture file specifying surface temperature
          \param temperatureRange a pair of values specifying the temperature range represented by the thermal map
+         \param reflectivityMapStr a path to a texture specifying reflectivity
          \return the actual name of the created look
          */
         std::string CreatePhysicalLook(const std::string& name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness = 0.f, 
                                        GLfloat reflectivity = 0.f, const std::string& albedoTexturePath = "", const std::string& normalMapPath = "", 
-                                       const std::string& temperatureMapPath = "", glm::vec2 temperatureRange = glm::vec2(20.f));
+                                       const std::string& reflectivityMapPath = "", const std::string& temperatureMapPath = "",
+                                       glm::vec2 temperatureRange = glm::vec2(20.f));
         
         //! A method to use a look.
         /*!

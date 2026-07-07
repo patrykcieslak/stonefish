@@ -341,10 +341,14 @@ void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
     OpenGLState::BindFramebuffer(renderFBO);
     OpenGLState::Viewport(0, 0, nBeamSamples_.x, nBeamSamples_.y);
     glDisable(GL_DEPTH_CLAMP);
-    sonarInputShader_[1]->Use();
-    sonarInputShader_[1]->SetUniform("eyePos", GetEyePosition());
     sonarInputShader_[0]->Use();
     sonarInputShader_[0]->SetUniform("eyePos", GetEyePosition());
+    sonarInputShader_[1]->Use();
+    sonarInputShader_[1]->SetUniform("eyePos", GetEyePosition());
+    sonarInputShader_[2]->Use();
+    sonarInputShader_[2]->SetUniform("eyePos", GetEyePosition());
+    sonarInputShader_[3]->Use();
+    sonarInputShader_[3]->SetUniform("eyePos", GetEyePosition());
     GLSLShader* shader;
     for(size_t i=0; i<2; ++i) //For each of the sonar views
     {
@@ -363,19 +367,32 @@ void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
             glm::mat4 M = objects[h].model;
             Material mat = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(objects[h].materialName);
             bool normalMapping = obj.texturable && (look.normalMap > 0);
+            bool reflMapping = obj.texturable && (look.reflectivityMap > 0);
             shader = normalMapping ? sonarInputShader_[1] : sonarInputShader_[0];
+            if(reflMapping && normalMapping)
+                shader = sonarInputShader_[3];
+            else if(reflMapping)
+                shader = sonarInputShader_[2];
+            else if(normalMapping)
+                shader = sonarInputShader_[1];
+            else
+                shader = sonarInputShader_[0];
             shader->Use();
             shader->SetUniform("MVP", VP * M);
             shader->SetUniform("M", M);
             shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
-            shader->SetUniform("restitution", (GLfloat)mat.restitution);
             if(normalMapping)
                 OpenGLState::BindTexture(TEX_MAT_NORMAL, GL_TEXTURE_2D, look.normalMap);
+            if(reflMapping)
+                OpenGLState::BindTexture(TEX_MAT_REFLECTIVITY, GL_TEXTURE_2D, look.reflectivityMap);
+            else
+                shader->SetUniform("restitution", (GLfloat)mat.restitution);
             content->DrawObject(objects[h].objectId, objects[h].lookId, objects[h].model);
         }
     }
     glEnable(GL_DEPTH_CLAMP);
     OpenGLState::UnbindTexture(TEX_MAT_NORMAL);
+    OpenGLState::UnbindTexture(TEX_MAT_REFLECTIVITY);
     OpenGLState::BindFramebuffer(0);
     
     //Compute sonar output histogram

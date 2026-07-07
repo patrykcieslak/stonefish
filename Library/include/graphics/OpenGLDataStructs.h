@@ -65,6 +65,7 @@
 #define TEX_MAT_ALBEDO          ((GLint)15)
 #define TEX_MAT_NORMAL          ((GLint)16)
 #define TEX_MAT_TEMPERATURE     ((GLint)17)
+#define TEX_MAT_REFLECTIVITY    ((GLint)18)
 //#define TEX_POINT_SHADOW        ((GLint)X) 
 //#define TEX_POINT_DEPTH         ((GLint)X)
 
@@ -500,7 +501,7 @@ namespace sf
         GLuint normalMap;
         GLuint temperatureMap;
         glm::vec2 temperatureRange;
-
+        GLuint reflectivityMap;
         Look()
         {
             name = "";
@@ -510,6 +511,7 @@ namespace sf
             normalMap = 0;
             temperatureMap = 0;
             temperatureRange = glm::vec2(20.f);
+            reflectivityMap = 0;
         }
     };
     

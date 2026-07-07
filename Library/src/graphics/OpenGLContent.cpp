@@ -1354,7 +1354,8 @@ std::string OpenGLContent::CreateSimpleLook(const std::string& name, glm::vec3 r
 
 std::string OpenGLContent::CreatePhysicalLook(const std::string& name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness, 
                                               GLfloat reflectivity, const std::string& albedoTexturePath, const std::string& normalMapPath, 
-                                              const std::string& temperatureMapPath, glm::vec2 temperatureRange)
+                                              const std::string& reflectivityMapPath, const std::string& temperatureMapPath,
+                                              glm::vec2 temperatureRange)
 {
     Look look;
     look.name = lookNameManager.AddName(name);
@@ -1365,6 +1366,7 @@ std::string OpenGLContent::CreatePhysicalLook(const std::string& name, glm::vec3
     look.params.push_back(metalness);
     if(albedoTexturePath != "") look.albedoTexture = LoadTexture(albedoTexturePath, true, false, maxAnisotropy);
     if(normalMapPath != "") look.normalMap = LoadTexture(normalMapPath, false);
+    if(reflectivityMapPath != "") look.reflectivityMap = LoadTexture(reflectivityMapPath, false);
     if(temperatureMapPath != "") look.temperatureMap = LoadTexture(temperatureMapPath, false);
     look.temperatureRange = temperatureRange;
     looks.push_back(look);

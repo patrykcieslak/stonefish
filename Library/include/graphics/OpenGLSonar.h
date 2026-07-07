@@ -159,7 +159,7 @@ namespace sf
         GLuint displayVAO_;
         GLuint displayVBO_;
         
-        static GLSLShader* sonarInputShader_[2];
+        static GLSLShader* sonarInputShader_[4];
         static GLSLShader* sonarVisualizeShader_[2];
     };
 }
