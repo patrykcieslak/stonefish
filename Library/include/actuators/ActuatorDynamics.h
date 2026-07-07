@@ -21,7 +21,7 @@
 //
 //  Created by Roger Pi on 03/06/2024
 //  Modified by Patryk Cieslak on 30/06/2024
-//  Copyright (c) 2024 Roger Pi and Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2026 Roger Pi and Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_ActuatorDynamics__
@@ -39,7 +39,7 @@ namespace sf
     {
     public:
         //! A constructor.
-        RotorDynamics() : lastOutput(0), outputLimit(-1)
+        RotorDynamics() : lastOutput_(0), outputLimit_(-1)
         {}
 
         //! A method that updates the model.
@@ -58,12 +58,12 @@ namespace sf
         */
         void setOutputLimit(Scalar limit)
         {
-            outputLimit = limit;
+            outputLimit_ = limit;
         }
 
     protected:
-        Scalar lastOutput;
-        Scalar outputLimit;
+        Scalar lastOutput_;
+        Scalar outputLimit_;
     };
 
     // ---------- Implemententation of several models of rotor dynamics -----------
@@ -97,7 +97,7 @@ namespace sf
         /*!
           \param tau time constant
         */
-        FirstOrder(Scalar tau) : tau(tau)
+        FirstOrder(Scalar tau) : tau_(tau)
         {
         }
 
@@ -108,10 +108,10 @@ namespace sf
         */
         Scalar Update(Scalar dt, Scalar sp) override
         {
-            Scalar alpha = dt / tau;
-            Scalar output = alpha * sp + (1 - alpha) * lastOutput;
-            lastOutput = outputLimit > Scalar(0) ?  btClamped(output, -outputLimit, outputLimit) : output;
-            return lastOutput;
+            Scalar alpha = dt / tau_;
+            Scalar output = alpha * sp + (1 - alpha) * lastOutput_;
+            lastOutput_ = outputLimit_ > Scalar(0) ?  btClamped(output, -outputLimit_, outputLimit_) : output;
+            return lastOutput_;
         }
 
         //! A method returning the model type.
@@ -121,7 +121,7 @@ namespace sf
         }
     
     private:
-        Scalar tau;
+        Scalar tau_;
     };
 
     //! A class representing the Yoerger dynamics model.
@@ -133,7 +133,7 @@ namespace sf
           \param alpha
           \param beta
         */
-        Yoerger(Scalar alpha, Scalar beta) : alpha(alpha), beta(beta)
+        Yoerger(Scalar alpha, Scalar beta) : alpha_(alpha), beta_(beta)
         {
         }
 
@@ -145,9 +145,9 @@ namespace sf
         Scalar Update(Scalar dt, Scalar sp) override
         {
             // state += dt*(beta*_cmd - alpha*state*std::abs(state));
-            Scalar output = lastOutput + dt * (beta * sp - (alpha * lastOutput * btFabs(lastOutput)));
-            lastOutput = outputLimit > Scalar(0) ? btClamped(output, -outputLimit, outputLimit) : output;
-            return lastOutput;
+            Scalar output = lastOutput_ + dt * (beta_ * sp - (alpha_ * lastOutput_ * btFabs(lastOutput_)));
+            lastOutput_ = outputLimit_ > Scalar(0) ? btClamped(output, -outputLimit_, outputLimit_) : output;
+            return lastOutput_;
         }
 
         //! A method returning the model type.
@@ -157,8 +157,8 @@ namespace sf
         }
 
     private:
-        Scalar alpha;
-        Scalar beta;
+        Scalar alpha_;
+        Scalar beta_;
     };
 
     //! A class representing the Bessa dynamics model.
@@ -174,7 +174,7 @@ namespace sf
           \param Rm
         */
         Bessa(Scalar Jmsp, Scalar Kv1, Scalar Kv2, Scalar Kt, Scalar Rm) 
-            : Jmsp(Jmsp), Kv1(Kv1), Kv2(Kv2), Kt(Kt), Rm(Rm)
+            : Jmsp_(Jmsp), Kv1_(Kv1), Kv2_(Kv2), Kt_(Kt), Rm_(Rm)
         {
         }
 
@@ -185,10 +185,10 @@ namespace sf
         */
         Scalar Update(Scalar dt, Scalar sp) override
         {
-            Scalar output = lastOutput +
-                dt * (sp * Kt/Rm - Kv1 * lastOutput - Kv2 * lastOutput * btFabs(lastOutput))/Jmsp;
-            lastOutput = outputLimit > Scalar(0) ?  btClamped(output, -outputLimit, outputLimit) : output;
-            return lastOutput;
+            Scalar output = lastOutput_ +
+                dt * (sp * Kt_/Rm_ - Kv1_ * lastOutput_ - Kv2_ * lastOutput_ * btFabs(lastOutput_))/Jmsp_;
+            lastOutput_ = outputLimit_ > Scalar(0) ?  btClamped(output, -outputLimit_, outputLimit_) : output;
+            return lastOutput_;
         }
 
         //! A method returning the model type.
@@ -198,11 +198,11 @@ namespace sf
         }
 
     private:
-        Scalar Jmsp;
-        Scalar Kv1;
-        Scalar Kv2;
-        Scalar Kt;
-        Scalar Rm;
+        Scalar Jmsp_;
+        Scalar Kv1_;
+        Scalar Kv2_;
+        Scalar Kt_;
+        Scalar Rm_;
     };
 
     //! A classs representing a mechnical shaft model with a PI controller.
@@ -217,7 +217,7 @@ namespace sf
           \param iLim integral limit [rad/s]
         */
         MechanicalPI(Scalar J, Scalar Kp, Scalar Ki, Scalar iLim)
-            : J(J), Kp(Kp), Ki(Ki), iLim(iLim), iError(0), damping(0)
+            : J_(J), Kp_(Kp), Ki_(Ki), iLim_(iLim), iError_(0), damping_(0)
         {
         }
 
@@ -228,14 +228,14 @@ namespace sf
         */
         Scalar Update(Scalar dt, Scalar sp) override
         {
-            Scalar error = sp - lastOutput;
-            Scalar tau = Kp * error + Ki * iError;
-            iError = btClamped(iError + error * dt, -iLim, iLim);
+            Scalar error = sp - lastOutput_;
+            Scalar tau = Kp_ * error + Ki_ * iError_;
+            iError_ = btClamped(iError_ + error * dt, -iLim_, iLim_);
 
-            Scalar tauD = lastOutput > Scalar(0) ? damping : -damping;
-            Scalar output = lastOutput + (tau - tauD)/J * dt;
-            lastOutput = outputLimit > Scalar(0) ?  btClamped(output, -outputLimit, outputLimit) : output;
-            return lastOutput;
+            Scalar tauD = lastOutput_ > Scalar(0) ? damping_ : -damping_;
+            Scalar output = lastOutput_ + (tau - tauD)/J_ * dt;
+            lastOutput_ = outputLimit_ > Scalar(0) ?  btClamped(output, -outputLimit_, outputLimit_) : output;
+            return lastOutput_;
         }
 
         //! A method used to update the damping torque.
@@ -244,7 +244,7 @@ namespace sf
         */
         void setDampingTorque(Scalar tau)
         {
-            damping = btFabs(tau);
+            damping_ = btFabs(tau);
         }
 
         //! A method returning the model type.
@@ -254,12 +254,12 @@ namespace sf
         }
 
     private:
-        Scalar J;
-        Scalar Kp;
-        Scalar Ki;
-        Scalar iLim;
-        Scalar iError;
-        Scalar damping;
+        Scalar J_;
+        Scalar Kp_;
+        Scalar Ki_;
+        Scalar iLim_;
+        Scalar iError_;
+        Scalar damping_;
     };
 
     // ----------------------------------------------------------------
@@ -291,7 +291,7 @@ namespace sf
         /*!
           \param kt thrust coefficient
         */
-        QuadraticThrust(Scalar kt) : kt(kt)
+        QuadraticThrust(Scalar kt) : kt_(kt)
         {
         }
 
@@ -302,7 +302,7 @@ namespace sf
         */
         std::pair<Scalar, Scalar> Update(Scalar input) override
         {
-            Scalar thrust = kt * input * btFabs(input);
+            Scalar thrust = kt_ * input * btFabs(input);
             return std::make_pair(thrust, Scalar(0));
         }
 
@@ -313,7 +313,7 @@ namespace sf
         }
     
     protected:
-        Scalar kt;
+        Scalar kt_;
     };
 
     //! A class representing a dead band model.
@@ -327,7 +327,7 @@ namespace sf
           \param dl lower limit of the deadband
           \param du upper limit of the deadband
         */
-        DeadbandThrust(Scalar ktn, Scalar ktp, Scalar dl, Scalar du) : ktn(ktn), ktp(ktp), dl(dl), du(du)
+        DeadbandThrust(Scalar ktn, Scalar ktp, Scalar dl, Scalar du) : ktn_(ktn), ktp_(ktp), dl_(dl), du_(du)
         {
         }
 
@@ -340,13 +340,13 @@ namespace sf
         {
             Scalar vv = input * btFabs(input);
             Scalar thrust(0);
-            if (vv < dl)
+            if (vv < dl_)
             {
-                thrust = ktn * (vv - dl);
+                thrust = ktn_ * (vv - dl_);
             }
-            else if (vv > du)
+            else if (vv > du_)
             {
-                thrust = ktp * (vv - du);
+                thrust = ktp_ * (vv - du_);
             }
             return std::make_pair(thrust, Scalar(0));
         }
@@ -358,10 +358,10 @@ namespace sf
         }
         
     protected:
-        Scalar ktn;
-        Scalar ktp;
-        Scalar dl;
-        Scalar du;
+        Scalar ktn_;
+        Scalar ktp_;
+        Scalar dl_;
+        Scalar du_;
     };
     
     //! A class representing a model based on linear interpolation of data points.
@@ -374,12 +374,12 @@ namespace sf
           \param out list of thrust data points
         */
         InterpolatedThrust(const std::vector<Scalar>& in, const std::vector<Scalar>& out)
-            : inputValues(in), outputValues(out)
+            : inputValues_(in), outputValues_(out)
         {
-            if (inputValues.empty() || outputValues.empty())
+            if (inputValues_.empty() || outputValues_.empty())
                 throw std::runtime_error("Interpolated thrust model: input and output values must not be empty!");
 
-            if (inputValues.size() != outputValues.size())
+            if (inputValues_.size() != outputValues_.size())
                 throw std::runtime_error("Interpolated thrust model: input and output values must be same size!");
         }
 
@@ -393,24 +393,24 @@ namespace sf
             Scalar thrust(0);
 
             // Ensure the input values are sorted
-            auto it = std::lower_bound(inputValues.begin(), inputValues.end(), input);
+            auto it = std::lower_bound(inputValues_.begin(), inputValues_.end(), input);
 
-            if (it == inputValues.begin()) // If the value is less than the smallest input value, return the first output value
+            if (it == inputValues_.begin()) // If the value is less than the smallest input value, return the first output value
             {
-                thrust = outputValues.front();
+                thrust = outputValues_.front();
             }
-            else if (it == inputValues.end()) // If the value is greater than the largest input value, return the last output value
+            else if (it == inputValues_.end()) // If the value is greater than the largest input value, return the last output value
             {
-                thrust = outputValues.back();
+                thrust = outputValues_.back();
             }
             else
             {
                 // Perform linear interpolation
-                auto idx = std::distance(inputValues.begin(), it);
-                Scalar x0 = inputValues[idx - 1];
-                Scalar x1 = inputValues[idx];
-                Scalar y0 = outputValues[idx - 1];
-                Scalar y1 = outputValues[idx];
+                auto idx = std::distance(inputValues_.begin(), it);
+                Scalar x0 = inputValues_[idx - 1];
+                Scalar x1 = inputValues_[idx];
+                Scalar y0 = outputValues_[idx - 1];
+                Scalar y1 = outputValues_[idx];
                 thrust = y0 + (input - x0) * (y1 - y0) / (x1 - x0);
             }
             return std::make_pair(thrust, Scalar(0));
@@ -423,7 +423,8 @@ namespace sf
         }
 
         protected:
-            std::vector<Scalar> inputValues, outputValues;
+            std::vector<Scalar> inputValues_;
+            std::vector<Scalar> outputValues_;
     };
 
     //! A class representing a realistic model based of fluid dynamics.
@@ -439,11 +440,11 @@ namespace sf
           \param RH flag informing if the propeller is right-handed
         */
         FDThrust(Scalar D, Scalar ktp, Scalar ktn, Scalar kq, bool RH, Scalar rho)
-            : D(D), ktp(ktp), ktn(ktn), kq(kq), RH(RH), rho(rho)
+            : D_(D), ktp_(ktp), ktn_(ktn), kq_(kq), RH_(RH), rho_(rho)
         {
             // TODO: Find a better way of defining alpha and beta
-            alpha = -ktp;
-            beta = -kq;
+            alpha_ = -ktp;
+            beta_ = -kq;
         }
 
         //! A method computing the model output.
@@ -453,7 +454,7 @@ namespace sf
         */
         std::pair<Scalar, Scalar> Update(Scalar input) override
         {
-            bool backward = (RH && input < Scalar(0)) || (!RH && input > Scalar(0));
+            bool backward = (RH_ && input < Scalar(0)) || (!RH_ && input > Scalar(0));
             
             /*kt and kq depend on the advance ratio J
                 J = u/(omega*D), where:
@@ -463,14 +464,14 @@ namespace sf
             Scalar n = (backward ? Scalar(-1) : Scalar(1)) * btFabs(input)/(Scalar(2) * M_PI); // Accounts for propoller handedness
             
             // Thrust is the force generated by pushing the liquid through the thruster.
-            Scalar kt0 = backward ? ktn : ktp; //In case of non-symmetrical thrusters the coefficient may be different
+            Scalar kt0 = backward ? ktn_ : ktp_; //In case of non-symmetrical thrusters the coefficient may be different
             //kt(J) = kt0 + alpha * J --> approximated with linear function
-            Scalar thrust = rho * D*D*D * btFabs(n) * (D*kt0*n + alpha*u);
+            Scalar thrust = rho_ * D_*D_*D_ * btFabs(n) * (D_*kt0*n + alpha_*u_);
             
             // Torque is the loading of propeller due to liquid resistance (reaction force).
-            Scalar kq0 = kq;
+            Scalar kq0 = kq_;
             //kQ(J) = kQ0 + beta * J --> approximated with linear function
-            Scalar torque = (RH ? Scalar(-1) : Scalar(1)) * rho * D*D*D*D * btFabs(n) * (D*kq0*n + beta*u);
+            Scalar torque = (RH_ ? Scalar(-1) : Scalar(1)) * rho_ * D_*D_*D_*D_ * btFabs(n) * (D_*kq0*n + beta_*u_);
 
             return std::make_pair(thrust, torque);
         }
@@ -481,7 +482,7 @@ namespace sf
         */
         void setIncomingFluidVelocity(Scalar vel)
         {
-            u = vel;
+            u_ = vel;
         }
 
         //! A method returning the type of the model.
@@ -491,15 +492,15 @@ namespace sf
         }
     
     protected:
-        Scalar D;
-        Scalar ktp;
-        Scalar ktn;
-        Scalar kq;
-        Scalar u;
-        bool RH;
-        Scalar rho;
-        Scalar alpha;
-        Scalar beta;
+        Scalar D_;
+        Scalar ktp_;
+        Scalar ktn_;
+        Scalar kq_;
+        Scalar u_;
+        bool RH_;
+        Scalar rho_;
+        Scalar alpha_;
+        Scalar beta_;
     };
 
 } // namespace sf

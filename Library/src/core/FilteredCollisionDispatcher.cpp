@@ -36,7 +36,7 @@ namespace sf
 
 FilteredCollisionDispatcher::FilteredCollisionDispatcher(btCollisionConfiguration* collisionConfiguration, bool inclusiveMode) : btCollisionDispatcher(collisionConfiguration)
 {
-    inclusive = inclusiveMode;
+    inclusive_ = inclusiveMode;
     // setNearCallback(myNearCallback);
 }
 
@@ -54,7 +54,7 @@ bool FilteredCollisionDispatcher::needsCollision(const btCollisionObject* body0,
     if(ent1 == nullptr)
         return false;
 
-    if(inclusive)
+    if(inclusive_)
         needs = SimulationApp::getApp()->getSimulationManager()->CheckCollision(ent0, ent1) > -1;
     else //exclusive
         needs = SimulationApp::getApp()->getSimulationManager()->CheckCollision(ent0, ent1) == -1;

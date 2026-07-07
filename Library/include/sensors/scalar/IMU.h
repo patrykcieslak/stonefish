@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/05/2014.
-//  Copyright (c) 2014-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_IMU__
@@ -71,8 +71,8 @@ namespace sf
         ScalarSensorType getScalarSensorType() const override;
 
         private:
-            Scalar yawDriftRate;
-            Scalar accumulatedYawDrift;
+            Scalar yawDriftRate_;
+            Scalar accumulatedYawDrift_;
     };
 }
 

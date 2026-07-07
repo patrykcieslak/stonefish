@@ -33,7 +33,7 @@ namespace sf
 
 Plane::Plane(std::string uniqueName, Scalar planeSize, std::string material, std::string look, float uvScale) : StaticEntity(uniqueName, material, look)
 {
-    phyMesh = OpenGLContent::BuildPlane(planeSize/2.f, uvScale > 0.f ? uvScale : 1.f);
+    phyMesh_ = OpenGLContent::BuildPlane(planeSize/2.f, uvScale > 0.f ? uvScale : 1.f);
     btCollisionShape* shape = new btStaticPlaneShape(Vector3(0,0,-1), 0);
     shape->setMargin(COLLISION_MARGIN);
     BuildRigidBody(shape);

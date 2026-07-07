@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 8/20/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLSpotLight__
@@ -113,13 +113,13 @@ namespace sf
         GLfloat getAngle();
         
     private:
-        glm::vec3 dir;
-        glm::vec3 tempDir;
-        GLfloat coneAngle;
-        GLfloat zNear;
-        GLfloat zFar;
-        glm::mat4 clipSpace;
-        GLuint shadowFBO;
+        glm::vec3 dir_;
+        glm::vec3 tempDir_;
+        GLfloat coneAngle_;
+        GLfloat zNear_;
+        GLfloat zFar_;
+        glm::mat4 clipSpace_;
+        GLuint shadowFBO_;
     };
 }
 

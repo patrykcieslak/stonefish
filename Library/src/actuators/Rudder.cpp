@@ -37,24 +37,24 @@ namespace sf
 Rudder::Rudder(std::string uniqueName, SolidEntity* rudder, Scalar area, Scalar liftCoeff, Scalar dragCoeff, Scalar stallAngle, 
     Scalar maxAngle, bool inverted, Scalar maxAngularRate) : LinkActuator(uniqueName)
 {
-    this->dragCoeff = dragCoeff;
-    this->liftCoeff = liftCoeff;
-    this->area = area;
-    this->stallAngle = stallAngle;
-    this->maxAngle = maxAngle;
-    this->maxAngularRate = btFabs(maxAngularRate);
-    inv = inverted;
+    this->dragCoeff_ = dragCoeff;
+    this->liftCoeff_ = liftCoeff;
+    this->area_ = area;
+    this->stallAngle_ = stallAngle;
+    this->maxAngle_ = maxAngle;
+    this->maxAngularRate_ = btFabs(maxAngularRate);
+    inv_ = inverted;
 
-    setpoint = Scalar(0);
-    theta = Scalar(0);
-    this->rudder = rudder;
-    this->rudder->BuildGraphicalObject();
+    setpoint_ = Scalar(0);
+    theta_ = Scalar(0);
+    this->rudder_ = rudder;
+    this->rudder_->BuildGraphicalObject();
 }
 
 Rudder::~Rudder()
 {
-    if(rudder != nullptr)
-        delete rudder;
+    if(rudder_ != nullptr)
+        delete rudder_;
 }
 
 ActuatorType Rudder::getType() const
@@ -64,44 +64,44 @@ ActuatorType Rudder::getType() const
 
 void Rudder::setSetpoint(Scalar s)
 {
-    if(inv) s *= Scalar(-1);
-    setpoint = std::max(std::min(s, maxAngle), -maxAngle);
+    if(inv_) s *= Scalar(-1);
+    setpoint_ = std::max(std::min(s, maxAngle_), -maxAngle_);
 }
 
 Scalar Rudder::getSetpoint() const
 {
-    return inv ? -setpoint : setpoint;
+    return inv_ ? -setpoint_ : setpoint_;
 }
 
 Scalar Rudder::getAngle() const
 {
-    return theta;
+    return theta_;
 }
 
 void Rudder::Update(Scalar dt)
 {
     //Update rudder angle
-    if(maxAngularRate > Scalar(0) && btFabs(setpoint-theta)/dt > maxAngularRate)
+    if(maxAngularRate_ > Scalar(0) && btFabs(setpoint_-theta_)/dt > maxAngularRate_)
     {
-        Scalar dTheta = setpoint-theta > Scalar(0) ? maxAngularRate * dt : -maxAngularRate * dt;
-        theta += dTheta;
+        Scalar dTheta = setpoint_-theta_ > Scalar(0) ? maxAngularRate_ * dt : -maxAngularRate_ * dt;
+        theta_ += dTheta;
     }
     else
-        theta = setpoint;
+        theta_ = setpoint_;
 
-    if(attach != NULL)
+    if(attach_ != NULL)
     {
-        Quaternion rudderRot(theta, 0, 0);
+        Quaternion rudderRot(theta_, 0, 0);
 
         //Get transforms
-        Transform solidTrans = attach->getCGTransform();
+        Transform solidTrans = attach_->getCGTransform();
         // o2a is the transform of the actuator
-        Transform rudderTrans = attach->getOTransform() * o2a * Transform(rudderRot);
+        Transform rudderTrans = attach_->getOTransform() * o2a_ * Transform(rudderRot);
         Vector3 relPos = rudderTrans.getOrigin() - solidTrans.getOrigin();
 
         Ocean* ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();
 
-        Vector3 absVel = attach->getLinearVelocityInLocalPoint(relPos);
+        Vector3 absVel = attach_->getLinearVelocityInLocalPoint(relPos);
         Vector3 fluidVel = ocn->GetFluidVelocity(rudderTrans.getOrigin());
         Vector3 velocity = rudderTrans.getBasis().transpose()*(absVel - fluidVel);
 
@@ -131,7 +131,7 @@ void Rudder::Update(Scalar dt)
             Scalar du2 = angle * u*u;
 
             // Approximated rudder parameter
-            Scalar X = .5 * area * rho * liftCoeff;
+            Scalar X = .5 * area_ * rho * liftCoeff_;
 
             // Equation 3.2.19
             Scalar lift = du2 * X;
@@ -140,34 +140,34 @@ void Rudder::Update(Scalar dt)
             Scalar drag = angle * du2 * X;
 
             // Drag is opposite to velocity
-            dragV = -velocity;
-            dragV.normalize() *= drag;
+            dragV_ = -velocity;
+            dragV_.normalize() *= drag;
 
             // Lift is restricted to XY plane
             // liftV = (-vy, vx, 0)
-            liftV = Vector3(0., 0., -1.).cross(velocity);
-            liftV.normalize() *= lift;
+            liftV_ = Vector3(0., 0., -1.).cross(velocity);
+            liftV_.normalize() *= lift;
 
             // if angle greater than stall -> no lift
-            if (fabs(angle) > stallAngle)
+            if (fabs(angle) > stallAngle_)
             {
-                liftV = Vector3(0, 0, 0);
+                liftV_ = Vector3(0, 0, 0);
             }
 
             // Torque vectors
-            Vector3 dragT = relPos.cross(rudderTrans.getBasis() * dragV);
-            Vector3 liftT = relPos.cross(rudderTrans.getBasis() * liftV);
+            Vector3 dragT = relPos.cross(rudderTrans.getBasis() * dragV_);
+            Vector3 liftT = relPos.cross(rudderTrans.getBasis() * liftV_);
 
             // Apply forces and torques
-            attach->ApplyTorque(dragT);
-            attach->ApplyTorque(liftT);
-            attach->ApplyCentralForce(rudderTrans.getBasis() * dragV);
-            attach->ApplyCentralForce(rudderTrans.getBasis() * liftV);
+            attach_->ApplyTorque(dragT);
+            attach_->ApplyTorque(liftT);
+            attach_->ApplyCentralForce(rudderTrans.getBasis() * dragV_);
+            attach_->ApplyCentralForce(rudderTrans.getBasis() * liftV_);
         }
         else
         {
-            dragV = Vector3(0, 0, 0);
-            liftV = Vector3(0, 0, 0);
+            dragV_ = Vector3(0, 0, 0);
+            liftV_ = Vector3(0, 0, 0);
         }
     }
 }
@@ -175,21 +175,21 @@ void Rudder::Update(Scalar dt)
 std::vector<Renderable> Rudder::Render()
 {
     Transform rudderTrans = Transform::getIdentity();
-    if(attach != NULL)
-        rudderTrans = attach->getOTransform() * o2a;
+    if(attach_ != NULL)
+        rudderTrans = attach_->getOTransform() * o2a_;
     else
         LinkActuator::Render();
     
     //Rotate rudder
-    rudderTrans *= Transform(Quaternion(theta, 0, 0)) * rudder->getO2GTransform();
+    rudderTrans *= Transform(Quaternion(theta_, 0, 0)) * rudder_->getO2GTransform();
     
     //Add renderable
     std::vector<Renderable> items(0);
     Renderable item;
     item.type = RenderableType::SOLID;
-    item.materialName = rudder->getMaterial().name;
-    item.objectId = rudder->getGraphicalObject();
-    item.lookId = dm == DisplayMode::GRAPHICAL ? rudder->getLook() : -1;
+    item.materialName = rudder_->getMaterial().name;
+    item.objectId = rudder_->getGraphicalObject();
+    item.lookId = dm_ == DisplayMode::GRAPHICAL ? rudder_->getLook() : -1;
 	item.model = glMatrixFromTransform(rudderTrans);
     items.push_back(item);
     
@@ -197,7 +197,7 @@ std::vector<Renderable> Rudder::Render()
     item.data = std::make_shared<std::vector<glm::vec3>>();
     auto points = item.getDataAsPoints();
     points->push_back(glm::vec3(0,0,0));
-    Vector3 VG = .1*(rudder->getO2GTransform().inverse().getBasis()*(liftV + dragV));
+    Vector3 VG = .1*(rudder_->getO2GTransform().inverse().getBasis()*(liftV_ + dragV_));
     points->push_back(glm::vec3(VG.getX(),VG.getY(),VG.getZ()));
     items.push_back(item);
     

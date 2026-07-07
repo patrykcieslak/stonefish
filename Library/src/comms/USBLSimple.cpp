@@ -31,22 +31,22 @@ namespace sf
 USBLSimple::USBLSimple(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange) 
            : USBL(uniqueName, deviceId, minVerticalFOVDeg, maxVerticalFOVDeg, operatingRange)
 {
-    rangeRes = Scalar(0);
-    angleRes = Scalar(0);
+    rangeRes_ = Scalar(0);
+    angleRes_ = Scalar(0);
 }
     
 void USBLSimple::setNoise(Scalar rangeDev, Scalar horizontalAngleDevDeg, Scalar verticalAngleDevDeg)
 {
-    noiseRange = std::normal_distribution<Scalar>(Scalar(0), btFabs(rangeDev));
-    noiseHAngle = std::normal_distribution<Scalar>(Scalar(0), btFabs(horizontalAngleDevDeg)/Scalar(180)*M_PI);
-    noiseVAngle = std::normal_distribution<Scalar>(Scalar(0), btFabs(verticalAngleDevDeg)/Scalar(180)*M_PI);
-    noise = true;
+    noiseRange_ = std::normal_distribution<Scalar>(Scalar(0), btFabs(rangeDev));
+    noiseHAngle_ = std::normal_distribution<Scalar>(Scalar(0), btFabs(horizontalAngleDevDeg)/Scalar(180)*M_PI);
+    noiseVAngle_ = std::normal_distribution<Scalar>(Scalar(0), btFabs(verticalAngleDevDeg)/Scalar(180)*M_PI);
+    noise_ = true;
 }
 
 void USBLSimple::setResolution(Scalar range, Scalar angleDeg)
 {
-    rangeRes = btFabs(range);
-    angleRes = btFabs(angleDeg)/Scalar(180)*M_PI;
+    rangeRes_ = btFabs(range);
+    angleRes_ = btFabs(angleDeg)/Scalar(180)*M_PI;
 }
 
 void USBLSimple::ProcessMessages()
@@ -55,7 +55,7 @@ void USBLSimple::ProcessMessages()
     std::string ack {"ACK"};
     std::vector<uint8_t> ackData(ack.begin(), ack.end());
 
-    for(auto it = rxBuffer.begin(); it != rxBuffer.end(); ++it)
+    for(auto it = rxBuffer_.begin(); it != rxBuffer_.end(); ++it)
     {
         msg = std::static_pointer_cast<AcousticDataFrame>(*it);
         if(msg->data == ackData)
@@ -75,20 +75,20 @@ void USBLSimple::ProcessMessages()
             Scalar vAngle = atan2(d, dir.getZ());
         
             //Apply noise and quantization
-            if(noise)
+            if(noise_)
             {
-                slantRange += noiseRange(randomGenerator);
-                hAngle += noiseHAngle(randomGenerator);
-                vAngle += noiseVAngle(randomGenerator);
+                slantRange += noiseRange_(randomGenerator);
+                hAngle += noiseHAngle_(randomGenerator);
+                vAngle += noiseVAngle_(randomGenerator);
             }
 
-            if(rangeRes > Scalar(0))
-                slantRange -= btFmod(slantRange, rangeRes); //Quantization
+            if(rangeRes_ > Scalar(0))
+                slantRange -= btFmod(slantRange, rangeRes_); //Quantization
 
-            if(angleRes > Scalar(0))
+            if(angleRes_ > Scalar(0))
             {
-                hAngle -= btFmod(hAngle, angleRes); //Quantization
-                vAngle -= btFmod(vAngle, angleRes); //Quantization
+                hAngle -= btFmod(hAngle, angleRes_); //Quantization
+                vAngle -= btFmod(vAngle, angleRes_); //Quantization
             }
             
             //Calculate receiver position
@@ -112,9 +112,9 @@ void USBLSimple::ProcessMessages()
             b.range = slantRange;
             b.localDepth = dO.getZ();
             b.localOri = dT.getRotation();
-            beacons[msg->source] = b;
+            beacons_[msg->source] = b;
 
-            newDataAvailable = true;
+            newDataAvailable_ = true;
         }
     }
 

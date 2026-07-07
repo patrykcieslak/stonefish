@@ -31,76 +31,76 @@ namespace sf
 DCMotor::DCMotor(std::string uniqueName, Scalar motorR, Scalar motorL, Scalar motorKe, Scalar motorKt, Scalar friction) : Motor(uniqueName)
 {
     //Params
-    R = motorR;
-    L = motorL;
-    Ke = motorKe;
-    Kt = motorKt;
-    B = friction;
-    gearEnabled = false;
-    gearEff = Scalar(1.);
-    gearRatio = Scalar(1.);
+    R_ = motorR;
+    L_ = motorL;
+    Ke_ = motorKe;
+    Kt_ = motorKt;
+    B_ = friction;
+    gearEnabled_ = false;
+    gearEff_ = Scalar(1.);
+    gearRatio_ = Scalar(1.);
     
     //Internal states
-    I = Scalar(0.);
-    V = Scalar(0.);
-    lastVoverL = Scalar(0.);
+    I_ = Scalar(0.);
+    V_ = Scalar(0.);
+    lastVoverL_ = Scalar(0.);
 }
 
 Scalar DCMotor::getKe() const
 {
-    return Ke;
+    return Ke_;
 }
 
 Scalar DCMotor::getKt() const
 {
-    return Kt;
+    return Kt_;
 }
 
 Scalar DCMotor::getR() const
 {
-    return R;
+    return R_;
 }
 
 Scalar DCMotor::getL() const
 {
-    return L;
+    return L_;
 }
 
 Scalar DCMotor::getGearRatio() const
 {
-    return gearRatio;
+    return gearRatio_;
 }
 
 void DCMotor::setCommand(Scalar volt)
 {
-    V = volt;
+    V_ = volt;
 }
 
 Scalar DCMotor::getVoltage() const
 {
-    return V;
+    return V_;
 }
 
 Scalar DCMotor::getTorque() const
 {
-    return torque;
+    return torque_;
 }
 
 Scalar DCMotor::getCurrent() const
 {
-    return I;
+    return I_;
 }
 
 Scalar DCMotor::getAngle() const
 {
     Scalar angle = Motor::getAngle();
-    return angle * gearRatio;
+    return angle * gearRatio_;
 }
 
 Scalar DCMotor::getAngularVelocity() const
 {
     Scalar angularV = Motor::getAngularVelocity();
-    return angularV * gearRatio;
+    return angularV * gearRatio_;
 }
 
 void DCMotor::Update(Scalar dt)
@@ -109,13 +109,13 @@ void DCMotor::Update(Scalar dt)
     Scalar aVelocity = getAngularVelocity();
     
     //Calculate internal state and output
-    torque = (I * Kt - aVelocity * B) * gearRatio * gearEff;
-    Scalar VoverL = (V - aVelocity * Ke * 9.5493 - I * R)/L;
-	I += VoverL * dt;
+    torque_ = (I_ * Kt_ - aVelocity * B_) * gearRatio_ * gearEff_;
+    Scalar VoverL = (V_ - aVelocity * Ke_ * 9.5493 - I_ * R_)/L_;
+	I_ += VoverL * dt;
 	
 	//Hack to avoid system blowup when the motor starts (shortcut)
-	if((btFabs(I) > btFabs(V/R)) && (I*V > Scalar(0)))
-		I = V/R;
+	if((btFabs(I_) > btFabs(V_/R_)) && (I_*V_ > Scalar(0)))
+		I_ = V_/R_;
         
 	//I += Scalar(0.5) * (VoverL + lastVoverL) * dt; //Integration (mid-point)
     //lastVoverL = VoverL;
@@ -126,9 +126,9 @@ void DCMotor::Update(Scalar dt)
 
 void DCMotor::SetupGearbox(bool enable, Scalar ratio, Scalar efficiency)
 {
-    gearEnabled = enable;
-    gearRatio = ratio > 0.0 ? ratio : 1.0;
-    gearEff = efficiency > 0.0 ? (efficiency <= 1.0 ? efficiency : 1.0) : 1.0;
+    gearEnabled_ = enable;
+    gearRatio_ = ratio > 0.0 ? ratio : 1.0;
+    gearEff_ = efficiency > 0.0 ? (efficiency <= 1.0 ? efficiency : 1.0) : 1.0;
 }
 
 }

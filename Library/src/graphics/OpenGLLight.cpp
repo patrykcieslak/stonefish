@@ -44,10 +44,10 @@ OpenGLCamera* OpenGLLight::activeView = nullptr;
 
 OpenGLLight::OpenGLLight(glm::vec3 position, GLfloat radius, glm::vec3 c, GLfloat lum)
 {
-    pos = tempPos = position;
-	R = glm::max(0.01f, radius);
-    active = true;
-    sourceObject = -1;
+    pos_ = tempPos_ = position;
+	R_ = glm::max(0.01f, radius);
+    active_ = true;
+    sourceObject_ = -1;
 }
 
 OpenGLLight::~OpenGLLight()
@@ -56,32 +56,32 @@ OpenGLLight::~OpenGLLight()
 
 bool OpenGLLight::isActive()
 {
-    return active;
+    return active_;
 }
 
 glm::vec4 OpenGLLight::getColorLi()
 {
-    return colorLi;
+    return colorLi_;
 }
 
 glm::vec3 OpenGLLight::getPosition()
 {
-    return pos;
+    return pos_;
 }
 
 GLfloat OpenGLLight::getSourceRadius()
 {
-	return R;
+	return R_;
 }
 
 int OpenGLLight::getSourceObject()
 {
-    return sourceObject;
+    return sourceObject_;
 }
 
 glm::mat4 OpenGLLight::getTransform()
 {
-    return glm::translate(pos);
+    return glm::translate(pos_);
 }
 
 bool OpenGLLight::operator<(const OpenGLLight& l)
@@ -91,22 +91,22 @@ bool OpenGLLight::operator<(const OpenGLLight& l)
 
 void OpenGLLight::UpdatePosition(glm::vec3 p)
 {
-    tempPos = p;
+    tempPos_ = p;
 }
 
 void OpenGLLight::UpdateTransform()
 {
-    pos = tempPos;
+    pos_ = tempPos_;
 }
 
 void OpenGLLight::SwitchOn()
 {
-    active = true;
+    active_ = true;
 }
 
 void OpenGLLight::SwitchOff()
 {
-    active = false;
+    active_ = false;
 }
 
 void OpenGLLight::InitShadowmap(GLint shadowmapLayer)

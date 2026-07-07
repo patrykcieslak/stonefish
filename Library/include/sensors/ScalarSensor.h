@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 20/11/2018.
-//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_ScalarSensor__
@@ -110,15 +110,7 @@ namespace sf
          \param includeTime a flag specifying if the timestamp should be written
          \param fixedPrecision number of decimal places to write
          */
-        void SaveMeasurementsToTextFile(const std::string& path, bool includeTime = true, unsigned int fixedPrecision = 6);
-        
-        //! A method used to save the measurements to an Octave file.
-        /*!
-         \param path a path to the output file
-         \param includeTime a flag specifying if the timestamp should be written
-         \param separateChannels
-         */
-        void SaveMeasurementsToOctaveFile(const std::string& path, bool includeTime = true, bool separateChannels = false);
+        void SaveMeasurementsToTextFile(const std::string& path, bool includeTime = true, size_t fixedPrecision = 6);
         
         //! A method returning the number of channels of the sensor.
         unsigned short getNumOfChannels() const;
@@ -135,33 +127,33 @@ namespace sf
          \param channel the index of the channel
          \return value of the measurement
          */
-        Scalar getValue(unsigned long int index, unsigned int channel) const;
+        Scalar getValue(size_t index, size_t channel) const;
         
         //! A method returning the last value of the measurement.
         /*!
          \param channel the index of the channel
          \return last value of the measurement
          */
-        Scalar getLastValue(unsigned int channel) const;
+        Scalar getLastValue(size_t channel) const;
         
         //! A method returning the description of a specified channel.
         /*!
          \param channel the infdex of the channel
          \return a structure discribing the channel
          */
-        SensorChannel getSensorChannelDescription(unsigned int channel) const;
+        SensorChannel getSensorChannelDescription(size_t channel) const;
         
         //! A method returning the type of scalar sensor.
         virtual ScalarSensorType getScalarSensorType() const = 0;
         
     protected:
         void AddSampleToHistory(const Sample& s);
-        std::deque<Sample*> history;
-        std::vector<SensorChannel> channels;
-        uint64_t sampleCount;
+        std::deque<Sample*> history_;
+        std::vector<SensorChannel> channels_;
+        size_t sampleCount_;
         
     private:
-        int historyLen;
+        int historyLen_;
     };
 }
     

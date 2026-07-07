@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/9/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Terrain__
@@ -69,8 +69,8 @@ namespace sf
         StaticEntityType getStaticType();
         
     private:
-        Scalar* heightfield;
-        Scalar maxHeight;
+        Scalar* heightfield_;
+        Scalar maxHeight_;
     };
 }
 

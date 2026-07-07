@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 24/05/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Mux__
@@ -71,7 +71,7 @@ namespace sf
         unsigned int getNumOfComponents() const;
         
     private:
-        std::vector<MuxComponent> components;
+        std::vector<MuxComponent> components_;
     };
 }
 

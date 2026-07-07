@@ -38,19 +38,19 @@ namespace sf
 {
 
 Light::Light(std::string uniqueName, Scalar radius, Color color, Scalar lum) 
-	: LinkActuator(uniqueName), attach2(nullptr), attach3(nullptr), c(color), coneAngle(0), glLight(nullptr)
+	: LinkActuator(uniqueName), attach2_(nullptr), attach3_(nullptr), c_(color), coneAngle_(0), glLight_(nullptr)
 {
     if(!SimulationApp::getApp()->hasGraphics())
         cCritical("Not possible to use lights in console simulation! Use graphical simulation if possible.");
     
-	R = radius < Scalar(0.01) ? Scalar(0.01) : radius;
-    Fi = lum < Scalar(0) ? Scalar(0) : lum;
+	R_ = radius < Scalar(0.01) ? Scalar(0.01) : radius;
+    Fi_ = lum < Scalar(0) ? Scalar(0) : lum;
 }
 
 Light::Light(std::string uniqueName, Scalar radius, Scalar coneAngleDeg, Color color, Scalar lum) 
 	: Light(uniqueName, radius, color, lum)
 {
-    coneAngle = coneAngleDeg > Scalar(0) ? coneAngleDeg : Scalar(45);
+    coneAngle_ = coneAngleDeg > Scalar(0) ? coneAngleDeg : Scalar(45);
 }
     
 ActuatorType Light::getType() const
@@ -60,23 +60,23 @@ ActuatorType Light::getType() const
 
 Transform Light::getActuatorFrame() const
 {
-	if(attach != nullptr)
-        return attach->getOTransform() * o2a; //Solid
-    else if(attach2 != nullptr)
-		return attach2->getTransform() * o2a; //Static
-	else if(attach3 != nullptr)
-        return attach3->getOTransform() * o2a; //Animated
+	if(attach_ != nullptr)
+        return attach_->getOTransform() * o2a_; //Solid
+    else if(attach2_ != nullptr)
+		return attach2_->getTransform() * o2a_; //Static
+	else if(attach3_ != nullptr)
+        return attach3_->getOTransform() * o2a_; //Animated
     else
-        return o2a;
+        return o2a_;
 }
 
 void Light::AttachToWorld(const Transform& origin)
 {
-	o2a = origin;
-    attach = nullptr;
-    attach2 = nullptr;
-    attach3 = nullptr;
-    if(glLight == nullptr)
+	o2a_ = origin;
+    attach_ = nullptr;
+    attach2_ = nullptr;
+    attach3_ = nullptr;
+    if(glLight_ == nullptr)
 	    InitGraphics();
 }
         
@@ -84,11 +84,11 @@ void Light::AttachToStatic(StaticEntity* body, const Transform& origin)
 {
 	if(body != nullptr)
 	{
-		o2a = origin;
-		attach = nullptr;
-        attach2 = body;
-        attach3 = nullptr;
-        if(glLight == nullptr)
+		o2a_ = origin;
+		attach_ = nullptr;
+        attach2_ = body;
+        attach3_ = nullptr;
+        if(glLight_ == nullptr)
 		    InitGraphics();
 	}
 }
@@ -97,11 +97,11 @@ void Light::AttachToAnimated(AnimatedEntity* body, const Transform& origin)
 {
     if(body != nullptr)
     {
-        o2a = origin;
-        attach = nullptr;
-        attach2 = nullptr;
-        attach3 = body;
-        if(glLight == nullptr)
+        o2a_ = origin;
+        attach_ = nullptr;
+        attach2_ = nullptr;
+        attach3_ = body;
+        if(glLight_ == nullptr)
             InitGraphics();
     }
 }
@@ -111,24 +111,24 @@ void Light::AttachToSolid(SolidEntity* body, const Transform& origin)
     LinkActuator::AttachToSolid(body, origin);
     if(body != nullptr)
     {
-        attach2 = nullptr;
-        attach3 = nullptr;
-        if(glLight == nullptr)
+        attach2_ = nullptr;
+        attach3_ = nullptr;
+        if(glLight_ == nullptr)
             InitGraphics();
     }
 }
 
 void Light::InitGraphics()
 {
-    if(coneAngle > Scalar(0)) //Spot light
-        glLight = new OpenGLSpotLight(glm::vec3(0.f), glm::vec3(0.f,0.f,-1.f), (GLfloat)R, (GLfloat)coneAngle, c.rgb, (GLfloat)Fi);
+    if(coneAngle_ > Scalar(0)) //Spot light
+        glLight_ = new OpenGLSpotLight(glm::vec3(0.f), glm::vec3(0.f,0.f,-1.f), (GLfloat)R_, (GLfloat)coneAngle_, c_.rgb, (GLfloat)Fi_);
     else //Omnidirectional light
-        glLight = new OpenGLPointLight(glm::vec3(0.f), (GLfloat)R, c.rgb, (GLfloat)Fi);
+        glLight_ = new OpenGLPointLight(glm::vec3(0.f), (GLfloat)R_, c_.rgb, (GLfloat)Fi_);
     
     UpdateTransform();
-    glLight->UpdateTransform();
-    glLight->SwitchOn();
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddLight(glLight);
+    glLight_->UpdateTransform();
+    glLight_->SwitchOn();
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddLight(glLight_);
 }
     
 void Light::Update(Scalar dt)
@@ -140,13 +140,13 @@ void Light::UpdateTransform()
     Transform lightTransform = getActuatorFrame();
     Vector3 pos = lightTransform.getOrigin();
     glm::vec3 glPos((GLfloat)pos.x(), (GLfloat)pos.y(), (GLfloat)pos.z());
-    glLight->UpdatePosition(glPos);
+    glLight_->UpdatePosition(glPos);
     
-    if(coneAngle > Scalar(0))
+    if(coneAngle_ > Scalar(0))
     {
         Vector3 dir = lightTransform.getBasis().getColumn(2);
         glm::vec3 glDir((GLfloat)dir.x(), (GLfloat)dir.y(), (GLfloat)dir.z());
-        ((OpenGLSpotLight*)glLight)->UpdateDirection(glDir);
+        ((OpenGLSpotLight*)glLight_)->UpdateDirection(glDir);
     }
 }
     
@@ -163,11 +163,11 @@ std::vector<Renderable> Light::Render()
     GLfloat iconSize = 1.f;
     unsigned int div = 24;
     
-    if(coneAngle > Scalar(0))
+    if(coneAngle_ > Scalar(0))
     {
         points->reserve(div * 2 + 8);
 
-        GLfloat r = iconSize * tanf((GLfloat)coneAngle/360.f*M_PI);
+        GLfloat r = iconSize * tanf((GLfloat)coneAngle_/360.f*M_PI);
         for(unsigned int i=0; i<div; ++i)
         {
             GLfloat angle1 = (GLfloat)i/(GLfloat)div * 2.f * M_PI;
@@ -209,12 +209,12 @@ std::vector<Renderable> Light::Render()
 
 void Light::Switch(bool on)
 {
-    if(glLight != nullptr)
+    if(glLight_ != nullptr)
     {
         if(on)
-            glLight->SwitchOn();
+            glLight_->SwitchOn();
         else
-            glLight->SwitchOff();
+            glLight_->SwitchOff();
     }
 }
 

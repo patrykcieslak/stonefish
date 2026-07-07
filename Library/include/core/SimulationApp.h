@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_SimulationApp__

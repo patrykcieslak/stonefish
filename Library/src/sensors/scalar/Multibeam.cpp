@@ -37,19 +37,19 @@ namespace sf
 
 Multibeam::Multibeam(std::string uniqueName, Scalar angleRangeDeg, unsigned int angleSteps, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    angRange = UnitSystem::Angle(true, angleRangeDeg);
-    angSteps = angleSteps;
+    angRange_ = UnitSystem::Angle(true, angleRangeDeg);
+    angSteps_ = angleSteps;
     
-    for(unsigned int i=0; i <= angSteps; ++i)
+    for(unsigned int i=0; i <= angSteps_; ++i)
     {
-        angles.push_back(i/(Scalar)angSteps * angRange - Scalar(0.5) * angRange);
+        angles_.push_back(i/(Scalar)angSteps_ * angRange_ - Scalar(0.5) * angRange_);
     
-        channels.push_back(SensorChannel("Distance", QuantityType::LENGTH));
-        channels.back().rangeMin = Scalar(0);
-        channels.back().rangeMax = BT_LARGE_FLOAT;
+        channels_.push_back(SensorChannel("Distance", QuantityType::LENGTH));
+        channels_.back().rangeMin = Scalar(0);
+        channels_.back().rangeMax = BT_LARGE_FLOAT;
     }
     
-    distances = std::vector<Scalar>(angSteps+1, Scalar(0));
+    distances_ = std::vector<Scalar>(angSteps_+1, Scalar(0));
 }
     
 void Multibeam::InternalUpdate(Scalar dt)
@@ -58,11 +58,11 @@ void Multibeam::InternalUpdate(Scalar dt)
     Transform mbTrans = getSensorFrame();
     
     //shoot rays
-    for(unsigned int i=0; i<=angSteps; ++i)
+    for(unsigned int i=0; i<=angSteps_; ++i)
     {
-        Vector3 dir = mbTrans.getBasis().getColumn(0) * btCos(angles[i]) + mbTrans.getBasis().getColumn(1) * btSin(angles[i]);
-        Vector3 from = mbTrans.getOrigin() + dir * channels[1].rangeMin;
-        Vector3 to = mbTrans.getOrigin() + dir * channels[1].rangeMax;
+        Vector3 dir = mbTrans.getBasis().getColumn(0) * btCos(angles_[i]) + mbTrans.getBasis().getColumn(1) * btSin(angles_[i]);
+        Vector3 from = mbTrans.getOrigin() + dir * channels_[1].rangeMin;
+        Vector3 to = mbTrans.getOrigin() + dir * channels_[1].rangeMax;
     
         btCollisionWorld::ClosestRayResultCallback closest(from, to);
         closest.m_collisionFilterGroup = MASK_DYNAMIC;
@@ -72,14 +72,14 @@ void Multibeam::InternalUpdate(Scalar dt)
         if(closest.hasHit())
         {
             Vector3 p = from.lerp(to, closest.m_closestHitFraction);
-            distances[i] = (p - mbTrans.getOrigin()).length();
+            distances_[i] = (p - mbTrans.getOrigin()).length();
         }
         else
-            distances[i] = channels[i].rangeMax;
+            distances_[i] = channels_[i].rangeMax;
     }
     
     //record sample
-    Sample s(distances);
+    Sample s(distances_);
     AddSampleToHistory(s);
 }
 
@@ -93,11 +93,11 @@ std::vector<Renderable> Multibeam::Render()
         item.model = glMatrixFromTransform(getSensorFrame());    
         item.data = std::make_shared<std::vector<glm::vec3>>();
         auto points = item.getDataAsPoints();
-        for(unsigned int i=0; i <= angSteps; ++i)
+        for(unsigned int i=0; i <= angSteps_; ++i)
         {
-            Vector3 dir = Vector3(1, 0, 0) * btCos(angles[i]) + Vector3(0, 1, 0) * btSin(angles[i]);
+            Vector3 dir = Vector3(1, 0, 0) * btCos(angles_[i]) + Vector3(0, 1, 0) * btSin(angles_[i]);
             points->push_back(glm::vec3(0,0,0));
-            points->push_back(glm::vec3(dir.x() * distances[i], dir.y() * distances[i], dir.z() * distances[i]));
+            points->push_back(glm::vec3(dir.x() * distances_[i], dir.y() * distances_[i], dir.z() * distances_[i]));
         }        
         items.push_back(item);
     }
@@ -109,10 +109,10 @@ void Multibeam::setRange(Scalar rangeMin, Scalar rangeMax)
     btClamp(rangeMin, Scalar(0), Scalar(BT_LARGE_FLOAT));
     btClamp(rangeMax, Scalar(0), Scalar(BT_LARGE_FLOAT)); 
 
-    for(unsigned int i=0; i<=angSteps; ++i)
+    for(unsigned int i=0; i<=angSteps_; ++i)
     {
-        channels[i].rangeMin = rangeMin;
-        channels[i].rangeMax = rangeMax;
+        channels_[i].rangeMin = rangeMin;
+        channels_[i].rangeMax = rangeMax;
     }
 }
 
@@ -120,8 +120,8 @@ void Multibeam::setNoise(Scalar rangeStdDev)
 {
     btClamp(rangeStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT));
 
-    for(unsigned int i=0; i<=angSteps; ++i)
-        channels[i].setStdDev(rangeStdDev);
+    for(unsigned int i=0; i<=angSteps_; ++i)
+        channels_[i].setStdDev(rangeStdDev);
 }
 
 ScalarSensorType Multibeam::getScalarSensorType() const
@@ -131,7 +131,7 @@ ScalarSensorType Multibeam::getScalarSensorType() const
 
 Scalar Multibeam::getAngleRange() const
 {
-    return angRange;
+    return angRange_;
 }
 
 }

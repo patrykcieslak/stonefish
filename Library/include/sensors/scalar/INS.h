@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/10/2021.
-//  Copyright (c) 2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2021-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_INS__
@@ -99,20 +99,20 @@ namespace sf
         ScalarSensorType getScalarSensorType() const override;
 
         private:
-            Scalar latitude, longitude, altitude;
-            Vector3 ned;
-            Vector3 velocity;
-            Transform out;
-            std::string gpsName;
-            std::string dvlName;
-            std::string pressName;
-            std::normal_distribution<Scalar> accNoiseX;
-            std::normal_distribution<Scalar> accNoiseY;
-            std::normal_distribution<Scalar> accNoiseZ;
-            std::normal_distribution<Scalar> avNoiseX;
-            std::normal_distribution<Scalar> avNoiseY;
-            std::normal_distribution<Scalar> avNoiseZ;
-            bool imuNoise;
+            Scalar latitude_, longitude_, altitude_;
+            Vector3 ned_;
+            Vector3 velocity_;
+            Transform out_;
+            std::string gpsName_;
+            std::string dvlName_;
+            std::string pressName_;
+            std::normal_distribution<Scalar> accNoiseX_;
+            std::normal_distribution<Scalar> accNoiseY_;
+            std::normal_distribution<Scalar> accNoiseZ_;
+            std::normal_distribution<Scalar> avNoiseX_;
+            std::normal_distribution<Scalar> avNoiseY_;
+            std::normal_distribution<Scalar> avNoiseZ_;
+            bool imuNoise_;
     };
 }
 

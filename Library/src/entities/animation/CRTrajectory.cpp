@@ -35,39 +35,39 @@ CRTrajectory::CRTrajectory(PlaybackMode playback) : PWLTrajectory(playback)
 
 void CRTrajectory::Interpolate()
 {
-    if(points.size() < 3)
+    if(points_.size() < 3)
         PWLTrajectory::Interpolate();
     else
     {
         //Find current path segment
-        auto it = std::find_if(points.begin(), points.end(),
-                               [&](const auto& key){ return key.t >= playTime; });
+        auto it = std::find_if(points_.begin(), points_.end(),
+                               [&](const auto& key){ return key.t >= playTime_; });
 
         Transform T0, T1, T2, T3;
         Scalar t0, t1, t2, t3;
 
-        if(it <= points.begin()+1) //Beginning
+        if(it <= points_.begin()+1) //Beginning
         {
-            T1 = points[0].T;
-            T2 = points[1].T;
-            T3 = points[2].T;
+            T1 = points_[0].T;
+            T2 = points_[1].T;
+            T3 = points_[2].T;
             T0.setOrigin(T1.getOrigin()-(T2.getOrigin()-T1.getOrigin()));
             T0.setRotation(T1.getRotation());
-            t1 = points[0].t;
-            t2 = points[1].t;
-            t3 = points[2].t;
+            t1 = points_[0].t;
+            t2 = points_[1].t;
+            t3 = points_[2].t;
             t0 = t1-(t2-t1);
         }
-        else if(it >= points.end()-1) //End
+        else if(it >= points_.end()-1) //End
         {
-            T0 = points[points.size()-3].T;
-            T1 = points[points.size()-2].T;
-            T2 = points.back().T;
+            T0 = points_[points_.size()-3].T;
+            T1 = points_[points_.size()-2].T;
+            T2 = points_.back().T;
             T3.setOrigin(T2.getOrigin()+(T2.getOrigin()-T1.getOrigin()));
             T3.setRotation(T2.getRotation());
-            t0 = points[points.size()-3].t;
-            t1 = points[points.size()-2].t;
-            t2 = points.back().t;
+            t0 = points_[points_.size()-3].t;
+            t1 = points_[points_.size()-2].t;
+            t2 = points_.back().t;
             t3 = t2 + (t2-t1);
         }
         else
@@ -85,25 +85,25 @@ void CRTrajectory::Interpolate()
         //Linear quantities
         if(btFuzzyZero((T2.getOrigin()-T1.getOrigin()).safeNorm())) //Coinciding points
         {
-            interpTrans.setOrigin(T2.getOrigin());
-            interpVel = V0();
+            interpTrans_.setOrigin(T2.getOrigin());
+            interpVel_ = V0();
         }
         else
         {
-            interpTrans.setOrigin(catmullRom(T0.getOrigin(), T1.getOrigin(), T2.getOrigin(), T3.getOrigin(),
-                                                                                    t0, t1, t2, t3, playTime));
-            interpVel = catmullRomDerivative(T0.getOrigin(), T1.getOrigin(), T2.getOrigin(), T3.getOrigin(),
-                                                                                    t0, t1, t2, t3, playTime);        
+            interpTrans_.setOrigin(catmullRom(T0.getOrigin(), T1.getOrigin(), T2.getOrigin(), T3.getOrigin(),
+                                                                                    t0, t1, t2, t3, playTime_));
+            interpVel_ = catmullRomDerivative(T0.getOrigin(), T1.getOrigin(), T2.getOrigin(), T3.getOrigin(),
+                                                                                    t0, t1, t2, t3, playTime_);        
         }
         //Angular quantities
         Vector3 dummy;
-        interpTrans.setRotation(slerp(T1.getRotation(), T2.getRotation(), (playTime-t1)/(t2-t1)));
-        calculateVelocityShortestPath(T1, T2, t2-t1, dummy, interpAngVel);
+        interpTrans_.setRotation(slerp(T1.getRotation(), T2.getRotation(), (playTime_-t1)/(t2-t1)));
+        calculateVelocityShortestPath(T1, T2, t2-t1, dummy, interpAngVel_);
 
-        if(!forward)
+        if(!forward_)
         {
-            interpVel = -interpVel;
-            interpAngVel = -interpAngVel;
+            interpVel_ = -interpVel_;
+            interpAngVel_ = -interpAngVel_;
         }
     }
 }
@@ -112,15 +112,15 @@ void CRTrajectory::BuildGraphicalPath()
 {
     PWLTrajectory::BuildGraphicalPath();
 
-    if(points.size() >= 3)
+    if(points_.size() >= 3)
     {
-        vis[1].getDataAsPoints()->clear();
-        for(size_t i=0; i<points.size()-1; ++i)
+        vis_[1].getDataAsPoints()->clear();
+        for(size_t i=0; i<points_.size()-1; ++i)
         {
-            Vector3 P1 = points[i].T.getOrigin();
-            Vector3 P2 = points[i+1].T.getOrigin();
-            Scalar t1 = points[i].t;
-            Scalar t2 = points[i+1].t;
+            Vector3 P1 = points_[i].T.getOrigin();
+            Vector3 P2 = points_[i+1].T.getOrigin();
+            Scalar t1 = points_[i].t;
+            Scalar t2 = points_[i+1].t;
             Scalar dist = (P2-P1).safeNorm();
             if(btFuzzyZero(dist))
                 continue;
@@ -130,31 +130,31 @@ void CRTrajectory::BuildGraphicalPath()
 
             if(i==0) //Beginning
             {
-                P3 = points[2].T.getOrigin();
+                P3 = points_[2].T.getOrigin();
                 P0 = P1-(P2-P1);
-                t3 = points[2].t;
+                t3 = points_[2].t;
                 t0 = t1-(t2-t1);
             }
-            else if(i==points.size()-2) //End
+            else if(i==points_.size()-2) //End
             {
-                P0 = points[i-1].T.getOrigin();
+                P0 = points_[i-1].T.getOrigin();
                 P3 = P2+(P2-P1);
-                t0 = points[i-1].t;
+                t0 = points_[i-1].t;
                 t3 = t2+(t2-t1);
             }
             else //Middle
             {
-                P0 = points[i-1].T.getOrigin();
-                P3 = points[i+2].T.getOrigin();
-                t0 = points[i-1].t;
-                t3 = points[i+2].t;
+                P0 = points_[i-1].T.getOrigin();
+                P3 = points_[i+2].T.getOrigin();
+                t0 = points_[i-1].t;
+                t3 = points_[i+2].t;
             }
 
             Scalar dt = (t2-t1)/Scalar(100.0);
             for(Scalar t=t1; t<t2; t+=dt)
-                vis[1].getDataAsPoints()->push_back(glVectorFromVector(catmullRom(P0, P1, P2, P3, t0, t1, t2, t3, t)));    
+                vis_[1].getDataAsPoints()->push_back(glVectorFromVector(catmullRom(P0, P1, P2, P3, t0, t1, t2, t3, t)));    
         }
-        vis[1].getDataAsPoints()->push_back(glVectorFromVector(points.back().T.getOrigin()));
+        vis_[1].getDataAsPoints()->push_back(glVectorFromVector(points_.back().T.getOrigin()));
     }
 }
 

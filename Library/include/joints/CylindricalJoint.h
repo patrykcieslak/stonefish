@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 28/03/2014.
-//  Copyright (c) 2014-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_CylindricalJoint__
@@ -95,14 +95,14 @@ namespace sf
         JointType getType() const;
         
     private:
-        Vector3 axisInA;
-        Vector3 pivotInA;
-        Scalar linSigDamping;
-        Scalar linVelDamping;
-        Scalar angSigDamping;
-        Scalar angVelDamping;
-        Scalar displacementIC;
-        Scalar angleIC;
+        Vector3 axisInA_;
+        Vector3 pivotInA_;
+        Scalar linSigDamping_;
+        Scalar linVelDamping_;
+        Scalar angSigDamping_;
+        Scalar angVelDamping_;
+        Scalar displacementIC_;
+        Scalar angleIC_;
     };
 }
 

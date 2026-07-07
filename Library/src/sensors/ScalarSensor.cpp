@@ -20,14 +20,13 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/4/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/ScalarSensor.h"
 
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
-#include "utils/ScientificFileUtil.h"
 #include "sensors/Sample.h"
 
 namespace sf
@@ -35,48 +34,48 @@ namespace sf
 
 ScalarSensor::ScalarSensor(std::string uniqueName, Scalar frequency, int historyLength) : Sensor(uniqueName, frequency)
 {
-    historyLen = historyLength;
-    history = std::deque<Sample*>(0);
-    sampleCount = 0;
+    historyLen_ = historyLength;
+    history_ = std::deque<Sample*>(0);
+    sampleCount_ = 0;
 }
 
 ScalarSensor::~ScalarSensor()
 {
     ClearHistory();
-    channels.clear();
+    channels_.clear();
 }
 
 Sample ScalarSensor::getLastSample() const
 {
-    if(history.size() > 0)
-        return Sample(*history.back());
+    if(history_.size() > 0)
+        return Sample(*history_.back());
     else
         return Sample(std::vector<Scalar>(getNumOfChannels(), Scalar(0)), true);
 }
 
 const std::vector<Sample>* ScalarSensor::getHistory()
 {
-    SDL_LockMutex(updateMutex);
+    SDL_LockMutex(updateMutex_);
     
     std::vector<Sample>* historyCopy = new std::vector<Sample>();
-    for(size_t i=0; i<history.size(); ++i)
-        (*historyCopy).push_back(*(history[i]));
+    for(size_t i=0; i<history_.size(); ++i)
+        (*historyCopy).push_back(*(history_[i]));
     
-    SDL_UnlockMutex(updateMutex);
+    SDL_UnlockMutex(updateMutex_);
     
     return historyCopy;
 }
 
 unsigned short ScalarSensor::getNumOfChannels() const
 {
-    return channels.size();
+    return channels_.size();
 }
 
-Scalar ScalarSensor::getValue(unsigned long int index, unsigned int channel) const
+Scalar ScalarSensor::getValue(size_t index, size_t channel) const
 {
-    if(index < history.size() && channel < channels.size())
+    if(index < history_.size() && channel < channels_.size())
     {
-        Sample* s = history[index];
+        Sample* s = history_[index];
         Scalar v = s->getValue(channel);
         return v;
     }
@@ -84,15 +83,15 @@ Scalar ScalarSensor::getValue(unsigned long int index, unsigned int channel) con
     return Scalar(0);
 }
 
-Scalar ScalarSensor::getLastValue(unsigned int channel) const
+Scalar ScalarSensor::getLastValue(size_t channel) const
 {
-    return getValue(history.size() - 1, channel);
+    return getValue(history_.size() - 1, channel);
 }
 
-SensorChannel ScalarSensor::getSensorChannelDescription(unsigned int channel) const
+SensorChannel ScalarSensor::getSensorChannelDescription(size_t channel) const
 {
-    if(channel < channels.size())
-        return channels[channel];
+    if(channel < channels_.size())
+        return channels_[channel];
     else
         return SensorChannel("Invalid", QuantityType::INVALID);
 }
@@ -105,51 +104,51 @@ void ScalarSensor::Reset()
 
 void ScalarSensor::AddSampleToHistory(const Sample& s)
 {
-    if(historyLen < 0 && history.size() > 0) //No history
+    if(historyLen_ < 0 && history_.size() > 0) //No history
     {
-        delete history[0];
-        history.pop_front();
+        delete history_[0];
+        history_.pop_front();
     }
-    else if(historyLen > 0 && (int)history.size() == historyLen) //Specified history length
+    else if(historyLen_ > 0 && (int)history_.size() == historyLen_) //Specified history length
     {
-        delete history[0];
-        history.pop_front();
+        delete history_[0];
+        history_.pop_front();
     }
     //else == 0 --> unlimited history
     
-    Sample* sample = new Sample(s, sampleCount);
-    ++sampleCount;
+    Sample* sample = new Sample(s, sampleCount_);
+    ++sampleCount_;
     
-    for(unsigned int i=0; i<sample->getNumOfDimensions(); ++i)
+    for(size_t i=0; i<sample->getNumOfDimensions(); ++i)
     {
         Scalar* data = sample->getDataPointer();
         
         //Add noise
-        if(channels[i].stdDev > Scalar(0) && data[i] < channels[i].rangeMax && data[i] > channels[i].rangeMin)
-            data[i] += channels[i].noise(randomGenerator);
+        if(channels_[i].stdDev > Scalar(0) && data[i] < channels_[i].rangeMax && data[i] > channels_[i].rangeMin)
+            data[i] += channels_[i].noise(randomGenerator);
     
         //Limit readings
-        if(data[i] > channels[i].rangeMax)
-            data[i] = channels[i].rangeMax;
-        else if(data[i] < channels[i].rangeMin)
-            data[i] = channels[i].rangeMin;
+        if(data[i] > channels_[i].rangeMax)
+            data[i] = channels_[i].rangeMax;
+        else if(data[i] < channels_[i].rangeMin)
+            data[i] = channels_[i].rangeMin;
     }
     
     //Add to history
-    history.push_back(sample);
+    history_.push_back(sample);
 }
 
 void ScalarSensor::ClearHistory()
 {
-    for(unsigned int i = 0; i < history.size(); i++)
-        delete history[i];
+    for(size_t i = 0; i < history_.size(); i++)
+        delete history_[i];
     
-    history.clear();
+    history_.clear();
 }
 
-void ScalarSensor::SaveMeasurementsToTextFile(const std::string& path, bool includeTime, unsigned int fixedPrecision)
+void ScalarSensor::SaveMeasurementsToTextFile(const std::string& path, bool includeTime, size_t fixedPrecision)
 {
-    if(history.size() == 0)
+    if(history_.size() == 0)
         return;
     
     cInfo("Saving %s measurements to: %s", getName().c_str(), path.c_str());
@@ -163,12 +162,12 @@ void ScalarSensor::SaveMeasurementsToTextFile(const std::string& path, bool incl
     
     //Write header
     fprintf(fp, "#Measurements from %s\n", getName().c_str());
-    fprintf(fp, "#Number of channels: %ld\n", channels.size());
-    fprintf(fp, "#Number of samples: %ld\n", history.size());
-    if(freq <= Scalar(0.))
+    fprintf(fp, "#Number of channels: %ld\n", channels_.size());
+    fprintf(fp, "#Number of samples: %ld\n", history_.size());
+    if(freq_ <= Scalar(0.))
         fprintf(fp, "#Frequency: %1.3lf Hz\n", SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond());
     else
-        fprintf(fp, "#Frequency: %1.3lf Hz\n", freq);
+        fprintf(fp, "#Frequency: %1.3lf Hz\n", freq_);
     fprintf(fp, "#Unit system: SI\n\n");
     
     //Write data header
@@ -177,11 +176,11 @@ void ScalarSensor::SaveMeasurementsToTextFile(const std::string& path, bool incl
     else
         fprintf(fp, "#");
     
-    for(unsigned int i = 0; i < channels.size(); i++)
+    for(size_t i = 0; i < channels_.size(); i++)
     {
-        fprintf(fp, "%s", channels[i].name.c_str());
+        fprintf(fp, "%s", channels_[i].name.c_str());
         
-        if(i < channels.size() - 1)
+        if(i < channels_.size() - 1)
             fprintf(fp, "\t");
         else
             fprintf(fp, "\n");
@@ -190,9 +189,9 @@ void ScalarSensor::SaveMeasurementsToTextFile(const std::string& path, bool incl
     //Write data
     std::string format = "%1." + std::to_string(fixedPrecision) + "lf";
     
-    for(unsigned int i = 0; i < history.size(); i++)
+    for(size_t i = 0; i < history_.size(); i++)
     {
-        Sample* s = history[i];
+        Sample* s = history_[i];
         
         if(includeTime)
         {
@@ -200,13 +199,13 @@ void ScalarSensor::SaveMeasurementsToTextFile(const std::string& path, bool incl
             fprintf(fp, "\t");
         }
         
-        for(unsigned int h = 0; h < channels.size(); h++)
+        for(size_t h = 0; h < channels_.size(); h++)
         {
             Scalar v = s->getValue(h);
             
             fprintf(fp, format.c_str(), v);
             
-            if(h < channels.size() - 1)
+            if(h < channels_.size() - 1)
                 fprintf(fp, "\t");
             else
                 fprintf(fp, "\n");
@@ -214,84 +213,6 @@ void ScalarSensor::SaveMeasurementsToTextFile(const std::string& path, bool incl
     }
     
     fclose(fp);
-}
-
-void ScalarSensor::SaveMeasurementsToOctaveFile(const std::string& path, bool includeTime, bool separateChannels)
-{
-    if(history.size() == 0)
-        return;
-    
-    //build data structure
-    ScientificData data("");
-    
-    if(separateChannels) //channels separated and saved in vecotors
-    {
-        if(includeTime) //write time vector
-        {
-            ScientificDataItem* it = new ScientificDataItem();
-            it->name = "Time";
-            it->type = DATA_VECTOR;
-            
-            btVectorXu* vector = new btVectorXu((unsigned int)history.size());
-            it->value = vector;
-            
-            for(unsigned int i = 0; i < history.size(); ++i)
-            {
-                Sample* s = history[i];
-                (*vector)[i] = s->getTimestamp();
-            }
-            
-            data.addItem(it);
-        }
-        
-        //write channel vectors
-        for(unsigned int i = 0; i < channels.size(); ++i)
-        {
-            ScientificDataItem* it = new ScientificDataItem();
-            it->name = channels[i].name;
-            it->type = DATA_VECTOR;
-            
-            btVectorXu* vector = new btVectorXu((unsigned int)history.size());
-            it->value = vector;
-            
-            for(unsigned int h = 0; h < history.size(); ++h)
-            {
-                Sample* s = history[h];
-                Scalar v = s->getValue(i);
-                (*vector)[h] = v;
-            }
-            
-            data.addItem(it);
-        }
-    }
-    else //channels combined in a matrix
-    {
-        ScientificDataItem* it = new ScientificDataItem();
-        it->name = getName();
-        it->type = DATA_MATRIX;
-        
-        btMatrixXu* matrix = new btMatrixXu((unsigned int)history.size(), (unsigned int)channels.size() + (includeTime ? 1 : 0));
-        it->value = matrix;
-        
-        for(unsigned int i = 0; i < history.size(); ++i)
-        {
-            Sample* s = history[i];
-            
-            if(includeTime)
-                matrix->setElem(i, 0, s->getTimestamp());
-            
-            for(unsigned int h = 0; h < channels.size(); ++h)
-            {
-                Scalar v = s->getValue(h);
-                matrix->setElem(i, h + (includeTime ? 1 : 0), v);
-            }
-        }
-        
-        data.addItem(it);
-    }
-    
-    //save data structure to file
-    SaveOctaveData(path, data);
 }
 
 }

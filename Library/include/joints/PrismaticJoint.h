@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 27/03/2014.
-//  Copyright (c) 2014-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_PrismaticJoint__
@@ -83,10 +83,10 @@ namespace sf
         JointType getType() const;
         
     private:
-        Vector3 axisInA;
-        Scalar sigDamping;
-        Scalar velDamping;
-        Scalar displacementIC;
+        Vector3 axisInA_;
+        Scalar sigDamping_;
+        Scalar velDamping_;
+        Scalar displacementIC_;
     };
 }
 

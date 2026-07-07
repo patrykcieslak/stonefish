@@ -36,26 +36,26 @@ namespace sf
 SegmentationCamera::SegmentationCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency, 
     Scalar minDistance, Scalar maxDistance) : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
 {
-    depthRange = glm::vec2((GLfloat)minDistance, (GLfloat)maxDistance);
-    newDataCallback = nullptr;
-    segmentationData= nullptr;
-    displayData = nullptr;
-    glCamera = nullptr;
+    depthRange_ = glm::vec2((GLfloat)minDistance, (GLfloat)maxDistance);
+    newDataCallback_ = nullptr;
+    segmentationData_= nullptr;
+    displayData_ = nullptr;
+    glCamera_ = nullptr;
 }
 
 SegmentationCamera::~SegmentationCamera()
 {
-    glCamera = nullptr;
+    glCamera_ = nullptr;
 }
 
 void* SegmentationCamera::getImageDataPointer(unsigned int index)
 {
-    return segmentationData;
+    return segmentationData_;
 }
 
 GLubyte* SegmentationCamera::getDisplayDataPointer()
 {
-    return displayData;
+    return displayData_;
 }
 
 VisionSensorType SegmentationCamera::getVisionSensorType() const
@@ -65,23 +65,23 @@ VisionSensorType SegmentationCamera::getVisionSensorType() const
 
 OpenGLView* SegmentationCamera::getOpenGLView() const
 {
-    return glCamera;
+    return glCamera_;
 }
 
 void SegmentationCamera::InitGraphics(bool& seesParticles)
 {
     seesParticles = true;
 
-    glCamera = new OpenGLSegmentationCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, depthRange, freq < Scalar(0));
-    glCamera->setCamera(this);
+    glCamera_ = new OpenGLSegmentationCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX_, resY_, (GLfloat)fovH_, depthRange_, freq_ < Scalar(0));
+    glCamera_->setCamera(this);
     UpdateTransform();
-    glCamera->UpdateTransform();
+    glCamera_->UpdateTransform();
     InternalUpdate(0);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera_);
 
     unsigned int w, h;
     getResolution(w, h);
-    displayData = new GLubyte[w*h*3];
+    displayData_ = new GLubyte[w*h*3];
 }
 
 void SegmentationCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
@@ -89,36 +89,36 @@ void SegmentationCamera::SetupCamera(const Vector3& eye, const Vector3& dir, con
     glm::vec3 eye_ = glm::vec3((GLfloat)eye.x(), (GLfloat)eye.y(), (GLfloat)eye.z());
     glm::vec3 dir_ = glm::vec3((GLfloat)dir.x(), (GLfloat)dir.y(), (GLfloat)dir.z());
     glm::vec3 up_ = glm::vec3((GLfloat)up.x(), (GLfloat)up.y(), (GLfloat)up.z());
-    glCamera->SetupCamera(eye_, dir_, up_);
+    glCamera_->SetupCamera(eye_, dir_, up_);
 }
 
 void SegmentationCamera::InstallNewDataHandler(std::function<void(SegmentationCamera*)> callback)
 {
-    newDataCallback = callback;
+    newDataCallback_ = callback;
 }
 
 void SegmentationCamera::NewDataReady(void* data, unsigned int index)
 {
-    if(newDataCallback != nullptr)
+    if(newDataCallback_ != nullptr)
     {
         if(index == 0)
         {
             unsigned int w, h;
             getResolution(w, h);
-            memcpy(displayData, data, w*h*3);
+            memcpy(displayData_, data, w*h*3);
         }
         else
         {
-            segmentationData = (GLushort*)data;
-            newDataCallback(this);
-            segmentationData = nullptr;
+            segmentationData_ = (GLushort*)data;
+            newDataCallback_(this);
+            segmentationData_ = nullptr;
         }
     }
 }
 
 void SegmentationCamera::InternalUpdate(Scalar dt)
 {
-    glCamera->Update();
+    glCamera_->Update();
 }
 
 }

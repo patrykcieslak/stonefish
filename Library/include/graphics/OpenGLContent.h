@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/06/2017.
-//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLContent__
@@ -535,41 +535,41 @@ namespace sf
         
     private:
         //Modes
-        DrawingMode mode;
-        GLfloat maxAnisotropy;
+        DrawingMode mode_;
+        GLfloat maxAnisotropy_;
         
         //Data
-        std::vector<OpenGLView*> views;
-        std::vector<OpenGLLight*> lights;
-        std::vector<Object> objects; // Rigid meshes (static)
-        std::vector<Cable> cables;   // Cables (dynamic)
-        std::vector<Look> looks;     // OpenGL materials
-        NameManager lookNameManager;
-        std::string currentLookName;
-        std::string currentShaderMode;
+        std::vector<OpenGLView*> views_;
+        std::vector<OpenGLLight*> lights_;
+        std::vector<Object> objects_; // Rigid meshes (static)
+        std::vector<Cable> cables_;   // Cables (dynamic)
+        std::vector<Look> looks_;     // OpenGL materials
+        NameManager lookNameManager_;
+        std::string currentLookName_;
+        std::string currentShaderMode_;
         
-        glm::vec3 eyePos;
-        glm::vec3 viewDir;
-        glm::mat4 view; //Current view matrix;
-        glm::mat4 projection; //Current projection matrix
-        glm::mat4 viewProjection; //Current view-projection matrix
-        glm::vec2 viewportSize; //Current view-port size
-        GLfloat FC; //Current logarithmic depth buffer constant
+        glm::vec3 eyePos_;
+        glm::vec3 viewDir_;
+        glm::mat4 view_; //Current view matrix;
+        glm::mat4 projection_; //Current projection matrix
+        glm::mat4 viewProjection_; //Current view-projection matrix
+        glm::vec2 viewportSize_; //Current view-port size
+        GLfloat FC_; //Current logarithmic depth buffer constant
         
         //Standard objects
-        GLuint baseVertexArray; //base VAO
-        GLuint cubeBuf; //cubemap cross VBO
-        GLuint csBuf[2]; //vertex data for drawing coord systems
-        Object ellipsoid; //used for approximating fluid dynamics coeffs
-        Object cylinder; //used for approximating fluid dynamics coeffs
-        GLuint lightsUBO;
-        LightsUBO lightsUBOData;
-        GLuint viewUBO;
+        GLuint baseVertexArray_; //base VAO
+        GLuint cubeBuf_; //cubemap cross VBO
+        GLuint csBuf_[2]; //vertex data for drawing coord systems
+        Object ellipsoid_; //used for approximating fluid dynamics coeffs
+        Object cylinder_; //used for approximating fluid dynamics coeffs
+        GLuint lightsUBO_;
+        LightsUBO lightsUBOData_;
+        GLuint viewUBO_;
         
         //Shaders
-        std::map<std::string, GLSLShader*> basicShaders;
-        std::vector<MaterialShader> materialShaders;
-        GLSLShader* lightSourceShader[2];
+        std::map<std::string, GLSLShader*> basicShaders_;
+        std::vector<MaterialShader> materialShaders_;
+        GLSLShader* lightSourceShader_[2];
     };
 }
 

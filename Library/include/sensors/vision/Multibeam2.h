@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 21/01/2019.
-//  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Multibeam2__
@@ -132,13 +132,13 @@ namespace sf
     private:
         void InitGraphics(bool& seesParticles);
         
-        std::vector<CamData> cameras;
-        GLfloat* imageData;
-        GLfloat* rangeData;
-        Scalar fovV;
-        glm::vec2 range;
-        std::function<void(Multibeam2*)> newDataCallback;
-        int dataCounter;
+        std::vector<CamData> cameras_;
+        GLfloat* imageData_;
+        GLfloat* rangeData_;
+        Scalar fovV_;
+        glm::vec2 range_;
+        std::function<void(Multibeam2*)> newDataCallback_;
+        int dataCounter_;
     };
 
 

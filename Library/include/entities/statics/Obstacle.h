@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 24/05/2014.
-//  Copyright(c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Obstacle__
@@ -107,8 +107,8 @@ namespace sf
         
     private:
         void BuildGraphicalObject();
-        Mesh* graMesh;
-        int graObjectId;
+        Mesh* graMesh_;
+        int graObjectId_;
     };
 }
 

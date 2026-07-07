@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/10/2017.
-//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_ForceTorque__
@@ -85,9 +85,9 @@ namespace sf
         ScalarSensorType getScalarSensorType() const override;
         
     private:
-        SolidEntity* attach;
-        Transform o2s;
-        Transform lastFrame;
+        SolidEntity* attach_;
+        Transform o2s_;
+        Transform lastFrame_;
     };
 }
 

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2018-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_ConsoleSimulationApp__
@@ -65,7 +65,7 @@ namespace sf
         void LoopInternal();
         
     private:
-        SDL_Thread* simulationThread;
+        SDL_Thread* simulationThread_;
         static int RunSimulation(void* data);
     };
     

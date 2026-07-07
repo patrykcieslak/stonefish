@@ -34,34 +34,34 @@ namespace sf
     
 Atmosphere::Atmosphere(std::string uniqueName, Fluid g) : ForcefieldEntity(uniqueName)
 {
-    ghost->setCollisionFlags(ghost->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
+    ghost_->setCollisionFlags(ghost_->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
     
     Scalar size(100000);
     Vector3 halfExtents = Vector3(size/Scalar(2), size/Scalar(2), size/Scalar(2));
-    ghost->setWorldTransform(Transform(Quaternion::getIdentity(), Vector3(0,0,-size/Scalar(2)))); //Above ocean surface and ground (z=0)
-    ghost->setCollisionShape(new btBoxShape(halfExtents));
+    ghost_->setWorldTransform(Transform(Quaternion::getIdentity(), Vector3(0,0,-size/Scalar(2)))); //Above ocean surface and ground (z=0)
+    ghost_->setCollisionShape(new btBoxShape(halfExtents));
     
-    gas = g;
-    wind = std::vector<VelocityField*>(0);
-    glAtmosphere = nullptr;
+    gas_ = g;
+    wind_ = std::vector<VelocityField*>(0);
+    glAtmosphere_ = nullptr;
 }
     
 Atmosphere::~Atmosphere()
 {
-    if(wind.size() > 0)
+    if(wind_.size() > 0)
     {
-        for(unsigned int i=0; i<wind.size(); ++i)
-            delete wind[i];
-        wind.clear();
+        for(unsigned int i=0; i<wind_.size(); ++i)
+            delete wind_[i];
+        wind_.clear();
     }
     
-    if(glAtmosphere != nullptr) 
-        delete glAtmosphere;
+    if(glAtmosphere_ != nullptr) 
+        delete glAtmosphere_;
 }
     
 OpenGLAtmosphere* Atmosphere::getOpenGLAtmosphere()
 {
-    return glAtmosphere;
+    return glAtmosphere_;
 }
     
 ForcefieldType Atmosphere::getForcefieldType()
@@ -71,17 +71,17 @@ ForcefieldType Atmosphere::getForcefieldType()
 
 Fluid Atmosphere::getGas() const
 {
-    return gas;
+    return gas_;
 }
 
 void Atmosphere::InitGraphics(const RenderSettings& s)
 {
-    glAtmosphere = new OpenGLAtmosphere(GetShaderPath() + "earth_atm.dat", s.shadows);
+    glAtmosphere_ = new OpenGLAtmosphere(GetShaderPath() + "earth_atm.dat", s.shadows);
 }
 
 void Atmosphere::SetSunPosition(Scalar longitudeDeg, Scalar latitudeDeg, std::tm& utc)
 {
-    if(glAtmosphere == nullptr) return;
+    if(glAtmosphere_ == nullptr) return;
     
     Scalar latitude = latitudeDeg/Scalar(180) * M_PI;
     Scalar longitude = longitudeDeg/Scalar(180) * M_PI;
@@ -96,37 +96,37 @@ void Atmosphere::SetSunPosition(Scalar longitudeDeg, Scalar latitudeDeg, std::tm
     Scalar elevation = btAsin(btSin(latitude)*btSin(declination) - btCos(latitude)*btCos(declination)*btCos(M_PI*solarTime/Scalar(12)));
     Scalar azimuth = btAtan2(btSin(M_PI*solarTime/Scalar(12)), btCos(M_PI*solarTime/Scalar(12))*btSin(latitude) - btTan(declination)*btCos(latitude));
     
-    glAtmosphere->SetSunPosition((float)(azimuth/M_PI*Scalar(180)), (float)(elevation/M_PI*Scalar(180)));
+    glAtmosphere_->SetSunPosition((float)(azimuth/M_PI*Scalar(180)), (float)(elevation/M_PI*Scalar(180)));
 }
     
 void Atmosphere::SetSunPosition(Scalar azimuthDeg, Scalar elevationDeg)
 {
-    if(glAtmosphere == nullptr) return;
+    if(glAtmosphere_ == nullptr) return;
     
-    glAtmosphere->SetSunPosition((float)azimuthDeg, (float)elevationDeg);
+    glAtmosphere_->SetSunPosition((float)azimuthDeg, (float)elevationDeg);
 }
 
 void Atmosphere::SetConditions(Scalar temperature, Scalar pressure, Scalar humidity)
 {
-    if(glAtmosphere == nullptr) return;
+    if(glAtmosphere_ == nullptr) return;
     
-    glAtmosphere->setAirTemperature((float)temperature);
-    glAtmosphere->setAirHumidity((float)humidity); 
+    glAtmosphere_->setAirTemperature((float)temperature);
+    glAtmosphere_->setAirHumidity((float)humidity); 
 }
 
 void Atmosphere::AddVelocityField(VelocityField* field)
 {
-    wind.push_back(field);
+    wind_.push_back(field);
 }
     
 void Atmosphere::GetSunPosition(Scalar &azimuthDeg, Scalar &elevationDeg)
 {
-    if(glAtmosphere == nullptr)
+    if(glAtmosphere_ == nullptr)
         azimuthDeg = elevationDeg = btScalar(0);
     else
     {
         float az, elev;
-        glAtmosphere->GetSunPosition(az, elev);
+        glAtmosphere_->GetSunPosition(az, elev);
         azimuthDeg = Scalar(az);
         elevationDeg = Scalar(elev);
     }
@@ -134,11 +134,11 @@ void Atmosphere::GetSunPosition(Scalar &azimuthDeg, Scalar &elevationDeg)
 
 Vector3 Atmosphere::GetSunDirection() const
 {
-    if(glAtmosphere == nullptr)
+    if(glAtmosphere_ == nullptr)
         return Vector3(0,0,0);
     else
     {
-        glm::vec3 dir = glAtmosphere->GetSunDirection();
+        glm::vec3 dir = glAtmosphere_->GetSunDirection();
         return Vector3(dir.x, dir.y, dir.z);
     }
 }
@@ -146,8 +146,8 @@ Vector3 Atmosphere::GetSunDirection() const
 Vector3 Atmosphere::GetFluidVelocity(const Vector3& point) const
 {
     Vector3 fv(0,0,0);
-    for(size_t i=0; i<wind.size(); ++i)
-        fv += wind[i]->GetVelocityAtPoint(point);
+    for(size_t i=0; i<wind_.size(); ++i)
+        fv += wind_[i]->GetVelocityAtPoint(point);
     return fv;    
 }
 

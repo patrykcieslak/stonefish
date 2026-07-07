@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 26/05/2024.
-//  Copyright (c) 2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLThermalCamera__
@@ -152,34 +152,34 @@ namespace sf
         static void Destroy();
         
     protected:
-        Camera* camera;
-        glm::mat4 cameraTransform;
-        glm::vec3 eye;
-        glm::vec3 dir;
-        glm::vec3 up;
-        glm::vec3 tempEye;
-        glm::vec3 tempDir;
-        glm::vec3 tempUp;
-        glm::mat4 projection;
-        glm::vec2 fov;
-        bool _needsUpdate;
-        bool newData;
-        glm::vec2 depthRange;
-        glm::vec2 temperatureRange;
-        GLfloat temperatureNoise;
-        std::default_random_engine randGen;
-        std::uniform_real_distribution<float> randDist;
-        glm::vec2 displayRange;
-        ColorMap colorMap;
+        Camera* camera_;
+        glm::mat4 cameraTransform_;
+        glm::vec3 eye_;
+        glm::vec3 dir_;
+        glm::vec3 up_;
+        glm::vec3 tempEye_;
+        glm::vec3 tempDir_;
+        glm::vec3 tempUp_;
+        glm::mat4 projection_;
+        glm::vec2 fov_;
+        bool needsUpdate_;
+        bool newData_;
+        glm::vec2 depthRange_;
+        glm::vec2 temperatureRange_;
+        GLfloat temperatureNoise_;
+        std::default_random_engine randGen_;
+        std::uniform_real_distribution<float> randDist_;
+        glm::vec2 displayRange_;
+        ColorMap colorMap_;
 
-        GLuint renderDepthTex;
-        GLuint renderTex[3];
-        GLuint displayTex;
-        GLuint outputPBO;
-        GLuint displayPBO;
-        GLuint displayFBO;
-        GLuint displayVAO;
-        GLuint displayVBO;
+        GLuint renderDepthTex_;
+        GLuint renderTex_[3];
+        GLuint displayTex_;
+        GLuint outputPBO_;
+        GLuint displayPBO_;
+        GLuint displayFBO_;
+        GLuint displayVAO_;
+        GLuint displayVBO_;
         static GLSLShader* thermalVisualizeShader;
         static GLSLShader* thermalOutputShader;
     };

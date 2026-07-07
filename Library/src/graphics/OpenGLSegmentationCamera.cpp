@@ -46,39 +46,39 @@ OpenGLSegmentationCamera::OpenGLSegmentationCamera(glm::vec3 eyePosition, glm::v
                           GLfloat horizontalFOVDeg, glm::vec2 range, bool continuousUpdate)
  : OpenGLView(originX, originY, width, height)
 {
-    _needsUpdate = false;
-    continuous = continuousUpdate;
-    newData = false;
-    camera = nullptr;
-    this->range = range;
+    needsUpdate_ = false;
+    continuous_ = continuousUpdate;
+    newData_ = false;
+    camera_ = nullptr;
+    this->range_ = range;
     
     SetupCamera(eyePosition, direction, cameraUp);
     UpdateTransform();
     
-    fov.x = horizontalFOVDeg/180.f*M_PI;
-    fov.y = 2.f * atanf( (GLfloat)viewportHeight/(GLfloat)viewportWidth * tanf(fov.x/2.f) );
-    projection = glm::perspectiveFov(fov.y, (GLfloat)viewportWidth, (GLfloat)viewportHeight, range.x, range.y);
-    focalLength = ((GLfloat)viewportWidth/2.f)/tanf(fov.x/2.f);
+    fov_.x = horizontalFOVDeg/180.f*M_PI;
+    fov_.y = 2.f * atanf( (GLfloat)viewportHeight_/(GLfloat)viewportWidth_ * tanf(fov_.x/2.f) );
+    projection_ = glm::perspectiveFov(fov_.y, (GLfloat)viewportWidth_, (GLfloat)viewportHeight_, range.x, range.y);
+    focalLength_ = ((GLfloat)viewportWidth_/2.f)/tanf(fov_.x/2.f);
     
     //Direct segmentation output
-    renderSegTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+    renderSegTex_[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_, viewportHeight_, 0), 
                                             GL_R16UI, GL_RED_INTEGER, GL_UNSIGNED_SHORT, NULL, FilteringMode::NEAREST, false);
-    renderSegTex[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+    renderSegTex_[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_, viewportHeight_, 0), 
                                             GL_R16UI, GL_RED_INTEGER, GL_UNSIGNED_SHORT, NULL, FilteringMode::NEAREST, false);
-    renderDepthTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+    renderDepthTex_ = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_, viewportHeight_, 0), 
                                                            GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
     std::vector<FBOTexture> fboTextures;
-    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderSegTex[0]));
-    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, renderSegTex[1]));
-    fboTextures.push_back(FBOTexture(GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, renderDepthTex));
-    renderFBO = OpenGLContent::GenerateFramebuffer(fboTextures);
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderSegTex_[0]));
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, renderSegTex_[1]));
+    fboTextures.push_back(FBOTexture(GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, renderDepthTex_));
+    renderFBO_ = OpenGLContent::GenerateFramebuffer(fboTextures);
 
     //Segmentation visualization with a color map
-    displaySegTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE, NULL, FilteringMode::BILINEAR, false);
+    displaySegTex_ = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_, viewportHeight_, 0), GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE, NULL, FilteringMode::BILINEAR, false);
 
     fboTextures.clear();
-    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, displaySegTex));
-    displayFBO = OpenGLContent::GenerateFramebuffer(fboTextures);
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, displaySegTex_));
+    displayFBO_ = OpenGLContent::GenerateFramebuffer(fboTextures);
 
     //Display quad
     GLfloat quadData[4][4];
@@ -99,11 +99,11 @@ OpenGLSegmentationCamera::OpenGLSegmentationCamera(glm::vec3 eyePosition, glm::v
     quadData[3][2] = 1.f;
     quadData[3][3] = 0.f;
     
-    glGenVertexArrays(1, &displayVAO);
-    OpenGLState::BindVertexArray(displayVAO);
+    glGenVertexArrays(1, &displayVAO_);
+    OpenGLState::BindVertexArray(displayVAO_);
     glEnableVertexAttribArray(0);
-    glGenBuffers(1, &displayVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, displayVBO);
+    glGenBuffers(1, &displayVBO_);
+    glBindBuffer(GL_ARRAY_BUFFER, displayVBO_);
     glBufferData(GL_ARRAY_BUFFER, sizeof(quadData), quadData, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -112,119 +112,119 @@ OpenGLSegmentationCamera::OpenGLSegmentationCamera(glm::vec3 eyePosition, glm::v
 
 OpenGLSegmentationCamera::~OpenGLSegmentationCamera()
 {
-    glDeleteTextures(1, &renderDepthTex);
-    glDeleteTextures(2, renderSegTex);
-    glDeleteTextures(1, &displaySegTex);
-    glDeleteFramebuffers(1, &renderFBO);
-    glDeleteFramebuffers(1, &displayFBO);
-    glDeleteVertexArrays(1, &displayVAO);
-    glDeleteBuffers(1, &displayVBO);
+    glDeleteTextures(1, &renderDepthTex_);
+    glDeleteTextures(2, renderSegTex_);
+    glDeleteTextures(1, &displaySegTex_);
+    glDeleteFramebuffers(1, &renderFBO_);
+    glDeleteFramebuffers(1, &displayFBO_);
+    glDeleteVertexArrays(1, &displayVAO_);
+    glDeleteBuffers(1, &displayVBO_);
 
-    if(camera != nullptr)
+    if(camera_ != nullptr)
     {
-        glDeleteBuffers(1, &outputPBO);
-        glDeleteBuffers(1, &displayPBO);
+        glDeleteBuffers(1, &outputPBO_);
+        glDeleteBuffers(1, &displayPBO_);
     }
 }
 
 void OpenGLSegmentationCamera::SetupCamera(glm::vec3 _eye, glm::vec3 _dir, glm::vec3 _up)
 {
-    tempDir = _dir;
-    tempEye = _eye;
-    tempUp = _up;
+    tempDir_ = _dir;
+    tempEye_ = _eye;
+    tempUp_ = _up;
 }
 
 void OpenGLSegmentationCamera::UpdateTransform()
 {
-    eye = tempEye;
-    dir = tempDir;
-    up = tempUp;
+    eye_ = tempEye_;
+    dir_ = tempDir_;
+    up_ = tempUp_;
     SetupCamera();
 
     //Inform camera to run callback
-    if(newData)
+    if(newData_)
     {
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, displayPBO);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, displayPBO_);
         GLubyte* src = (GLubyte*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
         if(src)
         {
-            camera->NewDataReady(src, 0);
+            camera_->NewDataReady(src, 0);
             glUnmapBuffer(GL_PIXEL_PACK_BUFFER); //Release pointer to the mapped buffer
         }
         
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO_);
         GLushort* src2 = (GLushort*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
         if(src2)
         {
-            camera->NewDataReady(src2, 1);
+            camera_->NewDataReady(src2, 1);
             glUnmapBuffer(GL_PIXEL_PACK_BUFFER); //Release pointer to the mapped buffer
         }
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-        newData = false;
+        newData_ = false;
     }
 }
 
 void OpenGLSegmentationCamera::SetupCamera()
 {
-    cameraTransform = glm::lookAt(eye, eye+dir, up);
+    cameraTransform_ = glm::lookAt(eye_, eye_+dir_, up_);
 }
 
 glm::vec3 OpenGLSegmentationCamera::GetEyePosition() const
 {
-    return eye;
+    return eye_;
 }
 
 glm::vec3 OpenGLSegmentationCamera::GetLookingDirection() const
 {
-    return dir;
+    return dir_;
 }
 
 glm::vec3 OpenGLSegmentationCamera::GetUpDirection() const
 {
-    return up;
+    return up_;
 }
 
 glm::mat4 OpenGLSegmentationCamera::GetProjectionMatrix() const
 {
-    return projection;
+    return projection_;
 }
 
 glm::mat4 OpenGLSegmentationCamera::GetViewMatrix() const
 {
-    return cameraTransform;
+    return cameraTransform_;
 }
 
 GLfloat OpenGLSegmentationCamera::GetFOVX() const
 {
-    return fov.x;
+    return fov_.x;
 }
 
 GLfloat OpenGLSegmentationCamera::GetFOVY() const
 {
-    return fov.y;
+    return fov_.y;
 }
 
 GLfloat OpenGLSegmentationCamera::GetNearClip() const
 {
-    return range.x;
+    return range_.x;
 }
 
 GLfloat OpenGLSegmentationCamera::GetFarClip() const
 {
-    return range.y;
+    return range_.y;
 }
 
 void OpenGLSegmentationCamera::Update()
 {
-    _needsUpdate = true;
+    needsUpdate_ = true;
 }
 
 bool OpenGLSegmentationCamera::needsUpdate()
 {
-    if(_needsUpdate)
+    if(needsUpdate_)
     {
-        _needsUpdate = false;
-        return enabled;
+        needsUpdate_ = false;
+        return enabled_;
     }
     else
         return false;
@@ -232,16 +232,16 @@ bool OpenGLSegmentationCamera::needsUpdate()
 
 void OpenGLSegmentationCamera::setCamera(Camera* cam, unsigned int index)
 {
-    camera = cam;
+    camera_ = cam;
 
-    glGenBuffers(1, &outputPBO);
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO);
-    glBufferData(GL_PIXEL_PACK_BUFFER, viewportWidth * viewportHeight * sizeof(GLushort), 0, GL_STREAM_READ);
+    glGenBuffers(1, &outputPBO_);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO_);
+    glBufferData(GL_PIXEL_PACK_BUFFER, viewportWidth_ * viewportHeight_ * sizeof(GLushort), 0, GL_STREAM_READ);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
-    glGenBuffers(1, &displayPBO);
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, displayPBO);
-    glBufferData(GL_PIXEL_PACK_BUFFER, viewportWidth * viewportHeight * 3 * sizeof(GLubyte), 0, GL_STREAM_READ);
+    glGenBuffers(1, &displayPBO_);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, displayPBO_);
+    glBufferData(GL_PIXEL_PACK_BUFFER, viewportWidth_ * viewportHeight_ * 3 * sizeof(GLubyte), 0, GL_STREAM_READ);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 }
 
@@ -257,8 +257,8 @@ void OpenGLSegmentationCamera::ComputeOutput(std::vector<Renderable>& objects, O
     content->SetDrawingMode(DrawingMode::RAW);
     
     //Segmentation object id output
-    OpenGLState::BindFramebuffer(renderFBO);
-    OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+    OpenGLState::BindFramebuffer(renderFBO_);
+    OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glm::mat4 VP = GetProjectionMatrix() * GetViewMatrix();
@@ -276,7 +276,7 @@ void OpenGLSegmentationCamera::ComputeOutput(std::vector<Renderable>& objects, O
         content->DrawObject(objects[i].objectId, -1, objects[i].model);
     }
 
-    if(ocean != nullptr && ocean->GetDepth(eye) > 0.f)
+    if(ocean != nullptr && ocean->GetDepth(eye_) > 0.f)
     {
         OpenGLOcean* glOcean = ocean->getOpenGLOcean();
         glOcean->DrawParticlesId(this, (GLushort)(UINT16_MAX-1));
@@ -285,20 +285,20 @@ void OpenGLSegmentationCamera::ComputeOutput(std::vector<Renderable>& objects, O
     //Flip image
     glDrawBuffer(GL_COLOR_ATTACHMENT1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderSegTex[0]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderSegTex_[0]);
     flipShader->Use();
     flipShader->SetUniform("texSource", TEX_POSTPROCESS1);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     
     //Color mapped segmentation display
-    OpenGLState::BindFramebuffer(displayFBO);
-    OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+    OpenGLState::BindFramebuffer(displayFBO_);
+    OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
     glClear(GL_COLOR_BUFFER_BIT);
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderSegTex[1]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderSegTex_[1]);
     segmentationVisualizeShader->Use();
     segmentationVisualizeShader->SetUniform("texSeg", TEX_POSTPROCESS1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    OpenGLState::BindVertexArray(displayVAO);
+    OpenGLState::BindVertexArray(displayVAO_);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     OpenGLState::BindVertexArray(0);
     OpenGLState::BindFramebuffer(0);
@@ -312,8 +312,8 @@ void OpenGLSegmentationCamera::DrawLDR(GLuint destinationFBO, bool updated)
     bool display = true;
     unsigned int dispX, dispY;
     GLfloat dispScale;
-    if(camera != nullptr)
-        display = camera->getDisplayOnScreen(dispX, dispY, dispScale);
+    if(camera_ != nullptr)
+        display = camera_->getDisplayOnScreen(dispX, dispY, dispScale);
     
     //Draw on screen
     if(display)
@@ -324,24 +324,24 @@ void OpenGLSegmentationCamera::DrawLDR(GLuint destinationFBO, bool updated)
         OpenGLState::BindFramebuffer(destinationFBO);
         OpenGLState::Viewport(0, 0, windowWidth, windowHeight);
         OpenGLState::DisableCullFace();
-        content->DrawTexturedQuad(dispX, dispY+viewportHeight*dispScale, viewportWidth*dispScale, -viewportHeight*dispScale, displaySegTex);
+        content->DrawTexturedQuad(dispX, dispY+viewportHeight_*dispScale, viewportWidth_*dispScale, -viewportHeight_*dispScale, displaySegTex_);
         OpenGLState::EnableCullFace();
         OpenGLState::BindFramebuffer(0);
     }
 
     //Copy texture to camera buffer
-    if(camera != nullptr && updated)
+    if(camera_ != nullptr && updated)
     {
-        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderSegTex[1]);
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderSegTex_[1]);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO_);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_UNSIGNED_SHORT, NULL);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, displaySegTex);
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, displayPBO);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, displaySegTex_);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, displayPBO_);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
         OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
-        newData = true;
+        newData_ = true;
     }
 }
 

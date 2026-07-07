@@ -284,17 +284,17 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const Transfo
     {
         nrow++;
         srow = nrow * info->rowskip;
-        info->m_J1linearAxis[srow+0] = -ax1[0] * this->threadPitch;
-        info->m_J1linearAxis[srow+1] = -ax1[1] * this->threadPitch;
-        info->m_J1linearAxis[srow+2] = -ax1[2] * this->threadPitch;
+        info->m_J1linearAxis[srow+0] = -ax1[0] * this->threadPitch_;
+        info->m_J1linearAxis[srow+1] = -ax1[1] * this->threadPitch_;
+        info->m_J1linearAxis[srow+2] = -ax1[2] * this->threadPitch_;
         
         info->m_J1angularAxis[srow+0] = ax1[0];
         info->m_J1angularAxis[srow+1] = ax1[1];
         info->m_J1angularAxis[srow+2] = ax1[2];
         
-        info->m_J2linearAxis[srow+0] = ax1[0] * this->threadPitch;
-        info->m_J2linearAxis[srow+1] = ax1[1] * this->threadPitch;
-        info->m_J2linearAxis[srow+2] = ax1[2] * this->threadPitch;
+        info->m_J2linearAxis[srow+0] = ax1[0] * this->threadPitch_;
+        info->m_J2linearAxis[srow+1] = ax1[1] * this->threadPitch_;
+        info->m_J2linearAxis[srow+2] = ax1[2] * this->threadPitch_;
         
         info->m_J2angularAxis[srow+0] = -ax1[0];
         info->m_J2angularAxis[srow+1] = -ax1[1];
@@ -305,7 +305,7 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const Transfo
         Scalar lin_disp = ax1.dot(ofs);
         Scalar ang_pos = this->getAngularPosition();
         info->m_constraintError[srow] =
-        -k * (lin_disp * this->threadPitch - ang_pos);
+        -k * (lin_disp * this->threadPitch_ - ang_pos);
         info->cfm[srow] = -m_cfmOrthoLin;
         
         // debug, set cfm to 0

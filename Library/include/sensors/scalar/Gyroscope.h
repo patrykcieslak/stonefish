@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 29/03/2014.
-//  Copyright (c) 2014-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Gyroscope__
@@ -65,7 +65,7 @@ namespace sf
         ScalarSensorType getScalarSensorType() const override;
         
     private:
-        Vector3 bias;
+        Vector3 bias_;
     };
 }
 

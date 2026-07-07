@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 25/02/2020.
-//  Copyright (c) 2020-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_USBL__
@@ -78,11 +78,11 @@ namespace sf
          */
         void InternalUpdate(Scalar dt) override;
         
-        bool ping;
-        Scalar pingRate;
-        Scalar pingTime;
-        std::map<uint64_t, BeaconInfo> beacons;
-        bool noise;
+        bool ping_;
+        Scalar pingRate_;
+        Scalar pingTime_;
+        std::map<uint64_t, BeaconInfo> beacons_;
+        bool noise_;
         
         static std::random_device randomDevice;
         static std::mt19937 randomGenerator;

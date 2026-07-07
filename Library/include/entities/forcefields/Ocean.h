@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/10/17.
-//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -163,15 +163,15 @@ namespace sf
         std::vector<Renderable> Render(const std::vector<std::unique_ptr<Actuator>>& act);
         
     private:
-        Fluid liquid;
-        std::vector<VelocityField*> currents;
-        OpenGLOcean* glOcean;
-        OceanCurrentsUBO glOceanCurrentsUBOData;
-        Scalar depth;
-        Scalar waterType;
-        Scalar salinity;
-        Scalar oceanState;
-        bool currentsEnabled;
-        Renderable wavesDebug;
+        Fluid liquid_;
+        std::vector<VelocityField*> currents_;
+        OpenGLOcean* glOcean_;
+        OceanCurrentsUBO glOceanCurrentsUBOData_;
+        Scalar depth_;
+        Scalar waterType_;
+        Scalar salinity_;
+        Scalar oceanState_;
+        bool currentsEnabled_;
+        Renderable wavesDebug_;
     };
 }

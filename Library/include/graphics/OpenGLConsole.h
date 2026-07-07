@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 02/12/2018.
-//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLConsole__
@@ -67,14 +67,14 @@ namespace sf
         void ResetScroll();
         
     private:
-        int windowW, windowH;
-        float scrollOffset;
-        float scrollVelocity;
-        int64_t lastTime;
-        OpenGLPrinter* printer;
-        GLuint logoTexture;
-        GLuint consoleVAO;
-        GLSLShader* texQuadShader;
+        int windowW_, windowH_;
+        float scrollOffset_;
+        float scrollVelocity_;
+        int64_t lastTime_;
+        OpenGLPrinter* printer_;
+        GLuint logoTexture_;
+        GLuint consoleVAO_;
+        GLSLShader* texQuadShader_;
     };
 }
 

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 25/02/20.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Comm__
@@ -157,19 +157,19 @@ namespace sf
         //! A method used for data reception.
         virtual void MessageReceived(std::shared_ptr<CommDataFrame> message);
         
-        bool newDataAvailable;
-        std::deque<std::shared_ptr<CommDataFrame>> txBuffer;
-        std::deque<std::shared_ptr<CommDataFrame>> rxBuffer;
-        uint64_t txSeq;
+        bool newDataAvailable_;
+        std::deque<std::shared_ptr<CommDataFrame>> txBuffer_;
+        std::deque<std::shared_ptr<CommDataFrame>> rxBuffer_;
+        uint64_t txSeq_;
         
     private:
-        std::string name;
-        uint64_t id;
-        int64_t cId;
-        SDL_mutex* updateMutex;
-        Entity* attach;
-        Transform o2c;
-        bool renderable;
+        std::string name_;
+        uint64_t id_;
+        int64_t cId_;
+        SDL_mutex* updateMutex_;
+        Entity* attach_;
+        Transform o2c_;
+        bool renderable_;
     };
 }
 

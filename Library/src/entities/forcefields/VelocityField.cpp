@@ -28,7 +28,7 @@
 namespace sf
 {
 
-VelocityField::VelocityField() : enabled(true)
+VelocityField::VelocityField() : enabled_(true)
 {
 }
 
@@ -38,12 +38,12 @@ VelocityField::~VelocityField()
 
 void VelocityField::setEnabled(bool en)
 {
-    enabled = en;
+    enabled_ = en;
 }
 
 bool VelocityField::isEnabled() const
 {
-    return enabled;
+    return enabled_;
 }
 
 }

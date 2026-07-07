@@ -43,18 +43,18 @@ NED::NED()
 void NED::Init(const Scalar lat, const Scalar lon, const Scalar height)
 {
     // Save NED origin
-    _init_lat = lat/Scalar(180) * M_PI;
-    _init_lon = lon/Scalar(180) * M_PI;
-    _init_h = height;
+    initLat_ = lat/Scalar(180) * M_PI;
+    initLon_ = lon/Scalar(180) * M_PI;
+    initH_ = height;
 
     // Compute ECEF of NED origin
-    Geodetic2Ecef(lat, lon, height, _init_ecef_x, _init_ecef_y, _init_ecef_z);
+    Geodetic2Ecef(lat, lon, height, initEcefX_, initEcefY_, initEcefZ_);
 
     // Compute ECEF to NED and NED to ECEF matrices
-    Scalar phiP = btAtan2(_init_ecef_z, btSqrt(_init_ecef_x*_init_ecef_x + _init_ecef_y*_init_ecef_y));
+    Scalar phiP = btAtan2(initEcefZ_, btSqrt(initEcefX_*initEcefX_ + initEcefY_*initEcefY_));
 
-    _ecef_to_ned_matrix = __nRe__(phiP, _init_lon);
-    _ned_to_ecef_matrix = __nRe__(_init_lat, _init_lon).transpose();
+    ecef2NedMatrix_ = nRe(phiP, initLon_);
+    ned2EcefMatrix_ = nRe(initLat_, initLon_).transpose();
 }
 
 void NED::Geodetic2Ecef(const Scalar lat, const Scalar lon, const Scalar height,
@@ -82,7 +82,7 @@ void NED::Ecef2Geodetic(const Scalar x, const Scalar y, const Scalar z,
     Scalar F = 54 * b * b * z * z;
     Scalar G = r * r + (1 - esq) * z * z - esq * Esq;
     Scalar C = (esq * esq * F * r * r) / btPow(G, 3);
-    Scalar S = __cbrt__(1 + C + btSqrt(C * C + 2 * C));
+    Scalar S = cbrt(1 + C + btSqrt(C * C + 2 * C));
     Scalar P = F / (3 * btPow((S + 1 / S + 1), 2) * G * G);
     Scalar Q = btSqrt(1 + 2 * esq * esq * P);
     Scalar r_0 = -(P * esq * r) / (1 + Q) + btSqrt(0.5 * a * a * (1 + 1.0 / Q) - P * (1 - esq) * z * z / (Q * (1 + Q)) - 0.5 * P * r * r);
@@ -101,10 +101,10 @@ void NED::Ecef2Ned(const Scalar x, const Scalar y, const Scalar z,
     // coordinates relative to another ECEF coordinate ref. Returns a tuple
     // (East, North, Up).
     Vector3 vect, ret;
-    vect.setX(x - _init_ecef_x);
-    vect.setY(y - _init_ecef_y);
-    vect.setZ(z - _init_ecef_z);
-    ret = _ecef_to_ned_matrix * vect;
+    vect.setX(x - initEcefX_);
+    vect.setY(y - initEcefY_);
+    vect.setZ(z - initEcefZ_);
+    ret = ecef2NedMatrix_ * vect;
     north = ret.getX();
     east = ret.getY();
     depth = -ret.getZ();
@@ -118,10 +118,10 @@ void NED::Ned2Ecef(const Scalar north, const Scalar east, const Scalar depth,
     ned.setX(north);
     ned.setY(east);
     ned.setZ(-depth);
-    ret = _ned_to_ecef_matrix * ned;
-    x = ret.getX() + _init_ecef_x;
-    y = ret.getY() + _init_ecef_y;
-    z = ret.getZ() + _init_ecef_z;
+    ret = ned2EcefMatrix_ * ned;
+    x = ret.getX() + initEcefX_;
+    y = ret.getY() + initEcefY_;
+    z = ret.getZ() + initEcefZ_;
 }
 
 void NED::Geodetic2Ned(const Scalar lat, const Scalar lon, const Scalar height,
@@ -142,7 +142,7 @@ void NED::Ned2Geodetic(const Scalar north, const Scalar east, const Scalar depth
     Ecef2Geodetic(x, y, z, lat, lon, height);
 }
 
-Scalar NED::__cbrt__(const Scalar x) const
+Scalar NED::cbrt(const Scalar x) const
 {
     if(x >= 0.0)
         return btPow(x, 1.0/3.0);
@@ -150,7 +150,7 @@ Scalar NED::__cbrt__(const Scalar x) const
         return -btPow(btFabs(x), 1.0/3.0);
 }
 
-Matrix3 NED::__nRe__(const Scalar lat_rad, const Scalar lon_rad) const
+Matrix3 NED::nRe(const Scalar lat_rad, const Scalar lon_rad) const
 {
     Scalar sLat = btSin(lat_rad);
     Scalar sLon = btSin(lon_rad);

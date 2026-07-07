@@ -34,20 +34,20 @@ namespace sf
 
 SphericalJoint::SphericalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, bool collideLinked) : Joint(uniqueName, collideLinked)
 {
-    btRigidBody* bodyA = solidA->rigidBody;
-    btRigidBody* bodyB = solidB->rigidBody;
+    btRigidBody* bodyA = solidA->rigidBody_;
+    btRigidBody* bodyB = solidB->rigidBody_;
     Vector3 pivotInA = bodyA->getCenterOfMassTransform().inverse() * pivot;
     Vector3 pivotInB = bodyB->getCenterOfMassTransform().inverse() * pivot;
     
     btPoint2PointConstraint* p2p = new btPoint2PointConstraint(*bodyA, *bodyB, pivotInA, pivotInB);
     setConstraint(p2p);
     
-    jSolidA = solidA;
-    jSolidB = solidB;
+    jSolidA_ = solidA;
+    jSolidB_ = solidB;
 
-    sigDamping = Vector3(0.,0.,0.);
-    velDamping = Vector3(0.,0.,0.);
-    angleIC = Vector3(0.,0.,0.);
+    sigDamping_ = Vector3(0.,0.,0.);
+    velDamping_ = Vector3(0.,0.,0.);
+    angleIC_ = Vector3(0.,0.,0.);
 }
 
 SphericalJoint::SphericalJoint(std::string uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId, const Vector3& pivot, bool collideLinked) : Joint(uniqueName, collideLinked)
@@ -57,16 +57,16 @@ SphericalJoint::SphericalJoint(std::string uniqueName, SolidEntity* solid, Feath
     Vector3 pivotInA = linkTransform.inverse() * pivot;
     Vector3 pivotInB = solidTransform.inverse() * pivot;
     
-    btMultiBodyPoint2Point* p2p = new btMultiBodyPoint2Point(fe->getMultiBody(), linkId, solid->rigidBody, pivotInA, pivotInB);
+    btMultiBodyPoint2Point* p2p = new btMultiBodyPoint2Point(fe->getMultiBody(), linkId, solid->rigidBody_, pivotInA, pivotInB);
     p2p->setMaxAppliedImpulse(BT_LARGE_FLOAT);
     setConstraint(p2p);
     
-    jSolidA = fe->getLink(linkId+1).solid;
-    jSolidB = solid;
+    jSolidA_ = fe->getLink(linkId+1).solid.get();
+    jSolidB_ = solid;
 
-    sigDamping = Vector3(0.,0.,0.);
-    velDamping = Vector3(0.,0.,0.);
-    angleIC = Vector3(0.,0.,0.);
+    sigDamping_ = Vector3(0.,0.,0.);
+    velDamping_ = Vector3(0.,0.,0.);
+    angleIC_ = Vector3(0.,0.,0.);
 }
 
 void SphericalJoint::setDamping(Vector3 constantFactor, Vector3 viscousFactor)
@@ -76,14 +76,14 @@ void SphericalJoint::setDamping(Vector3 constantFactor, Vector3 viscousFactor)
 
     for(int i = 0; i < 3; i++)
     {
-        sigDamping[i] = constantFactor[i] > Scalar(0.) ? constantFactor[i] : Scalar(0.);
-        velDamping[i] = viscousFactor[i] > Scalar(0.) ? viscousFactor[i] : Scalar(0.);
+        sigDamping_[i] = constantFactor[i] > Scalar(0.) ? constantFactor[i] : Scalar(0.);
+        velDamping_[i] = viscousFactor[i] > Scalar(0.) ? viscousFactor[i] : Scalar(0.);
     }
 }
 
 void SphericalJoint::setIC(Vector3 angles)
 {
-    angleIC = angles;
+    angleIC_ = angles;
 }
 
 JointType SphericalJoint::getType() const
@@ -108,7 +108,7 @@ void SphericalJoint::ApplyDamping()
     if(isMultibodyJoint())
         return;
 
-    if(sigDamping.length2() > Scalar(0.) || velDamping.length2() > Scalar(0.))
+    if(sigDamping_.length2() > Scalar(0.) || velDamping_.length2() > Scalar(0.))
     {
         btRigidBody& bodyA = getConstraint()->getRigidBodyA();
         btRigidBody& bodyB = getConstraint()->getRigidBodyB();
@@ -116,11 +116,11 @@ void SphericalJoint::ApplyDamping()
         Vector3 torque(0.,0.,0.);
         
         if(relativeAV.x() != Scalar(0.))
-            torque[0] = -(sigDamping.x() * relativeAV.x()/fabs(relativeAV.x())) - velDamping.x() * relativeAV.x();
+            torque[0] = -(sigDamping_.x() * relativeAV.x()/fabs(relativeAV.x())) - velDamping_.x() * relativeAV.x();
         if(relativeAV.y() != Scalar(0.))
-            torque[1] = -(sigDamping.y() * relativeAV.y()/fabs(relativeAV.y())) - velDamping.y() * relativeAV.y();
+            torque[1] = -(sigDamping_.y() * relativeAV.y()/fabs(relativeAV.y())) - velDamping_.y() * relativeAV.y();
         if(relativeAV.z() != Scalar(0.))
-            torque[2] = -(sigDamping.z() * relativeAV.z()/fabs(relativeAV.z())) - velDamping.z() * relativeAV.z();
+            torque[2] = -(sigDamping_.z() * relativeAV.z()/fabs(relativeAV.z())) - velDamping_.z() * relativeAV.z();
         
         bodyA.applyTorque(torque);
         bodyB.applyTorque(-torque);

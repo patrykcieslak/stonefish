@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 29/03/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_RealRotaryEncoder__
@@ -55,8 +55,8 @@ namespace sf
         ScalarSensorType getScalarSensorType() const override;
         
     private:
-        unsigned int cpr_res;
-        unsigned int abs;
+        unsigned int cprResolution_;
+        unsigned int abs_;
     };
 }
 

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/13/13.
-//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Joint__
@@ -105,14 +105,14 @@ namespace sf
     protected:
         void setConstraint(btTypedConstraint* c);
         void setConstraint(btMultiBodyConstraint* c);
-        SolidEntity* jSolidA;
-        SolidEntity* jSolidB;
-        btTypedConstraint* constraint;
-        btMultiBodyConstraint* mbConstraint;
+        SolidEntity* jSolidA_;
+        SolidEntity* jSolidB_;
+        btTypedConstraint* constraint_;
+        btMultiBodyConstraint* mbConstraint_;
 
     private:
-        std::string name;
-        bool collisionEnabled;
+        std::string name_;
+        bool collisionEnabled_;
     };
 }
 

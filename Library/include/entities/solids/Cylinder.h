@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/30/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Cylinder__
@@ -54,8 +54,8 @@ namespace sf
         btCollisionShape* BuildCollisionShape();
         
     private:
-        Scalar r;
-        Scalar halfHeight;
+        Scalar r_;
+        Scalar halfHeight_;
     };
 }
 

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/05/2019.
-//  Copyright (c) 2019-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Propeller__
@@ -45,7 +45,7 @@ namespace sf
          \param rightHand a flag to indicate if the propeller is right hand (clockwise rotation)
          \param inverted a flag to indicate if the setpoint is inverted (positive value results in backward force)
         */
-        Propeller(std::string uniqueName, std::shared_ptr<SolidEntity> propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand, bool inverted = false);
+        Propeller(std::string uniqueName, std::unique_ptr<SolidEntity> propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand, bool inverted = false);
         
         //! A method used to update the internal state of the thruster.
         /*!
@@ -84,24 +84,24 @@ namespace sf
         void WatchdogTimeout() override;
 
         //Params
-        Scalar D;
-        Scalar kT0;
-        Scalar kQ0;
-        Scalar kp;
-        Scalar ki;
-        Scalar iLim;
-        Scalar omegaLim;
-        std::shared_ptr<SolidEntity> propeller_;
-        bool RH;
-        bool inv;
+        Scalar D_;
+        Scalar kT0_;
+        Scalar kQ0_;
+        Scalar kp_;
+        Scalar ki_;
+        Scalar iLim_;
+        Scalar omegaLim_;
+        std::unique_ptr<SolidEntity> propeller_;
+        bool RH_;
+        bool inv_;
         
         //States
-        Scalar theta;
-        Scalar omega;
-        Scalar thrust;
-        Scalar torque;
-        Scalar setpoint;
-        Scalar iError;
+        Scalar theta_;
+        Scalar omega_;
+        Scalar thrust_;
+        Scalar torque_;
+        Scalar setpoint_;
+        Scalar iError_;
     };
 }
 

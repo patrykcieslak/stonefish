@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/12/12.
-//  Copyright (c) 2012-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLLight__
@@ -141,9 +141,9 @@ namespace sf
         static void SetCamera(OpenGLCamera* view);
 
     protected:
-		glm::vec4 colorLi;
-		bool active;
-        int sourceObject;
+		glm::vec4 colorLi_;
+		bool active_;
+        int sourceObject_;
         
         static GLuint spotShadowArrayTex; //2D array texture for storing shadowmaps of all spot lights (using only one texture unit for all spotlights!)
         static GLuint spotShadowSampler;
@@ -151,9 +151,9 @@ namespace sf
         static OpenGLCamera* activeView;
         
     private:
-        glm::vec3 pos;
-        glm::vec3 tempPos;
-		GLfloat R;
+        glm::vec3 pos_;
+        glm::vec3 tempPos_;
+		GLfloat R_;
     };
 }
 

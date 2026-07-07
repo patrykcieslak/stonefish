@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 23/03/2014.
-//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Sample__
@@ -40,14 +40,14 @@ namespace sf
          \param invalid a flag to mark if it is and invalid output
          \param index a number specifying the id of the sample
          */
-        Sample(const std::vector<Scalar>& data, bool invalid = false, uint64_t index = 0);
+        Sample(const std::vector<Scalar>& data, bool invalid = false, size_t index = 0);
         
         //! A copy constructor.
         /*!
          \param other a reference to a sample object
          \param index a number specifying the id of the sample
          */
-        Sample(const Sample& other, uint64_t index = 0);
+        Sample(const Sample& other, size_t index = 0);
         
         //! A method returning the timestamp of the sample.
         Scalar getTimestamp() const;
@@ -69,12 +69,12 @@ namespace sf
         Scalar* getDataPointer();
 
         //! A method returning the id of the sample.
-        uint64_t getId() const;
+        size_t getId() const;
         
     private:
-        Scalar timestamp;
-        std::vector<Scalar> data;
-        uint64_t id;
+        Scalar timestamp_;
+        std::vector<Scalar> data_;
+        size_t id_;
     };
 }
 

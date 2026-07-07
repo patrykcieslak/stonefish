@@ -36,43 +36,43 @@ namespace sf
 OpticalFlowCamera::OpticalFlowCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency, 
     Scalar minDistance, Scalar maxDistance) : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
 {
-    depthRange = glm::vec2((GLfloat)minDistance, (GLfloat)maxDistance);
-    noiseStdDev = glm::vec2(0.f);
-    displayMaxVelocity = resolutionX/2.f;
-    newDataCallback = nullptr;
-    flowData = nullptr;
-    displayData = nullptr;
-    glCamera = nullptr;
+    depthRange_ = glm::vec2((GLfloat)minDistance, (GLfloat)maxDistance);
+    noiseStdDev_ = glm::vec2(0.f);
+    displayMaxVelocity_ = resolutionX/2.f;
+    newDataCallback_ = nullptr;
+    flowData_ = nullptr;
+    displayData_ = nullptr;
+    glCamera_ = nullptr;
 }
 
 OpticalFlowCamera::~OpticalFlowCamera()
 {
-    glCamera = nullptr;
+    glCamera_ = nullptr;
 }
 
 void OpticalFlowCamera::setNoise(float velocityXStdDev, float velocityYStdDev)
 {
-    noiseStdDev.x = velocityXStdDev > 0.f ? velocityXStdDev : 0.f;
-    noiseStdDev.y = velocityYStdDev > 0.f ? velocityYStdDev : 0.f;
-    if(glCamera != nullptr)
-        glCamera->setNoise(noiseStdDev);
+    noiseStdDev_.x = velocityXStdDev > 0.f ? velocityXStdDev : 0.f;
+    noiseStdDev_.y = velocityYStdDev > 0.f ? velocityYStdDev : 0.f;
+    if(glCamera_ != nullptr)
+        glCamera_->setNoise(noiseStdDev_);
 }
 
 void OpticalFlowCamera::setDisplaySettings(GLfloat maxVelocity)
 {
-    displayMaxVelocity = glm::abs(maxVelocity);
-    if(glCamera != nullptr)
-        glCamera->setMaxVelocity(displayMaxVelocity);
+    displayMaxVelocity_ = glm::abs(maxVelocity);
+    if(glCamera_ != nullptr)
+        glCamera_->setMaxVelocity(displayMaxVelocity_);
 }
 
 void* OpticalFlowCamera::getImageDataPointer(unsigned int index)
 {
-    return flowData;
+    return flowData_;
 }
 
 GLubyte* OpticalFlowCamera::getDisplayDataPointer()
 {
-    return displayData;
+    return displayData_;
 }
 
 VisionSensorType OpticalFlowCamera::getVisionSensorType() const
@@ -82,25 +82,25 @@ VisionSensorType OpticalFlowCamera::getVisionSensorType() const
 
 OpenGLView* OpticalFlowCamera::getOpenGLView() const
 {
-    return glCamera;
+    return glCamera_;
 }
 
 void OpticalFlowCamera::InitGraphics(bool& seesParticles)
 {
     seesParticles = false;
 
-    glCamera = new OpenGLOpticalFlowCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, depthRange, freq < Scalar(0));
-    glCamera->setNoise(noiseStdDev);
-    glCamera->setMaxVelocity(displayMaxVelocity);
-    glCamera->setCamera(this);
+    glCamera_ = new OpenGLOpticalFlowCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX_, resY_, (GLfloat)fovH_, depthRange_, freq_ < Scalar(0));
+    glCamera_->setNoise(noiseStdDev_);
+    glCamera_->setMaxVelocity(displayMaxVelocity_);
+    glCamera_->setCamera(this);
     UpdateTransform();
-    glCamera->UpdateTransform();
+    glCamera_->UpdateTransform();
     InternalUpdate(0);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera_);
 
     unsigned int w, h;
     getResolution(w, h);
-    displayData = new GLubyte[w*h*3];
+    displayData_ = new GLubyte[w*h*3];
 }
 
 void OpticalFlowCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
@@ -108,36 +108,36 @@ void OpticalFlowCamera::SetupCamera(const Vector3& eye, const Vector3& dir, cons
     glm::vec3 eye_ = glm::vec3((GLfloat)eye.x(), (GLfloat)eye.y(), (GLfloat)eye.z());
     glm::vec3 dir_ = glm::vec3((GLfloat)dir.x(), (GLfloat)dir.y(), (GLfloat)dir.z());
     glm::vec3 up_ = glm::vec3((GLfloat)up.x(), (GLfloat)up.y(), (GLfloat)up.z());
-    glCamera->SetupCamera(eye_, dir_, up_);
+    glCamera_->SetupCamera(eye_, dir_, up_);
 }
 
 void OpticalFlowCamera::InstallNewDataHandler(std::function<void(OpticalFlowCamera*)> callback)
 {
-    newDataCallback = callback;
+    newDataCallback_ = callback;
 }
 
 void OpticalFlowCamera::NewDataReady(void* data, unsigned int index)
 {
-    if(newDataCallback != nullptr)
+    if(newDataCallback_ != nullptr)
     {
         if(index == 0)
         {
             unsigned int w, h;
             getResolution(w, h);
-            memcpy(displayData, data, w*h*3);
+            memcpy(displayData_, data, w*h*3);
         }
         else
         {
-            flowData = (GLfloat*)data;
-            newDataCallback(this);
-            flowData = nullptr;
+            flowData_ = (GLfloat*)data;
+            newDataCallback_(this);
+            flowData_ = nullptr;
         }
     }
 }
 
 void OpticalFlowCamera::InternalUpdate(Scalar dt)
 {
-    glCamera->Update();
+    glCamera_->Update();
 }
 
 }

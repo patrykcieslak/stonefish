@@ -36,10 +36,10 @@ namespace sf
 
 GPS::GPS(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    channels.push_back(SensorChannel("Latitude", QuantityType::ANGLE));
-    channels.push_back(SensorChannel("Longitude", QuantityType::ANGLE));
-    channels.push_back(SensorChannel("North", QuantityType::LENGTH));
-    channels.push_back(SensorChannel("East", QuantityType::LENGTH));
+    channels_.push_back(SensorChannel("Latitude", QuantityType::ANGLE));
+    channels_.push_back(SensorChannel("Longitude", QuantityType::ANGLE));
+    channels_.push_back(SensorChannel("North", QuantityType::LENGTH));
+    channels_.push_back(SensorChannel("East", QuantityType::LENGTH));
     setNoise(Scalar(0));
 }
 
@@ -60,10 +60,10 @@ void GPS::InternalUpdate(Scalar dt)
         Vector3 gpsPos = gpsTrans.getOrigin();
 		
         //add noise
-        if(!btFuzzyZero(nedStdDev))
+        if(!btFuzzyZero(nedStdDev_))
         {
-            gpsPos.setX(gpsPos.x() + noise(randomGenerator));
-            gpsPos.setY(gpsPos.y() + noise(randomGenerator));
+            gpsPos.setX(gpsPos.x() + noise_(randomGenerator));
+            gpsPos.setY(gpsPos.y() + noise_(randomGenerator));
         }
         
         //convert NED to geodetic coordinates
@@ -80,13 +80,13 @@ void GPS::InternalUpdate(Scalar dt)
 
 void GPS::setNoise(Scalar nedDev)
 {
-    nedStdDev = btClamped(nedDev, Scalar(0), Scalar(BT_LARGE_FLOAT));
-    noise = std::normal_distribution<Scalar>(Scalar(0), nedStdDev);
+    nedStdDev_ = btClamped(nedDev, Scalar(0), Scalar(BT_LARGE_FLOAT));
+    noise_ = std::normal_distribution<Scalar>(Scalar(0), nedStdDev_);
 }
 
 Scalar GPS::getNoise() const
 {
-    return nedStdDev;
+    return nedStdDev_;
 }
 
 ScalarSensorType GPS::getScalarSensorType() const

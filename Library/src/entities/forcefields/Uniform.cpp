@@ -40,24 +40,24 @@ VelocityFieldType Uniform::getType() const
 
 void Uniform::setVelocity(const Vector3& x)
 {
-    v = x;
+    v_ = x;
 }
 
 Vector3 Uniform::getVelocity() const
 {
-    return v;
+    return v_;
 }
 
 Vector3 Uniform::GetVelocityAtPoint(const Vector3& p) const
 {    
-    return v;
+    return v_;
 }
 
 std::vector<Renderable> Uniform::Render(VelocityFieldUBO& ubo)
 {
     std::vector<Renderable> items(0);
-    Scalar vel = v.length();
-    Vector3 dir = vel > Scalar(0) ? (v/vel) : Vector3(0,0,0);
+    Scalar vel = v_.length();
+    Vector3 dir = vel > Scalar(0) ? (v_/vel) : Vector3(0,0,0);
     ubo.posR = glm::vec4(0.f);
     ubo.dirV = glm::vec4((GLfloat)dir.getX(), (GLfloat)dir.getY(), (GLfloat)dir.getZ(), (GLfloat)vel);
     ubo.params= glm::vec3(0.f);

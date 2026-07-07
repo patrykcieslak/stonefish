@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 26/05/24.
-//  Copyright (c) 2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_ThermalCamera__
@@ -115,15 +115,15 @@ namespace sf
     private:
         void InitGraphics(bool& seesParticles);
         
-        OpenGLThermalCamera* glCamera;
-        GLfloat* temperatureData;
-        GLubyte* displayData;
-        glm::vec2 depthRange;
-        GLfloat noiseStdDev;
-        glm::vec2 measurementRange;
-        ColorMap colorMap;
-        glm::vec2 displayRange;
-        std::function<void(ThermalCamera*)> newDataCallback;
+        OpenGLThermalCamera* glCamera_;
+        GLfloat* temperatureData_;
+        GLubyte* displayData_;
+        glm::vec2 depthRange_;
+        GLfloat noiseStdDev_;
+        glm::vec2 measurementRange_;
+        ColorMap colorMap_;
+        glm::vec2 displayRange_;
+        std::function<void(ThermalCamera*)> newDataCallback_;
     };
 }
 

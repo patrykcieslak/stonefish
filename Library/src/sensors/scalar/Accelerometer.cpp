@@ -35,9 +35,9 @@ namespace sf
 
 Accelerometer::Accelerometer(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    channels.push_back(SensorChannel("Linear Acceleration X", QuantityType::ACCELERATION));
-    channels.push_back(SensorChannel("Linear Acceleration Y", QuantityType::ACCELERATION));
-    channels.push_back(SensorChannel("Linear Acceleration Z", QuantityType::ACCELERATION));
+    channels_.push_back(SensorChannel("Linear Acceleration X", QuantityType::ACCELERATION));
+    channels_.push_back(SensorChannel("Linear Acceleration Y", QuantityType::ACCELERATION));
+    channels_.push_back(SensorChannel("Linear Acceleration Z", QuantityType::ACCELERATION));
 }
 
 void Accelerometer::InternalUpdate(Scalar dt)
@@ -46,11 +46,11 @@ void Accelerometer::InternalUpdate(Scalar dt)
     Transform accTrans = getSensorFrame();
     
     // Get acceleration
-    Vector3 R = accTrans.getOrigin() - attach->getCGTransform().getOrigin();
+    Vector3 R = accTrans.getOrigin() - attach_->getCGTransform().getOrigin();
     Vector3 la = accTrans.getBasis().inverse() * (
-                                                attach->getLinearAcceleration() 
-                                                + attach->getAngularAcceleration().cross(R)
-                                                + attach->getAngularVelocity().cross(attach->getAngularVelocity().cross(R))
+                                                attach_->getLinearAcceleration() 
+                                                + attach_->getAngularAcceleration().cross(R)
+                                                + attach_->getAngularVelocity().cross(attach_->getAngularVelocity().cross(R))
                                                 - SimulationApp::getApp()->getSimulationManager()->getGravity()
                                                 );
     
@@ -61,19 +61,19 @@ void Accelerometer::InternalUpdate(Scalar dt)
 
 void Accelerometer::setRange(Vector3 linearAccelerationMax)
 {
-    channels[0].rangeMin = -btClamped(linearAccelerationMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[1].rangeMin = -btClamped(linearAccelerationMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[2].rangeMin = -btClamped(linearAccelerationMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[0].rangeMax = btClamped(linearAccelerationMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[1].rangeMax = btClamped(linearAccelerationMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[2].rangeMax = btClamped(linearAccelerationMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[0].rangeMin = -btClamped(linearAccelerationMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[1].rangeMin = -btClamped(linearAccelerationMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[2].rangeMin = -btClamped(linearAccelerationMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[0].rangeMax = btClamped(linearAccelerationMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[1].rangeMax = btClamped(linearAccelerationMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[2].rangeMax = btClamped(linearAccelerationMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
     
 void Accelerometer::setNoise(Vector3 linearAccelerationStdDev)
 {
-    channels[0].setStdDev(btClamped(linearAccelerationStdDev.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels[1].setStdDev(btClamped(linearAccelerationStdDev.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels[2].setStdDev(btClamped(linearAccelerationStdDev.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[0].setStdDev(btClamped(linearAccelerationStdDev.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[1].setStdDev(btClamped(linearAccelerationStdDev.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[2].setStdDev(btClamped(linearAccelerationStdDev.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
 
 ScalarSensorType Accelerometer::getScalarSensorType() const

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 18/05/2014.
-//  Copyright (c) 2014-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_GLSLShader__
@@ -282,10 +282,10 @@ namespace sf
         bool GetAttribute(std::string name, ParameterType type, GLint& index);
         bool GetUniform(std::string name, ParameterType type, GLint& location);
         
-        std::vector<GLSLAttribute> attributes;
-        std::vector<GLSLUniform> uniforms;
-        GLuint program;
-        bool valid;
+        std::vector<GLSLAttribute> attributes_;
+        std::vector<GLSLUniform> uniforms_;
+        GLuint program_;
+        bool valid_;
         
         static GLuint saqVertexShader;
         static bool verbose;

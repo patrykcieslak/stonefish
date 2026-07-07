@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/12/12.
-//  Copyright (c) 2012-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLRealCamera__
@@ -105,20 +105,20 @@ namespace sf
         bool needsUpdate() override;
         
     private:
-        ColorCamera* camera;
-        GLuint cameraFBO;
-        GLuint cameraColorTex[2];
-        GLuint cameraPBO;
+        ColorCamera* camera_;
+        GLuint cameraFBO_;
+        GLuint cameraColorTex_[2];
+        GLuint cameraPBO_;
         
-        glm::mat4 cameraTransform;
-        glm::vec3 eye;
-        glm::vec3 dir;
-        glm::vec3 up;
-        glm::vec3 tempEye;
-        glm::vec3 tempDir;
-        glm::vec3 tempUp;
-        bool _needsUpdate;
-        bool newData;
+        glm::mat4 cameraTransform_;
+        glm::vec3 eye_;
+        glm::vec3 dir_;
+        glm::vec3 up_;
+        glm::vec3 tempEye_;
+        glm::vec3 tempDir_;
+        glm::vec3 tempUp_;
+        bool needsUpdate_;
+        bool newData_;
     };
 }
 

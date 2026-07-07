@@ -41,81 +41,81 @@ GLSLShader* OpenGLEventBasedCamera::eventVisualizeShader = nullptr;
 OpenGLEventBasedCamera::OpenGLEventBasedCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
                                    GLint x, GLint y, GLint width, GLint height, GLfloat horizontalFovDeg, 
                                    glm::vec2 range, glm::vec2 C, uint32_t Tr, bool continuousUpdate) 
-                                   : OpenGLCamera(x, y, width, height, range), randDist(0.f, 1.f)
+                                   : OpenGLCamera(x, y, width, height, range), randDist_(0.f, 1.f)
 {  
-    _needsUpdate = false;
-    newData = false;
-    initialized = false;
-    lastSimTime = -1.f;
-    continuous = continuousUpdate;
-    camera = nullptr;
+    needsUpdate_ = false;
+    newData_ = false;
+    initialized_ = false;
+    lastSimTime_ = -1.f;
+    continuous_ = continuousUpdate;
+    camera_ = nullptr;
     C_ = C;
     Tr_ = Tr;
     sigmaC_ = glm::vec2(0.f);
     
     // Allocate necessary textures
     // --> Logarithm of luminance
-    renderLogLumTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+    renderLogLumTex_ = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_, viewportHeight_, 0), 
                                                      GL_R32F, GL_RED, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
     // --> Events (R -> pos x | pos y in px, G -> timestamp in ns, with polarization)
-    maxNumEvents = viewportWidth * viewportHeight * 10;
+    maxNumEvents_ = viewportWidth_ * viewportHeight_ * 10;
     glm::uvec3 maxTextureSize = OpenGLState::GetMaxTextureSize();
     glm::uvec3 eventsTextureSize;
-    if(maxNumEvents > maxTextureSize.x)
+    if(maxNumEvents_ > maxTextureSize.x)
     {
         eventsTextureSize.x = maxTextureSize.x;
-        eventsTextureSize.y = maxNumEvents/maxTextureSize.x + 1;
+        eventsTextureSize.y = maxNumEvents_/maxTextureSize.x + 1;
         eventsTextureSize.z = 0;
-        maxNumEvents = eventsTextureSize.x * eventsTextureSize.y;
+        maxNumEvents_ = eventsTextureSize.x * eventsTextureSize.y;
     }
     else
     {
-        eventsTextureSize.x = maxNumEvents;
+        eventsTextureSize.x = maxNumEvents_;
         eventsTextureSize.y = 1;
         eventsTextureSize.z = 0;
     }
-    renderEventTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, eventsTextureSize, 
+    renderEventTex_[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, eventsTextureSize, 
                                                      GL_RG32I, GL_RG_INTEGER, GL_INT, NULL, FilteringMode::NEAREST, false);
     // --> Last event timestamp (in ns, with polarization)
-    renderEventTex[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+    renderEventTex_[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_, viewportHeight_, 0), 
                                                      GL_R32I, GL_RED_INTEGER, GL_INT, NULL, FilteringMode::NEAREST, false);
     // --> Crossings
-    renderEventTex[2] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+    renderEventTex_[2] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_, viewportHeight_, 0), 
                                                      GL_R32F, GL_RED, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
     // Allocate buffer to store the event counter
     GLuint zero = 0;
-    glGenBuffers(1, &renderEventCounter);
-    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, renderEventCounter); 
+    glGenBuffers(1, &renderEventCounter_);
+    glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, renderEventCounter_); 
 	glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), &zero, GL_STREAM_READ);
 	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
 
     // Event display
-    displayTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+    displayTex_ = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_, viewportHeight_, 0), 
                                                      GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE, NULL, FilteringMode::BILINEAR, false);
     std::vector<FBOTexture> fboTextures;
-    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, displayTex));
-    displayFBO = OpenGLContent::GenerateFramebuffer(fboTextures);
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, displayTex_));
+    displayFBO_ = OpenGLContent::GenerateFramebuffer(fboTextures);
                                                      
     // Setup view
     SetupCamera(eyePosition, direction, cameraUp);
     // Setup projection
-    fovx = horizontalFovDeg/180.f * M_PI;
-    GLfloat fovy = 2.f * atanf( (GLfloat)viewportHeight/(GLfloat)viewportWidth * tanf(fovx/2.f) );
-    projection = glm::perspectiveFov(fovy, (GLfloat)viewportWidth, (GLfloat)viewportHeight, near, far);
+    fovx_ = horizontalFovDeg/180.f * M_PI;
+    GLfloat fovy = 2.f * atanf( (GLfloat)viewportHeight_/(GLfloat)viewportWidth_ * tanf(fovx_/2.f) );
+    projection_ = glm::perspectiveFov(fovy, (GLfloat)viewportWidth_, (GLfloat)viewportHeight_, near_, far_);
 
     UpdateTransform();
 }
 
 OpenGLEventBasedCamera::~OpenGLEventBasedCamera()
 {
-    glDeleteTextures(1, &renderLogLumTex);
-    glDeleteTextures(3, renderEventTex);
-    glDeleteBuffers(1, &renderEventCounter);
-    glDeleteFramebuffers(1, &displayFBO);
-    glDeleteTextures(1, &displayTex);
+    glDeleteTextures(1, &renderLogLumTex_);
+    glDeleteTextures(3, renderEventTex_);
+    glDeleteBuffers(1, &renderEventCounter_);
+    glDeleteFramebuffers(1, &displayFBO_);
+    glDeleteTextures(1, &displayTex_);
 
-    if(camera != nullptr)
-        glDeleteBuffers(1, &outputPBO);    
+    if(camera_ != nullptr)
+        glDeleteBuffers(1, &outputPBO_);    
 }
 
 ViewType OpenGLEventBasedCamera::getType() const
@@ -125,15 +125,15 @@ ViewType OpenGLEventBasedCamera::getType() const
 
 void OpenGLEventBasedCamera::Update()
 {
-    _needsUpdate = true;
+    needsUpdate_ = true;
 }
 
 bool OpenGLEventBasedCamera::needsUpdate()
 {
-    if(_needsUpdate)
+    if(needsUpdate_)
     {
-        _needsUpdate = false;
-        return enabled;
+        needsUpdate_ = false;
+        return enabled_;
     }
     else
         return false;
@@ -142,10 +142,10 @@ bool OpenGLEventBasedCamera::needsUpdate()
 void OpenGLEventBasedCamera::setCamera(EventBasedCamera* cam)
 {
     //Connect with camera sensor
-    camera = cam;    
-    glGenBuffers(1, &outputPBO);
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO);
-    glBufferData(GL_PIXEL_PACK_BUFFER, maxNumEvents * 2 * sizeof(GLint), 0, GL_STREAM_READ);
+    camera_ = cam;    
+    glGenBuffers(1, &outputPBO_);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO_);
+    glBufferData(GL_PIXEL_PACK_BUFFER, maxNumEvents_ * 2 * sizeof(GLint), 0, GL_STREAM_READ);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 }
 
@@ -156,108 +156,108 @@ void OpenGLEventBasedCamera::setNoise(glm::vec2 sigmaC)
 
 glm::vec3 OpenGLEventBasedCamera::GetEyePosition() const
 {
-    return eye;
+    return eye_;
 }
 
 glm::vec3 OpenGLEventBasedCamera::GetLookingDirection() const
 {
-    return dir;
+    return dir_;
 }
 
 glm::vec3 OpenGLEventBasedCamera::GetUpDirection() const
 {
-    return up;
+    return up_;
 }
 
 void OpenGLEventBasedCamera::SetupCamera(glm::vec3 _eye, glm::vec3 _dir, glm::vec3 _up)
 {
-    tempDir = _dir;
-    tempEye = _eye;
-    tempUp = _up;
+    tempDir_ = _dir;
+    tempEye_ = _eye;
+    tempUp_ = _up;
 }
 
 void OpenGLEventBasedCamera::UpdateTransform()
 {
-    eye = tempEye;
-    dir = tempDir;
-    up = tempUp;
+    eye_ = tempEye_;
+    dir_ = tempDir_;
+    up_ = tempUp_;
     SetupCamera();
     
-    viewUBOData.VP = GetProjectionMatrix() * GetViewMatrix();
-    viewUBOData.eye = GetEyePosition();
-    ExtractFrustumFromVP(viewUBOData.frustum, viewUBOData.VP);
+    viewUBOData_.VP = GetProjectionMatrix() * GetViewMatrix();
+    viewUBOData_.eye = GetEyePosition();
+    ExtractFrustumFromVP(viewUBOData_.frustum, viewUBOData_.VP);
 
     //Inform camera to run callback
-    if(newData)
+    if(newData_)
     {
-        glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, renderEventCounter);
+        glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, renderEventCounter_);
         GLuint* pEventCounter = (GLuint*)glMapBuffer(GL_ATOMIC_COUNTER_BUFFER, GL_READ_ONLY);
         GLuint lastEventCount = *pEventCounter;
         glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
         glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
         
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO_);
         GLint* src = (GLint*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
         if(src)
         {
-            camera->NewDataReady(src, lastEventCount);
+            camera_->NewDataReady(src, lastEventCount);
             glUnmapBuffer(GL_PIXEL_PACK_BUFFER); //Release pointer to the mapped buffer
         }
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-        newData = false;
+        newData_ = false;
     }
 }
 
 void OpenGLEventBasedCamera::SetupCamera()
 {
-    cameraTransform = glm::lookAt(eye, eye+dir, up);
+    cameraTransform_ = glm::lookAt(eye_, eye_+dir_, up_);
 }
 
 glm::mat4 OpenGLEventBasedCamera::GetViewMatrix() const
 {
-    return cameraTransform;
+    return cameraTransform_;
 }
 
 void OpenGLEventBasedCamera::ComputeOutput(double simTime)
 {
-    if(initialized)
+    if(initialized_)
     {
         // Reset event counter
         GLuint zero = 0;
-        glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, renderEventCounter);
+        glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, renderEventCounter_);
         glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &zero);
         glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
 
         // Compute events
-        glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, renderEventCounter);
-        glBindImageTexture(TEX_POSTPROCESS1, renderColorTex[lastActiveRenderColorBuffer], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
-        glBindImageTexture(TEX_POSTPROCESS2, renderLogLumTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
-        glBindImageTexture(TEX_POSTPROCESS3, renderEventTex[0], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32I);
-        glBindImageTexture(TEX_POSTPROCESS4, renderEventTex[1], 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32I);
-        glBindImageTexture(TEX_POSTPROCESS5, renderEventTex[2], 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+        glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, renderEventCounter_);
+        glBindImageTexture(TEX_POSTPROCESS1, renderColorTex_[lastActiveRenderColorBuffer_], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+        glBindImageTexture(TEX_POSTPROCESS2, renderLogLumTex_, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+        glBindImageTexture(TEX_POSTPROCESS3, renderEventTex_[0], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RG32I);
+        glBindImageTexture(TEX_POSTPROCESS4, renderEventTex_[1], 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32I);
+        glBindImageTexture(TEX_POSTPROCESS5, renderEventTex_[2], 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
         eventOutputShaders[1]->Use();
         eventOutputShaders[1]->SetUniform("currColor", TEX_POSTPROCESS1);
         eventOutputShaders[1]->SetUniform("logLum", TEX_POSTPROCESS2);
         eventOutputShaders[1]->SetUniform("events", TEX_POSTPROCESS3);
         eventOutputShaders[1]->SetUniform("eventTimes", TEX_POSTPROCESS4);
         eventOutputShaders[1]->SetUniform("crossings", TEX_POSTPROCESS5);
-        Scalar dt = simTime - lastSimTime;
+        Scalar dt = simTime - lastSimTime_;
         eventOutputShaders[1]->SetUniform("dT", (int32_t)round(dt*1e9));
         eventOutputShaders[1]->SetUniform("Tr", Tr_);
         eventOutputShaders[1]->SetUniform("C", C_);
         eventOutputShaders[1]->SetUniform("sigmaC", sigmaC_);
-        eventOutputShaders[1]->SetUniform("seed", glm::vec3(randDist(randGen), randDist(randGen), randDist(randGen)));
+        eventOutputShaders[1]->SetUniform("seed", glm::vec3(randDist_(randGen_), randDist_(randGen_), randDist_(randGen_)));
         glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT);
-        glDispatchCompute((GLuint)ceilf(viewportWidth/16.f), (GLuint)ceilf(viewportHeight/16.f), 1);
+        glDispatchCompute((GLuint)ceilf(viewportWidth_/16.f), (GLuint)ceilf(viewportHeight_/16.f), 1);
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_ATOMIC_COUNTER_BARRIER_BIT);
     }
     else
     {
         // Compute logarithm of luminance of the first frame (initialization)
-        glBindImageTexture(TEX_POSTPROCESS1, renderColorTex[lastActiveRenderColorBuffer], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
-        glBindImageTexture(TEX_POSTPROCESS2, renderLogLumTex, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
-        glBindImageTexture(TEX_POSTPROCESS4, renderEventTex[1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32I);
-        glBindImageTexture(TEX_POSTPROCESS5, renderEventTex[2], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
+        glBindImageTexture(TEX_POSTPROCESS1, renderColorTex_[lastActiveRenderColorBuffer_], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+        glBindImageTexture(TEX_POSTPROCESS2, renderLogLumTex_, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
+        glBindImageTexture(TEX_POSTPROCESS4, renderEventTex_[1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32I);
+        glBindImageTexture(TEX_POSTPROCESS5, renderEventTex_[2], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
         
         eventOutputShaders[0]->Use();
         eventOutputShaders[0]->SetUniform("currColor", TEX_POSTPROCESS1);
@@ -265,11 +265,11 @@ void OpenGLEventBasedCamera::ComputeOutput(double simTime)
         eventOutputShaders[0]->SetUniform("eventTimes", TEX_POSTPROCESS4);
         eventOutputShaders[0]->SetUniform("crossings", TEX_POSTPROCESS5);
         glMemoryBarrier(GL_FRAMEBUFFER_BARRIER_BIT);
-        glDispatchCompute((GLuint)ceilf(viewportWidth/16.f), (GLuint)ceilf(viewportHeight/16.f), 1); 
+        glDispatchCompute((GLuint)ceilf(viewportWidth_/16.f), (GLuint)ceilf(viewportHeight_/16.f), 1); 
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-        initialized = true;
+        initialized_ = true;
     }
-    lastSimTime = simTime;
+    lastSimTime_ = simTime;
 }
 
 void OpenGLEventBasedCamera::DrawLDR(GLuint destinationFBO, bool updated)
@@ -278,29 +278,29 @@ void OpenGLEventBasedCamera::DrawLDR(GLuint destinationFBO, bool updated)
     bool display = true;
     unsigned int dispX, dispY;
     GLfloat dispScale;
-    if(camera != nullptr)
-        display = camera->getDisplayOnScreen(dispX, dispY, dispScale);
+    if(camera_ != nullptr)
+        display = camera_->getDisplayOnScreen(dispX, dispY, dispScale);
     
     //Draw on screen
     if(display)
     {
         // Draw color image
-        OpenGLCamera::DrawLDR(displayFBO, updated);
+        OpenGLCamera::DrawLDR(displayFBO_, updated);
 
         // Overlay event information
         OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
         int windowHeight = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowHeight();
         int windowWidth = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowWidth();
         
-        glm::vec4 rect((GLfloat)dispX, (GLfloat)dispY, viewportWidth*dispScale, viewportHeight*dispScale);
+        glm::vec4 rect((GLfloat)dispX, (GLfloat)dispY, viewportWidth_*dispScale, viewportHeight_*dispScale);
         rect.y = windowHeight-rect.y-rect.w;
         rect.x /= windowWidth;
         rect.y /= windowHeight;
         rect.z /= windowWidth;
         rect.w /= windowHeight;
 
-        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, displayTex);
-        OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, renderEventTex[1]);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, displayTex_);
+        OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, renderEventTex_[1]);
         
         OpenGLState::BindFramebuffer(destinationFBO);
         content->SetViewportSize(windowWidth, windowHeight);
@@ -322,14 +322,14 @@ void OpenGLEventBasedCamera::DrawLDR(GLuint destinationFBO, bool updated)
     }
     
     //Copy data to camera buffer
-    if(camera != nullptr && updated)
+    if(camera_ != nullptr && updated)
     {
-        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderEventTex[0]);
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderEventTex_[0]);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO_);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RG_INTEGER, GL_INT, NULL);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
         OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
-        newData = true;
+        newData_ = true;
     }
 }
 

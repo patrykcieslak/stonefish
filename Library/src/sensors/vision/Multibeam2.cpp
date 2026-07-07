@@ -36,47 +36,47 @@ namespace sf
 Multibeam2::Multibeam2(std::string uniqueName, unsigned int horizontalRes, unsigned int verticalRes, Scalar horizontalFOVDeg, Scalar verticalFOVDeg,
                        Scalar minRange, Scalar maxRange, Scalar frequency) : Camera(uniqueName, horizontalRes, verticalRes, horizontalFOVDeg, frequency)
 {
-    fovV = verticalFOVDeg > Scalar(0) ? verticalFOVDeg : Scalar(90);
-    range.x = minRange < Scalar(0.01) ? 0.01f : (GLfloat)minRange;
-    range.y = maxRange > Scalar(0.01) ? (GLfloat)maxRange : 1.f;
-    newDataCallback = NULL;
-    dataCounter = 0;
-    imageData = new GLfloat[resX*resY]; // Buffer for storing image data
-    memset(imageData, 0, resX*resY*sizeof(GLfloat));
-    rangeData = new GLfloat[resX*resY]; // Buffer for storing final data
-    memset(rangeData, 0, resX*resY*sizeof(GLfloat));
+    fovV_ = verticalFOVDeg > Scalar(0) ? verticalFOVDeg : Scalar(90);
+    range_.x = minRange < Scalar(0.01) ? 0.01f : (GLfloat)minRange;
+    range_.y = maxRange > Scalar(0.01) ? (GLfloat)maxRange : 1.f;
+    newDataCallback_ = NULL;
+    dataCounter_ = 0;
+    imageData_ = new GLfloat[resX_*resY_]; // Buffer for storing image data
+    memset(imageData_, 0, resX_*resY_*sizeof(GLfloat));
+    rangeData_ = new GLfloat[resX_*resY_]; // Buffer for storing final data
+    memset(rangeData_, 0, resX_*resY_*sizeof(GLfloat));
 }
 
 Multibeam2::~Multibeam2()
 {
-    if(imageData != NULL)
-        delete [] imageData;
-    if(rangeData != NULL)
-        delete [] rangeData;
-    cameras.clear();
+    if(imageData_ != NULL)
+        delete [] imageData_;
+    if(rangeData_ != NULL)
+        delete [] rangeData_;
+    cameras_.clear();
 }
     
 void* Multibeam2::getImageDataPointer(unsigned int index)
 {
-    if(cameras.size() > index)
-        return &imageData[cameras[index].dataOffset];
+    if(cameras_.size() > index)
+        return &imageData_[cameras_[index].dataOffset];
     else
         return NULL;
 }
     
 float* Multibeam2::getRangeDataPointer()
 {
-    return rangeData;
+    return rangeData_;
 }
     
 glm::vec2 Multibeam2::getRangeLimits() const
 {
-    return range;
+    return range_;
 }
 
 Scalar Multibeam2::getVerticalFOV() const
 {
-    return fovV;
+    return fovV_;
 }
 
 VisionSensorType Multibeam2::getVisionSensorType() const
@@ -86,8 +86,8 @@ VisionSensorType Multibeam2::getVisionSensorType() const
 
 OpenGLView* Multibeam2::getOpenGLView() const
 {
-    if(cameras.size() > 0)
-        return cameras[0].cam;
+    if(cameras_.size() > 0)
+        return cameras_[0].cam;
     else
         return nullptr;
 }
@@ -96,23 +96,23 @@ void Multibeam2::InitGraphics(bool& seesParticles)
 {
     seesParticles = false;
 
-    if(fovH <= Scalar(MULTIBEAM_MAX_SINGLE_FOV))
+    if(fovH_ <= Scalar(MULTIBEAM_MAX_SINGLE_FOV))
     {
         CamData cd;
         cd.cam = NULL;
-        cd.fovH = (GLfloat)fovH;
-        cd.width = resX;
+        cd.fovH = (GLfloat)fovH_;
+        cd.width = resX_;
         cd.dataOffset = 0;
-        cameras.push_back(cd);
+        cameras_.push_back(cd);
     }
     else
     {
         //Find number of cameras needed not to exceed max FOV for a single camera
-        int nCam = (int)ceil(fovH/Scalar(MULTIBEAM_MAX_SINGLE_FOV));
-        Scalar fovH1 = fovH/Scalar(nCam);
+        int nCam = (int)ceil(fovH_/Scalar(MULTIBEAM_MAX_SINGLE_FOV));
+        Scalar fovH1 = fovH_/Scalar(nCam);
         
         //Check if resolution in X can be divided evenly for this number of cameras
-        int resmod = resX % nCam;
+        int resmod = resX_ % nCam;
         if(resmod == 0)
         {
             for(int i=0; i<nCam; ++i)
@@ -120,17 +120,17 @@ void Multibeam2::InitGraphics(bool& seesParticles)
                 CamData cd;
                 cd.cam = NULL;
                 cd.fovH = (GLfloat)fovH1;
-                cd.width = resX/nCam;
+                cd.width = resX_/nCam;
                 cd.dataOffset = 0;
-                cameras.push_back(cd);
+                cameras_.push_back(cd);
             }
         }
         else
         {
             //Correct FOV and resolution of the cameras
-            int resX1 = resX/nCam;
+            int resX1 = resX_/nCam;
             int resXc = resX1 + resmod;
-            Scalar fovHc = fovH/(Scalar(1) + (nCam-1)*Scalar(resX1)/Scalar(resXc));
+            Scalar fovHc = fovH_/(Scalar(1) + (nCam-1)*Scalar(resX1)/Scalar(resXc));
             fovH1 = fovHc * Scalar(resX1)/Scalar(resXc);
             
             CamData cd;
@@ -139,40 +139,40 @@ void Multibeam2::InitGraphics(bool& seesParticles)
             
             cd.fovH = (GLfloat)fovHc;
             cd.width = resXc;
-            cameras.push_back(cd);
+            cameras_.push_back(cd);
             
             cd.fovH = (GLfloat)fovH1;
             cd.width = resX1;
-            for(int i=0; i<nCam-1; ++i) cameras.push_back(cd);
+            for(int i=0; i<nCam-1; ++i) cameras_.push_back(cd);
         }
     }
     
     //Create depth cameras
     GLint accResX = 0;
-    for(size_t i=0; i<cameras.size(); ++i)
+    for(size_t i=0; i<cameras_.size(); ++i)
     {
-        cameras[i].cam = new OpenGLDepthCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),
-                                                            accResX, 0, cameras[i].width, resY, cameras[i].fovH, range.x, range.y, true, (GLfloat)fovV);
-        cameras[i].cam->setCamera(this, (unsigned int)i);
-        cameras[i].dataOffset = accResX*resY;
-        accResX += cameras[i].width;
+        cameras_[i].cam = new OpenGLDepthCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),
+                                                            accResX, 0, cameras_[i].width, resY_, cameras_[i].fovH, range_.x, range_.y, true, (GLfloat)fovV_);
+        cameras_[i].cam->setCamera(this, (unsigned int)i);
+        cameras_[i].dataOffset = accResX*resY_;
+        accResX += cameras_[i].width;
     }
     
     //Update camera transformations
     UpdateTransform();
     
-    for(size_t i=0; i<cameras.size(); ++i)
+    for(size_t i=0; i<cameras_.size(); ++i)
     {
-        cameras[i].cam->UpdateTransform();
-        cameras[i].cam->Update();
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(cameras[i].cam);
+        cameras_[i].cam->UpdateTransform();
+        cameras_[i].cam->Update();
+        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(cameras_[i].cam);
     }
 }
 
 void Multibeam2::InternalUpdate(Scalar dt)
 {
-    for(size_t i=0; i<cameras.size(); ++i)
-        cameras[i].cam->Update();
+    for(size_t i=0; i<cameras_.size(); ++i)
+        cameras_[i].cam->Update();
 }
     
 void Multibeam2::UpdateTransform()
@@ -182,12 +182,12 @@ void Multibeam2::UpdateTransform()
     Vector3 direction = mbTransform.getBasis().getColumn(2); //Z
     Vector3 cameraUp = -mbTransform.getBasis().getColumn(1); //-Y
     Scalar accFov(0);
-    Scalar offset = fovH/Scalar(360)*M_PI;
+    Scalar offset = fovH_/Scalar(360)*M_PI;
    
-    for(size_t i=0; i<cameras.size(); ++i)
+    for(size_t i=0; i<cameras_.size(); ++i)
     {
         //Calculate i-th camera transform
-        Scalar halfFov = cameras[i].fovH/Scalar(360)*M_PI;
+        Scalar halfFov = cameras_[i].fovH/Scalar(360)*M_PI;
         Vector3 dir = direction.rotate(cameraUp, offset - accFov - halfFov);
         accFov += Scalar(2)*halfFov;
         
@@ -205,44 +205,44 @@ void Multibeam2::SetupCamera(size_t index, const Vector3& eye, const Vector3& di
     glm::vec3 eye_ = glm::vec3((GLfloat)eye.x(), (GLfloat)eye.y(), (GLfloat)eye.z());
     glm::vec3 dir_ = glm::vec3((GLfloat)dir.x(), (GLfloat)dir.y(), (GLfloat)dir.z());
     glm::vec3 up_ = glm::vec3((GLfloat)up.x(), (GLfloat)up.y(), (GLfloat)up.z());
-    cameras[index].cam->SetupCamera(eye_, dir_, up_);
+    cameras_[index].cam->SetupCamera(eye_, dir_, up_);
 }
     
 void Multibeam2::InstallNewDataHandler(std::function<void(Multibeam2*)> callback)
 {
-    newDataCallback = callback;
+    newDataCallback_ = callback;
 }
     
 void Multibeam2::NewDataReady(void* data, unsigned int index)
 {
-    if(index >= cameras.size())
+    if(index >= cameras_.size())
         return;
 
-    memcpy(getImageDataPointer(index), data, cameras[index].width * resY * sizeof(GLfloat));
-    dataCounter += index;
-    int lastIndex = (int)cameras.size()-1;
+    memcpy(getImageDataPointer(index), data, cameras_[index].width * resY_ * sizeof(GLfloat));
+    dataCounter_ += index;
+    int lastIndex = (int)cameras_.size()-1;
     int nSum = lastIndex*(lastIndex+1)/2;
     
-    if(dataCounter == nSum) //Check if data received from all cameras
+    if(dataCounter_ == nSum) //Check if data received from all cameras
     {
-        dataCounter = 0;
+        dataCounter_ = 0;
         
         //Copy (rearange) data from temp to final sonar image
-        for(size_t i=0; i<cameras.size(); ++i)
+        for(size_t i=0; i<cameras_.size(); ++i)
         {
-            size_t xoffset = cameras[i].dataOffset/resY;
+            size_t xoffset = cameras_[i].dataOffset/resY_;
             
-            for(size_t h=0; h<resY; ++h)
+            for(size_t h=0; h<resY_; ++h)
             {
-                memcpy(&rangeData[xoffset + h*resX],
-                       &imageData[cameras[i].dataOffset + h*cameras[i].width],
-                       sizeof(GLfloat)*cameras[i].width);
+                memcpy(&rangeData_[xoffset + h*resX_],
+                       &imageData_[cameras_[i].dataOffset + h*cameras_[i].width],
+                       sizeof(GLfloat)*cameras_[i].width);
             }
         }
         
         //Call callback
-        if(newDataCallback != NULL)
-            newDataCallback(this);
+        if(newDataCallback_ != NULL)
+            newDataCallback_(this);
     }
 }
     
@@ -257,13 +257,13 @@ std::vector<Renderable> Multibeam2::Render()
         item.data = std::make_shared<std::vector<glm::vec3>>();
         auto points = item.getDataAsPoints();
         
-        unsigned int div = (unsigned int)ceil(fovH/5.0);
+        unsigned int div = (unsigned int)ceil(fovH_/5.0);
         GLfloat iconSize = 0.5f;
-        GLfloat cosFovV2 = cosf(fovV/360.f*M_PI);
-        GLfloat sinFovV2 = sinf(fovV/360.f*M_PI);
+        GLfloat cosFovV2 = cosf(fovV_/360.f*M_PI);
+        GLfloat sinFovV2 = sinf(fovV_/360.f*M_PI);
         GLfloat r = iconSize/cosFovV2;
-        GLfloat thetaDiv = fovH/180.f * M_PI/(GLfloat)div;
-        GLfloat offset = -fovH/360.f * M_PI;
+        GLfloat thetaDiv = fovH_/180.f * M_PI/(GLfloat)div;
+        GLfloat offset = -fovH_/360.f * M_PI;
         GLfloat y = sinFovV2 * r;
         
         for(unsigned int i=0; i<div; ++i)

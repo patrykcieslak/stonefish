@@ -138,14 +138,14 @@ namespace sf
         static void ExtractFrustumFromVP(glm::vec4 frustum[6], const glm::mat4& VP);
         
     protected:
-        GLint originX;
-        GLint originY;
-        GLint viewportWidth;
-        GLint viewportHeight;
-        GLuint renderFBO;
-        bool enabled;
-        bool continuous;
-        ViewUBO viewUBOData;
+        GLint originX_;
+        GLint originY_;
+        GLint viewportWidth_;
+        GLint viewportHeight_;
+        GLuint renderFBO_;
+        bool enabled_;
+        bool continuous_;
+        ViewUBO viewUBOData_;
     };
 }
     

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/29/13.
-//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLTrackball__
@@ -130,19 +130,19 @@ namespace sf
     private:
         GLfloat calculateZ(GLfloat x, GLfloat y);
         
-        MovingEntity* holdingEntity;
+        MovingEntity* holdingEntity_;
         
-        glm::vec3 tempCenter;
-        glm::mat4 trackballTransform;
-        glm::quat rotation;
-        glm::vec3 center;
-        glm::vec3 up;
-        GLfloat radius;
+        glm::vec3 tempCenter_;
+        glm::mat4 trackballTransform_;
+        glm::quat rotation_;
+        glm::vec3 center_;
+        glm::vec3 up_;
+        GLfloat radius_;
         
         //Mouse interaction
-        GLfloat x_start, y_start, z_start;
-        glm::quat rotation_start;
-        glm::vec3 translation_start;
+        GLfloat xStart_, yStart_, zStart_;
+        glm::quat rotationStart_;
+        glm::vec3 translationStart_;
         bool dragging;
         bool transMode;
 

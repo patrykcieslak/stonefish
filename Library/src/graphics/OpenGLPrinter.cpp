@@ -47,9 +47,9 @@ void OpenGLPrinter::SetWindowSize(GLuint width, GLuint height)
 
 OpenGLPrinter::OpenGLPrinter(const std::string& fontPath, GLuint size)
 {
-    initialized = false;
-    fontVBO = 0;
-    nativeFontSize = size;
+    initialized_ = false;
+    fontVBO_ = 0;
+    nativeFontSize_ = size;
     
     FT_Error error = 0;
     FT_Library ft;
@@ -86,7 +86,7 @@ OpenGLPrinter::OpenGLPrinter(const std::string& fontPath, GLuint size)
         if(printShader->isValid())
         {
             //Calculate texture atlas dimensions
-            FT_Set_Pixel_Sizes(face, 0, nativeFontSize);
+            FT_Set_Pixel_Sizes(face, 0, nativeFontSize_);
             
             unsigned int w = 0;
             unsigned int h = 0;
@@ -103,12 +103,12 @@ OpenGLPrinter::OpenGLPrinter(const std::string& fontPath, GLuint size)
                 h = face->glyph->bitmap.rows > h ? face->glyph->bitmap.rows : h;
             }
             
-            texWidth = (GLfloat)w;
-            texHeight = (GLfloat)h;
+            texWidth_ = (GLfloat)w;
+            texHeight_ = (GLfloat)h;
             
             //Create texture
-            glGenTextures(1, &fontTexture);
-            OpenGLState::BindTexture(TEX_GUI1, GL_TEXTURE_2D, fontTexture);
+            glGenTextures(1, &fontTexture_);
+            OpenGLState::BindTexture(TEX_GUI1, GL_TEXTURE_2D, fontTexture_);
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, (GLint)w, (GLint)h, 0, GL_RED, GL_UNSIGNED_BYTE, 0);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -126,10 +126,10 @@ OpenGLPrinter::OpenGLPrinter(const std::string& fontPath, GLuint size)
                 
                 glTexSubImage2D(GL_TEXTURE_2D, 0, x, 0, face->glyph->bitmap.width, face->glyph->bitmap.rows, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
                 
-                chars[i-32] = {glm::vec2((GLfloat)(face->glyph->advance.x >> 6), (GLfloat)(face->glyph->advance.y >> 6)),
+                chars_[i-32] = {glm::vec2((GLfloat)(face->glyph->advance.x >> 6), (GLfloat)(face->glyph->advance.y >> 6)),
                             glm::vec2((GLfloat)face->glyph->bitmap.width, (GLfloat)face->glyph->bitmap.rows),
                             glm::vec2((GLfloat)face->glyph->bitmap_left, (GLfloat)face->glyph->bitmap_top),
-                            (GLfloat)x/texWidth};
+                            (GLfloat)x/texWidth_};
                 
                 x += face->glyph->bitmap.width;
             }
@@ -140,10 +140,10 @@ OpenGLPrinter::OpenGLPrinter(const std::string& fontPath, GLuint size)
             FT_Done_Face(face);
             FT_Done_FreeType(ft);
 
-            glGenBuffers(1, &fontVBO); //Generate VBO for rendering textured quads
+            glGenBuffers(1, &fontVBO_); //Generate VBO for rendering textured quads
             
             //Successfully initialized!
-            initialized = true;
+            initialized_ = true;
         }
     }
 }
@@ -151,16 +151,16 @@ OpenGLPrinter::OpenGLPrinter(const std::string& fontPath, GLuint size)
 OpenGLPrinter::~OpenGLPrinter()
 {
     //Destroy all textures
-    if(fontTexture != 0)
-        glDeleteTextures(1, &fontTexture);
+    if(fontTexture_ != 0)
+        glDeleteTextures(1, &fontTexture_);
         
-    if(fontVBO != 0)
-        glDeleteBuffers(1, &fontVBO);
+    if(fontVBO_ != 0)
+        glDeleteBuffers(1, &fontVBO_);
 }
 
 void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GLuint y, GLfloat size, bool raw)
 {
-    if(!initialized)
+    if(!initialized_)
         return;
     
     struct Point
@@ -175,7 +175,7 @@ void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GL
     
     unsigned int n = 0;
     
-    GLfloat scale = (GLfloat)size/(GLfloat)nativeFontSize;
+    GLfloat scale = (GLfloat)size/(GLfloat)nativeFontSize_;
     GLfloat xf = (GLfloat)x/(GLfloat)windowW * 2.f - 1.f;
     GLfloat yf = (GLfloat)y/(GLfloat)windowH * 2.f - 1.f;
     GLfloat sx = 2.f/(GLfloat)windowW;
@@ -184,12 +184,12 @@ void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GL
     if(raw)
     {
         glActiveTexture(GL_TEXTURE0 + TEX_GUI1);
-        glBindTexture(GL_TEXTURE_2D, fontTexture);
+        glBindTexture(GL_TEXTURE_2D, fontTexture_);
         glUseProgram(printShader->getProgramHandle());
     }
     else
     {
-        OpenGLState::BindTexture(TEX_GUI1, GL_TEXTURE_2D, fontTexture);
+        OpenGLState::BindTexture(TEX_GUI1, GL_TEXTURE_2D, fontTexture_);
         printShader->Use();
     }
     
@@ -199,7 +199,7 @@ void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GL
     const char* ctext = text.c_str();
     for(const char *c = ctext; *c; ++c)
     {
-        Character ch = chars[*c-32];
+        Character ch = chars_[*c-32];
         GLfloat x2 = xf + ch.bearing.x * scale * sx;
         GLfloat y2 = -yf - ch.bearing.y * scale * sy;
         GLfloat w = ch.size.x * scale * sx;
@@ -211,14 +211,14 @@ void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GL
             continue;
         
         coords[n++] = (Point){x2, -y2,     ch.offset, 0};
-        coords[n++] = (Point){x2+w, -y2,   ch.offset + ch.size.x/texWidth, 0};
-        coords[n++] = (Point){x2, -y2-h,   ch.offset, ch.size.y/texHeight};
-        coords[n++] = (Point){x2+w, -y2,   ch.offset + ch.size.x/texWidth, 0};
-        coords[n++] = (Point){x2, -y2-h,   ch.offset, ch.size.y/texHeight};
-        coords[n++] = (Point){x2+w, -y2-h, ch.offset + ch.size.x/texWidth, ch.size.y/texHeight};
+        coords[n++] = (Point){x2+w, -y2,   ch.offset + ch.size.x/texWidth_, 0};
+        coords[n++] = (Point){x2, -y2-h,   ch.offset, ch.size.y/texHeight_};
+        coords[n++] = (Point){x2+w, -y2,   ch.offset + ch.size.x/texWidth_, 0};
+        coords[n++] = (Point){x2, -y2-h,   ch.offset, ch.size.y/texHeight_};
+        coords[n++] = (Point){x2+w, -y2-h, ch.offset + ch.size.x/texWidth_, ch.size.y/texHeight_};
     }
     
-    glBindBuffer(GL_ARRAY_BUFFER, fontVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, fontVBO_);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
     glBufferData(GL_ARRAY_BUFFER, sizeof coords, coords, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -242,13 +242,13 @@ GLuint OpenGLPrinter::TextLength(const std::string& text)
     GLuint length = 0;
     const char* ctext = text.c_str();
     for(const char *c = ctext; *c; ++c)
-        length += chars[*c-32].advance.x + chars[*c-32].bearing.x;
+        length += chars_[*c-32].advance.x + chars_[*c-32].bearing.x;
     return length;
 }
 
 glm::ivec2 OpenGLPrinter::TextDimensions(const std::string& text)
 {
-    return glm::ivec2(TextLength(text), nativeFontSize);
+    return glm::ivec2(TextLength(text), nativeFontSize_);
 }
 
 }

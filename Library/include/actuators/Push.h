@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/07/2023.
-//  Copyright (c) 2023-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2023-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Push__
@@ -68,9 +68,9 @@ namespace sf
     private:
         void WatchdogTimeout() override;
 
-        Scalar setpoint;
-        bool inv;
-        std::pair<Scalar, Scalar> limits;
+        Scalar setpoint_;
+        bool inv_;
+        std::pair<Scalar, Scalar> limits_;
     };
 }
 

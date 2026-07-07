@@ -40,29 +40,29 @@ OpenGLRealCamera::OpenGLRealCamera(glm::vec3 eyePosition, glm::vec3 direction, g
                                    GLfloat horizontalFovDeg, glm::vec2 range, bool continuousUpdate) 
                                    : OpenGLCamera(x, y, width, height, range)
 {
-    _needsUpdate = false;
-    newData = false;
-    continuous = continuousUpdate;
-    camera = NULL;
-    cameraFBO = 0;
+    needsUpdate_ = false;
+    newData_ = false;
+    continuous_ = continuousUpdate;
+    camera_ = NULL;
+    cameraFBO_ = 0;
     
     //Setup view
     SetupCamera(eyePosition, direction, cameraUp);
     //Setup projection
-    fovx = horizontalFovDeg/180.f * M_PI;
-    GLfloat fovy = 2.f * atanf( (GLfloat)viewportHeight/(GLfloat)viewportWidth * tanf(fovx/2.f) );
-    projection = glm::perspectiveFov(fovy, (GLfloat)viewportWidth, (GLfloat)viewportHeight, near, far);
+    fovx_ = horizontalFovDeg/180.f * M_PI;
+    GLfloat fovy = 2.f * atanf( (GLfloat)viewportHeight_/(GLfloat)viewportWidth_ * tanf(fovx_/2.f) );
+    projection_ = glm::perspectiveFov(fovy, (GLfloat)viewportWidth_, (GLfloat)viewportHeight_, near_, far_);
 
     UpdateTransform();
 }
 
 OpenGLRealCamera::~OpenGLRealCamera()
 {
-    if(camera != NULL)
+    if(camera_ != NULL)
     {
-        glDeleteFramebuffers(1, &cameraFBO);
-        glDeleteBuffers(1, &cameraPBO);
-        glDeleteTextures(2, cameraColorTex);
+        glDeleteFramebuffers(1, &cameraFBO_);
+        glDeleteBuffers(1, &cameraPBO_);
+        glDeleteTextures(2, cameraColorTex_);
     }
 }
 
@@ -73,15 +73,15 @@ ViewType OpenGLRealCamera::getType() const
 
 void OpenGLRealCamera::Update()
 {
-    _needsUpdate = true;
+    needsUpdate_ = true;
 }
 
 bool OpenGLRealCamera::needsUpdate()
 {
-    if(_needsUpdate)
+    if(needsUpdate_)
     {
-        _needsUpdate = false;
-        return enabled;
+        needsUpdate_ = false;
+        return enabled_;
     }
     else
         return false;
@@ -90,112 +90,112 @@ bool OpenGLRealCamera::needsUpdate()
 void OpenGLRealCamera::setCamera(ColorCamera* cam)
 {
     //Connect with camera sensor
-    camera = cam;
+    camera_ = cam;
     
     //Generate buffers
-    cameraColorTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3((GLuint)viewportWidth, (GLuint)viewportHeight, 0), 
+    cameraColorTex_[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3((GLuint)viewportWidth_, (GLuint)viewportHeight_, 0), 
                                                        GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE, NULL, sf::FilteringMode::NEAREST, false);
-    cameraColorTex[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3((GLuint)viewportWidth, (GLuint)viewportHeight, 0), 
+    cameraColorTex_[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3((GLuint)viewportWidth_, (GLuint)viewportHeight_, 0), 
                                                        GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE, NULL, sf::FilteringMode::NEAREST, false);
     std::vector<FBOTexture> textures;
-    textures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, cameraColorTex[0]));
-    textures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, cameraColorTex[1]));
-    cameraFBO = OpenGLContent::GenerateFramebuffer(textures);
+    textures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, cameraColorTex_[0]));
+    textures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, cameraColorTex_[1]));
+    cameraFBO_ = OpenGLContent::GenerateFramebuffer(textures);
     
-    glGenBuffers(1, &cameraPBO);
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, cameraPBO);
-    glBufferData(GL_PIXEL_PACK_BUFFER, viewportWidth * viewportHeight * 3, 0, GL_STREAM_READ);
+    glGenBuffers(1, &cameraPBO_);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, cameraPBO_);
+    glBufferData(GL_PIXEL_PACK_BUFFER, viewportWidth_ * viewportHeight_ * 3, 0, GL_STREAM_READ);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 }
 
 glm::vec3 OpenGLRealCamera::GetEyePosition() const
 {
-    return eye;
+    return eye_;
 }
 
 glm::vec3 OpenGLRealCamera::GetLookingDirection() const
 {
-    return dir;
+    return dir_;
 }
 
 glm::vec3 OpenGLRealCamera::GetUpDirection() const
 {
-    return up;
+    return up_;
 }
 
 void OpenGLRealCamera::SetupCamera(glm::vec3 _eye, glm::vec3 _dir, glm::vec3 _up)
 {
-    tempDir = _dir;
-    tempEye = _eye;
-    tempUp = _up;
+    tempDir_ = _dir;
+    tempEye_ = _eye;
+    tempUp_ = _up;
 }
 
 void OpenGLRealCamera::UpdateTransform()
 {
-    eye = tempEye;
-    dir = tempDir;
-    up = tempUp;
+    eye_ = tempEye_;
+    dir_ = tempDir_;
+    up_ = tempUp_;
     SetupCamera();
     
-    viewUBOData.VP = GetProjectionMatrix() * GetViewMatrix();
-    viewUBOData.eye = GetEyePosition();
-    ExtractFrustumFromVP(viewUBOData.frustum, viewUBOData.VP);
+    viewUBOData_.VP = GetProjectionMatrix() * GetViewMatrix();
+    viewUBOData_.eye = GetEyePosition();
+    ExtractFrustumFromVP(viewUBOData_.frustum, viewUBOData_.VP);
 
     //Inform camera to run callback
-    if(newData)
+    if(newData_)
     {
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, cameraPBO);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, cameraPBO_);
         GLubyte* src = (GLubyte*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
         if(src)
         {
-            camera->NewDataReady(src);
+            camera_->NewDataReady(src);
             glUnmapBuffer(GL_PIXEL_PACK_BUFFER); //Release pointer to the mapped buffer
         }
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-        newData = false;
+        newData_ = false;
     }
 }
 
 void OpenGLRealCamera::SetupCamera()
 {
-    cameraTransform = glm::lookAt(eye, eye+dir, up);
+    cameraTransform_ = glm::lookAt(eye_, eye_+dir_, up_);
 }
 
 glm::mat4 OpenGLRealCamera::GetViewMatrix() const
 {
-    return cameraTransform;
+    return cameraTransform_;
 }
 
 void OpenGLRealCamera::DrawLDR(GLuint destinationFBO, bool updated)
 {
-    if(camera != nullptr && updated)
+    if(camera_ != nullptr && updated)
     {
-        OpenGLCamera::DrawLDR(cameraFBO, updated);
+        OpenGLCamera::DrawLDR(cameraFBO_, updated);
 
-        OpenGLState::BindFramebuffer(cameraFBO);
-        OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+        OpenGLState::BindFramebuffer(cameraFBO_);
+        OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
         glDrawBuffer(GL_COLOR_ATTACHMENT1);
-        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cameraColorTex[0]);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cameraColorTex_[0]);
         flipShader->Use();
         flipShader->SetUniform("texSource", TEX_POSTPROCESS1);
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
         OpenGLState::UseProgram(0);
         OpenGLState::BindFramebuffer(0);
 
-        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cameraColorTex[1]);
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, cameraPBO);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cameraColorTex_[1]);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, cameraPBO_);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
         OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
-        newData = true;
+        newData_ = true;
     }
     
     //Check if there is a need to display image on screen
     bool display = true;
     unsigned int dispX, dispY;
     GLfloat dispScale;
-    if(camera != nullptr)
-        display = camera->getDisplayOnScreen(dispX, dispY, dispScale);
+    if(camera_ != nullptr)
+        display = camera_->getDisplayOnScreen(dispX, dispY, dispScale);
     
     //Draw on screen
     if(display)
@@ -207,7 +207,7 @@ void OpenGLRealCamera::DrawLDR(GLuint destinationFBO, bool updated)
         OpenGLState::DisableCullFace();
         OpenGLState::Viewport(0, 0, windowWidth, windowHeight);
         content->SetViewportSize(windowWidth, windowHeight);
-        content->DrawTexturedQuad(dispX, dispY, viewportWidth*dispScale, viewportHeight*dispScale, cameraColorTex[0]);
+        content->DrawTexturedQuad(dispX, dispY, viewportWidth_*dispScale, viewportHeight_*dispScale, cameraColorTex_[0]);
         OpenGLState::EnableCullFace();
         OpenGLState::BindFramebuffer(0);
     }

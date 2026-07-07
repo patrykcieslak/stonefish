@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/07/18.
-//  Copyright (c) 2018-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -63,7 +63,7 @@ namespace sf
         virtual VelocityFieldType getType() const = 0;
 
     private:
-        bool enabled;
+        bool enabled_;
     };
 }
 

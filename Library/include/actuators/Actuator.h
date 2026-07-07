@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/8/13.
-//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Actuator__
@@ -80,12 +80,12 @@ namespace sf
         virtual void WatchdogTimeout();
         void ResetWatchdog();
 
-        DisplayMode dm;
+        DisplayMode dm_;
 
     private:
-        std::string name;
-        Scalar watchdog;
-        Scalar watchdogTimeout;
+        std::string name_;
+        Scalar watchdog_;
+        Scalar watchdogTimeout_;
     };
 }
 

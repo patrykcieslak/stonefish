@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 20/06/20.
-//  Copyright (c) 2020-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_SSS__
@@ -151,17 +151,17 @@ namespace sf
     private:
         void InitGraphics(bool& seesParticles);
         
-        OpenGLSSS* glSSS;
-        void* sonarData;
-        GLubyte* displayData;
-        glm::vec2 range;
-        glm::vec2 noise;
-        Scalar gain;
-        Scalar fovV;
-        Scalar tilt;
-        ColorMap cMap;
+        OpenGLSSS* glSSS_;
+        void* sonarData_;
+        GLubyte* displayData_;
+        glm::vec2 range_;
+        glm::vec2 noise_;
+        Scalar gain_;
+        Scalar fovV_;
+        Scalar tilt_;
+        ColorMap cMap_;
         SonarOutputFormat outputFormat_;
-        std::function<void(SSS*)> newDataCallback;
+        std::function<void(SSS*)> newDataCallback_;
     };
 }
 

@@ -33,8 +33,8 @@ namespace sf
 
 LinkSensor::LinkSensor(std::string uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
 {
-    attach = nullptr;
-    o2s = Transform::getIdentity();
+    attach_ = nullptr;
+    o2s_ = Transform::getIdentity();
 }
 
 LinkSensor::~LinkSensor()
@@ -43,23 +43,23 @@ LinkSensor::~LinkSensor()
 
 void LinkSensor::setRelativeSensorFrame(const Transform& origin)
 {
-    o2s = origin;
+    o2s_ = origin;
 }
 
 Transform LinkSensor::getSensorFrame() const
 {
-    if(attach != nullptr)
-        return attach->getOTransform() * o2s;
+    if(attach_ != nullptr)
+        return attach_->getOTransform() * o2s_;
     else
-        return o2s;
+        return o2s_;
 }
 
 void LinkSensor::getSensorVelocity(Vector3& linear, Vector3& angular) const
 {
-    if(attach != nullptr)
+    if(attach_ != nullptr)
     {
-        linear = attach->getLinearVelocity();
-        angular = attach->getAngularVelocity();
+        linear = attach_->getLinearVelocity();
+        angular = attach_->getAngularVelocity();
     }
     else
     {
@@ -75,8 +75,8 @@ SensorType LinkSensor::getType() const
 
 std::string LinkSensor::getLinkName() const
 {
-    if(attach != nullptr)
-        return attach->getName();
+    if(attach_ != nullptr)
+        return attach_->getName();
     else
         return std::string("");
 }
@@ -85,8 +85,8 @@ void LinkSensor::AttachToSolid(MovingEntity* solid, const Transform& origin)
 {
     if(solid != nullptr)
     {
-        o2s = origin;
-        attach = solid;
+        o2s_ = origin;
+        attach_ = solid;
     }
 }
 

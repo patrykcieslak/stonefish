@@ -51,9 +51,9 @@
 namespace sf
 {
 
-OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s), hSettings(h)
+OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings_(s), hSettings_(h)
 {
-    drawingQueueMutex = SDL_CreateMutex();
+    drawingQueueMutex_ = SDL_CreateMutex();
     
     //Set default OpenGL options
     cInfo("Initialising OpenGL rendering pipeline...");
@@ -61,7 +61,7 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     //Load shaders and create rendering buffers
     cInfo("Loading shaders...");
     OpenGLAtmosphere::Init();
-    OpenGLCamera::Init(rSettings);
+    OpenGLCamera::Init(rSettings_);
     OpenGLDepthCamera::Init();
     OpenGLThermalCamera::Init();
     OpenGLOpticalFlowCamera::Init();
@@ -69,25 +69,25 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings(s
     OpenGLEventBasedCamera::Init();
     OpenGLSonar::Init();
     OpenGLOceanParticles::Init();
-    content = new OpenGLContent();
+    content_ = new OpenGLContent();
     
     //Create display framebuffer
-    glGenFramebuffers(1, &screenFBO);
-    OpenGLState::BindFramebuffer(screenFBO);
-    glGenTextures(1, &screenTex);
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, screenTex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, rSettings.windowW, rSettings.windowH, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glGenFramebuffers(1, &screenFBO_);
+    OpenGLState::BindFramebuffer(screenFBO_);
+    glGenTextures(1, &screenTex_);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, screenTex_);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, rSettings_.windowW, rSettings_.windowH, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); //Cheaper/better gaussian blur for GUI background
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); //Cheaper/better gaussian blur for GUI background
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screenTex, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screenTex_, 0);
     OpenGLState::UnbindTexture(TEX_BASE);
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE)
         cError("Display FBO initialization failed!");
     OpenGLState::BindFramebuffer(0);
-    lastSimTime = Scalar(-1);
+    lastSimTime_ = Scalar(-1);
 }
 
 OpenGLPipeline::~OpenGLPipeline()
@@ -101,219 +101,219 @@ OpenGLPipeline::~OpenGLPipeline()
     OpenGLSonar::Destroy();
     OpenGLOceanParticles::Destroy();
     OpenGLLight::Destroy();
-    delete content;
+    delete content_;
     
-    glDeleteTextures(1, &screenTex);
-    glDeleteFramebuffers(1, &screenFBO);
-    SDL_DestroyMutex(drawingQueueMutex);
+    glDeleteTextures(1, &screenTex_);
+    glDeleteFramebuffers(1, &screenFBO_);
+    SDL_DestroyMutex(drawingQueueMutex_);
 }
 
 RenderSettings OpenGLPipeline::getRenderSettings() const
 {
-    return rSettings;
+    return rSettings_;
 }
     
 HelperSettings& OpenGLPipeline::getHelperSettings()
 {
-    return hSettings;
+    return hSettings_;
 }
     
 GLuint OpenGLPipeline::getScreenTexture()
 {
-    return screenTex;
+    return screenTex_;
 }
 
 SDL_mutex* OpenGLPipeline::getDrawingQueueMutex()
 {
-    return drawingQueueMutex;
+    return drawingQueueMutex_;
 }
     
 OpenGLContent* OpenGLPipeline::getContent()
 {
-    return content;
+    return content_;
 }
 
 void OpenGLPipeline::AddToDrawingQueue(const Renderable& r)
 {
-    drawingQueue.push_back(r);
+    drawingQueue_.push_back(r);
 }
 
 void OpenGLPipeline::AddToDrawingQueue(const std::vector<Renderable>& r)
 {
-    drawingQueue.insert(drawingQueue.end(), r.begin(), r.end());
+    drawingQueue_.insert(drawingQueue_.end(), r.begin(), r.end());
 }
 
 void OpenGLPipeline::AddToSelectedDrawingQueue(const std::vector<Renderable>& r)
 {
-    selectedDrawingQueue.insert(selectedDrawingQueue.end(), r.begin(), r.end());
+    selectedDrawingQueue_.insert(selectedDrawingQueue_.end(), r.begin(), r.end());
 }
 
 void OpenGLPipeline::PurgeDrawingQueue()
 {
-    drawingQueue.clear();
+    drawingQueue_.clear();
 }
 
 void OpenGLPipeline::PurgeSelectedDrawingQueue()
 {
-    selectedDrawingQueue.clear();
+    selectedDrawingQueue_.clear();
 }
 
 bool OpenGLPipeline::isDrawingQueueEmpty()
 {
-    return drawingQueue.empty();
+    return drawingQueue_.empty();
 }
     
 void OpenGLPipeline::PerformDrawingQueueCopy(SimulationManager* sim)
 {
-    SDL_LockMutex(drawingQueueMutex);
+    SDL_LockMutex(drawingQueueMutex_);
 
     //Update vision sensor transforms and copy generated data to ensure consistency
     glMemoryBarrier(GL_PIXEL_BUFFER_BARRIER_BIT);
-    for(unsigned int i=0; i < content->getViewsCount(); ++i)
-        content->getView(i)->UpdateTransform();
+    for(unsigned int i=0; i < content_->getViewsCount(); ++i)
+        content_->getView(i)->UpdateTransform();
     //Update light transforms to ensure consistency
-    for(unsigned int i=0; i < content->getLightsCount(); ++i)
-        content->getLight(i)->UpdateTransform();
+    for(unsigned int i=0; i < content_->getLightsCount(); ++i)
+        content_->getLight(i)->UpdateTransform();
     //Update ocean currents for particle systems
     Ocean* ocean = sim->getOcean();
     if(ocean != NULL) ocean->UpdateCurrentsData();
 
-    if(!drawingQueue.empty())
+    if(!drawingQueue_.empty())
     {
-        drawingQueueCopy.clear();
-        selectedDrawingQueueCopy.clear();
+        drawingQueueCopy_.clear();
+        selectedDrawingQueueCopy_.clear();
         //Double buffering
-        drawingQueueCopy.insert(drawingQueueCopy.end(), drawingQueue.begin(), drawingQueue.end());
-        selectedDrawingQueueCopy.insert(selectedDrawingQueueCopy.end(), selectedDrawingQueue.begin(), selectedDrawingQueue.end());
+        drawingQueueCopy_.insert(drawingQueueCopy_.end(), drawingQueue_.begin(), drawingQueue_.end());
+        selectedDrawingQueueCopy_.insert(selectedDrawingQueueCopy_.end(), selectedDrawingQueue_.begin(), selectedDrawingQueue_.end());
         //Enable update of drawing queue by clearing old queue
-        drawingQueue.clear(); 
-        selectedDrawingQueue.clear();
+        drawingQueue_.clear(); 
+        selectedDrawingQueue_.clear();
     }
 
-    SDL_UnlockMutex(drawingQueueMutex);
+    SDL_UnlockMutex(drawingQueueMutex_);
 
     //Sort objects by material to reduce uniform/texture switching
-    std::sort(drawingQueueCopy.begin(), drawingQueueCopy.end(), Renderable::SortByMaterial);
+    std::sort(drawingQueueCopy_.begin(), drawingQueueCopy_.end(), Renderable::SortByMaterial);
 }
 
 void OpenGLPipeline::DrawDisplay()
 {
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, screenFBO);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, screenFBO_);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glBlitFramebuffer(0, 0, rSettings.windowW, rSettings.windowH, 0, 0, rSettings.windowW, rSettings.windowH, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glBlitFramebuffer(0, 0, rSettings_.windowW, rSettings_.windowH, 0, 0, rSettings_.windowW, rSettings_.windowH, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
 
 void OpenGLPipeline::DrawObjects()
 {
-    for(size_t i=0; i<drawingQueueCopy.size(); ++i)
+    for(size_t i=0; i<drawingQueueCopy_.size(); ++i)
     {
-		if (drawingQueueCopy[i].type == RenderableType::SOLID)
+		if (drawingQueueCopy_[i].type == RenderableType::SOLID)
         {
-			content->DrawObject(drawingQueueCopy[i].objectId, drawingQueueCopy[i].lookId, drawingQueueCopy[i].model);
+			content_->DrawObject(drawingQueueCopy_[i].objectId, drawingQueueCopy_[i].lookId, drawingQueueCopy_[i].model);
         }
-        else if(drawingQueueCopy[i].type == RenderableType::CABLE)
+        else if(drawingQueueCopy_[i].type == RenderableType::CABLE)
         {
-            auto nodes = drawingQueueCopy[i].getDataAsCableNodes();
-            content->DrawCable(drawingQueueCopy[i].objectId, drawingQueueCopy[i].model[0][0], *nodes, drawingQueueCopy[i].lookId);
+            auto nodes = drawingQueueCopy_[i].getDataAsCableNodes();
+            content_->DrawCable(drawingQueueCopy_[i].objectId, drawingQueueCopy_[i].model[0][0], *nodes, drawingQueueCopy_[i].lookId);
         }
     }
 }
 
 void OpenGLPipeline::DrawLights()
 {
-    for(unsigned int i=0; i<content->getLightsCount(); ++i)
-        content->DrawLightSource(i);
+    for(unsigned int i=0; i<content_->getLightsCount(); ++i)
+        content_->DrawLightSource(i);
 }
     
 void OpenGLPipeline::DrawHelpers()
 {
     //Coordinate systems
-    if(hSettings.showCoordSys)
+    if(hSettings_.showCoordSys)
     {
-        content->DrawCoordSystem(glm::mat4(1.f), 1.f);
+        content_->DrawCoordSystem(glm::mat4(1.f), 1.f);
         
-        for(size_t h=0; h<drawingQueueCopy.size(); ++h)
+        for(size_t h=0; h<drawingQueueCopy_.size(); ++h)
         {
-            if(drawingQueueCopy[h].type == RenderableType::SOLID_CS)
-                content->DrawCoordSystem(drawingQueueCopy[h].model, 0.25f);
+            if(drawingQueueCopy_[h].type == RenderableType::SOLID_CS)
+                content_->DrawCoordSystem(drawingQueueCopy_[h].model, 0.25f);
         }
     }
     
     //Discrete and multibody joints
-    if(hSettings.showJoints)
+    if(hSettings_.showJoints)
     {
-        for(size_t h=0; h<drawingQueueCopy.size(); ++h)
+        for(size_t h=0; h<drawingQueueCopy_.size(); ++h)
         {
-            if(drawingQueueCopy[h].type == RenderableType::MULTIBODY_AXIS)
-                content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy[h].model);
-            else if(drawingQueueCopy[h].type == RenderableType::JOINT_LINES)
-                content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy[h].model);
-            else if(drawingQueueCopy[h].type == RenderableType::PATH_POINTS)
-                content->DrawPrimitives(PrimitiveType::POINTS, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy[h].model);
-            else if(drawingQueueCopy[h].type == RenderableType::PATH_LINE_STRIP)
-                content->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy[h].model);
+            if(drawingQueueCopy_[h].type == RenderableType::MULTIBODY_AXIS)
+                content_->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy_[h].getDataAsPoints().get(), glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy_[h].model);
+            else if(drawingQueueCopy_[h].type == RenderableType::JOINT_LINES)
+                content_->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy_[h].getDataAsPoints().get(), glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy_[h].model);
+            else if(drawingQueueCopy_[h].type == RenderableType::PATH_POINTS)
+                content_->DrawPrimitives(PrimitiveType::POINTS, drawingQueueCopy_[h].getDataAsPoints().get(), glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy_[h].model);
+            else if(drawingQueueCopy_[h].type == RenderableType::PATH_LINE_STRIP)
+                content_->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy_[h].getDataAsPoints().get(), glm::vec4(1.f,0.5f,1.f,1.f), drawingQueueCopy_[h].model);
         }
     }
     
     //Sensors
-    if(hSettings.showSensors)
+    if(hSettings_.showSensors)
     {
-        for(size_t h=0; h<drawingQueueCopy.size(); ++h)
+        for(size_t h=0; h<drawingQueueCopy_.size(); ++h)
         {
-            if(drawingQueueCopy[h].type == RenderableType::SENSOR_CS)
-                content->DrawCoordSystem(drawingQueueCopy[h].model, 0.25f);
-            else if(drawingQueueCopy[h].type == RenderableType::SENSOR_POINTS)
-                content->DrawPrimitives(PrimitiveType::POINTS, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy[h].model);
-            else if(drawingQueueCopy[h].type == RenderableType::SENSOR_LINES)
-                content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy[h].model);
-            else if(drawingQueueCopy[h].type == RenderableType::SENSOR_LINE_STRIP)
-                content->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy[h].model);
+            if(drawingQueueCopy_[h].type == RenderableType::SENSOR_CS)
+                content_->DrawCoordSystem(drawingQueueCopy_[h].model, 0.25f);
+            else if(drawingQueueCopy_[h].type == RenderableType::SENSOR_POINTS)
+                content_->DrawPrimitives(PrimitiveType::POINTS, drawingQueueCopy_[h].getDataAsPoints().get(), glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy_[h].model);
+            else if(drawingQueueCopy_[h].type == RenderableType::SENSOR_LINES)
+                content_->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy_[h].getDataAsPoints().get(), glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy_[h].model);
+            else if(drawingQueueCopy_[h].type == RenderableType::SENSOR_LINE_STRIP)
+                content_->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy_[h].getDataAsPoints().get(), glm::vec4(1.f,1.f,0,1.f), drawingQueueCopy_[h].model);
         }
     }
     
     //Actuators
-    if(hSettings.showActuators)
+    if(hSettings_.showActuators)
     {
-        for(size_t h=0; h<drawingQueueCopy.size(); ++h)
+        for(size_t h=0; h<drawingQueueCopy_.size(); ++h)
         {
-            if(drawingQueueCopy[h].type == RenderableType::ACTUATOR_LINES)
-                content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(1.f,0.5f,0,1.f), drawingQueueCopy[h].model);
+            if(drawingQueueCopy_[h].type == RenderableType::ACTUATOR_LINES)
+                content_->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy_[h].getDataAsPoints().get(), glm::vec4(1.f,0.5f,0,1.f), drawingQueueCopy_[h].model);
         }
     }
     
     //Fluid dynamics
-    if(hSettings.showFluidDynamics)
+    if(hSettings_.showFluidDynamics)
     {
-        for(size_t h=0; h<drawingQueueCopy.size(); ++h)
+        for(size_t h=0; h<drawingQueueCopy_.size(); ++h)
         {
-            switch(drawingQueueCopy[h].type)
+            switch(drawingQueueCopy_[h].type)
             {
                 case RenderableType::HYDRO_CS:
-                    content->DrawEllipsoid(drawingQueueCopy[h].model, glm::vec3(0.005f), glm::vec4(0.3f, 0.7f, 1.f, 1.f));
+                    content_->DrawEllipsoid(drawingQueueCopy_[h].model, glm::vec3(0.005f), glm::vec4(0.3f, 0.7f, 1.f, 1.f));
                     break;
                     
                 case RenderableType::HYDRO_CYLINDER:
-                    content->DrawCylinder(drawingQueueCopy[h].model, drawingQueueCopy[h].getDataAsPoints().get()->at(0), glm::vec4(0.2f, 0.5f, 1.f, 1.f));
+                    content_->DrawCylinder(drawingQueueCopy_[h].model, drawingQueueCopy_[h].getDataAsPoints().get()->at(0), glm::vec4(0.2f, 0.5f, 1.f, 1.f));
                     break;
                     
                 case RenderableType::HYDRO_ELLIPSOID:
-                    content->DrawEllipsoid(drawingQueueCopy[h].model, drawingQueueCopy[h].getDataAsPoints().get()->at(0), glm::vec4(0.2f, 0.5f, 1.f, 1.f));
+                    content_->DrawEllipsoid(drawingQueueCopy_[h].model, drawingQueueCopy_[h].getDataAsPoints().get()->at(0), glm::vec4(0.2f, 0.5f, 1.f, 1.f));
                     break;
                     
                 case RenderableType::HYDRO_POINTS:
-                    content->DrawPrimitives(PrimitiveType::POINTS, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(0.3f, 0.7f, 1.f, 1.f), drawingQueueCopy[h].model);
+                    content_->DrawPrimitives(PrimitiveType::POINTS, drawingQueueCopy_[h].getDataAsPoints().get(), glm::vec4(0.3f, 0.7f, 1.f, 1.f), drawingQueueCopy_[h].model);
                     break;
                     
                 case RenderableType::HYDRO_LINES:
-                    content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(0.2f, 0.5f, 1.f, 1.f), drawingQueueCopy[h].model);
+                    content_->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy_[h].getDataAsPoints().get(), glm::vec4(0.2f, 0.5f, 1.f, 1.f), drawingQueueCopy_[h].model);
                     break;
                     
                 case RenderableType::HYDRO_LINE_STRIP:
-                    content->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(0.2f, 0.5f, 1.f, 1.f), drawingQueueCopy[h].model);
+                    content_->DrawPrimitives(PrimitiveType::LINE_STRIP, drawingQueueCopy_[h].getDataAsPoints().get(), glm::vec4(0.2f, 0.5f, 1.f, 1.f), drawingQueueCopy_[h].model);
                     break;
 
                 case RenderableType::HYDRO_TRIANGLES:
-                    content->DrawPrimitives(PrimitiveType::TRIANGLES, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(0.2f, 0.5f, 1.f, 1.f), drawingQueueCopy[h].model);
+                    content_->DrawPrimitives(PrimitiveType::TRIANGLES, drawingQueueCopy_[h].getDataAsPoints().get(), glm::vec4(0.2f, 0.5f, 1.f, 1.f), drawingQueueCopy_[h].model);
                     break;
                     
                 default:
@@ -323,22 +323,22 @@ void OpenGLPipeline::DrawHelpers()
     }
     
     //Forces
-    if(hSettings.showForces)
+    if(hSettings_.showForces)
     {
-        for(size_t h=0; h<drawingQueueCopy.size(); ++h)
+        for(size_t h=0; h<drawingQueueCopy_.size(); ++h)
         {
-            switch(drawingQueueCopy[h].type)
+            switch(drawingQueueCopy_[h].type)
             {
                 case RenderableType::FORCE_BUOYANCY:
-                    content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(0.f,0.f,1.f,1.f), drawingQueueCopy[h].model);
+                    content_->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy_[h].getDataAsPoints().get(), glm::vec4(0.f,0.f,1.f,1.f), drawingQueueCopy_[h].model);
                     break;
         
                 case RenderableType::FORCE_LINEAR_DRAG:
-                    content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(0.f,1.f,1.f,1.f), drawingQueueCopy[h].model);
+                    content_->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy_[h].getDataAsPoints().get(), glm::vec4(0.f,1.f,1.f,1.f), drawingQueueCopy_[h].model);
                     break;
                     
                 case RenderableType::FORCE_QUADRATIC_DRAG:
-                    content->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy[h].getDataAsPoints().get(), glm::vec4(1.f,0.f,1.f,1.f), drawingQueueCopy[h].model);
+                    content_->DrawPrimitives(PrimitiveType::LINES, drawingQueueCopy_[h].getDataAsPoints().get(), glm::vec4(1.f,0.f,1.f,1.f), drawingQueueCopy_[h].model);
                     break;
         
                 default:
@@ -352,8 +352,8 @@ void OpenGLPipeline::Render(SimulationManager* sim)
 {	
     //Update time step for animation purposes
     Scalar now = sim->getSimulationTime();
-    Scalar dt = now-lastSimTime;
-    lastSimTime = now;
+    Scalar dt = now-lastSimTime_;
+    lastSimTime_ = now;
 
     //Double-buffering of drawing queue
     PerformDrawingQueueCopy(sim);
@@ -364,38 +364,38 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     if(ocean != nullptr)
     {
         ocean->getOpenGLOcean()->Simulate(dt);
-        renderMode = rSettings.ocean > RenderQuality::DISABLED && ocean->isRenderable() ? 1 : 0;
+        renderMode = rSettings_.ocean > RenderQuality::DISABLED && ocean->isRenderable() ? 1 : 0;
     }
     Atmosphere* atm = sim->getAtmosphere();
     OpenGLState::EnableDepthTest();
     OpenGLState::EnableCullFace();
     
     //Bake shadow maps for lights (independent of view)
-    content->SetupLights();
-    if(rSettings.shadows > RenderQuality::DISABLED)
+    content_->SetupLights();
+    if(rSettings_.shadows > RenderQuality::DISABLED)
     {
         glCullFace(GL_FRONT);
         glDisable(GL_DEPTH_CLAMP);
-        content->SetDrawingMode(DrawingMode::SHADOW);
-        for(size_t i=0; i<content->getLightsCount(); ++i)
+        content_->SetDrawingMode(DrawingMode::SHADOW);
+        for(size_t i=0; i<content_->getLightsCount(); ++i)
         {
-            if(content->getLight(i)->isActive())
-                content->getLight(i)->BakeShadowmap(this);
+            if(content_->getLight(i)->isActive())
+                content_->getLight(i)->BakeShadowmap(this);
         }
         glEnable(GL_DEPTH_CLAMP);
         glCullFace(GL_BACK);
     }
     
     //Clear display framebuffer
-    OpenGLState::BindFramebuffer(screenFBO);
+    OpenGLState::BindFramebuffer(screenFBO_);
     glClear(GL_COLOR_BUFFER_BIT);
 
     //Update the queue of views needing update
     unsigned int updateCount = 0;
     std::vector<unsigned int> viewsNoUpdate; //View that are not needing update but have to be displayed
-    for(int i=content->getViewsCount()-1; i >= 0; --i) //Go through views in reverse order
+    for(int i=content_->getViewsCount()-1; i >= 0; --i) //Go through views in reverse order
     {
-        OpenGLView* view = content->getView(i);
+        OpenGLView* view = content_->getView(i);
         
         if(!view->isEnabled()) //Skip disabled views
             continue;
@@ -404,17 +404,17 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         {
             if(view->isContinuous()) //Has to always get updated independent from the number of views in the queue
             {
-                if(std::find(viewsQueue.begin(), viewsQueue.end(), i) == viewsQueue.end()) //Not already in the queue
+                if(std::find(viewsQueue_.begin(), viewsQueue_.end(), i) == viewsQueue_.end()) //Not already in the queue
                 {
-                    viewsQueue.push_front(i);
+                    viewsQueue_.push_front(i);
                     ++updateCount;
                 }
             }
             else // Will be updated now or in the following frames
             {
-                if(std::find(viewsQueue.begin(), viewsQueue.end(), i) == viewsQueue.end()) //Not already in the queue
+                if(std::find(viewsQueue_.begin(), viewsQueue_.end(), i) == viewsQueue_.end()) //Not already in the queue
                 {
-                    viewsQueue.push_back(i);
+                    viewsQueue_.push_back(i);
                     viewsNoUpdate.push_back(i);
                 }
             }
@@ -426,17 +426,17 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         }
     }
 
-    if(viewsQueue.size() > content->getViewsCount()) // Safety condition to avoid runaway
+    if(viewsQueue_.size() > content_->getViewsCount()) // Safety condition to avoid runaway
     {
-        updateCount = viewsQueue.size();
+        updateCount = viewsQueue_.size();
         viewsNoUpdate.clear();
     }
-    else if(updateCount < (unsigned int)viewsQueue.size())
+    else if(updateCount < (unsigned int)viewsQueue_.size())
     {
         ++updateCount;
-        auto it = std::find(viewsNoUpdate.begin(), viewsNoUpdate.end(), viewsQueue[updateCount-1]);
+        auto it = std::find(viewsNoUpdate.begin(), viewsNoUpdate.end(), viewsQueue_[updateCount-1]);
         if(it != viewsNoUpdate.end())
-            viewsNoUpdate.erase(std::find(viewsNoUpdate.begin(), viewsNoUpdate.end(), viewsQueue[updateCount-1]));
+            viewsNoUpdate.erase(std::find(viewsNoUpdate.begin(), viewsNoUpdate.end(), viewsQueue_[updateCount-1]));
     }
 
     //Loop through all views -> trackballs, cameras, depth cameras...
@@ -445,7 +445,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
         OpenGLState::EnableDepthTest();
         OpenGLState::EnableCullFace();
         OpenGLState::DisableBlend();
-        OpenGLView* view = content->getView(viewsQueue[i]);
+        OpenGLView* view = content_->getView(viewsQueue_[i]);
     
         switch(view->getType())
         { 
@@ -453,9 +453,9 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             {
                 OpenGLDepthCamera* camera = static_cast<OpenGLDepthCamera*>(view);
                 //Draw objects and compute depth data
-                camera->ComputeOutput(drawingQueueCopy);
+                camera->ComputeOutput(drawingQueueCopy_);
                 //Draw camera output
-                camera->DrawLDR(screenFBO, true);
+                camera->DrawLDR(screenFBO_, true);
             }
             break;
 
@@ -476,12 +476,12 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 {
                     //Apply view properties
                     GLint* viewport = camera->GetViewport();
-                    content->SetViewportSize(viewport[2],viewport[3]);
+                    content_->SetViewportSize(viewport[2],viewport[3]);
                 
                     //Bake parallel-split shadowmaps for sun
-                    if(rSettings.shadows > RenderQuality::DISABLED)
+                    if(rSettings_.shadows > RenderQuality::DISABLED)
                     {
-                        content->SetDrawingMode(DrawingMode::SHADOW);
+                        content_->SetDrawingMode(DrawingMode::SHADOW);
                         atm->getOpenGLAtmosphere()->BakeShadowmaps(this, camera);
                     }
                     atm->getOpenGLAtmosphere()->SetupMaterialShaders();
@@ -493,13 +493,13 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                     
                     camera->SetViewport();
-                    content->SetCurrentView(camera);
+                    content_->SetCurrentView(camera);
                     
                     //Draw scene
                     if(renderMode == 0) //NO OCEAN
                     {
                         //Render all objects
-                        content->SetDrawingMode(DrawingMode::TEMPERATURE);
+                        content_->SetDrawingMode(DrawingMode::TEMPERATURE);
                         DrawObjects();
                     
                         //Render sky (at the end to take profit of early bailing)
@@ -518,7 +518,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                         glOcean->DrawSurfaceTemperature(camera);
                         //Draw all objects as above surface 
                         //(depth testing will secure drawing only what is above water)
-                        content->SetDrawingMode(DrawingMode::TEMPERATURE);
+                        content_->SetDrawingMode(DrawingMode::TEMPERATURE);
                         DrawObjects();
                         
                         //Render sky (left for the end to only fill empty spaces)
@@ -529,7 +529,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 camera->ComputeOutput();
 
                 //Draw camera output
-                camera->DrawLDR(screenFBO, true);
+                camera->DrawLDR(screenFBO_, true);
             }
             break;
 
@@ -537,9 +537,9 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             {
                 OpenGLOpticalFlowCamera* camera = static_cast<OpenGLOpticalFlowCamera*>(view);
                 //Draw objects and compute camera data
-                camera->ComputeOutput(drawingQueueCopy);
+                camera->ComputeOutput(drawingQueueCopy_);
                 //Draw camera output
-                camera->DrawLDR(screenFBO, true);
+                camera->DrawLDR(screenFBO_, true);
             }
             break;
 
@@ -547,9 +547,9 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             {
                 OpenGLSegmentationCamera* camera = static_cast<OpenGLSegmentationCamera*>(view);
                 //Draw objects and compute camera data
-                camera->ComputeOutput(drawingQueueCopy, ocean);
+                camera->ComputeOutput(drawingQueueCopy_, ocean);
                 //Draw camera output
-                camera->DrawLDR(screenFBO, true);
+                camera->DrawLDR(screenFBO_, true);
             }
             break;
             
@@ -557,9 +557,9 @@ void OpenGLPipeline::Render(SimulationManager* sim)
             {
                 OpenGLSonar* sonar = static_cast<OpenGLSonar*>(view);
                 //Draw objects and compute sonar data
-                sonar->ComputeOutput(drawingQueueCopy);
+                sonar->ComputeOutput(drawingQueueCopy_);
                 //Draw sonar output
-                sonar->DrawLDR(screenFBO, true);
+                sonar->DrawLDR(screenFBO_, true);
             }
             break;
 
@@ -571,12 +571,12 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 OpenGLCamera* camera = static_cast<OpenGLCamera*>(view);
                 OpenGLLight::SetCamera(camera);
                 GLint* viewport = camera->GetViewport();
-                content->SetViewportSize(viewport[2],viewport[3]);
+                content_->SetViewportSize(viewport[2],viewport[3]);
             
                 //Bake parallel-split shadowmaps for sun
-                if(rSettings.shadows > RenderQuality::DISABLED)
+                if(rSettings_.shadows > RenderQuality::DISABLED)
                 {
-                    content->SetDrawingMode(DrawingMode::SHADOW);
+                    content_->SetDrawingMode(DrawingMode::SHADOW);
                     atm->getOpenGLAtmosphere()->BakeShadowmaps(this, camera);
                 }
                 atm->getOpenGLAtmosphere()->SetupMaterialShaders();
@@ -587,18 +587,18 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
                 
                 camera->SetViewport();
-                content->SetCurrentView(camera);
+                content_->SetCurrentView(camera);
                 
                 //Draw scene
                 if(renderMode == 0) //NO OCEAN
                 {
                     //Render all objects
-                    content->SetDrawingMode(DrawingMode::FULL);
+                    content_->SetDrawingMode(DrawingMode::FULL);
                     DrawObjects();
                     DrawLights();
 
                     //Ambient occlusion
-                    if(rSettings.ao > RenderQuality::DISABLED)
+                    if(rSettings_.ao > RenderQuality::DISABLED)
                         camera->DrawAO(1.0f);
                     
                     //Render sky (at the end to take profit of early bailing)
@@ -617,14 +617,14 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     glm::vec3 eye = camera->GetEyePosition();
                     if(ocean->GetDepth(eye) > 0.0) //Underwater
                     {  
-                        content->SetDrawingMode(DrawingMode::UNDERWATER);
+                        content_->SetDrawingMode(DrawingMode::UNDERWATER);
                         DrawObjects();
                         glOcean->DrawBackground(camera);
                         glOcean->DrawBacksurface(camera);
                         //camera->GenerateBloom();
                         DrawLights();
                         
-                        if(rSettings.ssr > RenderQuality::DISABLED)
+                        if(rSettings_.ssr > RenderQuality::DISABLED)
                         {
                             //Linear depth front faces
                             camera->GenerateLinearDepth(true);
@@ -634,7 +634,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                             glClear(GL_DEPTH_BUFFER_BIT);
                             glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
                             glCullFace(GL_FRONT);
-                            content->SetDrawingMode(DrawingMode::FLAT);
+                            content_->SetDrawingMode(DrawingMode::FLAT);
                             DrawObjects();
                             glCullFace(GL_BACK);
                             glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -655,7 +655,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     }
                     else //Above water
                     {
-                        content->SetDrawingMode(DrawingMode::UNDERWATER);
+                        content_->SetDrawingMode(DrawingMode::UNDERWATER);
                         DrawObjects();
                         DrawLights();
                         glOcean->DrawBackground(camera);
@@ -670,14 +670,14 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                         OpenGLState::DisableDepthTest();
                         OpenGLState::EnableBlend();
                         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                        content->DrawTexturedSAQ(camera->getColorTexture(1));
+                        content_->DrawTexturedSAQ(camera->getColorTexture(1));
                         OpenGLState::DisableBlend();
                         OpenGLState::EnableDepthTest();
                         
                         //Draw all objects as above surface 
                         //(depth testing will secure drawing only what is above water)
                         camera->SetRenderBuffers(0, true, false); //Color + Normal
-                        content->SetDrawingMode(DrawingMode::FULL);
+                        content_->SetDrawingMode(DrawingMode::FULL);
                         DrawObjects();
                         DrawLights();
                     
@@ -685,7 +685,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                         atm->getOpenGLAtmosphere()->DrawSkyAndSun(camera);    
 
                         //Postprocess
-                        if(rSettings.ssr > RenderQuality::DISABLED)
+                        if(rSettings_.ssr > RenderQuality::DISABLED)
                         {
                             //Linear depth front faces
                             camera->GenerateLinearDepth(true);
@@ -695,7 +695,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                             glClear(GL_DEPTH_BUFFER_BIT);
                             glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
                             glCullFace(GL_FRONT);
-                            content->SetDrawingMode(DrawingMode::FLAT);
+                            content_->SetDrawingMode(DrawingMode::FLAT);
                             DrawObjects();
                             glCullFace(GL_BACK);
                             glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -712,27 +712,27 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                     static_cast<OpenGLEventBasedCamera*>(camera)->ComputeOutput(now);
 
                 //Drawing to the screen
-                camera->DrawLDR(screenFBO, true);
+                camera->DrawLDR(screenFBO_, true);
             
                 //Non-reallistic rendering (graphical information)
                 if(camera->getType() == ViewType::TRACKBALL)
                 {
                     //Overlay debugging info
-                    OpenGLState::BindFramebuffer(screenFBO); //No depth buffer, just one color buffer
-                    content->SetProjectionMatrix(camera->GetProjectionMatrix());
-                    content->SetViewMatrix(camera->GetViewMatrix());
+                    OpenGLState::BindFramebuffer(screenFBO_); //No depth buffer, just one color buffer
+                    content_->SetProjectionMatrix(camera->GetProjectionMatrix());
+                    content_->SetViewMatrix(camera->GetViewMatrix());
                     OpenGLState::DisableCullFace();
                     
                     //Simulation debugging
                     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
                     //if(sim->getSolidDisplayMode() == DisplayMode::PHYSICAL) DrawObjects();
                     DrawHelpers();
-                    if(hSettings.showOceanVelocityField && ocean != NULL) ocean->getOpenGLOcean()->DrawVelocityField(camera, 5.f);
-                    if(hSettings.showBulletDebugInfo) sim->RenderBulletDebug();
+                    if(hSettings_.showOceanVelocityField && ocean != NULL) ocean->getOpenGLOcean()->DrawVelocityField(camera, 5.f);
+                    if(hSettings_.showBulletDebugInfo) sim->RenderBulletDebug();
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                     
                     //Overlay selection outline
-                    ((OpenGLTrackball*)camera)->DrawSelection(selectedDrawingQueueCopy, screenFBO);
+                    ((OpenGLTrackball*)camera)->DrawSelection(selectedDrawingQueueCopy_, screenFBO_);
                     
                     //Graphics debugging
                     //if(ocean != NULL)
@@ -767,11 +767,11 @@ void OpenGLPipeline::Render(SimulationManager* sim)
     //Draw views that are displayed but not updated
     for(size_t i=0; i<viewsNoUpdate.size(); ++i)
     {
-        OpenGLView* view = content->getView(viewsNoUpdate[i]);
-        view->DrawLDR(screenFBO, false);
+        OpenGLView* view = content_->getView(viewsNoUpdate[i]);
+        view->DrawLDR(screenFBO_, false);
     }
     //Remove views drawn in this frame
-    viewsQueue.erase(viewsQueue.begin(), viewsQueue.begin() + updateCount);
+    viewsQueue_.erase(viewsQueue_.begin(), viewsQueue_.begin() + updateCount);
 }
 
 }

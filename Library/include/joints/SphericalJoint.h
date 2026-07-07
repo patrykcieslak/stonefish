@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 2/3/13.
-//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_SphericalJoint__
@@ -86,9 +86,9 @@ namespace sf
         JointType getType() const;
         
     private:
-        Vector3 sigDamping;
-        Vector3 velDamping;
-        Vector3 angleIC;
+        Vector3 sigDamping_;
+        Vector3 velDamping_;
+        Vector3 angleIC_;
     };
 }
     

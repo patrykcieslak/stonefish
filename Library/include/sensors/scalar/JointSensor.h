@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 20/11/2018.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_JointSensor__
@@ -50,7 +50,7 @@ namespace sf
          \param multibody a pointer to a multibody
          \param jointId an index of the multibody joint
          */
-        virtual void AttachToJoint(FeatherstoneEntity* multibody, unsigned int jointId);
+        virtual void AttachToJoint(FeatherstoneEntity* multibody, size_t jointId);
         
         //! A method used to attach the sensor to a discrete joint.
         /*!
@@ -75,9 +75,9 @@ namespace sf
         std::string getJointName() const;
         
     protected:
-        FeatherstoneEntity* fe;
-        unsigned int jId;
-        Joint* j;
+        FeatherstoneEntity* fe_;
+        unsigned int jId_;
+        Joint* j_;
     };
 }
 

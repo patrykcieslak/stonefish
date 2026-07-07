@@ -35,16 +35,16 @@ namespace sf
 
 ForceTorque::ForceTorque(std::string uniqueName, SolidEntity* attachment, const Transform& origin, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
 {
-    attach = attachment;
-    o2s = origin;
-    lastFrame = Transform::getIdentity();
+    attach_ = attachment;
+    o2s_ = origin;
+    lastFrame_ = Transform::getIdentity();
     
-    channels.push_back(SensorChannel("Force X", QuantityType::FORCE));
-    channels.push_back(SensorChannel("Force Y", QuantityType::FORCE));
-    channels.push_back(SensorChannel("Force Z", QuantityType::FORCE));
-    channels.push_back(SensorChannel("Torque X", QuantityType::TORQUE));
-    channels.push_back(SensorChannel("Torque Y", QuantityType::TORQUE));
-    channels.push_back(SensorChannel("Torque Z", QuantityType::TORQUE));
+    channels_.push_back(SensorChannel("Force X", QuantityType::FORCE));
+    channels_.push_back(SensorChannel("Force Y", QuantityType::FORCE));
+    channels_.push_back(SensorChannel("Force Z", QuantityType::FORCE));
+    channels_.push_back(SensorChannel("Torque X", QuantityType::TORQUE));
+    channels_.push_back(SensorChannel("Torque Y", QuantityType::TORQUE));
+    channels_.push_back(SensorChannel("Torque Z", QuantityType::TORQUE));
 }
 
 ForceTorque::ForceTorque(std::string uniqueName, const Transform& origin, Scalar frequency, int historyLength) :
@@ -54,24 +54,24 @@ ForceTorque::ForceTorque(std::string uniqueName, const Transform& origin, Scalar
 
 Transform ForceTorque::getSensorFrame() const
 {
-    return lastFrame;
+    return lastFrame_;
 }
 
 void ForceTorque::InternalUpdate(Scalar dt)
 {
-    if(j != NULL && attach != NULL)
+    if(j_ != NULL && attach_ != NULL)
     {
-        Vector3 force(j->getFeedback(0), j->getFeedback(1), j->getFeedback(2));
-        Vector3 torque(j->getFeedback(3), j->getFeedback(4), j->getFeedback(5));
+        Vector3 force(j_->getFeedback(0), j_->getFeedback(1), j_->getFeedback(2));
+        Vector3 torque(j_->getFeedback(3), j_->getFeedback(4), j_->getFeedback(5));
     
-        if(j->isMultibodyJoint())
+        if(j_->isMultibodyJoint())
         {  
             force /= dt;
             torque /= dt;
         }
     
-        lastFrame = attach->getOTransform() * o2s;
-        Matrix3 toSensor = lastFrame.getBasis().inverse();
+        lastFrame_ = attach_->getOTransform() * o2s_;
+        Matrix3 toSensor = lastFrame_.getBasis().inverse();
         force = toSensor * force;
         torque = toSensor * torque;
 	
@@ -81,12 +81,12 @@ void ForceTorque::InternalUpdate(Scalar dt)
     else
     {   
         Vector3 force, torque;
-        unsigned int childId = fe->getJointFeedback(jId, force, torque);
-        lastFrame = fe->getLink(childId).solid->getCG2OTransform() * o2s;
-        Matrix3 toSensor = lastFrame.getBasis().inverse();
+        unsigned int childId = fe_->getJointFeedback(jId_, force, torque);
+        lastFrame_ = fe_->getLink(childId).solid->getCG2OTransform() * o2s_;
+        Matrix3 toSensor = lastFrame_.getBasis().inverse();
         force = toSensor * force;
         torque = toSensor * torque;
-        lastFrame = fe->getLink(childId).solid->getCGTransform() * lastFrame; //From local to global
+        lastFrame_ = fe_->getLink(childId).solid->getCGTransform() * lastFrame_; //From local to global
         
         Sample s{std::vector<Scalar>({force.getX(), force.getY(), force.getZ(), torque.getX(), torque.getY(), torque.getZ()})};
         AddSampleToHistory(s);
@@ -95,29 +95,29 @@ void ForceTorque::InternalUpdate(Scalar dt)
 
 void ForceTorque::setRange(const Vector3& forceMax, const Vector3& torqueMax)
 {
-    channels[0].rangeMin = -btClamped(forceMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[1].rangeMin = -btClamped(forceMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[2].rangeMin = -btClamped(forceMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[0].rangeMax = btClamped(forceMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[1].rangeMax = btClamped(forceMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[2].rangeMax = btClamped(forceMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[0].rangeMin = -btClamped(forceMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[1].rangeMin = -btClamped(forceMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[2].rangeMin = -btClamped(forceMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[0].rangeMax = btClamped(forceMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[1].rangeMax = btClamped(forceMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[2].rangeMax = btClamped(forceMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
     
-    channels[3].rangeMin = -btClamped(torqueMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[4].rangeMin = -btClamped(torqueMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[5].rangeMin = -btClamped(torqueMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[3].rangeMax = btClamped(torqueMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[4].rangeMax = btClamped(torqueMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[5].rangeMax = btClamped(torqueMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[3].rangeMin = -btClamped(torqueMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[4].rangeMin = -btClamped(torqueMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[5].rangeMin = -btClamped(torqueMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[3].rangeMax = btClamped(torqueMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[4].rangeMax = btClamped(torqueMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[5].rangeMax = btClamped(torqueMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
     
 void ForceTorque::setNoise(Scalar forceStdDev, Scalar torqueStdDev)
 {
-    channels[0].setStdDev(btClamped(forceStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels[1].setStdDev(btClamped(forceStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels[2].setStdDev(btClamped(forceStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels[3].setStdDev(btClamped(torqueStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels[4].setStdDev(btClamped(torqueStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels[5].setStdDev(btClamped(torqueStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[0].setStdDev(btClamped(forceStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[1].setStdDev(btClamped(forceStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[2].setStdDev(btClamped(forceStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[3].setStdDev(btClamped(torqueStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[4].setStdDev(btClamped(torqueStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[5].setStdDev(btClamped(torqueStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
     
 std::vector<Renderable> ForceTorque::Render()
@@ -127,7 +127,7 @@ std::vector<Renderable> ForceTorque::Render()
     {
         Renderable item;
         item.type = RenderableType::SENSOR_CS;
-        item.model = glMatrixFromTransform(lastFrame);
+        item.model = glMatrixFromTransform(lastFrame_);
         items.push_back(item);
     }    
     return items;

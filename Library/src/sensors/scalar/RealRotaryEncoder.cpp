@@ -33,34 +33,34 @@ namespace sf
 
 RealRotaryEncoder::RealRotaryEncoder(std::string uniqueName, unsigned int cpr_resolution, bool absolute, Scalar frequency, int historyLength) : RotaryEncoder(uniqueName, frequency, historyLength)
 {
-    cpr_res = cpr_resolution;
-    abs = absolute;
+    cprResolution_ = cpr_resolution;
+    abs_ = absolute;
 }
 
 void RealRotaryEncoder::Reset()
 {
     //incremental angle
-    angle = lastAngle = GetRawAngle();
+    angle_ = lastAngle_ = GetRawAngle();
   
     //quantization
-    lastAngle /= FULL_ANGLE;
-    lastAngle = Scalar(trunc(lastAngle * cpr_res)) / Scalar(cpr_res) * FULL_ANGLE;
+    lastAngle_ /= FULL_ANGLE;
+    lastAngle_ = Scalar(trunc(lastAngle_ * cprResolution_)) / Scalar(cprResolution_) * FULL_ANGLE;
     
     ScalarSensor::Reset();
 }
 
 void RealRotaryEncoder::InternalUpdate(Scalar dt)
 {
-    if(abs)
+    if(abs_)
     {
         //to positive
-        angle = GetRawAngle();
-        if(angle < Scalar(0))
-            angle += FULL_ANGLE;
+        angle_ = GetRawAngle();
+        if(angle_ < Scalar(0))
+            angle_ += FULL_ANGLE;
         
         //quantization
-        angle /= FULL_ANGLE;
-        angle = Scalar(trunc(angle * Scalar((1 << cpr_res) - 1))) / Scalar((1 << cpr_res) - 1) * FULL_ANGLE;
+        angle_ /= FULL_ANGLE;
+        angle_ = Scalar(trunc(angle_ * Scalar((1 << cprResolution_) - 1))) / Scalar((1 << cprResolution_) - 1) * FULL_ANGLE;
     }
     else
     {
@@ -69,26 +69,26 @@ void RealRotaryEncoder::InternalUpdate(Scalar dt)
         
         //quantization
         actualAngle /= FULL_ANGLE;
-        actualAngle = Scalar(trunc(actualAngle * cpr_res)) / Scalar(cpr_res) * FULL_ANGLE;
+        actualAngle = Scalar(trunc(actualAngle * cprResolution_)) / Scalar(cprResolution_) * FULL_ANGLE;
         
         //accumulate
-        if(lastAngle * actualAngle < Scalar(0))
+        if(lastAngle_ * actualAngle < Scalar(0))
         {
-            if(lastAngle > M_PI_4)
-                angle += ((actualAngle + FULL_ANGLE) - lastAngle);
-            else if(lastAngle < -M_PI_4)
-                angle += (actualAngle - (lastAngle + FULL_ANGLE));
+            if(lastAngle_ > M_PI_4)
+                angle_ += ((actualAngle + FULL_ANGLE) - lastAngle_);
+            else if(lastAngle_ < -M_PI_4)
+                angle_ += (actualAngle - (lastAngle_ + FULL_ANGLE));
             else
-                angle += (actualAngle-lastAngle);
+                angle_ += (actualAngle-lastAngle_);
         }
         else
-            angle += (actualAngle-lastAngle);
+            angle_ += (actualAngle-lastAngle_);
         
-        lastAngle = actualAngle;
+        lastAngle_ = actualAngle;
     }
     
     //record sample
-    Sample s{std::vector<Scalar>({angle, Scalar(0)})};
+    Sample s{std::vector<Scalar>({angle_, Scalar(0)})};
     AddSampleToHistory(s);
 }
 

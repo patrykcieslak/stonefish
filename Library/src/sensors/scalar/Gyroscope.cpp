@@ -33,10 +33,10 @@ namespace sf
 
 Gyroscope::Gyroscope(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    channels.push_back(SensorChannel("Angular velocity X", QuantityType::ANGULAR_VELOCITY));
-    channels.push_back(SensorChannel("Angular velocity Y", QuantityType::ANGULAR_VELOCITY));
-    channels.push_back(SensorChannel("Angular velocity Z", QuantityType::ANGULAR_VELOCITY));
-    bias = V0();
+    channels_.push_back(SensorChannel("Angular velocity X", QuantityType::ANGULAR_VELOCITY));
+    channels_.push_back(SensorChannel("Angular velocity Y", QuantityType::ANGULAR_VELOCITY));
+    channels_.push_back(SensorChannel("Angular velocity Z", QuantityType::ANGULAR_VELOCITY));
+    bias_ = V0();
 }
 
 void Gyroscope::InternalUpdate(Scalar dt)
@@ -45,10 +45,10 @@ void Gyroscope::InternalUpdate(Scalar dt)
     Matrix3 toGyroFrame = getSensorFrame().getBasis().inverse();
     
     //get angular velocity
-    Vector3 omega = toGyroFrame * attach->getAngularVelocity();
+    Vector3 omega = toGyroFrame * attach_->getAngularVelocity();
 
     //add bias error
-    omega += bias;
+    omega += bias_;
 
     //record sample
     Sample s{std::vector<Scalar>({omega.x(), omega.y(), omega.z()})};
@@ -57,20 +57,20 @@ void Gyroscope::InternalUpdate(Scalar dt)
 
 void Gyroscope::setRange(Vector3 angularVelocityMax)
 {
-    channels[0].rangeMin = -btClamped(angularVelocityMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[1].rangeMin = -btClamped(angularVelocityMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[2].rangeMin = -btClamped(angularVelocityMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[0].rangeMax = btClamped(angularVelocityMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[1].rangeMax = btClamped(angularVelocityMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[2].rangeMax = btClamped(angularVelocityMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[0].rangeMin = -btClamped(angularVelocityMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[1].rangeMin = -btClamped(angularVelocityMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[2].rangeMin = -btClamped(angularVelocityMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[0].rangeMax = btClamped(angularVelocityMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[1].rangeMax = btClamped(angularVelocityMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[2].rangeMax = btClamped(angularVelocityMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
 
 void Gyroscope::setNoise(Vector3 angularVelocityStdDev, Vector3 angularVelocityBias)
 {
-    channels[0].setStdDev(btClamped(angularVelocityStdDev.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels[1].setStdDev(btClamped(angularVelocityStdDev.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels[2].setStdDev(btClamped(angularVelocityStdDev.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    bias = angularVelocityBias;
+    channels_[0].setStdDev(btClamped(angularVelocityStdDev.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[1].setStdDev(btClamped(angularVelocityStdDev.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[2].setStdDev(btClamped(angularVelocityStdDev.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    bias_ = angularVelocityBias;
 }
 
 ScalarSensorType Gyroscope::getScalarSensorType() const

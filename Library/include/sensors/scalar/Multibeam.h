@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/08/2018.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Multibeam__
@@ -73,10 +73,10 @@ namespace sf
         Scalar getAngleRange() const;
         
     private:
-        Scalar angRange;
-        unsigned int angSteps;
-        std::vector<Scalar> angles;
-        std::vector<Scalar> distances;
+        Scalar angRange_;
+        unsigned int angSteps_;
+        std::vector<Scalar> angles_;
+        std::vector<Scalar> distances_;
     };
 }
 

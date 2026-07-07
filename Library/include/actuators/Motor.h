@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 15/09/2015.
-//  Copyright (c) 2015-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2015-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Motor__
@@ -72,8 +72,8 @@ namespace sf
         ActuatorType getType() const;
         
     protected:
-        Scalar torque;
-        std::pair<Scalar, Scalar> limits;
+        Scalar torque_;
+        std::pair<Scalar, Scalar> limits_;
 
     private:
         void WatchdogTimeout() override;

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 08/11/23.
-//  Copyright(c) 2023 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2023-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_BSTrajectory__
@@ -55,9 +55,9 @@ namespace sf
         void BuildGraphicalPath();
 
     private:
-        tinyspline::BSpline spline;
-        tinyspline::BSpline deriv;
-        double lastPlayTime;
+        tinyspline::BSpline spline_;
+        tinyspline::BSpline deriv_;
+        double lastPlayTime_;
     };
 }
 

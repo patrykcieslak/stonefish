@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 17/01/2019.
-//  Copyright (c) 2019-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Wing__
@@ -74,9 +74,6 @@ namespace sf
         
         //! A method that returns the collision shape for the wing (tapered box).
         btCollisionShape* BuildCollisionShape();
-        
-    private:
-        
     };
 }
 

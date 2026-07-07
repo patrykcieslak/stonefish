@@ -67,7 +67,7 @@ void SuctionCup::AttachToSolid(SolidEntity* body, const Transform& origin)
 
 void SuctionCup::AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId)
 {
-    LinkActuator::AttachToSolid(multibody->getLink(linkId+1).solid, I4());
+    LinkActuator::AttachToSolid(multibody->getLink(linkId+1).solid.get(), I4());
     attachFE_ = multibody;
     attachLinkId_ = linkId;
 }
@@ -78,7 +78,7 @@ void SuctionCup::Update(Scalar dt)
 
 void SuctionCup::Engage(SimulationManager* sm)
 {
-    if(attach != nullptr && joint_ == nullptr && pump_)
+    if(attach_ != nullptr && joint_ == nullptr && pump_)
     {
         btDispatcher* dispatcher = sm->getDynamicsWorld()->getDispatcher();
         int numManifolds = dispatcher->getNumManifolds();
@@ -94,7 +94,7 @@ void SuctionCup::Engage(SimulationManager* sm)
             Entity* entB = (Entity*)coB->getUserPointer();
             std::unique_ptr<Joint> joint;
             
-            if(entA == attach && entB->getType() == EntityType::SOLID)
+            if(entA == attach_ && entB->getType() == EntityType::SOLID)
             {
                 Transform jointFrame = ((SolidEntity*)entA)->getCG2CTransform();
                 jointFrame.setOrigin(contactManifold->getContactPoint(0).getPositionWorldOnA());
@@ -109,7 +109,7 @@ void SuctionCup::Engage(SimulationManager* sm)
                                             Vector3(10,10,10), Vector3(10,10,10), Vector3(0.5,0.5,0.5), Vector3(0.5,0.5,0.5));
                 }
             }
-            else if(entB == attach && entA->getType() == EntityType::SOLID)
+            else if(entB == attach_ && entA->getType() == EntityType::SOLID)
             {
                 Transform jointFrame = ((SolidEntity*)entB)->getCG2CTransform();
                 jointFrame.setOrigin(contactManifold->getContactPoint(0).getPositionWorldOnB());

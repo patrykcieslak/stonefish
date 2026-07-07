@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 24/05/2014.
-//  Copyright (c) 2014-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Console__
@@ -85,9 +85,9 @@ namespace sf
         std::vector<ConsoleMessage> getLines();
         
     protected:
-        bool stdoutEnabled;
-        std::vector<ConsoleMessage> lines;
-        SDL_mutex* linesMutex;
+        bool stdoutEnabled_;
+        std::vector<ConsoleMessage> lines_;
+        SDL_mutex* linesMutex_;
     };
 }
 

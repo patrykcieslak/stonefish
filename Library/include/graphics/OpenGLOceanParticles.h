@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/08/19.
-//  Copyright (c) 2019-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLOceanParticles__
@@ -80,12 +80,12 @@ namespace sf
 	private:
 		void Create(glm::vec3 eyePos);
 	
-		std::default_random_engine generator;
-		std::uniform_real_distribution<GLfloat> uniformd;
-		std::normal_distribution<GLfloat> normald;
-		bool initialised;
-		GLfloat range;
-		glm::vec3 lastEyePos;
+		std::default_random_engine generator_;
+		std::uniform_real_distribution<GLfloat> uniformd_;
+		std::normal_distribution<GLfloat> normald_;
+		bool initialised_;
+		GLfloat range_;
+		glm::vec3 lastEyePos_;
 
 		static GLuint flakeTexture;
 		static GLuint noiseTexture; 

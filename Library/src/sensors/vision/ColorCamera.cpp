@@ -36,33 +36,33 @@ namespace sf
 ColorCamera::ColorCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency, 
     Scalar minDistance, Scalar maxDistance) : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
 {
-    depthRange = glm::vec2((GLfloat)minDistance, (GLfloat)maxDistance);
-    newDataCallback = nullptr;
-    imageData = nullptr;
+    depthRange_ = glm::vec2((GLfloat)minDistance, (GLfloat)maxDistance);
+    newDataCallback_ = nullptr;
+    imageData_ = nullptr;
 }
 
 ColorCamera::~ColorCamera()
 {
-    glCamera = nullptr;
+    glCamera_ = nullptr;
 }
     
 void ColorCamera::setExposureCompensation(Scalar comp)
 {
-    if(glCamera != nullptr)
-        glCamera->setExposureCompensation((GLfloat)comp);
+    if(glCamera_ != nullptr)
+        glCamera_->setExposureCompensation((GLfloat)comp);
 }
     
 Scalar ColorCamera::getExposureCompensation() const
 {
-    if(glCamera != nullptr)
-        return (Scalar)glCamera->getExposureCompensation();
+    if(glCamera_ != nullptr)
+        return (Scalar)glCamera_->getExposureCompensation();
     else
         return Scalar(0);
 }
 
 void* ColorCamera::getImageDataPointer(unsigned int index)
 {
-    return imageData;
+    return imageData_;
 }
 
 VisionSensorType ColorCamera::getVisionSensorType() const
@@ -72,19 +72,19 @@ VisionSensorType ColorCamera::getVisionSensorType() const
 
 OpenGLView* ColorCamera::getOpenGLView() const
 {
-    return glCamera;
+    return glCamera_;
 }
 
 void ColorCamera::InitGraphics(bool& seesParticles)
 {
     seesParticles = true;
     
-    glCamera = new OpenGLRealCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, depthRange, freq < Scalar(0));
-    glCamera->setCamera(this);
+    glCamera_ = new OpenGLRealCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX_, resY_, (GLfloat)fovH_, depthRange_, freq_ < Scalar(0));
+    glCamera_->setCamera(this);
     UpdateTransform();
-    glCamera->UpdateTransform();
+    glCamera_->UpdateTransform();
     InternalUpdate(0);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera_);
 }
 
 void ColorCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
@@ -92,27 +92,27 @@ void ColorCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vect
     glm::vec3 eye_ = glm::vec3((GLfloat)eye.x(), (GLfloat)eye.y(), (GLfloat)eye.z());
     glm::vec3 dir_ = glm::vec3((GLfloat)dir.x(), (GLfloat)dir.y(), (GLfloat)dir.z());
     glm::vec3 up_ = glm::vec3((GLfloat)up.x(), (GLfloat)up.y(), (GLfloat)up.z());
-    glCamera->SetupCamera(eye_, dir_, up_);
+    glCamera_->SetupCamera(eye_, dir_, up_);
 }
 
 void ColorCamera::InstallNewDataHandler(std::function<void(ColorCamera*)> callback)
 {
-    newDataCallback = callback;
+    newDataCallback_ = callback;
 }
 
 void ColorCamera::NewDataReady(void* data, unsigned int index)
 {
-    if(newDataCallback != nullptr)
+    if(newDataCallback_ != nullptr)
     {
-        imageData = (GLubyte*)data;
-        newDataCallback(this);
-        imageData = nullptr;
+        imageData_ = (GLubyte*)data;
+        newDataCallback_(this);
+        imageData_ = nullptr;
     }
 }
 
 void ColorCamera::InternalUpdate(Scalar dt)
 {
-    glCamera->Update();
+    glCamera_->Update();
 }
 
 }

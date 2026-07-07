@@ -32,25 +32,25 @@ namespace sf
     
 Console::Console(bool useStdout)
 {
-    stdoutEnabled = useStdout;
-    lines = std::vector<ConsoleMessage>(0);
-    linesMutex = SDL_CreateMutex();
+    stdoutEnabled_ = useStdout;
+    lines_ = std::vector<ConsoleMessage>(0);
+    linesMutex_ = SDL_CreateMutex();
 }
 
 Console::~Console()
 {
-    lines.clear();
-    SDL_DestroyMutex(linesMutex);
+    lines_.clear();
+    SDL_DestroyMutex(linesMutex_);
 }
     
 SDL_mutex* Console::getLinesMutex()
 {
-    return linesMutex;
+    return linesMutex_;
 }
 
 std::vector<ConsoleMessage> Console::getLines()
 {
-    return lines;
+    return lines_;
 }
 
 void Console::Print(MessageType t, std::string format, ...)
@@ -61,7 +61,7 @@ void Console::Print(MessageType t, std::string format, ...)
     vsnprintf(buffer, sizeof(buffer), format.c_str(), args);
     va_end(args);
     
-    if(stdoutEnabled)
+    if(stdoutEnabled_)
     {
 #ifdef COLOR_CONSOLE
         switch(t)
@@ -109,23 +109,23 @@ void Console::Print(MessageType t, std::string format, ...)
     ConsoleMessage msg;
     msg.type = t;
     msg.text = std::string(buffer);
-    SDL_LockMutex(linesMutex);
-    lines.push_back(msg);
-    SDL_UnlockMutex(linesMutex);
+    SDL_LockMutex(linesMutex_);
+    lines_.push_back(msg);
+    SDL_UnlockMutex(linesMutex_);
 }
 
 void Console::AppendMessage(const ConsoleMessage& msg)
 {
-    SDL_LockMutex(linesMutex);
-    lines.push_back(msg);
-    SDL_UnlockMutex(linesMutex);
+    SDL_LockMutex(linesMutex_);
+    lines_.push_back(msg);
+    SDL_UnlockMutex(linesMutex_);
 }
     
 void Console::Clear()
 {
-    SDL_LockMutex(linesMutex);
-    lines.clear();
-    SDL_UnlockMutex(linesMutex);
+    SDL_LockMutex(linesMutex_);
+    lines_.clear();
+    SDL_UnlockMutex(linesMutex_);
 }
 
 bool Console::SaveToFile(std::string filename)
@@ -133,26 +133,26 @@ bool Console::SaveToFile(std::string filename)
     std::ofstream outFile(filename);
     if(outFile.is_open())
     {
-        SDL_LockMutex(linesMutex);
-        for(size_t i=0; i<lines.size(); ++i)
+        SDL_LockMutex(linesMutex_);
+        for(size_t i=0; i<lines_.size(); ++i)
         {
-            switch(lines[i].type)
+            switch(lines_[i].type)
             {
                 case MessageType::INFO:
-                    outFile << "[INFO] " << lines[i].text << std::endl;
+                    outFile << "[INFO] " << lines_[i].text << std::endl;
                     break;
                 case MessageType::WARNING:
-                    outFile << "[WARN] " << lines[i].text << std::endl;
+                    outFile << "[WARN] " << lines_[i].text << std::endl;
                     break;
                 case MessageType::ERROR:
-                    outFile << "[ERROR] " << lines[i].text << std::endl;
+                    outFile << "[ERROR] " << lines_[i].text << std::endl;
                     break;
                 case MessageType::CRITICAL:
-                    outFile << "[CRITICAL] " << lines[i].text << std::endl;
+                    outFile << "[CRITICAL] " << lines_[i].text << std::endl;
                     break;
             }
         }
-        SDL_UnlockMutex(linesMutex);
+        SDL_UnlockMutex(linesMutex_);
         outFile.close();
         return true;
     }

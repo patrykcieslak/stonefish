@@ -31,7 +31,7 @@ namespace sf
 
 BSTrajectory::BSTrajectory(PlaybackMode playback) : PWLTrajectory(playback)
 {
-    lastPlayTime = 0.0;
+    lastPlayTime_ = 0.0;
 }
 
 void BSTrajectory::AddKeyPoint(Scalar keyTime, Transform keyTransform)
@@ -45,33 +45,33 @@ void BSTrajectory::AddKeyPoint(Scalar keyTime, Transform keyTransform)
     k.T = keyTransform;
 
     //Add to the list
-    auto it = std::find(points.begin(), points.end(), k);
-    if(it != points.end())
+    auto it = std::find(points_.begin(), points_.end(), k);
+    if(it != points_.end())
         *it = k;
     else
-        points.push_back(k);
+        points_.push_back(k);
     
     //Sort key points by time
-    std::sort(points.begin(), points.end());
+    std::sort(points_.begin(), points_.end());
 
     //Reset
-    playTime = Scalar(0);
-    endTime = points.back().t;
-    forward = true;
+    playTime_ = Scalar(0);
+    endTime_ = points_.back().t;
+    forward_ = true;
 
     //Build B-spline
-    if(points.size() >= 3)
+    if(points_.size() >= 3)
     {
-        std::vector<Scalar> cp(points.size() * 4);
-        for(size_t i=0; i<points.size(); ++i)
+        std::vector<Scalar> cp(points_.size() * 4);
+        for(size_t i=0; i<points_.size(); ++i)
         {
-            cp[i*4+0] = points[i].t;
-            cp[i*4+1] = points[i].T.getOrigin().getX();
-            cp[i*4+2] = points[i].T.getOrigin().getY();
-            cp[i*4+3] = points[i].T.getOrigin().getZ();
+            cp[i*4+0] = points_[i].t;
+            cp[i*4+1] = points_[i].T.getOrigin().getX();
+            cp[i*4+2] = points_[i].T.getOrigin().getY();
+            cp[i*4+3] = points_[i].T.getOrigin().getZ();
         }
-        spline = tinyspline::BSpline::interpolateCubicNatural(cp, 4);
-        deriv = spline.derive(1);
+        spline_ = tinyspline::BSpline::interpolateCubicNatural(cp, 4);
+        deriv_ = spline_.derive(1);
     }
     
     BuildGraphicalPath();
@@ -80,30 +80,30 @@ void BSTrajectory::AddKeyPoint(Scalar keyTime, Transform keyTransform)
 
 void BSTrajectory::Interpolate()
 {
-    if(points.size() < 3)
+    if(points_.size() < 3)
         PWLTrajectory::Interpolate();
     else
     {
         //Find current path segment
-        auto it = std::find_if(points.begin(), points.end(),
-                               [&](const auto& key){ return key.t >= playTime; });
+        auto it = std::find_if(points_.begin(), points_.end(),
+                               [&](const auto& key){ return key.t >= playTime_; });
 
         Transform T1, T2;
         Scalar t1, t2;
 
-        if(it <= points.begin()+1) //Beginning
+        if(it <= points_.begin()+1) //Beginning
         {
-            T1 = points[0].T;
-            T2 = points[1].T;
-            t1 = points[0].t;
-            t2 = points[1].t;
+            T1 = points_[0].T;
+            T2 = points_[1].T;
+            t1 = points_[0].t;
+            t2 = points_[1].t;
         }
-        else if(it >= points.end()-1) //End
+        else if(it >= points_.end()-1) //End
         {
-            T1 = points[points.size()-2].T;
-            T2 = points.back().T;
-            t1 = points[points.size()-2].t;
-            t2 = points.back().t;
+            T1 = points_[points_.size()-2].T;
+            T2 = points_.back().T;
+            t1 = points_[points_.size()-2].t;
+            t2 = points_.back().t;
         }
         else
         {
@@ -116,34 +116,34 @@ void BSTrajectory::Interpolate()
         //Linear quantities
         if(btFuzzyZero((T2.getOrigin()-T1.getOrigin()).safeNorm())) //Coinciding points
         {
-            interpTrans.setOrigin(T2.getOrigin());
-            interpVel = V0();
+            interpTrans_.setOrigin(T2.getOrigin());
+            interpVel_ = V0();
         }
         else
         {
-            tinyspline::DeBoorNet net = spline.bisect(playTime, 0.0001);
+            tinyspline::DeBoorNet net = spline_.bisect(playTime_, 0.0001);
             std::vector<Scalar> p = net.result();
-            interpTrans.setOrigin(Vector3(p[1], p[2], p[3]));
+            interpTrans_.setOrigin(Vector3(p[1], p[2], p[3]));
             
-            Vector3 lastInterpVel = interpVel;
-            std::vector<Scalar> v = deriv.eval(net.knot()).result();
-            interpVel = Vector3(v[1]/v[0], v[2]/v[0], v[3]/v[0]);  // dx/dt = (dx/ds) / (ds/dt)
-            if(!forward)
-                interpVel = -interpVel;
+            Vector3 lastInterpVel = interpVel_;
+            std::vector<Scalar> v = deriv_.eval(net.knot()).result();
+            interpVel_ = Vector3(v[1]/v[0], v[2]/v[0], v[3]/v[0]);  // dx/dt = (dx/ds) / (ds/dt)
+            if(!forward_)
+                interpVel_ = -interpVel_;
 
-            if(lastPlayTime > 0.0)
-                interpAcc = (interpVel - lastInterpVel)/(playTime - lastPlayTime);
+            if(lastPlayTime_ > 0.0)
+                interpAcc_ = (interpVel_ - lastInterpVel)/(playTime_ - lastPlayTime_);
             else
-                interpAcc.setZero();
+                interpAcc_.setZero();
                 
-            lastPlayTime = playTime;
+            lastPlayTime_ = playTime_;
         }
         //Angular quantities
         Vector3 dummy;
-        interpTrans.setRotation(slerp(T1.getRotation(), T2.getRotation(), (playTime-t1)/(t2-t1)));
-        calculateVelocityShortestPath(T1, T2, t2-t1, dummy, interpAngVel);
-        if(!forward)
-            interpAngVel = -interpAngVel;
+        interpTrans_.setRotation(slerp(T1.getRotation(), T2.getRotation(), (playTime_-t1)/(t2-t1)));
+        calculateVelocityShortestPath(T1, T2, t2-t1, dummy, interpAngVel_);
+        if(!forward_)
+            interpAngVel_ = -interpAngVel_;
     }
 }
 
@@ -151,12 +151,12 @@ void BSTrajectory::BuildGraphicalPath()
 {
     PWLTrajectory::BuildGraphicalPath();
 
-    if(points.size() >= 3)
+    if(points_.size() >= 3)
     {
-        vis[1].getDataAsPoints()->clear();
-        std::vector<Scalar> p = spline.sample((size_t)ceil(points.back().t * 10));
+        vis_[1].getDataAsPoints()->clear();
+        std::vector<Scalar> p = spline_.sample((size_t)ceil(points_.back().t * 10));
         for(size_t i = 0; i<p.size(); i+=4)
-            vis[1].getDataAsPoints()->push_back(glm::vec3((GLfloat)p[i+1], (GLfloat)p[i+2], (GLfloat)p[i+3]));
+            vis_[1].getDataAsPoints()->push_back(glm::vec3((GLfloat)p[i+1], (GLfloat)p[i+2], (GLfloat)p[i+3]));
     }
 }
 

@@ -35,13 +35,13 @@ namespace sf
 
 Servo::Servo(std::string uniqueName, Scalar positionGain, Scalar velocityGain, Scalar maxTorque) : JointActuator(uniqueName)
 {
-    Kp = btFabs(positionGain);
-    Kv = btFabs(velocityGain);
-    tauMax = btFabs(maxTorque);
-    pSetpoint = Scalar(0);
-    vSetpoint = Scalar(0);
-    vLimit = Scalar(-1); // No limit
-    mode = ServoControlMode::VELOCITY;
+    Kp_ = btFabs(positionGain);
+    Kv_ = btFabs(velocityGain);
+    tauMax_ = btFabs(maxTorque);
+    pSetpoint_ = Scalar(0);
+    vSetpoint_ = Scalar(0);
+    vLimit_ = Scalar(-1); // No limit
+    mode_ = ServoControlMode::VELOCITY;
 }
 
 ActuatorType Servo::getType() const
@@ -51,80 +51,80 @@ ActuatorType Servo::getType() const
 
 void Servo::setControlMode(ServoControlMode m)
 {
-    mode = m;
+    mode_ = m;
 }
 
 void Servo::setDesiredPosition(Scalar pos)
 {
-    if(btFuzzyZero(pSetpoint - pos)) //Check if setpoint changed
+    if(btFuzzyZero(pSetpoint_ - pos)) //Check if setpoint changed
         return;
     
-    if(fe != nullptr)
+    if(fe_ != nullptr)
     {
-        FeatherstoneJoint jnt = fe->getJoint(jId);
+        FeatherstoneJoint jnt = fe_->getJoint(jId_);
         if(jnt.lowerLimit < jnt.upperLimit) //Does it have joint limits?
             pos = btClamped(pos, jnt.lowerLimit, jnt.upperLimit);
     }
     
-    pSetpoint = pos;
+    pSetpoint_ = pos;
 }
 
 void Servo::setDesiredVelocity(Scalar vel)
 {
-    if(btFuzzyZero(vSetpoint - vel)) //Check if setpoint changed
+    if(btFuzzyZero(vSetpoint_ - vel)) //Check if setpoint changed
         return;
         
     if(btFuzzyZero(vel))
-        pSetpoint = getPosition();
+        pSetpoint_ = getPosition();
 
-    if(vLimit > Scalar(0))
-        vSetpoint = btClamped(vel, -vLimit, vLimit);
+    if(vLimit_ > Scalar(0))
+        vSetpoint_ = btClamped(vel, -vLimit_, vLimit_);
     else
-        vSetpoint = vel;
+        vSetpoint_ = vel;
 
     ResetWatchdog();
 }
 
 void Servo::setMaxVelocity(Scalar vel)
 {
-    vLimit = vel;
+    vLimit_ = vel;
 }
 
 void Servo::setMaxTorque(Scalar tau)
 {
-    tauMax = tau;
-    if(fe != nullptr)
-        fe->setMaxMotorForceTorque(jId, tauMax);
+    tauMax_ = tau;
+    if(fe_ != nullptr)
+        fe_->setMaxMotorForceTorque(jId_, tauMax_);
 }
 
 Scalar Servo::getDesiredPosition() const
 {
-    return pSetpoint;
+    return pSetpoint_;
 }
         
 Scalar Servo::getDesiredVelocity() const
 {
-    return vSetpoint;
+    return vSetpoint_;
 }
     
 Scalar Servo::getPosition() const
 {
-    if(j != nullptr)
+    if(j_ != nullptr)
     {
-        switch(j->getType())
+        switch(j_->getType())
         {
             case JointType::REVOLUTE:
-                return ((RevoluteJoint*)j)->getAngle();
+                return ((RevoluteJoint*)j_)->getAngle();
             
             default:
                 return Scalar(0);
         }
     }
-    else if(fe != nullptr)
+    else if(fe_ != nullptr)
     {
         Scalar pos;
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
-        fe->getJointPosition(jId, pos, jt);
+        fe_->getJointPosition(jId_, pos, jt);
         return pos;
     }
     else
@@ -133,22 +133,22 @@ Scalar Servo::getPosition() const
     
 Scalar Servo::getVelocity() const
 {
-    if(j != nullptr)
+    if(j_ != nullptr)
     {
-        switch(j->getType())
+        switch(j_->getType())
         {
             case JointType::REVOLUTE:
-                return ((RevoluteJoint*)j)->getAngularVelocity();
+                return ((RevoluteJoint*)j_)->getAngularVelocity();
             
             default:
                 return Scalar(0);
         }
     }
-    else if(fe != nullptr)
+    else if(fe_ != nullptr)
     {
         Scalar vel;
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
-        fe->getJointVelocity(jId, vel, jt);
+        fe_->getJointVelocity(jId_, vel, jt);
         return vel;
     }
     else
@@ -157,8 +157,8 @@ Scalar Servo::getVelocity() const
     
 Scalar Servo::getEffort() const
 {
-    if(fe != nullptr)
-        return fe->getMotorForceTorque(jId);
+    if(fe_ != nullptr)
+        return fe_->getMotorForceTorque(jId_);
     else
         return Scalar(0);
 }
@@ -167,11 +167,11 @@ void Servo::AttachToJoint(FeatherstoneEntity* multibody, unsigned int jointId)
 {
     JointActuator::AttachToJoint(multibody, jointId);
     
-    if(fe != nullptr) //Actuator succesfully attached?
+    if(fe_ != nullptr) //Actuator succesfully attached?
     {
-        fe->AddJointMotor(jId, tauMax);
-        fe->MotorPositionSetpoint(jId, Scalar(0), Kp);
-        fe->MotorVelocitySetpoint(jId, Scalar(0), Kv);
+        fe_->AddJointMotor(jId_, tauMax_);
+        fe_->MotorPositionSetpoint(jId_, Scalar(0), Kp_);
+        fe_->MotorVelocitySetpoint(jId_, Scalar(0), Kv_);
     }
 }
 
@@ -179,14 +179,14 @@ void Servo::AttachToJoint(Joint* joint)
 {
     JointActuator::AttachToJoint(joint);
     
-    if(j != nullptr)
+    if(j_ != nullptr)
     {
-        switch(j->getType())
+        switch(j_->getType())
         {
             case JointType::REVOLUTE:
             {
-                pSetpoint = getPosition();
-                ((RevoluteJoint*)j)->EnableMotor(true, tauMax);
+                pSetpoint_ = getPosition();
+                ((RevoluteJoint*)j_)->EnableMotor(true, tauMax_);
             }
                 break;
 
@@ -200,53 +200,53 @@ void Servo::Update(Scalar dt)
 {
     Actuator::Update(dt);
 
-    if(j != nullptr)
+    if(j_ != nullptr)
     {
         Scalar vSetpoint2;
-        if(mode == ServoControlMode::POSITION || btFuzzyZero(vSetpoint))
+        if(mode_ == ServoControlMode::POSITION || btFuzzyZero(vSetpoint_))
         {
-            Scalar err = pSetpoint - getPosition();
-            vSetpoint2 = Kp * err;
-            if(vLimit > Scalar(0))
-                vSetpoint2 = btClamped(vSetpoint2, -vLimit, vLimit);
+            Scalar err = pSetpoint_ - getPosition();
+            vSetpoint2 = Kp_ * err;
+            if(vLimit_ > Scalar(0))
+                vSetpoint2 = btClamped(vSetpoint2, -vLimit_, vLimit_);
         }
         else
         {
             //vSetpoint2 = vSetpoint;
-            Scalar err = vSetpoint - getVelocity();  
-            vSetpoint2 = Kv * err + vSetpoint;
-            if(vLimit > Scalar(0))
-                vSetpoint2 = btClamped(vSetpoint2, -vLimit, vLimit);
+            Scalar err = vSetpoint_ - getVelocity();  
+            vSetpoint2 = Kv_ * err + vSetpoint_;
+            if(vLimit_ > Scalar(0))
+                vSetpoint2 = btClamped(vSetpoint2, -vLimit_, vLimit_);
         }
 
-        switch(j->getType())
+        switch(j_->getType())
         {
             case JointType::REVOLUTE:
-                ((RevoluteJoint*)j)->setMotorVelocity(vSetpoint2);
+                ((RevoluteJoint*)j_)->setMotorVelocity(vSetpoint2);
                 break;
             
             default:
                 break;
         }
     }
-    else if(fe != nullptr)
+    else if(fe_ != nullptr)
     {
         //Use internal multibody motors
-        switch(mode)
+        switch(mode_)
         {
             case ServoControlMode::POSITION: 
             {
-                Scalar err = pSetpoint - getPosition();
-                if(vLimit > Scalar(0)               // If velocity is limited 
-                   && btFabs(err) > vLimit * dt)    // and position error could result in crossing this limit
+                Scalar err = pSetpoint_ - getPosition();
+                if(vLimit_ > Scalar(0)               // If velocity is limited 
+                   && btFabs(err) > vLimit_ * dt)    // and position error could result in crossing this limit
                 {
-                    fe->MotorPositionSetpoint(jId, Scalar(0), Scalar(0));
-                    fe->MotorVelocitySetpoint(jId, err > Scalar(0) ? vLimit : -vLimit, Kv);
+                    fe_->MotorPositionSetpoint(jId_, Scalar(0), Scalar(0));
+                    fe_->MotorVelocitySetpoint(jId_, err > Scalar(0) ? vLimit_ : -vLimit_, Kv_);
                 }
                 else
                 {
-                    fe->MotorPositionSetpoint(jId, pSetpoint, Kp);
-                    fe->MotorVelocitySetpoint(jId, Scalar(0), Kv);
+                    fe_->MotorPositionSetpoint(jId_, pSetpoint_, Kp_);
+                    fe_->MotorVelocitySetpoint(jId_, Scalar(0), Kv_);
                 }
             }
                 break;
@@ -254,17 +254,17 @@ void Servo::Update(Scalar dt)
             case ServoControlMode::VELOCITY:
             case ServoControlMode::TORQUE:
             {
-                if(btFuzzyZero(vSetpoint))
+                if(btFuzzyZero(vSetpoint_))
                 { 
-                    fe->MotorPositionSetpoint(jId, pSetpoint, Kp);
-                    fe->MotorVelocitySetpoint(jId, Scalar(0), Kv);
+                    fe_->MotorPositionSetpoint(jId_, pSetpoint_, Kp_);
+                    fe_->MotorVelocitySetpoint(jId_, Scalar(0), Kv_);
                 }
                 else
                 {
-                    Scalar vSetpoint2 = vSetpoint;
+                    Scalar vSetpoint2 = vSetpoint_;
                     
                     //Do not allow to cross limits by changing velocity setpoint
-                    FeatherstoneJoint jnt = fe->getJoint(jId);
+                    FeatherstoneJoint jnt = fe_->getJoint(jId_);
                     if(jnt.lowerLimit < jnt.upperLimit)
                     {
                         Scalar jpos = getPosition();
@@ -272,8 +272,8 @@ void Servo::Update(Scalar dt)
                         vSetpoint2 = jpos2 < jnt.lowerLimit ? (jnt.lowerLimit - jpos)/dt : (jpos2 > jnt.upperLimit ? (jnt.upperLimit - jpos)/dt : vSetpoint2);
                     }
                     
-                    fe->MotorPositionSetpoint(jId, Scalar(0), Scalar(0));
-                    fe->MotorVelocitySetpoint(jId, vSetpoint2, Kv);
+                    fe_->MotorPositionSetpoint(jId_, Scalar(0), Scalar(0));
+                    fe_->MotorVelocitySetpoint(jId_, vSetpoint2, Kv_);
                 }
             }
                 break;
@@ -283,7 +283,7 @@ void Servo::Update(Scalar dt)
 
 void Servo::WatchdogTimeout()
 {
-    if(mode == ServoControlMode::VELOCITY)
+    if(mode_ == ServoControlMode::VELOCITY)
         setDesiredVelocity(Scalar(0));
 }
 

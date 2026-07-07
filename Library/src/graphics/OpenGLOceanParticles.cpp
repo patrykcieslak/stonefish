@@ -46,11 +46,11 @@ GLSLShader* OpenGLOceanParticles::renderShader = nullptr;
 GLSLShader* OpenGLOceanParticles::renderIdShader = nullptr;
 GLSLShader* OpenGLOceanParticles::updateShader = nullptr;
 
-OpenGLOceanParticles::OpenGLOceanParticles(size_t numOfParticles, GLfloat visibleRange) : OpenGLParticles(numOfParticles), uniformd(0, 1.f), normald(0, 1.f)
+OpenGLOceanParticles::OpenGLOceanParticles(size_t numOfParticles, GLfloat visibleRange) : OpenGLParticles(numOfParticles), uniformd_(0, 1.f), normald_(0, 1.f)
 {
-    initialised = false;
-    range = fabsf(visibleRange);
-    lastEyePos = glm::vec3(0);
+    initialised_ = false;
+    range_ = fabsf(visibleRange);
+    lastEyePos_ = glm::vec3(0);
 }
     
 OpenGLOceanParticles::~OpenGLOceanParticles()
@@ -59,32 +59,32 @@ OpenGLOceanParticles::~OpenGLOceanParticles()
 
 void OpenGLOceanParticles::Create(glm::vec3 eyePos)
 {
-    lastEyePos = eyePos;
+    lastEyePos_ = eyePos;
     //Create particles randomly (uniformly) distributed inside a sphere
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, particlePosSSBO);
-    glm::vec4* positions = (glm::vec4*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, sizeof(glm::vec4) * nParticles, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-    for(GLuint i=0; i<nParticles; ++i) 
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, particlePosSSBO_);
+    glm::vec4* positions = (glm::vec4*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, sizeof(glm::vec4) * nParticles_, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+    for(GLuint i=0; i<nParticles_; ++i) 
     {
-        GLfloat r = cbrtf(uniformd(generator)) * range; //cbrtf for uniform distribution in sphere volume
-        *(positions++) = glm::vec4(r * glm::normalize(glm::vec3(normald(generator), normald(generator), normald(generator))) + eyePos, uniformd(generator)*0.005f + 0.002f);
+        GLfloat r = cbrtf(uniformd_(generator_)) * range_; //cbrtf for uniform distribution in sphere volume
+        *(positions++) = glm::vec4(r * glm::normalize(glm::vec3(normald_(generator_), normald_(generator_), normald_(generator_))) + eyePos, uniformd_(generator_)*0.005f + 0.002f);
     }
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, particleVelSSBO);
-    glm::vec4* velocities = (glm::vec4*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, sizeof(glm::vec4) * nParticles, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-    memset(velocities, 0, sizeof(glm::vec4) * nParticles);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, particleVelSSBO_);
+    glm::vec4* velocities = (glm::vec4*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, sizeof(glm::vec4) * nParticles_, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+    memset(velocities, 0, sizeof(glm::vec4) * nParticles_);
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    initialised = true;
+    initialised_ = true;
 }
     
 void OpenGLOceanParticles::Update(OpenGLView* view, GLfloat dt)
 {
     glm::vec3 eyePos = view->GetEyePosition();
-    lastEyePos = eyePos;
+    lastEyePos_ = eyePos;
 
     //Check if ever updated
-    if(!initialised)
+    if(!initialised_)
     {
         Create(eyePos);
         return;
@@ -93,13 +93,13 @@ void OpenGLOceanParticles::Update(OpenGLView* view, GLfloat dt)
     //Move particles
     updateShader->Use();
     updateShader->SetUniform("dt", dt);
-    updateShader->SetUniform("numParticles", nParticles);
+    updateShader->SetUniform("numParticles", nParticles_);
     updateShader->SetUniform("eyePos", eyePos);
-    updateShader->SetUniform("R", range);
+    updateShader->SetUniform("R", range_);
     OpenGLState::BindTexture(TEX_MAT_ALBEDO, GL_TEXTURE_3D, noiseTexture);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POS, particlePosSSBO);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_VEL, particleVelSSBO);
-    glDispatchCompute((GLuint)ceil(nParticles/256.0), 1, 1);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POS, particlePosSSBO_);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_VEL, particleVelSSBO_);
+    glDispatchCompute((GLuint)ceil(nParticles_/256.0), 1, 1);
     OpenGLState::UnbindTexture(TEX_MAT_ALBEDO);
     OpenGLState::UseProgram(0);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -117,12 +117,12 @@ void OpenGLOceanParticles::Draw(OpenGLView* view, OpenGLOcean* glOcn)
     renderShader->SetUniform("viewDir", view->GetLookingDirection());
     renderShader->SetUniform("cWater", glOcn->getLightAttenuation());
     renderShader->SetUniform("bWater", glOcn->getLightScattering());
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POS, particlePosSSBO);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POS, particlePosSSBO_);
     OpenGLState::BindTexture(TEX_MAT_ALBEDO, GL_TEXTURE_2D, flakeTexture);
     OpenGLState::EnableBlend();
     glBlendFunc(GL_ONE, GL_ONE);
-    OpenGLState::BindVertexArray(particleVAO);
-    glDrawElements(GL_TRIANGLES, nParticles * 6, GL_UNSIGNED_INT, 0);
+    OpenGLState::BindVertexArray(particleVAO_);
+    glDrawElements(GL_TRIANGLES, nParticles_ * 6, GL_UNSIGNED_INT, 0);
     OpenGLState::BindVertexArray(0);
     OpenGLState::DisableBlend();
     OpenGLState::UnbindTexture(TEX_MAT_ALBEDO);
@@ -139,10 +139,10 @@ void OpenGLOceanParticles::DrawId(OpenGLView* view, GLushort id)
     renderIdShader->SetUniform("FC", view->GetLogDepthConstant());
     renderIdShader->SetUniform("objectId", (GLuint)id);
 
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POS, particlePosSSBO);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POS, particlePosSSBO_);
     OpenGLState::BindTexture(TEX_MAT_ALBEDO, GL_TEXTURE_2D, flakeTexture);
-    OpenGLState::BindVertexArray(particleVAO);
-    glDrawElements(GL_TRIANGLES, nParticles * 6, GL_UNSIGNED_INT, 0);
+    OpenGLState::BindVertexArray(particleVAO_);
+    glDrawElements(GL_TRIANGLES, nParticles_ * 6, GL_UNSIGNED_INT, 0);
     OpenGLState::BindVertexArray(0);
     OpenGLState::UnbindTexture(TEX_MAT_ALBEDO);
     OpenGLState::UseProgram(0);

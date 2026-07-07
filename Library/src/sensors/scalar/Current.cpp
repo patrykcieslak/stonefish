@@ -33,8 +33,8 @@ namespace sf
 
 Current::Current(std::string uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
 {
-    motor = nullptr;
-    channels.push_back(SensorChannel("Current", QuantityType::CURRENT));
+    motor_ = nullptr;
+    channels_.push_back(SensorChannel("Current", QuantityType::CURRENT));
 }
 
 Transform Current::getSensorFrame() const
@@ -51,15 +51,15 @@ void Current::getSensorVelocity(Vector3& linear, Vector3& angular) const
 void Current::AttachToMotor(DCMotor* m)
 {
     if(m != nullptr)
-        motor = m;
+        motor_ = m;
 }
 
 void Current::InternalUpdate(Scalar dt)
 {
     //read current
     Scalar current = Scalar(0);
-    if(motor != nullptr)
-        current = motor->getCurrent();
+    if(motor_ != nullptr)
+        current = motor_->getCurrent();
     
     //record sample
     Sample s{std::vector<Scalar>({current})};

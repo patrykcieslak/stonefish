@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/3/13.
-//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -72,6 +72,6 @@ namespace sf
         EntityType getType() const;
         
     protected:
-        btPairCachingGhostObject* ghost;
+        btPairCachingGhostObject* ghost_;
     };
 }

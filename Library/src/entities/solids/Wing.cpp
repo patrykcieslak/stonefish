@@ -36,7 +36,7 @@ Wing::Wing(std::string uniqueName, PhysicsSettings phy, Scalar baseChordLength, 
            std::string material, std::string look, Scalar thickness)
            : SolidEntity(uniqueName, phy, material, look, thickness)
 {
-    T_O2G = T_O2C = origin;
+    T_O2G_ = T_O2C_ = origin;
     baseChordLength = baseChordLength <= Scalar(0) ? Scalar(1) : baseChordLength;
     tipChordLength = tipChordLength < Scalar(0) ? baseChordLength : tipChordLength;
     maxCamber = maxCamber < Scalar(0) ? Scalar(0) : (maxCamber > Scalar(100) ? Scalar(100) : maxCamber);
@@ -45,29 +45,29 @@ Wing::Wing(std::string uniqueName, PhysicsSettings phy, Scalar baseChordLength, 
     wingLength = wingLength < Scalar(0) ? Scalar(0) : wingLength;
     
     //1. Build wing geometry
-    phyMesh = OpenGLContent::BuildWing((GLfloat)baseChordLength, (GLfloat)tipChordLength, (GLfloat)maxCamber, (GLfloat)maxCamberPos,
+    phyMesh_ = OpenGLContent::BuildWing((GLfloat)baseChordLength, (GLfloat)tipChordLength, (GLfloat)maxCamber, (GLfloat)maxCamberPos,
                                        (GLfloat)profileThickness, (GLfloat)wingLength);
     
     //2. Compute physical properties
     Vector3 CG;
     Matrix3 Irot;
-    ComputePhysicalProperties(phyMesh, thickness, mat.density, mass, CG, volume, surface, Ipri, Irot);
-    T_CG2C.setOrigin(-CG); //Set CG position
-    T_CG2C = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C; //Align CG frame to principal axes of inertia
-    T_CG2O = T_CG2C * T_O2C.inverse();
-    T_CG2G = T_CG2O * T_O2G;
+    ComputePhysicalProperties(phyMesh_, thickness, mat_.density, mass_, CG, volume_, surface_, Ipri_, Irot);
+    T_CG2C_.setOrigin(-CG); //Set CG position
+    T_CG2C_ = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C_; //Align CG frame to principal axes of inertia
+    T_CG2O_ = T_CG2C_ * T_O2C_.inverse();
+    T_CG2G_ = T_CG2O_ * T_O2G_;
     
     //3. Compute hydrodynamic properties
     ComputeFluidDynamicsApprox(GeometryApproxType::ELLIPSOID);
-    T_O2H = T_CG2O.inverse() * T_CG2H;
-    P_CB = Vector3(0,0,0);
+    T_O2H_ = T_CG2O_.inverse() * T_CG2H_;
+    P_CB_ = Vector3(0,0,0);
 }
     
 Wing::Wing(std::string uniqueName, PhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength, std::string NACA, Scalar wingLength, const Transform& origin, 
            std::string material, std::string look, Scalar thickness)
            : SolidEntity(uniqueName, phy, material, look, thickness)
 {
-    T_O2G = T_O2C = origin;
+    T_O2G_ = T_O2C_ = origin;
     baseChordLength = baseChordLength <= Scalar(0) ? Scalar(1) : baseChordLength;
     tipChordLength = tipChordLength < Scalar(0) ? baseChordLength : tipChordLength;
     wingLength = wingLength < Scalar(0) ? Scalar(0) : wingLength;
@@ -97,23 +97,23 @@ Wing::Wing(std::string uniqueName, PhysicsSettings phy, Scalar baseChordLength, 
     }
     
     //2. Build wing geometry
-    phyMesh = OpenGLContent::BuildWing((GLfloat)baseChordLength, (GLfloat)tipChordLength, (GLfloat)maxCamber, (GLfloat)maxCamberPos,
+    phyMesh_ = OpenGLContent::BuildWing((GLfloat)baseChordLength, (GLfloat)tipChordLength, (GLfloat)maxCamber, (GLfloat)maxCamberPos,
                                        (GLfloat)profileThickness, (GLfloat)wingLength);
     
     
     //3. Compute physical properties
     Vector3 CG;
     Matrix3 Irot;
-    ComputePhysicalProperties(phyMesh, thickness, mat.density, mass, CG, volume, surface, Ipri, Irot);
-    T_CG2C.setOrigin(-CG); //Set CG position
-    T_CG2C = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C; //Align CG frame to principal axes of inertia
-    T_CG2O = T_CG2C * T_O2C.inverse();
-    T_CG2G = T_CG2O * T_O2G;
+    ComputePhysicalProperties(phyMesh_, thickness, mat_.density, mass_, CG, volume_, surface_, Ipri_, Irot);
+    T_CG2C_.setOrigin(-CG); //Set CG position
+    T_CG2C_ = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C_; //Align CG frame to principal axes of inertia
+    T_CG2O_ = T_CG2C_ * T_O2C_.inverse();
+    T_CG2G_ = T_CG2O_ * T_O2G_;
 
     //4. Compute hydrodynamic properties
     ComputeFluidDynamicsApprox(GeometryApproxType::ELLIPSOID);
-    T_O2H = T_CG2O.inverse() * T_CG2H;
-    P_CB = Vector3(0,0,0);
+    T_O2H_ = T_CG2O_.inverse() * T_CG2H_;
+    P_CB_ = Vector3(0,0,0);
 }
     
 SolidType Wing::getSolidType()
@@ -124,9 +124,9 @@ SolidType Wing::getSolidType()
 btCollisionShape* Wing::BuildCollisionShape()
 {
     btConvexHullShape* convex = new btConvexHullShape();
-    for(size_t i=0; i<phyMesh->getNumOfVertices(); ++i)
+    for(size_t i=0; i<phyMesh_->getNumOfVertices(); ++i)
     {
-        glm::vec3 pos = phyMesh->getVertexPos(i);
+        glm::vec3 pos = phyMesh_->getVertexPos(i);
         Vector3 v(pos.x, pos.y, pos.z);
         convex->addPoint(v);
     }

@@ -37,76 +37,76 @@ namespace sf
 
 OpenGLConsole::OpenGLConsole()
 {
-    windowW = 0;
-    windowH = 0;
-    lastTime = 0;
-    scrollOffset = 0.f;
-    scrollVelocity = 0.f;
-    printer = NULL;
-    logoTexture = 0;
-    consoleVAO = 0;
-    texQuadShader = NULL;
-    lastTime = GetTimeInMicroseconds();
+    windowW_ = 0;
+    windowH_ = 0;
+    lastTime_ = 0;
+    scrollOffset_ = 0.f;
+    scrollVelocity_ = 0.f;
+    printer_ = NULL;
+    logoTexture_ = 0;
+    consoleVAO_ = 0;
+    texQuadShader_ = NULL;
+    lastTime_ = GetTimeInMicroseconds();
 }
     
 OpenGLConsole::~OpenGLConsole()
 {
-    if(printer != NULL) delete printer;
-    if(logoTexture > 0) glDeleteTextures(1, &logoTexture);
-    if(consoleVAO > 0) glDeleteVertexArrays(1, &consoleVAO);
-    if(texQuadShader != NULL) delete texQuadShader;
+    if(printer_ != NULL) delete printer_;
+    if(logoTexture_ > 0) glDeleteTextures(1, &logoTexture_);
+    if(consoleVAO_ > 0) glDeleteVertexArrays(1, &consoleVAO_);
+    if(texQuadShader_ != NULL) delete texQuadShader_;
 }
     
 void OpenGLConsole::Init(int w, int h)
 {
-    windowW = w;
-    windowH = h;
-    OpenGLPrinter::SetWindowSize(windowW, windowH);
+    windowW_ = w;
+    windowH_ = h;
+    OpenGLPrinter::SetWindowSize(windowW_, windowH_);
     
-    if(logoTexture > 0) //Check if not already initialized
+    if(logoTexture_ > 0) //Check if not already initialized
         return;
     //Load logo texture
-    logoTexture = OpenGLContent::LoadInternalTexture("logo_64.png", false, true);
+    logoTexture_ = OpenGLContent::LoadInternalTexture("logo_64.png", false, true);
     
-    glGenVertexArrays(1, &consoleVAO);
-    OpenGLState::BindVertexArray(consoleVAO);
+    glGenVertexArrays(1, &consoleVAO_);
+    OpenGLState::BindVertexArray(consoleVAO_);
     glEnableVertexAttribArray(0);
     OpenGLState::BindVertexArray(0);
     
-    texQuadShader = new GLSLShader("texQuad.frag","texQuad.vert");
-    texQuadShader->AddUniform("rect", ParameterType::VEC4);
-    texQuadShader->AddUniform("tex", ParameterType::INT);
-    texQuadShader->AddUniform("color", ParameterType::VEC4);
+    texQuadShader_ = new GLSLShader("texQuad.frag","texQuad.vert");
+    texQuadShader_->AddUniform("rect", ParameterType::VEC4);
+    texQuadShader_->AddUniform("tex", ParameterType::INT);
+    texQuadShader_->AddUniform("color", ParameterType::VEC4);
     
-    printer = new OpenGLPrinter(GetShaderPath() + std::string(STANDARD_FONT_NAME), STANDARD_FONT_SIZE);
+    printer_ = new OpenGLPrinter(GetShaderPath() + std::string(STANDARD_FONT_NAME), STANDARD_FONT_SIZE);
 }
     
 void OpenGLConsole::Scroll(GLfloat amount)
 {
-    scrollVelocity += 25.f * amount;
+    scrollVelocity_ += 25.f * amount;
 }
     
 void OpenGLConsole::ResetScroll()
 {
-    scrollOffset = 0.f;
-    scrollVelocity = 0.f;
+    scrollOffset_ = 0.f;
+    scrollVelocity_ = 0.f;
 }
     
 void OpenGLConsole::Render(bool overlay)
 {
-    if(logoTexture == 0)
+    if(logoTexture_ == 0)
         return;
     
     int64_t now = GetTimeInMicroseconds();
-    GLfloat dt = (lastTime-now)/1000000.f;
-    lastTime = now;
+    GLfloat dt = (lastTime_-now)/1000000.f;
+    lastTime_ = now;
         
-    if(lines.size() == 0)
+    if(lines_.size() == 0)
         return;
         
     //Calculate visible lines range
-    long int maxVisibleLines = (long int)floorf((GLfloat)windowH/(GLfloat)(STANDARD_FONT_SIZE + 5)) + 1;
-    long int linesCount = lines.size();
+    long int maxVisibleLines = (long int)floorf((GLfloat)windowH_/(GLfloat)(STANDARD_FONT_SIZE + 5)) + 1;
+    long int linesCount = lines_.size();
     long int visibleLines = maxVisibleLines;
     long int scrolledLines = 0;
         
@@ -118,66 +118,66 @@ void OpenGLConsole::Render(bool overlay)
     
     if(linesCount < maxVisibleLines) //there is enough space to display all lines
     {
-        scrollOffset = 0.f;
-        scrollVelocity = 0.f;
+        scrollOffset_ = 0.f;
+        scrollVelocity_ = 0.f;
         visibleLines = linesCount;
     }
     else //there is more lines than can appear on screen at once
     {
-        scrolledLines = (long int)floorf(-scrollOffset /(GLfloat)(STANDARD_FONT_SIZE + 5));
+        scrolledLines = (long int)floorf(-scrollOffset_ /(GLfloat)(STANDARD_FONT_SIZE + 5));
         scrolledLines = scrolledLines < 0 ? 0 : scrolledLines;
         if(linesCount < scrolledLines + visibleLines)
             visibleLines = linesCount - scrolledLines;
         
-        if(scrollVelocity != 0.f) //velocity damping (momentum effect)
+        if(scrollVelocity_ != 0.f) //velocity damping (momentum effect)
         {
-            scrollOffset += scrollVelocity * dt;
-            GLfloat dampingAcc = scrollVelocity * 1.f;
-            scrollVelocity += dampingAcc * dt;
+            scrollOffset_ += scrollVelocity_ * dt;
+            GLfloat dampingAcc = scrollVelocity_ * 1.f;
+            scrollVelocity_ += dampingAcc * dt;
         }
         
         //springy effect
-        if(scrollOffset > 0.f) //the list is scrolled up too much
+        if(scrollOffset_ > 0.f) //the list is scrolled up too much
         {
-            GLfloat newVelocity = scrollVelocity - scrollOffset * 10.f * dt;
+            GLfloat newVelocity = scrollVelocity_ - scrollOffset_ * 10.f * dt;
             if(newVelocity > 0.f)
-                scrollVelocity = scrollOffset * 2.f;
+                scrollVelocity_ = scrollOffset_ * 2.f;
             else
-                scrollVelocity = newVelocity;
+                scrollVelocity_ = newVelocity;
         }
         else if(visibleLines < (maxVisibleLines - 1)) //the list is scrolled down too much
         {
-            GLfloat newVelocity = scrollVelocity + (1.f - (GLfloat)visibleLines/(GLfloat)(maxVisibleLines - 2)) * (GLfloat)windowH * 10.f * dt;
+            GLfloat newVelocity = scrollVelocity_ + (1.f - (GLfloat)visibleLines/(GLfloat)(maxVisibleLines - 2)) * (GLfloat)windowH_ * 10.f * dt;
             if(newVelocity < 0.f)
-                scrollVelocity = -((1.f - (GLfloat)visibleLines/(GLfloat)(maxVisibleLines - 1)) * (GLfloat)windowH) * 2.f;
+                scrollVelocity_ = -((1.f - (GLfloat)visibleLines/(GLfloat)(maxVisibleLines - 1)) * (GLfloat)windowH_) * 2.f;
             else
-                scrollVelocity = newVelocity;
+                scrollVelocity_ = newVelocity;
         }
     }
     
     //Setup viewport and ortho
     if(overlay)
     {
-        glScissor(0, 0, windowW, windowH);
-        OpenGLState::Viewport(0, 0, windowW, windowH);
+        glScissor(0, 0, windowW_, windowH_);
+        OpenGLState::Viewport(0, 0, windowW_, windowH_);
         OpenGLState::DisableDepthTest();
         OpenGLState::DisableCullFace();
         OpenGLState::EnableBlend();
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         
-        texQuadShader->Use();
-        texQuadShader->SetUniform("tex", 0);
-        texQuadShader->SetUniform("color",  glm::vec4(0.3f,0.3f,0.3f,1.f));
-        texQuadShader->SetUniform("rect", glm::vec4(0, 0, 1.f, 1.f));
+        texQuadShader_->Use();
+        texQuadShader_->SetUniform("tex", 0);
+        texQuadShader_->SetUniform("color",  glm::vec4(0.3f,0.3f,0.3f,1.f));
+        texQuadShader_->SetUniform("rect", glm::vec4(0, 0, 1.f, 1.f));
         
         OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, ((GraphicalSimulationApp*)SimulationApp::getApp())->getGUI()->getTranslucentTexture());
-        OpenGLState::BindVertexArray(consoleVAO);
+        OpenGLState::BindVertexArray(consoleVAO_);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         
-        texQuadShader->SetUniform("color",  glm::vec4(1.f,1.f,1.f,1.f));
-        texQuadShader->SetUniform("rect", glm::vec4((windowW - logoSize - logoMargin)/(GLfloat)windowW, 1.f - (logoMargin+logoSize)/(GLfloat)windowH, logoSize/(GLfloat)windowW, logoSize/(GLfloat)windowH));
+        texQuadShader_->SetUniform("color",  glm::vec4(1.f,1.f,1.f,1.f));
+        texQuadShader_->SetUniform("rect", glm::vec4((windowW_ - logoSize - logoMargin)/(GLfloat)windowW_, 1.f - (logoMargin+logoSize)/(GLfloat)windowH_, logoSize/(GLfloat)windowW_, logoSize/(GLfloat)windowH_));
         
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, logoTexture);
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, logoTexture_);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         OpenGLState::UseProgram(0);
         OpenGLState::UnbindTexture(TEX_BASE);
@@ -185,7 +185,7 @@ void OpenGLConsole::Render(bool overlay)
         //Text rendering
         for(long int i = scrolledLines; i < scrolledLines + visibleLines; i++)
         {
-            ConsoleMessage* msg = &lines[linesCount-1-i];
+            ConsoleMessage* msg = &lines_[linesCount-1-i];
             glm::vec4 color;
             switch(msg->type)
             {
@@ -200,7 +200,7 @@ void OpenGLConsole::Render(bool overlay)
                     color = error;
                     break;
             }
-            printer->Print(msg->text.c_str(), color, 10.f, scrollOffset + 10.f + i * (STANDARD_FONT_SIZE + 5), STANDARD_FONT_SIZE);
+            printer_->Print(msg->text.c_str(), color, 10.f, scrollOffset_ + 10.f + i * (STANDARD_FONT_SIZE + 5), STANDARD_FONT_SIZE);
         }
         
         OpenGLState::BindVertexArray(0);
@@ -210,13 +210,13 @@ void OpenGLConsole::Render(bool overlay)
     }
     else //During loading of resources (displaying in second thread -> no VAO sharing)
     {
-        glUseProgram(texQuadShader->getProgramHandle());
-        texQuadShader->SetUniform("tex", 0);
-        texQuadShader->SetUniform("color",  glm::vec4(1.f,1.f,1.f,1.f));
-        texQuadShader->SetUniform("rect", glm::vec4((windowW - logoSize - logoMargin)/(GLfloat)windowW, 1.f - (logoMargin+logoSize)/(GLfloat)windowH, logoSize/(GLfloat)windowW, logoSize/(GLfloat)windowH));
+        glUseProgram(texQuadShader_->getProgramHandle());
+        texQuadShader_->SetUniform("tex", 0);
+        texQuadShader_->SetUniform("color",  glm::vec4(1.f,1.f,1.f,1.f));
+        texQuadShader_->SetUniform("rect", glm::vec4((windowW_ - logoSize - logoMargin)/(GLfloat)windowW_, 1.f - (logoMargin+logoSize)/(GLfloat)windowH_, logoSize/(GLfloat)windowW_, logoSize/(GLfloat)windowH_));
         
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, logoTexture);
+        glBindTexture(GL_TEXTURE_2D, logoTexture_);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindTexture(GL_TEXTURE_2D, 0);
         glUseProgram(0);
@@ -224,7 +224,7 @@ void OpenGLConsole::Render(bool overlay)
         //Text rendering
         for(long int i = scrolledLines; i < scrolledLines + visibleLines; i++)
         {
-            ConsoleMessage* msg = &lines[linesCount-1-i];
+            ConsoleMessage* msg = &lines_[linesCount-1-i];
             glm::vec4 color;
             switch(msg->type)
             {
@@ -239,7 +239,7 @@ void OpenGLConsole::Render(bool overlay)
                     color = error;
                     break;
             }
-            printer->Print(msg->text.c_str(), color, 10.f, scrollOffset + 10.f + i * (STANDARD_FONT_SIZE + 5), STANDARD_FONT_SIZE, true);
+            printer_->Print(msg->text.c_str(), color, 10.f, scrollOffset_ + 10.f + i * (STANDARD_FONT_SIZE + 5), STANDARD_FONT_SIZE, true);
         }
     }
     

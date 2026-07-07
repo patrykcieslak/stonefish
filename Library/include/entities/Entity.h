@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -119,7 +119,7 @@ namespace sf
         virtual void getAABB(Vector3& min, Vector3& max) = 0;
         
     private:
-        bool renderable;
-        std::string name;
+        bool renderable_;
+        std::string name_;
     };
 }

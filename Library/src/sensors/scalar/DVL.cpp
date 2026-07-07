@@ -37,29 +37,29 @@ namespace sf
 
 DVL::DVL(std::string uniqueName, Scalar beamAngleDeg, bool beamPositiveZ, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    range[0] = range[1] = range[2] = range[3] = Scalar(0.);
-    beamAngle = btRadians(beamAngleDeg);
-    beamPosZ = beamPositiveZ;
-    channels.push_back(SensorChannel("Velocity X", QuantityType::VELOCITY));
-    channels.push_back(SensorChannel("Velocity Y", QuantityType::VELOCITY));
-    channels.push_back(SensorChannel("Velocity Z", QuantityType::VELOCITY));
-    channels.push_back(SensorChannel("Altitude", QuantityType::LENGTH));
-    channels.push_back(SensorChannel("Water velocity X", QuantityType::VELOCITY));
-    channels.push_back(SensorChannel("Water velocity Y", QuantityType::VELOCITY));
-    channels.push_back(SensorChannel("Water velocity Z", QuantityType::VELOCITY));
-    channels.push_back(SensorChannel("Status", QuantityType::UNITLESS));
-    channels[3].rangeMin = Scalar(0);
-    channels[3].rangeMax = Scalar(1000);
-    addNoiseStdDev[0] = addNoiseStdDev[1] = Scalar(0);
-    mulNoiseFactor[0] = mulNoiseFactor[1] = Scalar(0);
+    range_[0] = range_[1] = range_[2] = range_[3] = Scalar(0.);
+    beamAngle_ = btRadians(beamAngleDeg);
+    beamPosZ_ = beamPositiveZ;
+    channels_.push_back(SensorChannel("Velocity X", QuantityType::VELOCITY));
+    channels_.push_back(SensorChannel("Velocity Y", QuantityType::VELOCITY));
+    channels_.push_back(SensorChannel("Velocity Z", QuantityType::VELOCITY));
+    channels_.push_back(SensorChannel("Altitude", QuantityType::LENGTH));
+    channels_.push_back(SensorChannel("Water velocity X", QuantityType::VELOCITY));
+    channels_.push_back(SensorChannel("Water velocity Y", QuantityType::VELOCITY));
+    channels_.push_back(SensorChannel("Water velocity Z", QuantityType::VELOCITY));
+    channels_.push_back(SensorChannel("Status", QuantityType::UNITLESS));
+    channels_[3].rangeMin = Scalar(0);
+    channels_[3].rangeMax = Scalar(1000);
+    addNoiseStdDev_[0] = addNoiseStdDev_[1] = Scalar(0);
+    mulNoiseFactor_[0] = mulNoiseFactor_[1] = Scalar(0);
     setWaterLayer(0, 0, 0);
 }
 
 void DVL::setWaterLayer(Scalar minSize, Scalar nearBoundary, Scalar farBoundary)
 {
-    waterLayer.setX(btClamped(minSize, Scalar(0), channels[3].rangeMax - channels[3].rangeMin));
-    waterLayer.setY(btClamped(nearBoundary, channels[3].rangeMin, channels[3].rangeMax - waterLayer.getX()));
-    waterLayer.setZ(btClamped(farBoundary, waterLayer.getX() + waterLayer.getY(), channels[3].rangeMax));
+    waterLayer_.setX(btClamped(minSize, Scalar(0), channels_[3].rangeMax - channels_[3].rangeMin));
+    waterLayer_.setY(btClamped(nearBoundary, channels_[3].rangeMin, channels_[3].rangeMax - waterLayer_.getX()));
+    waterLayer_.setZ(btClamped(farBoundary, waterLayer_.getX() + waterLayer_.getY(), channels_[3].rangeMax));
 }
     
 void DVL::InternalUpdate(Scalar dt)
@@ -82,22 +82,22 @@ void DVL::InternalUpdate(Scalar dt)
     for(unsigned int i=0; i<4; ++i)
     {
         Scalar alpha = M_PI_4 + i * M_PI_2;
-        dir[i] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle) 
-                 + (dvlTrans.getBasis().getColumn(0) * btCos(alpha) + dvlTrans.getBasis().getColumn(1) * btSin(alpha)) * btSin(beamAngle);
+        dir[i] = dvlTrans.getBasis().getColumn(2) * btCos(beamAngle_) 
+                 + (dvlTrans.getBasis().getColumn(0) * btCos(alpha) + dvlTrans.getBasis().getColumn(1) * btSin(alpha)) * btSin(beamAngle_);
     }
     
-    Scalar dirFactor = beamPosZ ? Scalar(1) : Scalar(-1);
+    Scalar dirFactor = beamPosZ_ ? Scalar(1) : Scalar(-1);
 
-    unsigned int divs = ceil(channels[3].rangeMax - channels[3].rangeMin);
+    unsigned int divs = ceil(channels_[3].rangeMax - channels_[3].rangeMin);
     Scalar minRange(-1);
 
     for(unsigned int i=0; i<4; ++i)
     {
-        from[i] = dvlTrans.getOrigin() + dirFactor * dir[i] * channels[3].rangeMin;
-        to[i] = dvlTrans.getOrigin() + dirFactor * dir[i] * channels[3].rangeMax;
+        from[i] = dvlTrans.getOrigin() + dirFactor * dir[i] * channels_[3].rangeMin;
+        to[i] = dvlTrans.getOrigin() + dirFactor * dir[i] * channels_[3].rangeMax;
 
         Vector3 step = (to[i]-from[i])/Scalar(divs);
-        range[i] = Scalar(-1);
+        range_[i] = Scalar(-1);
 
         for(unsigned int h=0; h<divs; ++h)
         {
@@ -111,17 +111,17 @@ void DVL::InternalUpdate(Scalar dt)
             if(closest.hasHit())
             {
                 Vector3 p = from_.lerp(to_, closest.m_closestHitFraction);
-                range[i] = (p - dvlTrans.getOrigin()).length();
+                range_[i] = (p - dvlTrans.getOrigin()).length();
                 break;
             }
         }
 
-        if(range[i] > Scalar(0) && (range[i] < minRange || minRange < Scalar(0)))
-                minRange = range[i];
+        if(range_[i] > Scalar(0) && (range_[i] < minRange || minRange < Scalar(0)))
+                minRange = range_[i];
     }
 
     //Get altitude
-    Scalar altitude = channels[3].rangeMax;
+    Scalar altitude = channels_[3].rangeMax;
     Vector3 v = V0();
     status = 3;
 
@@ -131,8 +131,8 @@ void DVL::InternalUpdate(Scalar dt)
     {
         for(unsigned int i=0; i<4; ++i)
         {
-            range[i] = Scalar(-1);
-            from[i] = dvlTrans.getOrigin() + dirFactor * dir[i] * channels[3].rangeMin;
+            range_[i] = Scalar(-1);
+            from[i] = dvlTrans.getOrigin() + dirFactor * dir[i] * channels_[3].rangeMin;
             to[i] = dvlTrans.getOrigin();
             btCollisionWorld::ClosestRayResultCallback closest(from[i], to[i]);
             closest.m_collisionFilterGroup = MASK_DYNAMIC;
@@ -142,8 +142,8 @@ void DVL::InternalUpdate(Scalar dt)
             if(closest.hasHit() && btDot(closest.m_hitNormalWorld, dirFactor * dir[i]) > Scalar(0))
             {
                 Vector3 p = from[i].lerp(to[i], closest.m_closestHitFraction);
-                range[i] = (p - dvlTrans.getOrigin()).length();
-                if(range[i] < minRange || minRange < Scalar(0)) minRange = range[i];
+                range_[i] = (p - dvlTrans.getOrigin()).length();
+                if(range_[i] < minRange || minRange < Scalar(0)) minRange = range_[i];
             }
         }
         if(minRange > Scalar(0)) //Detection closer than minimum range of DVL - no water ping possible
@@ -151,8 +151,8 @@ void DVL::InternalUpdate(Scalar dt)
     }
     else //Successful bottom ping
     {
-        altitude = minRange * btCos(beamAngle);
-        v = dvlTrans.getBasis().inverse() * attach->getLinearVelocityInLocalPoint(dvlTrans.getOrigin() - attach->getCGTransform().getOrigin());
+        altitude = minRange * btCos(beamAngle_);
+        v = dvlTrans.getBasis().inverse() * attach_->getLinearVelocityInLocalPoint(dvlTrans.getOrigin() - attach_->getCGTransform().getOrigin());
         status = 0;
     }
     
@@ -162,17 +162,17 @@ void DVL::InternalUpdate(Scalar dt)
     //a) layer thickness = 0
     //b) compressed layer thickness is less than minimum layer thickness
     //ASSUME: Water layer far boundary has to be closer than 80% of altitude.
-    if(!tooClose && waterLayer.getX() > Scalar(0) && Scalar(0.8)*altitude > waterLayer.getX() + waterLayer.getY()) //Water layer ping possible
+    if(!tooClose && waterLayer_.getX() > Scalar(0) && Scalar(0.8)*altitude > waterLayer_.getX() + waterLayer_.getY()) //Water layer ping possible
     {
         Ocean* ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();
         if(ocn != nullptr)
         {
             Vector3 zDir = dvlTrans.getBasis().getColumn(2);
             //Layer compressed until minimum layer thinckness is reached.
-            Scalar layerSize = btClamped(Scalar(0.8) * altitude - waterLayer.getY(), waterLayer.getX(), waterLayer.getZ()-waterLayer.getY());
+            Scalar layerSize = btClamped(Scalar(0.8) * altitude - waterLayer_.getY(), waterLayer_.getX(), waterLayer_.getZ()-waterLayer_.getY());
             //Sample velocity
             unsigned int n = ceil(layerSize/Scalar(0.1)); //ASSUME: Mesurement resolution = 0.1 m.
-            Scalar dist = waterLayer.getY();
+            Scalar dist = waterLayer_.getY();
             Scalar weight(0);
             for(unsigned int i=0; i<=n; ++i)
             {
@@ -191,12 +191,12 @@ void DVL::InternalUpdate(Scalar dt)
     }
     
     //Update noise characteristics
-    channels[0].setStdDev(mulNoiseFactor[0] * v.x() + addNoiseStdDev[0]);
-    channels[1].setStdDev(mulNoiseFactor[0] * v.y() + addNoiseStdDev[0]);
-    channels[2].setStdDev(mulNoiseFactor[0] * v.z() + addNoiseStdDev[0]);
-    channels[4].setStdDev(mulNoiseFactor[1] * wv.x() + addNoiseStdDev[1]);
-    channels[5].setStdDev(mulNoiseFactor[1] * wv.y() + addNoiseStdDev[1]);
-    channels[6].setStdDev(mulNoiseFactor[1] * wv.z() + addNoiseStdDev[1]);
+    channels_[0].setStdDev(mulNoiseFactor_[0] * v.x() + addNoiseStdDev_[0]);
+    channels_[1].setStdDev(mulNoiseFactor_[0] * v.y() + addNoiseStdDev_[0]);
+    channels_[2].setStdDev(mulNoiseFactor_[0] * v.z() + addNoiseStdDev_[0]);
+    channels_[4].setStdDev(mulNoiseFactor_[1] * wv.x() + addNoiseStdDev_[1]);
+    channels_[5].setStdDev(mulNoiseFactor_[1] * wv.y() + addNoiseStdDev_[1]);
+    channels_[6].setStdDev(mulNoiseFactor_[1] * wv.z() + addNoiseStdDev_[1]);
     
     //Save data
     Sample s{std::vector<Scalar>({v.x(), v.y(), v.z(), altitude, wv.x(), wv.y(), wv.z(), Scalar(status)})};
@@ -223,10 +223,10 @@ std::vector<Renderable> DVL::Render()
             for(unsigned int i=0; i<4; ++i)
             {
                 Scalar alpha = M_PI_4 + i * M_PI_2;
-                dir[i] = (Vector3(0,0,1) * btCos(beamAngle) + (Vector3(1,0,0) * btCos(alpha) + Vector3(0,1,0) * btSin(alpha)) * btSin(beamAngle)).safeNormalize();
+                dir[i] = (Vector3(0,0,1) * btCos(beamAngle_) + (Vector3(1,0,0) * btCos(alpha) + Vector3(0,1,0) * btSin(alpha)) * btSin(beamAngle_)).safeNormalize();
             }
             
-            if(!beamPosZ)
+            if(!beamPosZ_)
             {
                 dir[0] = -dir[0];
                 dir[1] = -dir[1];
@@ -234,38 +234,38 @@ std::vector<Renderable> DVL::Render()
                 dir[3] = -dir[3];
             }
 
-            if(range[0] > Scalar(0))
+            if(range_[0] > Scalar(0))
             {
                 points->push_back(glm::vec3(0,0,0));
-                points->push_back(glm::vec3(dir[0].x()*range[0], dir[0].y()*range[0], dir[0].z()*range[0]));
+                points->push_back(glm::vec3(dir[0].x()*range_[0], dir[0].y()*range_[0], dir[0].z()*range_[0]));
             }
             
-            if(range[1] > Scalar(0))
+            if(range_[1] > Scalar(0))
             {
                 points->push_back(glm::vec3(0,0,0));
-                points->push_back(glm::vec3(dir[1].x()*range[1], dir[1].y()*range[1], dir[1].z()*range[1]));
+                points->push_back(glm::vec3(dir[1].x()*range_[1], dir[1].y()*range_[1], dir[1].z()*range_[1]));
             }
             
-            if(range[2] > Scalar(0))
+            if(range_[2] > Scalar(0))
             {
                 points->push_back(glm::vec3(0,0,0));
-                points->push_back(glm::vec3(dir[2].x()*range[2], dir[2].y()*range[2], dir[2].z()*range[2]));
+                points->push_back(glm::vec3(dir[2].x()*range_[2], dir[2].y()*range_[2], dir[2].z()*range_[2]));
             }
             
-            if(range[3] > Scalar(0))
+            if(range_[3] > Scalar(0))
             {
                 points->push_back(glm::vec3(0,0,0));
-                points->push_back(glm::vec3(dir[3].x()*range[3], dir[3].y()*range[3], dir[3].z()*range[3]));
+                points->push_back(glm::vec3(dir[3].x()*range_[3], dir[3].y()*range_[3], dir[3].z()*range_[3]));
             }
         }
         //Water ping
         if(status == 1 || status == 2) //Good water ping
         {
-            Scalar layerSize = btClamped(Scalar(0.8) * getLastValue(3) - waterLayer.getY(), waterLayer.getX(), waterLayer.getZ()-waterLayer.getY());        
-            GLfloat a1 = (GLfloat)waterLayer.getY();
-            GLfloat a2 = (GLfloat)(waterLayer.getY() + layerSize);
-            GLfloat r1 = a1 * glm::tan((GLfloat)beamAngle);
-            GLfloat r2 = a2 * glm::tan((GLfloat)beamAngle);
+            Scalar layerSize = btClamped(Scalar(0.8) * getLastValue(3) - waterLayer_.getY(), waterLayer_.getX(), waterLayer_.getZ()-waterLayer_.getY());        
+            GLfloat a1 = (GLfloat)waterLayer_.getY();
+            GLfloat a2 = (GLfloat)(waterLayer_.getY() + layerSize);
+            GLfloat r1 = a1 * glm::tan((GLfloat)beamAngle_);
+            GLfloat r2 = a2 * glm::tan((GLfloat)beamAngle_);
             for(unsigned int i=0; i<4; ++i)
             {
                 GLfloat ang1 = (GLfloat)i/2.f * glm::pi<GLfloat>() + glm::quarter_pi<GLfloat>();
@@ -286,45 +286,45 @@ std::vector<Renderable> DVL::Render()
 void DVL::setRange(const Vector3& velocityMax, Scalar altitudeMin, Scalar altitudeMax)
 {
     //Velocity
-    channels[0].rangeMin = -btClamped(velocityMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[1].rangeMin = -btClamped(velocityMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[2].rangeMin = -btClamped(velocityMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[0].rangeMax = btClamped(velocityMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[1].rangeMax = btClamped(velocityMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[2].rangeMax = btClamped(velocityMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[0].rangeMin = -btClamped(velocityMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[1].rangeMin = -btClamped(velocityMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[2].rangeMin = -btClamped(velocityMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[0].rangeMax = btClamped(velocityMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[1].rangeMax = btClamped(velocityMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[2].rangeMax = btClamped(velocityMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
     //Altitude
-    channels[3].rangeMin = btClamped(altitudeMin, Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[3].rangeMax = btClamped(altitudeMax, Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[3].rangeMin = btClamped(altitudeMin, Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[3].rangeMax = btClamped(altitudeMax, Scalar(0), Scalar(BT_LARGE_FLOAT));
     //Water velocity
-    channels[4].rangeMin = -btClamped(velocityMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[5].rangeMin = -btClamped(velocityMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[6].rangeMin = -btClamped(velocityMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[4].rangeMax = btClamped(velocityMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[5].rangeMax = btClamped(velocityMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[6].rangeMax = btClamped(velocityMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[4].rangeMin = -btClamped(velocityMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[5].rangeMin = -btClamped(velocityMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[6].rangeMin = -btClamped(velocityMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[4].rangeMax = btClamped(velocityMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[5].rangeMax = btClamped(velocityMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[6].rangeMax = btClamped(velocityMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
 
 void DVL::setNoise(Scalar velPercent, Scalar velStdDev, Scalar altitudeStdDev, Scalar waterVelPercent, Scalar waterVelStdDev)
 {
-    channels[3].setStdDev(btClamped(altitudeStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    addNoiseStdDev[0] = btClamped(velStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT));
-    addNoiseStdDev[1] = btClamped(waterVelStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT));;
-    mulNoiseFactor[0] = btClamped(velPercent, Scalar(0), Scalar(100))/Scalar(100);
-    mulNoiseFactor[1] = btClamped(waterVelPercent, Scalar(0), Scalar(100))/Scalar(100);
+    channels_[3].setStdDev(btClamped(altitudeStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    addNoiseStdDev_[0] = btClamped(velStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT));
+    addNoiseStdDev_[1] = btClamped(waterVelStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT));;
+    mulNoiseFactor_[0] = btClamped(velPercent, Scalar(0), Scalar(100))/Scalar(100);
+    mulNoiseFactor_[1] = btClamped(waterVelPercent, Scalar(0), Scalar(100))/Scalar(100);
 }
 
 void DVL::getRange(Vector3& velocityMax, Scalar& altitudeMin, Scalar& altitudeMax) const
 {
-    velocityMax.setX(channels[0].rangeMax);
-    velocityMax.setY(channels[1].rangeMax);
-    velocityMax.setZ(channels[2].rangeMax);
-    altitudeMin = channels[3].rangeMin;
-    altitudeMax = channels[3].rangeMax;
+    velocityMax.setX(channels_[0].rangeMax);
+    velocityMax.setY(channels_[1].rangeMax);
+    velocityMax.setZ(channels_[2].rangeMax);
+    altitudeMin = channels_[3].rangeMin;
+    altitudeMax = channels_[3].rangeMax;
 }
 
 Scalar DVL::getBeamAngle() const
 {
-    return beamAngle;
+    return beamAngle_;
 }
 
 ScalarSensorType DVL::getScalarSensorType() const

@@ -39,76 +39,76 @@ namespace sf
 {
 
 SolidEntity::SolidEntity(std::string uniqueName, PhysicsSettings phy, std::string material, std::string look, Scalar thickness) 
-    : MovingEntity(uniqueName, material, look), thick(thickness), phy(phy)
+    : MovingEntity(uniqueName, material, look), thick_(thickness), phy_(phy)
 {
     //Check if ocean is enabled and change physics mode accordingly
     if((phy.mode == PhysicsMode::SUBMERGED || phy.mode == PhysicsMode::FLOATING) && !SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
-        this->phy.mode = PhysicsMode::SURFACE;
+        this->phy_.mode = PhysicsMode::SURFACE;
     
     //Get material
-    mat = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(material);
+    mat_ = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(material);
     
     //Get Look
     if(SimulationApp::getApp()->hasGraphics())
-        lookId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+        lookId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
     else
-        lookId = -1;
+        lookId_ = -1;
     
     //Set transformations to identity
-    T_O2G = I4();
-    T_O2C = I4();
-    T_O2H = I4();
-    T_CG2C = I4();
-    T_CG2G = I4();
-    T_CG2O = I4();
-    P_CB.setZero();
+    T_O2G_ = I4();
+    T_O2C_ = I4();
+    T_O2H_ = I4();
+    T_CG2C_ = I4();
+    T_CG2G_ = I4();
+    T_CG2O_ = I4();
+    P_CB_.setZero();
     
     //Set properties
-    mass = Scalar(0);
-    aMass.setZero();
-    surface = Scalar(0);
-    aI.setZero();
-    Ipri.setZero();
-    contactK = Scalar(-1);
-    contactD = Scalar(0);
-    volume = Scalar(0);
-    fdApproxType =  GeometryApproxType::AUTO;
-    fdApproxParams = std::vector<Scalar>(0);
-    fdCd = Vector3(-1.0, -1.0, -1.0);
-    fdCf = Vector3(-1.0, -1.0, -1.0);
-    T_CG2H = Transform::getIdentity();
+    mass_ = Scalar(0);
+    aMass_.setZero();
+    surface_ = Scalar(0);
+    aI_.setZero();
+    Ipri_.setZero();
+    contactK_ = Scalar(-1);
+    contactD_ = Scalar(0);
+    volume_ = Scalar(0);
+    fdApproxType_ =  GeometryApproxType::AUTO;
+    fdApproxParams_ = std::vector<Scalar>(0);
+    fdCd_ = Vector3(-1.0, -1.0, -1.0);
+    fdCf_ = Vector3(-1.0, -1.0, -1.0);
+    T_CG2H_ = Transform::getIdentity();
     
     //Set vectors to zero
-    Fb.setZero();
-    Tb.setZero();
-    Fdq.setZero();
-    Tdq.setZero();
-    Fdf.setZero();
-    Tdf.setZero();
-    Fda.setZero();
-    Tda.setZero();
-    Swet = Scalar(0);
-    Vsub = Scalar(0);
-    lastV.setZero();
-    lastOmega.setZero();
-    linearAcc.setZero();
-    angularAcc.setZero();
+    Fb_.setZero();
+    Tb_.setZero();
+    Fdq_.setZero();
+    Tdq_.setZero();
+    Fdf_.setZero();
+    Tdf_.setZero();
+    Fda_.setZero();
+    Tda_.setZero();
+    Swet_ = Scalar(0);
+    Vsub_ = Scalar(0);
+    lastV_.setZero();
+    lastOmega_.setZero();
+    linearAcc_.setZero();
+    angularAcc_.setZero();
     
     //Set pointers
-    multibodyCollider = nullptr;
-    phyMesh = nullptr;
-    graObjectId = -1;
-    phyObjectId = -1;
-    dm = DisplayMode::GRAPHICAL;
-    submerged.type = RenderableType::HYDRO_LINES;
-    submerged.model = glm::mat4(1.f);
-    submerged.data = std::make_shared<std::vector<glm::vec3>>();
+    multibodyCollider_ = nullptr;
+    phyMesh_ = nullptr;
+    graObjectId_ = -1;
+    phyObjectId_ = -1;
+    dm_ = DisplayMode::GRAPHICAL;
+    submerged_.type = RenderableType::HYDRO_LINES;
+    submerged_.model = glm::mat4(1.f);
+    submerged_.data = std::make_shared<std::vector<glm::vec3>>();
 }
 
 SolidEntity::~SolidEntity()
 {
-    if(phyMesh != nullptr) 
-        delete phyMesh;
+    if(phyMesh_ != nullptr) 
+        delete phyMesh_;
 }
 
 EntityType SolidEntity::getType() const
@@ -118,73 +118,73 @@ EntityType SolidEntity::getType() const
 
 btMultiBodyLinkCollider* SolidEntity::getMultiBodyLinkCollider() const
 {
-    return multibodyCollider;
+    return multibodyCollider_;
 }
 
 void SolidEntity::ScalePhysicalPropertiesToArbitraryMass(Scalar mass)
 {
-    if(rigidBody != nullptr || multibodyCollider != nullptr)
+    if(rigidBody_ != nullptr || multibodyCollider_ != nullptr)
     {
         cWarning("Physical properties of bodies cannot be changed after adding to simulation!");
         return;
     }
     
-    Scalar oldMass = this->mass;
-    this->mass = mass;
-    Ipri *= this->mass/oldMass;
+    Scalar oldMass = this->mass_;
+    this->mass_ = mass;
+    Ipri_ *= this->mass_/oldMass;
 }
 
 void SolidEntity::SetArbitraryPhysicalProperties(Scalar mass, const Vector3& inertia, const Transform& CG)
 {
-    if(rigidBody != nullptr || multibodyCollider != nullptr)
+    if(rigidBody_ != nullptr || multibodyCollider_ != nullptr)
     {
         cWarning("Physical properties of bodies cannot be changed after adding to simulation!");
         return;
     }
     
-    this->mass = mass;
-    Ipri = inertia;
-    Transform T_CG_old_new = T_CG2O * CG; //Transform from old CG to new CG
-    T_CG2O = CG.inverse(); //Set new CG in body origin frame
-    T_CG2C = T_CG2O * T_O2C;
-    T_CG2G = T_CG2O * T_O2G;
-    T_CG2H = T_CG_old_new.inverse() * T_CG2H;
-    P_CB = T_CG_old_new.inverse() * P_CB;
+    this->mass_ = mass;
+    Ipri_ = inertia;
+    Transform T_CG_old_new = T_CG2O_ * CG; //Transform from old CG to new CG
+    T_CG2O_ = CG.inverse(); //Set new CG in body origin frame
+    T_CG2C_ = T_CG2O_ * T_O2C_;
+    T_CG2G_ = T_CG2O_ * T_O2G_;
+    T_CG2H_ = T_CG_old_new.inverse() * T_CG2H_;
+    P_CB_ = T_CG_old_new.inverse() * P_CB_;
 }
 
 void SolidEntity::SetContactProperties(bool soft, Scalar stiffness, Scalar damping)
 {
     if(soft)
     {
-        contactK = stiffness > Scalar(0) ? stiffness : Scalar(1000);
-        contactD = damping >= Scalar(0) ? damping : Scalar(0); 
+        contactK_ = stiffness > Scalar(0) ? stiffness : Scalar(1000);
+        contactD_ = damping >= Scalar(0) ? damping : Scalar(0); 
     }
     else
     {
-        contactK = Scalar(-1);
-        contactD = Scalar(0);
+        contactK_ = Scalar(-1);
+        contactD_ = Scalar(0);
     }
     
-    if(rigidBody != nullptr)
+    if(rigidBody_ != nullptr)
     {
         if(soft)
-            rigidBody->setContactStiffnessAndDamping(contactK, contactD);
+            rigidBody_->setContactStiffnessAndDamping(contactK_, contactD_);
         else
         {
-            int cflags = rigidBody->getCollisionFlags();
+            int cflags = rigidBody_->getCollisionFlags();
             cflags &= ~(btCollisionObject::CollisionFlags::CF_HAS_CONTACT_STIFFNESS_DAMPING);
-            rigidBody->setCollisionFlags(cflags);
+            rigidBody_->setCollisionFlags(cflags);
         }
     }
-    else if(multibodyCollider != nullptr)
+    else if(multibodyCollider_ != nullptr)
     {
         if(soft)
-            multibodyCollider->setContactStiffnessAndDamping(contactK, contactD);
+            multibodyCollider_->setContactStiffnessAndDamping(contactK_, contactD_);
         else
         {
-            int cflags = multibodyCollider->getCollisionFlags();
+            int cflags = multibodyCollider_->getCollisionFlags();
             cflags &= ~(btCollisionObject::CollisionFlags::CF_HAS_CONTACT_STIFFNESS_DAMPING);
-            multibodyCollider->setCollisionFlags(cflags);
+            multibodyCollider_->setCollisionFlags(cflags);
         }
     }
 }
@@ -192,32 +192,32 @@ void SolidEntity::SetContactProperties(bool soft, Scalar stiffness, Scalar dampi
 void SolidEntity::SetHydrodynamicCoefficients(const Vector3& Cd, const Vector3& Cf)
 {
     if(Cd.getX() >= Scalar(0) && Cd.getY() >= Scalar(0) && Cd.getZ() >= Scalar(0))
-        fdCd = Cd;
+        fdCd_ = Cd;
     if(Cf.getX() >= Scalar(0) && Cf.getY() >= Scalar(0) && Cf.getZ() >= Scalar(0))
-        fdCf = Cf;
+        fdCf_ = Cf;
 }
 
 int SolidEntity::getPhysicalObject() const
 {
-    return phyObjectId;
+    return phyObjectId_;
 }
 
 bool SolidEntity::isBuoyant() const
 {
-    return (phy.mode == PhysicsMode::SUBMERGED || phy.mode == PhysicsMode::FLOATING) && phy.buoyancy;
+    return (phy_.mode == PhysicsMode::SUBMERGED || phy_.mode == PhysicsMode::FLOATING) && phy_.buoyancy;
 }
     
 PhysicsMode SolidEntity::getPhysicsMode() const
 {
-    return phy.mode;
+    return phy_.mode;
 }
 
 void SolidEntity::getAABB(Vector3& min, Vector3& max)
 {
-    if(rigidBody != nullptr)
-        rigidBody->getAabb(min, max);
-    else if(multibodyCollider != nullptr)
-        multibodyCollider->getCollisionShape()->getAabb(getCGTransform(), min, max);
+    if(rigidBody_ != nullptr)
+        rigidBody_->getAabb(min, max);
+    else if(multibodyCollider_ != nullptr)
+        multibodyCollider_->getCollisionShape()->getAabb(getCGTransform(), min, max);
     else
     {
         min.setValue(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);
@@ -229,26 +229,26 @@ std::vector<Renderable> SolidEntity::Render()
 {
     std::vector<Renderable> items(0);
     
-    if( (rigidBody != nullptr || multibodyCollider != nullptr)  && isRenderable() )
+    if( (rigidBody_ != nullptr || multibodyCollider_ != nullptr)  && isRenderable() )
     {
         //Mesh
         Renderable item1;
         item1.type = RenderableType::SOLID;
-        item1.materialName = mat.name;
+        item1.materialName = mat_.name;
         
-        if(dm == DisplayMode::GRAPHICAL && graObjectId >= 0)
+        if(dm_ == DisplayMode::GRAPHICAL && graObjectId_ >= 0)
         {
-            item1.objectId = graObjectId;
-            item1.lookId = lookId;
+            item1.objectId = graObjectId_;
+            item1.lookId = lookId_;
             item1.model = glMatrixFromTransform(getGTransform());
             item1.cor = glVectorFromVector(getCGTransform().getOrigin());
             item1.vel = glVectorFromVector(getLinearVelocity());
             item1.avel = glVectorFromVector(getAngularVelocity());
             items.push_back(item1);
         }
-        else if(dm == DisplayMode::PHYSICAL && phyObjectId >= 0)
+        else if(dm_ == DisplayMode::PHYSICAL && phyObjectId_ >= 0)
         {
-            item1.objectId = phyObjectId;
+            item1.objectId = phyObjectId_;
             item1.lookId = -1;
             item1.model = glMatrixFromTransform(getCTransform());
             item1.cor = glVectorFromVector(getCGTransform().getOrigin());
@@ -264,7 +264,7 @@ std::vector<Renderable> SolidEntity::Render()
         items.push_back(item2);
         
         //Hydrodynamics
-        Vector3 cbWorld = getCGTransform() * P_CB;
+        Vector3 cbWorld = getCGTransform() * P_CB_;
         Renderable item3;
         item3.type = RenderableType::HYDRO_CS;
         item3.model = glMatrixFromTransform(Transform(Quaternion::getIdentity(), cbWorld));
@@ -281,7 +281,7 @@ std::vector<Renderable> SolidEntity::Render()
         item4.data = std::make_shared<std::vector<glm::vec3>>();
         auto points = item4.getDataAsPoints();
         points->push_back(cgv);
-        points->push_back(cgv + glm::vec3((GLfloat)Fb.x(), (GLfloat)Fb.y(), (GLfloat)Fb.z())/1000.f);
+        points->push_back(cgv + glm::vec3((GLfloat)Fb_.x(), (GLfloat)Fb_.y(), (GLfloat)Fb_.z())/1000.f);
         items.push_back(item4);
         
         //---Linear drag
@@ -291,7 +291,7 @@ std::vector<Renderable> SolidEntity::Render()
         item5.data = std::make_shared<std::vector<glm::vec3>>();
         points = item5.getDataAsPoints();
         points->push_back(cgv);
-        points->push_back(cgv + glm::vec3((GLfloat)Fdf.x(), (GLfloat)Fdf.y(), (GLfloat)Fdf.z()));
+        points->push_back(cgv + glm::vec3((GLfloat)Fdf_.x(), (GLfloat)Fdf_.y(), (GLfloat)Fdf_.z()));
         items.push_back(item5);
 
         //---Quadratic drag
@@ -301,7 +301,7 @@ std::vector<Renderable> SolidEntity::Render()
         item6.data = std::make_shared<std::vector<glm::vec3>>();
         points = item6.getDataAsPoints();
         points->push_back(cgv);
-        points->push_back(cgv + glm::vec3((GLfloat)Fdq.x(), (GLfloat)Fdq.y(), (GLfloat)Fdq.z()));
+        points->push_back(cgv + glm::vec3((GLfloat)Fdq_.x(), (GLfloat)Fdq_.y(), (GLfloat)Fdq_.z()));
         items.push_back(item6);
 
         //Surface crossing debug
@@ -362,22 +362,22 @@ std::vector<Renderable> SolidEntity::Render()
         item7.data = std::make_shared<std::vector<glm::vec3>>();
         points = item7.getDataAsPoints();
 
-        switch(fdApproxType)
+        switch(fdApproxType_)
         {    
             case GeometryApproxType::SPHERE:
                 item7.type = RenderableType::HYDRO_ELLIPSOID;
-                points->push_back(glm::vec3((GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[0]));
+                points->push_back(glm::vec3((GLfloat)fdApproxParams_[0], (GLfloat)fdApproxParams_[0], (GLfloat)fdApproxParams_[0]));
                 break;
                 
             case GeometryApproxType::CYLINDER:
                 item7.type = RenderableType::HYDRO_CYLINDER;
-                points->push_back(glm::vec3((GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[1]));
+                points->push_back(glm::vec3((GLfloat)fdApproxParams_[0], (GLfloat)fdApproxParams_[0], (GLfloat)fdApproxParams_[1]));
                 break;
 
             case GeometryApproxType::AUTO:       
             case GeometryApproxType::ELLIPSOID:
                 item7.type = RenderableType::HYDRO_ELLIPSOID;
-                points->push_back(glm::vec3((GLfloat)fdApproxParams[0], (GLfloat)fdApproxParams[1], (GLfloat)fdApproxParams[2]));
+                points->push_back(glm::vec3((GLfloat)fdApproxParams_[0], (GLfloat)fdApproxParams_[1], (GLfloat)fdApproxParams_[2]));
                 break;
         }
         items.push_back(item7);
@@ -389,35 +389,35 @@ std::vector<Renderable> SolidEntity::Render()
     
 Transform SolidEntity::getCG2GTransform() const
 {
-    return T_CG2G;
+    return T_CG2G_;
 }
     
 Transform SolidEntity::getCG2CTransform() const
 {
-    return T_CG2C;
+    return T_CG2C_;
 }
     
 Transform SolidEntity::getCG2OTransform() const
 {
-    return T_CG2O;
+    return T_CG2O_;
 }
     
 Vector3 SolidEntity::getCB() const
 {
-    return P_CB;
+    return P_CB_;
 }
 
 Transform SolidEntity::getCGTransform() const
 {
-    if(rigidBody != nullptr)
+    if(rigidBody_ != nullptr)
     {
         Transform trans;
-        rigidBody->getMotionState()->getWorldTransform(trans);
+        rigidBody_->getMotionState()->getWorldTransform(trans);
         return trans;
     }
-    else if(multibodyCollider != nullptr)
+    else if(multibodyCollider_ != nullptr)
     {
-        return multibodyCollider->getWorldTransform();
+        return multibodyCollider_->getWorldTransform();
     }
     else
         return Transform::getIdentity();
@@ -425,62 +425,62 @@ Transform SolidEntity::getCGTransform() const
 
 Transform SolidEntity::getO2CTransform() const
 {
-    return T_O2C;
+    return T_O2C_;
 }
     
 Transform SolidEntity::getO2GTransform() const
 {
-    return T_O2G;
+    return T_O2G_;
 }
 
 Transform SolidEntity::getO2HTransform() const
 {
-    return T_O2H;
+    return T_O2H_;
 }
     
 Transform SolidEntity::getGTransform() const
 {
-    return getCGTransform() * T_CG2G;
+    return getCGTransform() * T_CG2G_;
 }
     
 Transform SolidEntity::getCTransform() const
 {
-    return getCGTransform() * T_CG2C;
+    return getCGTransform() * T_CG2C_;
 }
     
 Transform SolidEntity::getHTransform() const
 {
-    return getCGTransform() * T_CG2H;
+    return getCGTransform() * T_CG2H_;
 }
     
 Transform SolidEntity::getOTransform() const
 {
-    return getCGTransform() * T_CG2O;
+    return getCGTransform() * T_CG2O_;
 }
 
 void SolidEntity::setCGTransform(const Transform& trans)
 {
-    if(rigidBody != nullptr)
+    if(rigidBody_ != nullptr)
     {
-        rigidBody->getMotionState()->setWorldTransform(trans);
+        rigidBody_->getMotionState()->setWorldTransform(trans);
     }
-    else if(multibodyCollider != nullptr)
+    else if(multibodyCollider_ != nullptr)
     {
-        multibodyCollider->setWorldTransform(trans);
+        multibodyCollider_->setWorldTransform(trans);
     }
 }
 
 Vector3 SolidEntity::getLinearVelocity() const
 {
-    if(rigidBody != nullptr)
+    if(rigidBody_ != nullptr)
     {
-        return rigidBody->getLinearVelocity();
+        return rigidBody_->getLinearVelocity();
     }
-    else if(multibodyCollider != nullptr)
+    else if(multibodyCollider_ != nullptr)
     {
         //Get multibody and link id
-        btMultiBody* multiBody = multibodyCollider->m_multiBody;
-        int index = multibodyCollider->m_link;
+        btMultiBody* multiBody = multibodyCollider_->m_multiBody;
+        int index = multibodyCollider_->m_link;
         
         //Start with base velocity
         Vector3 linVelocity = multiBody->getBaseVel(); //Global
@@ -523,15 +523,15 @@ Vector3 SolidEntity::getLinearVelocity() const
 
 Vector3 SolidEntity::getAngularVelocity() const
 {
-    if(rigidBody != nullptr)
+    if(rigidBody_ != nullptr)
     {
-        return rigidBody->getAngularVelocity();
+        return rigidBody_->getAngularVelocity();
     }
-    else if(multibodyCollider != nullptr)
+    else if(multibodyCollider_ != nullptr)
     {
         //Get multibody and link id
-        btMultiBody* multiBody = multibodyCollider->m_multiBody;
-        int index = multibodyCollider->m_link;
+        btMultiBody* multiBody = multibodyCollider_->m_multiBody;
+        int index = multibodyCollider_->m_link;
         
         //Start with base velocity
         Vector3 angVelocity = multiBody->getBaseOmega(); //Global
@@ -556,11 +556,11 @@ Vector3 SolidEntity::getAngularVelocity() const
 
 Vector3 SolidEntity::getLinearVelocityInLocalPoint(const Vector3& relPos) const
 {
-    if(rigidBody != nullptr)
+    if(rigidBody_ != nullptr)
     {
-        return rigidBody->getVelocityInLocalPoint(relPos);
+        return rigidBody_->getVelocityInLocalPoint(relPos);
     }
-    else if(multibodyCollider != nullptr)
+    else if(multibodyCollider_ != nullptr)
     {
         return getLinearVelocity() + getAngularVelocity().cross(relPos);
     }
@@ -570,14 +570,14 @@ Vector3 SolidEntity::getLinearVelocityInLocalPoint(const Vector3& relPos) const
 
 Vector3 SolidEntity::getAppliedForce()
 {
-    if(rigidBody != nullptr)
+    if(rigidBody_ != nullptr)
     {
-        return rigidBody->getTotalForce();
+        return rigidBody_->getTotalForce();
     }
-    else if(multibodyCollider != nullptr)
+    else if(multibodyCollider_ != nullptr)
     {
-        btMultiBody* multiBody = multibodyCollider->m_multiBody;
-        int index = multibodyCollider->m_link;
+        btMultiBody* multiBody = multibodyCollider_->m_multiBody;
+        int index = multibodyCollider_->m_link;
 
         if(index >= 0)
             return multiBody->getLinkForce(index);
@@ -590,105 +590,105 @@ Vector3 SolidEntity::getAppliedForce()
 
 void SolidEntity::getHydrodynamicForces(Vector3& Fb, Vector3& Tb, Vector3& Fd, Vector3& Td, Vector3& Ff, Vector3& Tf)
 {
-    Fb = this->Fb;
-    Tb = this->Tb;
-    Fd = this->Fdq;
-    Td = this->Tdq;
-    Ff = this->Fdf;
-    Tf = this->Tdf;
+    Fb = this->Fb_;
+    Tb = this->Tb_;
+    Fd = this->Fdq_;
+    Td = this->Tdq_;
+    Ff = this->Fdf_;
+    Tf = this->Tdf_;
 }
 
 void SolidEntity::getHydrodynamicCoefficients(Vector3& Cd, Vector3& Cf) const
 {
-    Cd = fdCd;
-    Cf = fdCf;
+    Cd = fdCd_;
+    Cf = fdCf_;
 }
 
 Scalar SolidEntity::getWettedSurface() const
 {
-    return Swet;
+    return Swet_;
 }
 
 Scalar SolidEntity::getSubmergedVolume() const
 {
-    return Vsub;
+    return Vsub_;
 }
 
 Vector3 SolidEntity::getLinearAcceleration() const
 {
-    return linearAcc;
+    return linearAcc_;
 }
 
 Vector3 SolidEntity::getAngularAcceleration() const
 {
-    return angularAcc;
+    return angularAcc_;
 }
 
 Scalar SolidEntity::getVolume() const
 {
-    return volume;
+    return volume_;
 }
     
 Vector3 SolidEntity::getInertia() const
 {
-    return Ipri;
+    return Ipri_;
 }
 
 Scalar SolidEntity::getMass() const
 {
-    return mass;
+    return mass_;
 }
 
 Scalar SolidEntity::getSurface() const
 {
-    return surface;
+    return surface_;
 }
 
 Vector3 SolidEntity::getAddedMass() const
 {
-    return aMass;
+    return aMass_;
 }
 
 Vector3 SolidEntity::getAddedInertia() const
 {
-    return aI;
+    return aI_;
 }
 
 Scalar SolidEntity::getAugmentedMass() const
 {
-    if(phy.mode == PhysicsMode::SUBMERGED)
-        return mass + (aMass.x() + aMass.y() + aMass.z())/Scalar(3);
+    if(phy_.mode == PhysicsMode::SUBMERGED)
+        return mass_ + (aMass_.x() + aMass_.y() + aMass_.z())/Scalar(3);
     else
-        return mass;
+        return mass_;
 }
 
 Vector3 SolidEntity::getAugmentedInertia() const
 {
-    if(phy.mode == PhysicsMode::SUBMERGED)
-        return Ipri + aI;
+    if(phy_.mode == PhysicsMode::SUBMERGED)
+        return Ipri_ + aI_;
     else
-        return Ipri;
+        return Ipri_;
 }
 
 void SolidEntity::getGeometryApprox(GeometryApproxType& type, std::vector<Scalar>& params) const
 {
-    type = fdApproxType;
-    params = fdApproxParams;
+    type = fdApproxType_;
+    params = fdApproxParams_;
 }
 
 const Mesh* SolidEntity::getPhysicsMesh()
 {
-    return phyMesh;
+    return phyMesh_;
 }
 
 std::vector<Vector3>* SolidEntity::getMeshVertices() const
 {
     std::vector<Vector3>* vertices = new std::vector<Vector3>(0);
-    if(phyMesh != nullptr)
+    if(phyMesh_ != nullptr)
     {
-        for(size_t i=0; i<phyMesh->getNumOfVertices(); ++i)
+        for(size_t i=0; i<phyMesh_->getNumOfVertices(); ++i)
         {
-            glm::vec3 pos = phyMesh->getVertexPos(i);
+            glm::vec3 pos = phyMesh_->getVertexPos(i);
             vertices->push_back(Vector3(pos.x, pos.y, pos.z));
         }
     }
@@ -713,7 +713,7 @@ void SolidEntity::ComputeFluidDynamicsApprox(GeometryApproxType t)
             break;
     }
 #ifdef DEBUG
-    cInfo("Added mass: %lf, %lf, %lf, %lf, %lf, %lf", aMass.x(), aMass.y(), aMass.z(), aI.x(), aI.y(), aI.z());
+    cInfo("Added mass: %lf, %lf, %lf, %lf, %lf, %lf", aMass_.x(), aMass_.y(), aMass_.z(), aI_.x(), aI_.y(), aI_.z());
 #endif
 }
 
@@ -723,7 +723,7 @@ void SolidEntity::ComputeSphericalApprox()
     if(x->size() < 2)
         return;
     for(size_t i=0; i<x->size(); ++i)
-        x->at(i) = T_CG2C * x->at(i) - P_CB;
+        x->at(i) = T_CG2C_ * x->at(i) - P_CB_;
     
     Scalar r(0);
     for(size_t i=0; i<x->size(); ++i)
@@ -733,9 +733,9 @@ void SolidEntity::ComputeSphericalApprox()
             r = rc;
     }
     
-    fdApproxType =  GeometryApproxType::SPHERE;
-    fdApproxParams.resize(1);
-    fdApproxParams[0] = btSqrt(r);
+    fdApproxType_ =  GeometryApproxType::SPHERE;
+    fdApproxParams_.resize(1);
+    fdApproxParams_[0] = btSqrt(r);
     
     Scalar rho = Scalar(1000);
     Ocean* ocn;
@@ -743,13 +743,13 @@ void SolidEntity::ComputeSphericalApprox()
         rho = ocn->getLiquid().density;
 
     Scalar m = Scalar(2)*M_PI*rho*r*r*r/Scalar(3);
-    aMass = Vector3(m,m,m);
-    aI = V0();
+    aMass_ = Vector3(m,m,m);
+    aI_ = V0();
     
     //Set transform with respect to geometry
     Transform sphereTransform = I4();
-    sphereTransform.setOrigin(P_CB);
-    T_CG2H = sphereTransform;
+    sphereTransform.setOrigin(P_CB_);
+    T_CG2H_ = sphereTransform;
 
     Vector3 Cd(1,1,1);
     SetHydrodynamicCoefficients(Cd, Scalar(0.1)*Cd); //No need to trasform (all equal)
@@ -763,7 +763,7 @@ void SolidEntity::ComputeCylindricalApprox()
     if(x->size() < 2)
         return;
     for(size_t i=0; i<x->size(); ++i)
-        x->at(i) = T_CG2C * x->at(i) - P_CB;
+        x->at(i) = T_CG2C_ * x->at(i) - P_CB_;
         
     //Radius
     Scalar r[3] = {0,0,0};
@@ -800,26 +800,26 @@ void SolidEntity::ComputeCylindricalApprox()
         l_2 = d > l_2 ? d : l_2;
     }
     
-    fdApproxType =  GeometryApproxType::CYLINDER;
-    fdApproxParams.resize(2);
+    fdApproxType_ =  GeometryApproxType::CYLINDER;
+    fdApproxParams_.resize(2);
     
     if(axis == 0) //X axis
     {
-        fdApproxParams[0] = r[0]; 
-        fdApproxParams[1] = l_2*Scalar(2);
-        T_CG2H = Transform(Quaternion(0,M_PI_2,0), P_CB);
+        fdApproxParams_[0] = r[0]; 
+        fdApproxParams_[1] = l_2*Scalar(2);
+        T_CG2H_ = Transform(Quaternion(0,M_PI_2,0), P_CB_);
     }
     else if(axis == 1) //Y axis
     {
-        fdApproxParams[0] = r[1];
-        fdApproxParams[1] = l_2*Scalar(2);
-        T_CG2H = Transform(Quaternion(0,0,M_PI_2), P_CB);
+        fdApproxParams_[0] = r[1];
+        fdApproxParams_[1] = l_2*Scalar(2);
+        T_CG2H_ = Transform(Quaternion(0,0,M_PI_2), P_CB_);
     }
     else
     {
-        fdApproxParams[0] = r[2];
-        fdApproxParams[1] = l_2*Scalar(2);
-        T_CG2H = Transform(IQ(), P_CB);
+        fdApproxParams_[0] = r[2];
+        fdApproxParams_[1] = l_2*Scalar(2);
+        T_CG2H_ = Transform(IQ(), P_CB_);
     }
     
     //Added mass and inertia
@@ -828,18 +828,18 @@ void SolidEntity::ComputeCylindricalApprox()
     if((ocn = SimulationApp::getApp()->getSimulationManager()->getOcean()) != nullptr)
         rho = ocn->getLiquid().density;
 
-    Scalar m1 = rho*M_PI*fdApproxParams[0]*fdApproxParams[0]; //Parallel to axis
-    Scalar m2 = rho*M_PI*fdApproxParams[0]*fdApproxParams[0]*fdApproxParams[1]; //Perpendicular to axis
+    Scalar m1 = rho*M_PI*fdApproxParams_[0]*fdApproxParams_[0]; //Parallel to axis
+    Scalar m2 = rho*M_PI*fdApproxParams_[0]*fdApproxParams_[0]*fdApproxParams_[1]; //Perpendicular to axis
     Scalar I1 = Scalar(0);
-    Scalar I2 = Scalar(1)/Scalar(12)*M_PI*rho*fdApproxParams[1]*fdApproxParams[1]*btPow(fdApproxParams[0], Scalar(3));
+    Scalar I2 = Scalar(1)/Scalar(12)*M_PI*rho*fdApproxParams_[1]*fdApproxParams_[1]*btPow(fdApproxParams_[0], Scalar(3));
     
-    aMass = T_CG2H.getBasis() * Vector3(m2, m2, m1);
-    aMass = Vector3(btFabs(aMass.getX()), btFabs(aMass.getY()), btFabs(aMass.getZ()));
-    aI = T_CG2H.getBasis() * Vector3(I2, I2, I1);
-    aI = Vector3(btFabs(aI.getX()), btFabs(aI.getY()), btFabs(aI.getZ()));
+    aMass_ = T_CG2H_.getBasis() * Vector3(m2, m2, m1);
+    aMass_ = Vector3(btFabs(aMass_.getX()), btFabs(aMass_.getY()), btFabs(aMass_.getZ()));
+    aI_ = T_CG2H_.getBasis() * Vector3(I2, I2, I1);
+    aI_ = Vector3(btFabs(aI_.getX()), btFabs(aI_.getY()), btFabs(aI_.getZ()));
 
     Vector3 Cd(0.5, 0.5, 1.0);
-    Cd = T_CG2O.getBasis().inverse() * T_CG2H.getBasis() * Cd; // To origin frame
+    Cd = T_CG2O_.getBasis().inverse() * T_CG2H_.getBasis() * Cd; // To origin frame
     Cd = Vector3(btFabs(Cd.getX()), btFabs(Cd.getY()), btFabs(Cd.getZ()));
     SetHydrodynamicCoefficients(Cd, Scalar(0.1)*Cd);
 
@@ -855,7 +855,7 @@ void SolidEntity::ComputeEllipsoidalApprox()
     if(x->size() < 2)
         return;
     for(size_t i=0; i<x->size(); ++i)
-        x->at(i) = T_CG2C * x->at(i) - P_CB; //Points in CG frame around center of buoyancy
+        x->at(i) = T_CG2C_ * x->at(i) - P_CB_; //Points in CG frame around center of buoyancy
     
     //P. Kumar, E.A. Yıldırım, Computing Minimum-Volume Enclosing Axis-Aligned Ellipsoids
     //J Optim Theory Appl (2008) 136: 211–228
@@ -985,11 +985,11 @@ void SolidEntity::ComputeEllipsoidalApprox()
     cInfo("Ellipsoid core points: %d", x0.size());
 #endif
     
-    fdApproxType =  GeometryApproxType::ELLIPSOID;
-    fdApproxParams.resize(3);
-    fdApproxParams[0] = d.getX();
-    fdApproxParams[1] = d.getY();
-    fdApproxParams[2] = d.getZ();
+    fdApproxType_ =  GeometryApproxType::ELLIPSOID;
+    fdApproxParams_.resize(3);
+    fdApproxParams_[0] = d.getX();
+    fdApproxParams_[1] = d.getY();
+    fdApproxParams_[2] = d.getZ();
     
     //Compute added mass
     Scalar rho = Scalar(1000);
@@ -997,24 +997,24 @@ void SolidEntity::ComputeEllipsoidalApprox()
     if((ocn = SimulationApp::getApp()->getSimulationManager()->getOcean()) != nullptr)
         rho = ocn->getLiquid().density;
 
-    Scalar r12 = (fdApproxParams[1] + fdApproxParams[2])/Scalar(2);
-    aMass.setX(LambKFactor(fdApproxParams[0], r12)*Scalar(4)/Scalar(3)*M_PI*rho*fdApproxParams[0]*r12*r12);
-    aMass.setY(Scalar(4)/Scalar(3)*M_PI*rho*fdApproxParams[2]*fdApproxParams[2]*fdApproxParams[0]);
-    aMass.setZ(Scalar(4)/Scalar(3)*M_PI*rho*fdApproxParams[1]*fdApproxParams[1]*fdApproxParams[0]);
-    aI.setX(0); //THIS SHOULD BE > 0
-    aI.setY(Scalar(1)/Scalar(12)*M_PI*rho*fdApproxParams[1]*fdApproxParams[1]*btPow(fdApproxParams[0], Scalar(3)));
-    aI.setZ(Scalar(1)/Scalar(12)*M_PI*rho*fdApproxParams[2]*fdApproxParams[2]*btPow(fdApproxParams[0], Scalar(3)));
+    Scalar r12 = (fdApproxParams_[1] + fdApproxParams_[2])/Scalar(2);
+    aMass_.setX(LambKFactor(fdApproxParams_[0], r12)*Scalar(4)/Scalar(3)*M_PI*rho*fdApproxParams_[0]*r12*r12);
+    aMass_.setY(Scalar(4)/Scalar(3)*M_PI*rho*fdApproxParams_[2]*fdApproxParams_[2]*fdApproxParams_[0]);
+    aMass_.setZ(Scalar(4)/Scalar(3)*M_PI*rho*fdApproxParams_[1]*fdApproxParams_[1]*fdApproxParams_[0]);
+    aI_.setX(0); //THIS SHOULD BE > 0
+    aI_.setY(Scalar(1)/Scalar(12)*M_PI*rho*fdApproxParams_[1]*fdApproxParams_[1]*btPow(fdApproxParams_[0], Scalar(3)));
+    aI_.setZ(Scalar(1)/Scalar(12)*M_PI*rho*fdApproxParams_[2]*fdApproxParams_[2]*btPow(fdApproxParams_[0], Scalar(3)));
     
     //Set transform with respect to geometry
     Transform ellipsoidTransform;
     ellipsoidTransform.getBasis().setIdentity(); //Aligned with CG frame (for now)
-    ellipsoidTransform.setOrigin(P_CB);
-    T_CG2H = ellipsoidTransform;
+    ellipsoidTransform.setOrigin(P_CB_);
+    T_CG2H_ = ellipsoidTransform;
 
-    Vector3 Cd(Scalar(1)/fdApproxParams[0] , Scalar(1)/fdApproxParams[1], Scalar(1)/fdApproxParams[2]);
+    Vector3 Cd(Scalar(1)/fdApproxParams_[0] , Scalar(1)/fdApproxParams_[1], Scalar(1)/fdApproxParams_[2]);
     Scalar maxCd = btMax(btMax(Cd.x(), Cd.y()), Cd.z());
     Cd /= maxCd;
-    Cd = T_CG2O.getBasis().inverse() * Cd; // To origin frame
+    Cd = T_CG2O_.getBasis().inverse() * Cd; // To origin frame
     Cd = Vector3(btFabs(Cd.getX()), btFabs(Cd.getY()), btFabs(Cd.getZ()));
     SetHydrodynamicCoefficients(Cd, Scalar(0.1)*Cd);
 
@@ -1040,19 +1040,19 @@ Scalar SolidEntity::LambKFactor(Scalar r1, Scalar r2)
 
 void SolidEntity::BuildGraphicalObject()
 {
-    if(phyMesh == nullptr || !SimulationApp::getApp()->hasGraphics())
+    if(phyMesh_ == nullptr || !SimulationApp::getApp()->hasGraphics())
         return;
 
-    if (graObjectId > -1) // Object already built
+    if (graObjectId_ > -1) // Object already built
         return;
         
-    graObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh);
-    phyObjectId = graObjectId;
+    graObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh_);
+    phyObjectId_ = graObjectId_;
 }
 
 void SolidEntity::BuildRigidBody(btDynamicsWorld* world)
 {
-    if(rigidBody == nullptr)
+    if(rigidBody_ == nullptr)
     {
         btDefaultMotionState* motionState = new btDefaultMotionState();
         
@@ -1064,12 +1064,12 @@ void SolidEntity::BuildRigidBody(btDynamicsWorld* world)
         {
             colShape = (btCompoundShape*)colShape0;
             for(int i=0; i < colShape->getNumChildShapes(); ++i)
-                colShape->updateChildTransform(i, T_CG2C * colShape->getChildTransform(i), true);
+                colShape->updateChildTransform(i, T_CG2C_ * colShape->getChildTransform(i), true);
         }
         else //For other shapes, create compound shape which allow for the shift against gravity centre
         {
             colShape = new btCompoundShape();
-            colShape->addChildShape(T_CG2C, colShape0);
+            colShape->addChildShape(T_CG2C_, colShape0);
         }
         
         //Construct Bullet rigid body
@@ -1081,25 +1081,25 @@ void SolidEntity::BuildRigidBody(btDynamicsWorld* world)
         rigidBodyCI.m_linearDamping = rigidBodyCI.m_angularDamping = world->getSolverInfo().m_damping;
         rigidBodyCI.m_additionalDamping = false;
 
-        rigidBody = new btRigidBody(rigidBodyCI);
-        rigidBody->setUserPointer(this);
-        rigidBody->setFlags(rigidBody->getFlags() | BT_ENABLE_GYROSCOPIC_FORCE_IMPLICIT_BODY);
-        rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+        rigidBody_ = new btRigidBody(rigidBodyCI);
+        rigidBody_->setUserPointer(this);
+        rigidBody_->setFlags(rigidBody_->getFlags() | BT_ENABLE_GYROSCOPIC_FORCE_IMPLICIT_BODY);
+        rigidBody_->setCollisionFlags(rigidBody_->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
         //rigidBody->setContactProcessingThreshold(0.002);
         //rigidBody->setCcdMotionThreshold(0.01);
         //rigidBody->setCcdSweptSphereRadius(0.9);
         
         // Soft contact
-        if(contactK > Scalar(0))
-            rigidBody->setContactStiffnessAndDamping(contactK, contactD);
+        if(contactK_ > Scalar(0))
+            rigidBody_->setContactStiffnessAndDamping(contactK_, contactD_);
 
-        cInfo("Built rigid body %s [mass: %1.3lf; inertia: %1.3lf, %1.3lf, %1.3lf; volume: %1.1lf]", getName().c_str(), mass, Ipri.x(), Ipri.y(), Ipri.z(), volume*1e6);
+        cInfo("Built rigid body %s [mass: %1.3lf; inertia: %1.3lf, %1.3lf, %1.3lf; volume: %1.1lf]", getName().c_str(), mass_, Ipri_.x(), Ipri_.y(), Ipri_.z(), volume_*1e6);
     }
 }
 
 void SolidEntity::BuildMultibodyLinkCollider(btMultiBody *mb, unsigned int child, btSoftMultiBodyDynamicsWorld* world)
 {
-    if(multibodyCollider == nullptr)
+    if(multibodyCollider_ == nullptr)
     {
         //Generate collision shape
         btCollisionShape* colShape0 = BuildCollisionShape();
@@ -1110,43 +1110,43 @@ void SolidEntity::BuildMultibodyLinkCollider(btMultiBody *mb, unsigned int child
             for(int i=0; i < colShape->getNumChildShapes(); ++i)
             {
                 colShape->getChildShape(i)->setMargin(Scalar(0));
-                colShape->updateChildTransform(i, T_CG2C * colShape->getChildTransform(i), true);
+                colShape->updateChildTransform(i, T_CG2C_ * colShape->getChildTransform(i), true);
             }
         }
         else //For other shapes, create compound shape which allow for the shift against gravity centre
         {
             colShape = new btCompoundShape();
             colShape0->setMargin(Scalar(0));
-            colShape->addChildShape(T_CG2C, colShape0);
+            colShape->addChildShape(T_CG2C_, colShape0);
             
         }
         colShape->setMargin(Scalar(0));
         
         //Construct Bullet multi-body link
-        multibodyCollider = new btMultiBodyLinkCollider(mb, child - 1);
-        multibodyCollider->setCollisionShape(colShape);
-        multibodyCollider->setUserPointer(this); //HAS TO BE AFTER SETTING COLLISION SHAPE TO PROPAGATE TO ALL OF COMPOUND SUBSHAPES!!!!!
-        multibodyCollider->setFriction(Scalar(0));
-        multibodyCollider->setRestitution(Scalar(0));
-        multibodyCollider->setRollingFriction(Scalar(0));
-        multibodyCollider->setSpinningFriction(Scalar(0));
-        multibodyCollider->setCollisionFlags(multibodyCollider->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
-        multibodyCollider->setActivationState(DISABLE_DEACTIVATION);
+        multibodyCollider_ = new btMultiBodyLinkCollider(mb, child - 1);
+        multibodyCollider_->setCollisionShape(colShape);
+        multibodyCollider_->setUserPointer(this); //HAS TO BE AFTER SETTING COLLISION SHAPE TO PROPAGATE TO ALL OF COMPOUND SUBSHAPES!!!!!
+        multibodyCollider_->setFriction(Scalar(0));
+        multibodyCollider_->setRestitution(Scalar(0));
+        multibodyCollider_->setRollingFriction(Scalar(0));
+        multibodyCollider_->setSpinningFriction(Scalar(0));
+        multibodyCollider_->setCollisionFlags(multibodyCollider_->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+        multibodyCollider_->setActivationState(DISABLE_DEACTIVATION);
         
         if(child > 0)
-            mb->getLink(child - 1).m_collider = multibodyCollider;
+            mb->getLink(child - 1).m_collider = multibodyCollider_;
         else
-            mb->setBaseCollider(multibodyCollider);
+            mb->setBaseCollider(multibodyCollider_);
         
-        world->addCollisionObject(multibodyCollider, MASK_DYNAMIC, MASK_GHOST | MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING);
+        world->addCollisionObject(multibodyCollider_, MASK_DYNAMIC, MASK_GHOST | MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING);
         
-        if(contactK > Scalar(0))
-            multibodyCollider->setContactStiffnessAndDamping(contactK, contactD);
+        if(contactK_ > Scalar(0))
+            multibodyCollider_->setContactStiffnessAndDamping(contactK_, contactD_);
         
         //Graphics
         BuildGraphicalObject();
         
-        cInfo("Built multibody link %s (mass[kg]: %1.3lf; inertia[kgm2]: %1.3lf, %1.3lf, %1.3lf; volume[cm3]: %1.1lf)", getName().c_str(), mass, Ipri.x(), Ipri.y(), Ipri.z(), volume*1e6);
+        cInfo("Built multibody link %s (mass[kg]: %1.3lf; inertia[kgm2]: %1.3lf, %1.3lf, %1.3lf; volume[cm3]: %1.1lf)", getName().c_str(), mass_, Ipri_.x(), Ipri_.y(), Ipri_.z(), volume_*1e6);
     }
 }
 
@@ -1157,7 +1157,7 @@ void SolidEntity::AddToSimulation(SimulationManager* sm)
 
 void SolidEntity::AddToSimulation(SimulationManager* sm, const Transform& origin)
 {
-    if(rigidBody == nullptr)
+    if(rigidBody_ == nullptr)
     {
         // Build
         BuildRigidBody(sm->getDynamicsWorld());
@@ -1167,51 +1167,51 @@ void SolidEntity::AddToSimulation(SimulationManager* sm, const Transform& origin
         Scalar linSleep, angSleep;
         sm->getSleepingThresholds(linSleep, angSleep);
         if(linSleep <= Scalar(0) || angSleep <= Scalar(0))        
-            rigidBody->setActivationState(DISABLE_DEACTIVATION);
+            rigidBody_->setActivationState(DISABLE_DEACTIVATION);
         else
         {
-            rigidBody->setSleepingThresholds(linSleep, angSleep);
+            rigidBody_->setSleepingThresholds(linSleep, angSleep);
         }
 
         // Add to world
-        Transform Tcg = origin * T_CG2O.inverse();
-        rigidBody->setMotionState(new btDefaultMotionState(Tcg));
-        sm->getDynamicsWorld()->addRigidBody(rigidBody, MASK_DYNAMIC, MASK_GHOST | MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING);
+        Transform Tcg = origin * T_CG2O_.inverse();
+        rigidBody_->setMotionState(new btDefaultMotionState(Tcg));
+        sm->getDynamicsWorld()->addRigidBody(rigidBody_, MASK_DYNAMIC, MASK_GHOST | MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING);
     }
 }
 
 void SolidEntity::RemoveFromSimulation(SimulationManager* sm)
 {
-    sm->getDynamicsWorld()->removeRigidBody(rigidBody);
-    rigidBody = nullptr;
+    sm->getDynamicsWorld()->removeRigidBody(rigidBody_);
+    rigidBody_ = nullptr;
 }
 
 void SolidEntity::UpdateAcceleration(Scalar dt)
 {
     Vector3 currentV = getLinearVelocity();
     Vector3 currentOmega = getAngularVelocity();
-    linearAcc = (currentV - lastV)/dt;
-    angularAcc = (currentOmega - lastOmega)/dt;
-    lastV = currentV;
-    lastOmega = currentOmega;
+    linearAcc_ = (currentV - lastV_)/dt;
+    angularAcc_ = (currentOmega - lastOmega_)/dt;
+    lastV_ = currentV;
+    lastOmega_ = currentOmega;
 }
 
 void SolidEntity::ApplyGravity(const Vector3& g)
 {
-    if(rigidBody != nullptr)
+    if(rigidBody_ != nullptr)
     {
-        rigidBody->applyCentralForce(g * mass);
+        rigidBody_->applyCentralForce(g * mass_);
     }
 }
 
 void SolidEntity::ApplyCentralForce(const Vector3& force)
 {
-    if(rigidBody != nullptr)
-        rigidBody->applyCentralForce(force);
-    else if(multibodyCollider != nullptr)
+    if(rigidBody_ != nullptr)
+        rigidBody_->applyCentralForce(force);
+    else if(multibodyCollider_ != nullptr)
     {
-        btMultiBody* multiBody = multibodyCollider->m_multiBody;
-        int index = multibodyCollider->m_link;
+        btMultiBody* multiBody = multibodyCollider_->m_multiBody;
+        int index = multibodyCollider_->m_link;
         
         if(index == -1) //base
             multiBody->addBaseForce(force);
@@ -1222,12 +1222,12 @@ void SolidEntity::ApplyCentralForce(const Vector3& force)
 
 void SolidEntity::ApplyTorque(const Vector3& torque)
 {
-    if(rigidBody != nullptr)
-        rigidBody->applyTorque(torque);
-    else if(multibodyCollider != nullptr)
+    if(rigidBody_ != nullptr)
+        rigidBody_->applyTorque(torque);
+    else if(multibodyCollider_ != nullptr)
     {
-        btMultiBody* multiBody = multibodyCollider->m_multiBody;
-        int index = multibodyCollider->m_link;
+        btMultiBody* multiBody = multibodyCollider_->m_multiBody;
+        int index = multibodyCollider_->m_link;
         
         if(index == -1) //base
             multiBody->addBaseTorque(torque);
@@ -1798,9 +1798,9 @@ void SolidEntity::ComputeHydrodynamicForcesSubmerged(const Mesh* mesh, Ocean* oc
 
 void SolidEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* ocn)
 {
-    if(phy.mode != PhysicsMode::FLOATING && phy.mode != PhysicsMode::SUBMERGED) return;
+    if(phy_.mode != PhysicsMode::FLOATING && phy_.mode != PhysicsMode::SUBMERGED) return;
     
-    auto points = submerged.getDataAsPoints();
+    auto points = submerged_.getDataAsPoints();
     if (points != nullptr)
         points->clear();
 
@@ -1809,14 +1809,14 @@ void SolidEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
     //If completely outside fluid just set all torques and forces to 0
     if(bf == BodyFluidPosition::OUTSIDE)
     {
-        Fb.setZero();
-        Tb.setZero();
-        Fdq.setZero();
-        Tdq.setZero();
-        Fdf.setZero();
-        Tdf.setZero();
-        Swet = Scalar(0);
-        Vsub = Scalar(0);
+        Fb_.setZero();
+        Tb_.setZero();
+        Fdq_.setZero();
+        Tdq_.setZero();
+        Fdf_.setZero();
+        Tdf_.setZero();
+        Swet_ = Scalar(0);
+        Vsub_ = Scalar(0);
         return;
     }
     
@@ -1830,36 +1830,36 @@ void SolidEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
         //Compute buoyancy based on CB position
         if(isBuoyant())
         {
-            Fb = -volume*ocn->getLiquid().density * SimulationApp::getApp()->getSimulationManager()->getGravity();
-            Tb = (getCGTransform() * P_CB - getCGTransform().getOrigin()).cross(Fb);
+            Fb_ = -volume_*ocn->getLiquid().density * SimulationApp::getApp()->getSimulationManager()->getGravity();
+            Tb_ = (getCGTransform() * P_CB_ - getCGTransform().getOrigin()).cross(Fb_);
         }
         
         if(settings.dampingForces)
-            ComputeHydrodynamicForcesSubmerged(getPhysicsMesh(), ocn, getCGTransform(), getCTransform(), v, omega, Fdq, Tdq, Fdf, Tdf);
+            ComputeHydrodynamicForcesSubmerged(getPhysicsMesh(), ocn, getCGTransform(), getCTransform(), v, omega, Fdq_, Tdq_, Fdf_, Tdf_);
 
-        Swet = surface;
+        Swet_ = surface_;
     }
     else //CROSSING_FLUID_SURFACE
     {
         if(!isBuoyant()) settings.reallisticBuoyancy = false;
-        ComputeHydrodynamicForcesSurface(settings, getPhysicsMesh(), ocn, getCGTransform(), getCTransform(), v, omega, Fb, Tb, Fdq, Tdq, Fdf, Tdf, Swet, Vsub, submerged);
+        ComputeHydrodynamicForcesSurface(settings, getPhysicsMesh(), ocn, getCGTransform(), getCTransform(), v, omega, Fb_, Tb_, Fdq_, Tdq_, Fdf_, Tdf_, Swet_, Vsub_, submerged_);
     }
     
     if(settings.dampingForces)
-        CorrectHydrodynamicForces(ocn, Fdq, Tdq, Fdf, Tdf, fdCd, fdCf, getOTransform());
+        CorrectHydrodynamicForces(ocn, Fdq_, Tdq_, Fdf_, Tdf_, fdCd_, fdCf_, getOTransform());
 }
 
 void SolidEntity::ComputeAerodynamicForces(Atmosphere* atm)
 {
-    if(phy.mode != PhysicsMode::AERODYNAMIC) return;
+    if(phy_.mode != PhysicsMode::AERODYNAMIC) return;
     
     //Get velocities and transformations
     Vector3 v = getLinearVelocity();
     Vector3 omega = getAngularVelocity();
     
     //Compute drag
-    ComputeAerodynamicForces(getPhysicsMesh(), atm, getCGTransform(), getCTransform(), v, omega, Fda, Tda);
-    CorrectAerodynamicForces(atm, Fda, Tda);
+    ComputeAerodynamicForces(getPhysicsMesh(), atm, getCGTransform(), getCTransform(), v, omega, Fda_, Tda_);
+    CorrectAerodynamicForces(atm, Fda_, Tda_);
 }
 
 void SolidEntity::ComputeAerodynamicForces(const Mesh* mesh, Atmosphere* atm, const Transform& T_CG, const Transform& T_C,
@@ -1925,10 +1925,10 @@ void SolidEntity::ComputeAerodynamicForces(const Mesh* mesh, Atmosphere* atm, co
 void SolidEntity::CorrectAerodynamicForces(Atmosphere* atm, Vector3& _Fda, Vector3& _Tda)
 {
     //Correct forces
-    Vector3 Fdan = (T_CG2H.getBasis().inverse() * _Fda).safeNormalize(); //Transform force to proxy frame
+    Vector3 Fdan = (T_CG2H_.getBasis().inverse() * _Fda).safeNormalize(); //Transform force to proxy frame
     Scalar corFactor(1.0);
     
-    switch(fdApproxType)
+    switch(fdApproxType_)
     {
         case  GeometryApproxType::AUTO:
         case  GeometryApproxType::SPHERE:
@@ -1943,7 +1943,7 @@ void SolidEntity::CorrectAerodynamicForces(Atmosphere* atm, Vector3& _Fda, Vecto
                 
         case  GeometryApproxType::ELLIPSOID:
         {
-            Vector3 Cd(Scalar(1)/fdApproxParams[0] , Scalar(1)/fdApproxParams[1], Scalar(1)/fdApproxParams[2]);
+            Vector3 Cd(Scalar(1)/fdApproxParams_[0] , Scalar(1)/fdApproxParams_[1], Scalar(1)/fdApproxParams_[2]);
             Scalar maxCd = btMax(btMax(Cd.x(), Cd.y()), Cd.z());
             Cd /= maxCd;
             corFactor = Cd.dot(Fdan);
@@ -1957,14 +1957,14 @@ void SolidEntity::CorrectAerodynamicForces(Atmosphere* atm, Vector3& _Fda, Vecto
 
 void SolidEntity::ApplyHydrodynamicForces()
 {
-    ApplyCentralForce(Fb + Fdq + Fdf);
-    ApplyTorque(Tb + Tdq + Tdf);
+    ApplyCentralForce(Fb_ + Fdq_ + Fdf_);
+    ApplyTorque(Tb_ + Tdq_ + Tdf_);
 }
 
 void SolidEntity::ApplyAerodynamicForces()
 {
-    ApplyCentralForce(Fda);
-    ApplyTorque(Tda);
+    ApplyCentralForce(Fda_);
+    ApplyTorque(Tda_);
 }
 
 }

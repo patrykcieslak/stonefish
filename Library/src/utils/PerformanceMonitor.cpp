@@ -31,106 +31,106 @@ namespace sf
 
 PerformanceMonitor::PerformanceMonitor(size_t averageMaxCount)
 {
-    maxCount = averageMaxCount;
+    maxCount_ = averageMaxCount;
     
-    simTime = 0;
-    simFinished = true;
-    phyTime = std::deque<double>(0);
-    phyTimeAvg = 0;
-    hydroTime = std::deque<double>(0);
-    hydroTimeAvg = 0;
-    updateMtx = SDL_CreateMutex();
+    simTime_ = 0;
+    simFinished_ = true;
+    phyTime_ = std::deque<double>(0);
+    phyTimeAvg_ = 0;
+    hydroTime_ = std::deque<double>(0);
+    hydroTimeAvg_ = 0;
+    updateMtx_ = SDL_CreateMutex();
 }
 
 PerformanceMonitor::~PerformanceMonitor()
 {
-    SDL_DestroyMutex(updateMtx);
+    SDL_DestroyMutex(updateMtx_);
 }
 
 void PerformanceMonitor::SimulationStarted()
 {
-    SDL_LockMutex(updateMtx);
-    simStart = std::chrono::high_resolution_clock::now();
-    simTime = 0;
-    simFinished = false;
-    phyTime.clear();
-    phyTimeAvg = 0;
-    hydroTime.clear();
-    hydroTimeAvg = 0;
-    SDL_UnlockMutex(updateMtx);
+    SDL_LockMutex(updateMtx_);
+    simStart_ = std::chrono::high_resolution_clock::now();
+    simTime_ = 0;
+    simFinished_ = false;
+    phyTime_.clear();
+    phyTimeAvg_ = 0;
+    hydroTime_.clear();
+    hydroTimeAvg_ = 0;
+    SDL_UnlockMutex(updateMtx_);
 }
 
 void PerformanceMonitor::SimulationFinished()
 {
-    SDL_LockMutex(updateMtx);
+    SDL_LockMutex(updateMtx_);
     auto simEnd = std::chrono::high_resolution_clock::now();
-    simTime = std::chrono::duration_cast<std::chrono::seconds>(simEnd - simStart).count();
-    simFinished = true;
-    SDL_UnlockMutex(updateMtx);
+    simTime_ = std::chrono::duration_cast<std::chrono::seconds>(simEnd - simStart_).count();
+    simFinished_ = true;
+    SDL_UnlockMutex(updateMtx_);
 }
 
 void PerformanceMonitor::PhysicsStarted()
 {
-    phyStart = std::chrono::high_resolution_clock::now();
+    phyStart_ = std::chrono::high_resolution_clock::now();
 }
 
 void PerformanceMonitor::PhysicsFinished()
 {
-    Update(phyStart, phyTime, phyTimeAvg);
+    Update(phyStart_, phyTime_, phyTimeAvg_);
 }
 
 void PerformanceMonitor::HydrodynamicsStarted()
 {
-    hydroStart = std::chrono::high_resolution_clock::now();
+    hydroStart_ = std::chrono::high_resolution_clock::now();
 }
 
 void PerformanceMonitor::HydrodynamicsFinished()
 {
-    Update(hydroStart, hydroTime, hydroTimeAvg);
+    Update(hydroStart_, hydroTime_, hydroTimeAvg_);
 }
 
 double PerformanceMonitor::getSimulationTime()
 {
-    SDL_LockMutex(updateMtx);
-    if(!simFinished)
+    SDL_LockMutex(updateMtx_);
+    if(!simFinished_)
     {
         auto simEnd = std::chrono::high_resolution_clock::now();
-        simTime = std::chrono::duration_cast<std::chrono::seconds>(simEnd - simStart).count();
+        simTime_ = std::chrono::duration_cast<std::chrono::seconds>(simEnd - simStart_).count();
     }
-    double simTimeCopy = simTime;
-    SDL_UnlockMutex(updateMtx);
+    double simTimeCopy = simTime_;
+    SDL_UnlockMutex(updateMtx_);
     return simTimeCopy;
 }
 
 double PerformanceMonitor::getPhysicsTime()
 {
-    SDL_LockMutex(updateMtx);
-    double t = phyTime.back();
-    SDL_UnlockMutex(updateMtx);
+    SDL_LockMutex(updateMtx_);
+    double t = phyTime_.back();
+    SDL_UnlockMutex(updateMtx_);
     return t;
 }
 
 double PerformanceMonitor::getPhysicsTimeAverage()
 {
-    SDL_LockMutex(updateMtx);
-    double t = phyTimeAvg;
-    SDL_UnlockMutex(updateMtx);
+    SDL_LockMutex(updateMtx_);
+    double t = phyTimeAvg_;
+    SDL_UnlockMutex(updateMtx_);
     return t;
 }
 
 double PerformanceMonitor::getHydrodynamicsTime()
 {
-    SDL_LockMutex(updateMtx);
-    double t = hydroTime.back();
-    SDL_UnlockMutex(updateMtx);
+    SDL_LockMutex(updateMtx_);
+    double t = hydroTime_.back();
+    SDL_UnlockMutex(updateMtx_);
     return t;
 }
 
 double PerformanceMonitor::getHydrodynamicsTimeAverage()
 {
-    SDL_LockMutex(updateMtx);
-    double t = hydroTimeAvg;
-    SDL_UnlockMutex(updateMtx);
+    SDL_LockMutex(updateMtx_);
+    double t = hydroTimeAvg_;
+    SDL_UnlockMutex(updateMtx_);
     return t;
 }
 
@@ -138,15 +138,15 @@ void PerformanceMonitor::Update(const std::chrono::high_resolution_clock::time_p
 {
     // Compute elapsed time
     auto end = std::chrono::high_resolution_clock::now();
-    SDL_LockMutex(updateMtx);
+    SDL_LockMutex(updateMtx_);
     double elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
     // Update averaging queue
     times.push_back(elapsed);
-    if(times.size() > maxCount)
+    if(times.size() > maxCount_)
         times.pop_front();
     // Update average
     average = std::accumulate(times.begin(), times.end(), 0.0) / (double)times.size();
-    SDL_UnlockMutex(updateMtx);
+    SDL_UnlockMutex(updateMtx_);
 }
 
 }

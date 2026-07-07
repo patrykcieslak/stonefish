@@ -96,9 +96,9 @@
 namespace sf
 {
 
-ScenarioParser::ScenarioParser(SimulationManager* sm) : log(false), sm(sm)
+ScenarioParser::ScenarioParser(SimulationManager* sm) : log(false), sm_(sm)
 {
-    graphical = SimulationApp::getApp()->hasGraphics();
+    graphical_ = SimulationApp::getApp()->hasGraphics();
 }
 
 std::vector<ConsoleMessage> ScenarioParser::getLog()
@@ -108,7 +108,7 @@ std::vector<ConsoleMessage> ScenarioParser::getLog()
 
 SimulationManager* ScenarioParser::getSimulationManager()
 {
-    return sm;
+    return sm_;
 }
 
 bool ScenarioParser::Parse(std::string filename)
@@ -117,7 +117,7 @@ bool ScenarioParser::Parse(std::string filename)
     log.Print(MessageType::INFO, "Scenario file: %s", filename.c_str());
     
     //Open file
-    XMLError result = doc.LoadFile(filename.c_str());
+    XMLError result = doc_.LoadFile(filename.c_str());
     if(result != XML_SUCCESS)
     {
         switch(result)
@@ -140,7 +140,7 @@ bool ScenarioParser::Parse(std::string filename)
     }
     
     //Find root node
-    XMLNode* root = doc.FirstChildElement("scenario");
+    XMLNode* root = doc_.FirstChildElement("scenario");
     if(root == nullptr)
     {
         log.Print(MessageType::ERROR, "Root node not found!");
@@ -313,7 +313,7 @@ bool ScenarioParser::Parse(std::string filename)
                 return false;
             }
             l->AttachToWorld(origin);
-            sm->AddActuator(std::move(l));
+            sm_->AddActuator(std::move(l));
         }
         element = element->NextSiblingElement("light");
     }
@@ -338,7 +338,7 @@ bool ScenarioParser::Parse(std::string filename)
                 return false;
             }
             comm->AttachToWorld(origin);
-            sm->AddComm(std::move(comm));
+            sm_->AddComm(std::move(comm));
         }
         element = element->NextSiblingElement("comm");
     }
@@ -579,12 +579,12 @@ bool ScenarioParser::ParseSolver(XMLElement* element)
 {
     XMLElement* item;
     Scalar erp, stopErp;
-    sm->getJointErp(erp, stopErp);
-    Scalar erp2 = sm->getDynamicsWorld()->getSolverInfo().m_erp2;
-    Scalar globalDamping = sm->getDynamicsWorld()->getSolverInfo().m_damping;
-    Scalar globalFriction = sm->getDynamicsWorld()->getSolverInfo().m_friction;
+    sm_->getJointErp(erp, stopErp);
+    Scalar erp2 = sm_->getDynamicsWorld()->getSolverInfo().m_erp2;
+    Scalar globalDamping = sm_->getDynamicsWorld()->getSolverInfo().m_damping;
+    Scalar globalFriction = sm_->getDynamicsWorld()->getSolverInfo().m_friction;
     Scalar linSleep, angSleep;
-    sm->getSleepingThresholds(linSleep, angSleep);
+    sm_->getSleepingThresholds(linSleep, angSleep);
 
     if((item = element->FirstChildElement("erp")) != nullptr)
         item->QueryAttribute("value", &erp);
@@ -601,12 +601,12 @@ bool ScenarioParser::ParseSolver(XMLElement* element)
         item->QueryAttribute("linear", &linSleep);
         item->QueryAttribute("angular", &angSleep);
     }
-    sm->setSolverParams(erp, stopErp, erp2, globalDamping, globalFriction, linSleep, angSleep);
+    sm_->setSolverParams(erp, stopErp, erp2, globalDamping, globalFriction, linSleep, angSleep);
     
     unsigned int presc;
     if((item = element->FirstChildElement("fluid_dynamics")) != nullptr
         && item->QueryAttribute("prescaler", &presc) == XML_SUCCESS)
-            sm->setFluidDynamicsPrescaler(presc);
+            sm_->setFluidDynamicsPrescaler(presc);
 
     return true;
 }
@@ -630,7 +630,7 @@ bool ScenarioParser::ParseEnvironment(XMLElement* element)
         log.Print(MessageType::ERROR, "NED definition incorrect!");
         return false;
     }
-    sm->getNED()->Init(lat, lon, Scalar(0));
+    sm_->getNED()->Init(lat, lon, Scalar(0));
     
     //Setup ocean
     XMLElement* ocean = element->FirstChildElement("ocean");
@@ -657,10 +657,10 @@ bool ScenarioParser::ParseEnvironment(XMLElement* element)
             item->QueryAttribute("temperature", &waterTemperature);
         }
         
-        std::string waterName = sm->getMaterialManager()->CreateFluid("Water", waterDensity, 1.308e-3, 1.55); 
-        sm->EnableOcean(wavesHeight, sm->getMaterialManager()->getFluid(waterName));
-        sm->getOcean()->setWaterType(jerlov);
-        sm->getOcean()->SetConditions(waterTemperature);
+        std::string waterName = sm_->getMaterialManager()->CreateFluid("Water", waterDensity, 1.308e-3, 1.55); 
+        sm_->EnableOcean(wavesHeight, sm_->getMaterialManager()->getFluid(waterName));
+        sm_->getOcean()->setWaterType(jerlov);
+        sm_->getOcean()->SetConditions(waterTemperature);
         
         //Particles
         bool particles = true;
@@ -668,12 +668,12 @@ bool ScenarioParser::ParseEnvironment(XMLElement* element)
         {
             item->QueryAttribute("enabled", &particles);
         }
-        sm->getOcean()->setParticles(particles);
+        sm_->getOcean()->setParticles(particles);
 
         //Currents
         if((item = ocean->FirstChildElement("current")) != nullptr)
         {
-            Ocean* ocn = sm->getOcean();
+            Ocean* ocn = sm_->getOcean();
             do
             {
                 VelocityField* current = ParseVelocityField(item);
@@ -698,13 +698,13 @@ bool ScenarioParser::ParseEnvironment(XMLElement* element)
                 log.Print(MessageType::WARNING, "Sun position definition incorrect - using defualts.");
             }
             else
-                sm->getAtmosphere()->SetSunPosition(az, elev);
+                sm_->getAtmosphere()->SetSunPosition(az, elev);
         }
 
         //Winds
         if((item = atmosphere->FirstChildElement("wind")) != nullptr)
         {
-            Atmosphere* atm = sm->getAtmosphere();
+            Atmosphere* atm = sm_->getAtmosphere();
             do
             {
                 VelocityField* wind = ParseVelocityField(item);
@@ -723,7 +723,7 @@ bool ScenarioParser::ParseEnvironment(XMLElement* element)
             item->QueryAttribute("temperature", &temp);
             item->QueryAttribute("pressure", &press);
             item->QueryAttribute("humidity", &hum);
-            sm->getAtmosphere()->SetConditions(temp, press, hum);
+            sm_->getAtmosphere()->SetConditions(temp, press, hum);
         }
     }
     return true;
@@ -763,7 +763,7 @@ bool ScenarioParser::ParseMaterials(XMLElement* element)
             return false;
         }
         mat->QueryAttribute("magnetic", &magnetic);
-        sm->getMaterialManager()->CreateMaterial(materialName, density, restitution, magnetic);
+        sm_->getMaterialManager()->CreateMaterial(materialName, density, restitution, magnetic);
         mat = mat->NextSiblingElement("material");
     }
     
@@ -791,7 +791,7 @@ bool ScenarioParser::ParseMaterials(XMLElement* element)
             }
             else
             {
-                if(!sm->getMaterialManager()->SetMaterialsInteraction(std::string(name1), std::string(name2), fstatic, fdynamic))
+                if(!sm_->getMaterialManager()->SetMaterialsInteraction(std::string(name1), std::string(name2), fstatic, fdynamic))
                     log.Print(MessageType::WARNING, "Setting friction coefficients failed - using defaults.");
             }
             friction = friction->NextSiblingElement("friction");
@@ -856,17 +856,17 @@ bool ScenarioParser::ParseLooks(XMLElement* element)
         if(look->QueryAttribute("temperature", &tempRange.first) == XML_SUCCESS)
         {
             tempRange.second = tempRange.first;
-            sm->CreateLook(lookName, color, roughness, metalness, reflectivity, textureStr, normalMapStr, "", tempRange);
+            sm_->CreateLook(lookName, color, roughness, metalness, reflectivity, textureStr, normalMapStr, "", tempRange);
         }
         else if(look->QueryStringAttribute("temperature_map", &tempMap) == XML_SUCCESS
                 && look->QueryAttribute("temperature_min", &tempRange.first) == XML_SUCCESS
                 && look->QueryAttribute("temperature_max", &tempRange.second) == XML_SUCCESS)
         {
             tempMapStr = GetFullPath(std::string(tempMap));
-            sm->CreateLook(lookName, color, roughness, metalness, reflectivity, textureStr, normalMapStr, tempMapStr, tempRange);
+            sm_->CreateLook(lookName, color, roughness, metalness, reflectivity, textureStr, normalMapStr, tempMapStr, tempRange);
         }
         else
-        sm->CreateLook(lookName, color, roughness, metalness, reflectivity, textureStr, normalMapStr);
+        sm_->CreateLook(lookName, color, roughness, metalness, reflectivity, textureStr, normalMapStr);
         look = look->NextSiblingElement("look");
     }
     
@@ -1152,7 +1152,7 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
                 return false;
             }
             l->AttachToStatic(object.get(), origin);
-            sm->AddActuator(std::move(l));
+            sm_->AddActuator(std::move(l));
         }
         item = item->NextSiblingElement("light");
     }
@@ -1177,13 +1177,13 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
                 return false;
             }
             comm->AttachToStatic(object.get(), origin);
-            sm->AddComm(std::move(comm));
+            sm_->AddComm(std::move(comm));
         }
         item = item->NextSiblingElement("comm");
     }
 
     //---- Add to world ----
-    sm->AddStaticEntity(std::move(object), trans);
+    sm_->AddStaticEntity(std::move(object), trans);
 
     return true;
 }
@@ -1325,7 +1325,7 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
     }
 
     //---- Object specific ----
-     std::unique_ptr<AnimatedEntity> object {};
+    std::unique_ptr<AnimatedEntity> object {};
         
     if(typestr == "empty")
     {
@@ -1479,7 +1479,7 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
                 return false;
             }
             l->AttachToAnimated(object.get(), origin);
-            sm->AddActuator(std::move(l));
+            sm_->AddActuator(std::move(l));
         }
         item = item->NextSiblingElement("light");
     }
@@ -1504,13 +1504,13 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
                 return false;
             }
             comm->AttachToSolid(object.get(), origin);
-            sm->AddComm(std::move(comm));
+            sm_->AddComm(std::move(comm));
         }
         item = item->NextSiblingElement("comm");
     }
 
     //---- Add to world ----
-    sm->AddAnimatedEntity(std::move(object));
+    sm_->AddAnimatedEntity(std::move(object));
 
     return true;
 }
@@ -1519,7 +1519,7 @@ bool ScenarioParser::ParseDynamic(XMLElement* element)
 {
     //---- Solid ----
     std::unique_ptr<SolidEntity> solid {};
-    if(!ParseSolid(element, solid.get()))
+    if((solid = ParseSolid(element)) == nullptr)
         return false;
     
     XMLElement* item;
@@ -1562,7 +1562,7 @@ bool ScenarioParser::ParseDynamic(XMLElement* element)
                 return false;
             }
             l->AttachToSolid(solid.get(), origin);
-            sm->AddActuator(std::move(l));
+            sm_->AddActuator(std::move(l));
         }
         item = item->NextSiblingElement("light");
     }
@@ -1587,13 +1587,13 @@ bool ScenarioParser::ParseDynamic(XMLElement* element)
                 return false;
             }
             comm->AttachToSolid(solid.get(), origin);
-            sm->AddComm(std::move(comm));
+            sm_->AddComm(std::move(comm));
         }
         item = item->NextSiblingElement("comm");
     }
 
     //---- Add to world ----
-    sm->AddSolidEntity(std::move(solid), trans);
+    sm_->AddSolidEntity(std::move(solid), trans);
 
     return true;
 }
@@ -1705,15 +1705,16 @@ bool ScenarioParser::ParseCable(XMLElement* element)
     }
 
     //---- Add to world ----
-    CableEntity* cable = new CableEntity(cableName, phy, first, second, numSegments, diameter, std::string(mat), std::string(look), stretchFactor, uvScale);
-    sm->AddEntity(cable);
+    std::unique_ptr<CableEntity> cable = std::make_unique<CableEntity>(cableName, phy, first, second, numSegments, diameter, std::string(mat), std::string(look), stretchFactor, uvScale);
+    CableEntity* cablePtr = cable.get();
+    sm_->AddEntity(std::move(cable));
 
     //---- Anchors ----
     auto parseAnchor = [&](XMLElement* anchorItem, const std::string& anchorTypeStr, sf::CableEnds anchorEnd) -> bool
     {
         if (anchorTypeStr == "world")
         {
-            cable->AttachToWorld(anchorEnd);
+            cablePtr->AttachToWorld(anchorEnd);
             return true;
         }
         else if (anchorTypeStr == "dynamic")
@@ -1723,10 +1724,10 @@ bool ScenarioParser::ParseCable(XMLElement* element)
             if ((childItem = anchorItem->FirstChildElement("body")) != nullptr
                 && childItem->QueryStringAttribute("name", &bodyName) == XML_SUCCESS)
             {        
-                SolidEntity* body = dynamic_cast<SolidEntity*>(sm->getEntity(std::string(bodyName)));
+                SolidEntity* body = dynamic_cast<SolidEntity*>(sm_->getEntity(std::string(bodyName)));
                 if (body != nullptr)
                 {
-                    cable->AttachToSolid(anchorEnd, body);
+                    cablePtr->AttachToSolid(anchorEnd, body);
                     return true;
                 }
                 else
@@ -1758,7 +1759,7 @@ bool ScenarioParser::ParseCable(XMLElement* element)
     return true;
 }
 
-bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::string ns, bool compoundPart)
+std::unique_ptr<SolidEntity> ScenarioParser::ParseSolid(XMLElement* element, std::string ns, bool compoundPart)
 {
     //---- Basic ----
     const char* name = nullptr;
@@ -1769,14 +1770,14 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
     if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
     {
         log.Print(MessageType::ERROR, "Rigid body name missing!");
-        return false;
+        return nullptr;
     }
     std::string solidName = ns != "" ? ns + "/" + std::string(name) : std::string(name);
 
     if(element->QueryStringAttribute("type", &type) != XML_SUCCESS)
     {
         log.Print(MessageType::ERROR, "Type of rigid body '%s' missing!", solidName.c_str());
-        return false;
+        return nullptr;
     }
     if(element->QueryStringAttribute("physics", &phyType) == XML_SUCCESS)
     {
@@ -1794,56 +1795,53 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
         else 
         {
             log.Print(MessageType::ERROR, "Incorrect physics type for rigid body '%s'!", solidName.c_str());
-            return false;
+            return nullptr;
         }
     }
     element->QueryAttribute("buoyant", &phy.buoyancy);
     element->QueryAttribute("collisions", &phy.collisions);
     
+    std::unique_ptr<SolidEntity> solid {};
+    XMLElement* item;
     std::string typeStr(type);
     
-    XMLElement* item;
-
     if(typeStr == "compound")
     {
         //First external part
-        SolidEntity* part = nullptr;
-        Compound* comp = nullptr;
+        std::unique_ptr<SolidEntity> part {};
+        std::unique_ptr<Compound> comp {};
         Transform partOrigin;
       
         if((item = element->FirstChildElement("external_part")) == nullptr
-            || !ParseSolid(item, part, solidName, true))
+            || (part = ParseSolid(item, solidName, true)) == nullptr)
         {
             log.Print(MessageType::ERROR, "No properly defined external part of compound rigid body '%s' found!", solidName.c_str());
-            return false;
+            return nullptr;
         }
         XMLElement* item2;
         if((item2 = item->FirstChildElement("compound_transform")) == nullptr || !ParseTransform(item2, partOrigin))
         {
             log.Print(MessageType::ERROR, "Incorrect definition of external part's '%s' origin frame, for rigid body '%s'!", part->getName().c_str(), solidName.c_str());
-            return false;
+            return nullptr;
         }
-        comp = new Compound(solidName, phy, part, partOrigin);
+        comp = std::make_unique<Compound>(solidName, phy, std::move(part), partOrigin);
         
         //Iterate through all external parts
         item = item->NextSiblingElement("external_part");
         while(item != nullptr)
         {
-            if(!ParseSolid(item, part, solidName, true))
+            if((part = ParseSolid(item, solidName, true)) == nullptr)
             {
                 log.Print(MessageType::ERROR, "Incorrect definition of external part of rigid body '%s'!", solidName.c_str());
-                delete comp;
-                return false;
+                return nullptr;
             }
             if((item2 = item->FirstChildElement("compound_transform")) == nullptr || !ParseTransform(item2, partOrigin))
             {
                 log.Print(MessageType::ERROR, "Incorrect definition of external part's '%s' origin frame, for rigid body '%s'!", part->getName().c_str(), solidName.c_str());
-                delete part;
-                delete comp;
-                return false;
+                return nullptr;
             }
                 
-            comp->AddExternalPart(part, partOrigin);
+            comp->AddExternalPart(std::move(part), partOrigin);
             item = item->NextSiblingElement("external_part");
         }
         
@@ -1851,27 +1849,24 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
         item = element->FirstChildElement("internal_part");
         while(item != nullptr)
         {
-            if(!ParseSolid(item, part, solidName, true))
+            if((part = ParseSolid(item, solidName, true)) == nullptr)
             {
                 log.Print(MessageType::ERROR, "Incorrect definition of internal part of rigid body '%s'!", solidName.c_str());
-                delete comp;
-                return false;
+                return nullptr;
             }
             if((item2 = item->FirstChildElement("compound_transform")) == nullptr || !ParseTransform(item2, partOrigin))
             {
                 log.Print(MessageType::ERROR, "Incorrect definition of internal part's '%s' origin frame, for rigid body '%s'!", part->getName().c_str(), solidName.c_str());
-                delete part;
-                delete comp;
-                return false;
+                return nullptr;
             }
             bool alwaysVisible = false;
             item->QueryBoolAttribute("always_visible", &alwaysVisible);
                 
-            comp->AddInternalPart(part, partOrigin, alwaysVisible);
+            comp->AddInternalPart(std::move(part), partOrigin, alwaysVisible);
             item = item->NextSiblingElement("internal_part");
         }
         
-        solid = comp;
+        solid = std::move(comp);
     }
     else
     {
@@ -1895,14 +1890,14 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
             || item->QueryStringAttribute("name", &mat) != XML_SUCCESS)
         {
             log.Print(MessageType::ERROR, "Material of rigid body '%s' not properly defined!", solidName.c_str());
-            return false;
+            return nullptr;
         }
         //Look
         if((item = element->FirstChildElement("look")) == nullptr
             || item->QueryStringAttribute("name", &look) != XML_SUCCESS)
         {
             log.Print(MessageType::ERROR, "Look of rigid body '%s' not properly defined!", solidName.c_str());
-            return false;
+            return nullptr;
         }
         else
         {
@@ -1936,7 +1931,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
             if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
             {
                 log.Print(MessageType::ERROR, "Definition of origin frame of rigid body '%s' missing!", solidName.c_str());
-                return false;
+                return nullptr;
             }
         }
         //---- Specific ----
@@ -1951,11 +1946,11 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
                 || !ParseVector(dims, dim))
             {
                 log.Print(MessageType::ERROR, "Dimensions of rigid body '%s' not properly defined!", solidName.c_str());
-                return false;
+                return nullptr;
             }    
             if(item->QueryAttribute("thickness", &thickness) != XML_SUCCESS)
                 thickness = Scalar(-1);
-            solid = new Box(solidName, phy, dim, origin, std::string(mat), std::string(look), thickness, uvMode);
+            solid = std::make_unique<Box>(solidName, phy, dim, origin, std::string(mat), std::string(look), thickness, uvMode);
         }
         else if(typeStr == "cylinder")
         {
@@ -1965,11 +1960,11 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
                 || item->QueryAttribute("height", &height) != XML_SUCCESS)
             {
                 log.Print(MessageType::ERROR, "Dimensions of rigid body '%s' not properly defined!", solidName.c_str());
-                return false;
+                return nullptr;
             }
             if(item->QueryAttribute("thickness", &thickness) != XML_SUCCESS)
                 thickness = Scalar(-1);
-            solid = new Cylinder(solidName, phy, radius, height, origin, std::string(mat), std::string(look), thickness);
+            solid = std::make_unique<Cylinder>(solidName, phy, radius, height, origin, std::string(mat), std::string(look), thickness);
         }
         else if(typeStr == "sphere")
         {
@@ -1978,11 +1973,11 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
                 || item->QueryAttribute("radius", &radius) != XML_SUCCESS)
             {
                 log.Print(MessageType::ERROR, "Dimensions of rigid body '%s' not properly defined!", solidName.c_str());
-                return false;
+                return nullptr;
             }
             if(item->QueryAttribute("thickness", &thickness) != XML_SUCCESS)
                 thickness = Scalar(-1);
-            solid = new Sphere(solidName, phy, radius, origin, std::string(mat), std::string(look), thickness);
+            solid = std::make_unique<Sphere>(solidName, phy, radius, origin, std::string(mat), std::string(look), thickness);
         }
         else if(typeStr == "torus")
         {
@@ -1992,11 +1987,11 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
                 || item->QueryAttribute("minor_radius", &radiusMin) != XML_SUCCESS)
             {
                 log.Print(MessageType::ERROR, "Dimensions of rigid body '%s' not properly defined!", solidName.c_str());
-                return false;
+                return nullptr;
             }
             if(item->QueryAttribute("thickness", &thickness) != XML_SUCCESS)
                 thickness = Scalar(-1);
-            solid = new Torus(solidName, phy, radiusMaj, radiusMin, origin, std::string(mat), std::string(look), thickness);
+            solid = std::make_unique<Torus>(solidName, phy, radiusMaj, radiusMin, origin, std::string(mat), std::string(look), thickness);
         }
         else if(typeStr == "wing")
         {
@@ -2009,7 +2004,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
                || item->QueryStringAttribute("naca", &naca) != XML_SUCCESS)
             {
                 log.Print(MessageType::ERROR, "Dimensions of rigid body '%s' not properly defined!", solidName.c_str());
-                return false;
+                return nullptr;
             }
             if(item->QueryAttribute("thickness", &thickness) != XML_SUCCESS)
                 thickness = Scalar(-1);
@@ -2018,9 +2013,9 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
             if(nacaStr.size() != 4)
             {
                 log.Print(MessageType::ERROR, "Incorrect NACA code for wind '%s'!", solidName.c_str());
-                return false;
+                return nullptr;
             }
-            solid = new Wing(solidName, phy, baseChord, tipChord, nacaStr, length, origin, std::string(mat), std::string(look), thickness);
+            solid = std::make_unique<Wing>(solidName, phy, baseChord, tipChord, nacaStr, length, origin, std::string(mat), std::string(look), thickness);
         }
         else if(typeStr == "model")
         {
@@ -2032,14 +2027,14 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
             if((item = element->FirstChildElement("physical")) == nullptr)
             {
                 log.Print(MessageType::ERROR, "Physical mesh of rigid body '%s' not defined!", solidName.c_str());
-                return false;
+                return nullptr;
             }
             XMLElement* item2;
             if((item2 = item->FirstChildElement("mesh")) == nullptr
                 || item2->QueryStringAttribute("filename", &phyMesh) != XML_SUCCESS)
             {
                 log.Print(MessageType::ERROR, "Physical mesh of rigid body '%s' not properly defined!", solidName.c_str());
-                return false;
+                return nullptr;
             }
             item2->QueryAttribute("scale", &phyScale);
             if((item2 = item->FirstChildElement("thickness")) != nullptr)
@@ -2047,7 +2042,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
             if((item2 = item->FirstChildElement("origin")) == nullptr || !ParseTransform(item2, phyOrigin))
             {
                 log.Print(MessageType::ERROR, "Physical mesh of rigid body '%s' not properly defined!", solidName.c_str());
-                return false;
+                return nullptr;
             }
             
             if((item = element->FirstChildElement("visual")) != nullptr)
@@ -2060,25 +2055,25 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
                 || item->QueryStringAttribute("filename", &graMesh) != XML_SUCCESS)
                 {
                     log.Print(MessageType::ERROR, "Visual mesh of rigid body '%s' not properly defined!", solidName.c_str());
-                    return false;
+                    return nullptr;
                 }
                 item->QueryAttribute("scale", &graScale);
                 if((item = item->NextSiblingElement("origin")) == nullptr || !ParseTransform(item, graOrigin))
                 {
                     log.Print(MessageType::ERROR, "Visual mesh of rigid body '%s' not properly defined!", solidName.c_str());
-                    return false;
+                    return nullptr;
                 }          
-                solid = new Polyhedron(solidName, phy, GetFullPath(std::string(graMesh)), graScale, graOrigin, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, std::string(mat), std::string(look), thickness); 
+                solid = std::make_unique<Polyhedron>(solidName, phy, GetFullPath(std::string(graMesh)), graScale, graOrigin, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, std::string(mat), std::string(look), thickness);
             }
             else
             {
-                solid = new Polyhedron(solidName, phy, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, std::string(mat), std::string(look), thickness); 
+                solid = std::make_unique<Polyhedron>(solidName, phy, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, std::string(mat), std::string(look), thickness);
             }
         }
         else
         {
             log.Print(MessageType::ERROR, "Unknown type of rigid body '%s'!", solidName.c_str());
-            return false;
+            return nullptr;
         }
          
         //Modify automatically calculated dynamical properties
@@ -2111,7 +2106,7 @@ bool ScenarioParser::ParseSolid(XMLElement* element, SolidEntity*& solid, std::s
             solid->SetContactProperties(true, contactK, contactD);
         }
     }
-    return true;
+    return solid;
 }
 
 bool ScenarioParser::ParseRobot(XMLElement* element)
@@ -2156,56 +2151,55 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
         return false;
     }
 
-    Robot* robot;
+    std::unique_ptr<Robot> robot {};
     if(algorithm == "featherstone")
-        robot = new FeatherstoneRobot(robotName, fixed);
+        robot = std::make_unique<FeatherstoneRobot>(robotName, fixed);
     else if(algorithm == "general")
-        robot = new GeneralRobot(robotName, fixed);
-            
+        robot = std::make_unique<GeneralRobot>(robotName, fixed);
+
     //---- Links ----
     //Base link
-    SolidEntity* baseLink = nullptr;
+    std::unique_ptr<SolidEntity> baseLink {};
     
     if((item = element->FirstChildElement("base_link")) == nullptr)
     {
         log.Print(MessageType::ERROR, "Base link of robot '%s' missing!", robotName.c_str());
-        delete robot;
         return false;
     }
-    if(!ParseLink(item, robot, baseLink))
+    if((baseLink = ParseLink(item, robot.get())) == nullptr)
     {
         log.Print(MessageType::ERROR, "Base link of robot '%s' not properly defined!", robotName.c_str());
-        delete robot;
         return false;
     }
     
     //Other links
-    SolidEntity* link = nullptr;
-    std::vector<SolidEntity*> links(0);
+    std::vector<std::unique_ptr<SolidEntity>> links;
     
     item = element->FirstChildElement("link");
     while(item != nullptr)
     {
-        if(!ParseLink(item, robot, link))
+        std::unique_ptr<SolidEntity> link {};
+        if ((link = ParseLink(item, robot.get())) != nullptr)
         {
-            log.Print(MessageType::ERROR, "Link of robot '%s' not properly defined!", robotName.c_str());
-            delete robot;
+            links.push_back(std::move(link));
+        }
+        else
+        {
+            log.Print(MessageType::ERROR, "Link of robot '%s' not properly defined!", robot->getName().c_str());
             return false;
         }        
-        links.push_back(link);
         item = item->NextSiblingElement("link");
     }
     
-    robot->DefineLinks(baseLink, links, selfCollisions);
+    robot->DefineLinks(std::move(baseLink), std::move(links), selfCollisions);
     
     //---- Joints ----
     item = element->FirstChildElement("joint");
     while(item != nullptr)
     {
-        if(!ParseJoint(item, robot))
+        if(!ParseJoint(item, robot.get()))
         {
             log.Print(MessageType::ERROR, "Joint of robot '%s' not properly defined!", robotName.c_str());
-            delete robot;
             return false;
         }
         item = item->NextSiblingElement("joint");
@@ -2217,10 +2211,9 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
     item = element->FirstChildElement("sensor");
     while(item != nullptr)
     {
-        if(!ParseSensor(item, robot))
+        if(!ParseSensor(item, robot.get()))
         {
             log.Print(MessageType::ERROR, "Sensor of robot '%s' not properly defined!", robotName.c_str());
-            delete robot;
             return false;
         }
         item = item->NextSiblingElement("sensor");
@@ -2230,10 +2223,9 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
     item = element->FirstChildElement("actuator");
     while(item != nullptr)
     {
-        if(!ParseActuator(item, robot))
+        if(!ParseActuator(item, robot.get()))
         {
             log.Print(MessageType::ERROR, "Actuator of robot '%s' not properly defined!", robotName.c_str());
-            delete robot;
             return false;
         }
         item = item->NextSiblingElement("actuator");
@@ -2243,11 +2235,10 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
     item = element->FirstChildElement("light");
     while(item != nullptr)
     {
-        Light* l = ParseLight(item, robot->getName());
+        std::unique_ptr<Light> l = ParseLight(item, robot->getName());
         if(l == nullptr)
         {
             log.Print(MessageType::ERROR, "Light of robot '%s' not properly defined!", robotName.c_str());
-            delete robot;
             return false;
         }
         else
@@ -2259,11 +2250,9 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
                 || ((item2 = item->FirstChildElement("origin")) == nullptr || !ParseTransform(item2, origin)) )
             {
                 log.Print(MessageType::ERROR, "Light of robot '%s' not properly defined!", robotName.c_str());
-                delete l;
-                delete robot;
                 return false;
             }
-            robot->AddLinkActuator(l, robot->getName() + "/" + std::string(linkName), origin);
+            robot->AddLinkActuator(l.release(), robot->getName() + "/" + std::string(linkName), origin);
         }
         item = item->NextSiblingElement("light");
     }
@@ -2272,11 +2261,10 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
     item = element->FirstChildElement("comm");
     while(item != nullptr)
     {
-        Comm* comm = ParseComm(item, robot->getName());
+        std::unique_ptr<Comm> comm = ParseComm(item, robot->getName());
         if(comm == nullptr)
         {
             log.Print(MessageType::ERROR, "Communication device of robot '%s' not properly defined!", robotName.c_str());
-            delete robot;
             return false;
         }
         else
@@ -2288,22 +2276,20 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
                 || ((item2 = item->FirstChildElement("origin")) == nullptr || !ParseTransform(item2, origin)) )
             {
                 log.Print(MessageType::ERROR, "Communication device of robot '%s' not properly defined!", robotName.c_str());
-                delete comm;
-                delete robot;
                 return false;
             }
-            robot->AddComm(comm, robot->getName() + "/" + std::string(linkName), origin);
+            robot->AddComm(comm.release(), robot->getName() + "/" + std::string(linkName), origin);
         }
         item = item->NextSiblingElement("comm");
     }
     
-    sm->AddRobot(robot, trans);
+    sm_->AddRobot(std::move(robot), trans);
     return true;
 }
 
-bool ScenarioParser::ParseLink(XMLElement* element, Robot* robot, SolidEntity*& link)
+std::unique_ptr<SolidEntity> ScenarioParser::ParseLink(XMLElement* element, Robot* robot)
 {
-    return ParseSolid(element, link, robot->getName());
+    return ParseSolid(element, robot->getName());
 }
         
 bool ScenarioParser::ParseJoint(XMLElement* element, Robot* robot)
@@ -2405,7 +2391,7 @@ bool ScenarioParser::ParseJoint(XMLElement* element, Robot* robot)
 bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
 {
     //Parse
-    Actuator* act = ParseActuator(element, robot->getName());
+    std::unique_ptr<Actuator> act = ParseActuator(element, robot->getName());
     if(act == nullptr)
         return false;
     
@@ -2431,10 +2417,9 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
                 || item->QueryStringAttribute("name", &jointName) != XML_SUCCESS)
             {
                 log.Print(MessageType::ERROR, "Joint definition for actuator '%s' missing!", act->getName().c_str());
-                delete act;
                 return false;
             }
-            robot->AddJointActuator((JointActuator*)act, robot->getName() + "/" + std::string(jointName));
+            robot->AddJointActuator((JointActuator*)act.release(), robot->getName() + "/" + std::string(jointName));
         }
             break;
 
@@ -2454,16 +2439,14 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
                 || item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
             {
                 log.Print(MessageType::ERROR, "Link definition for actuator '%s' missing!", act->getName().c_str());
-                delete act;
                 return false;
             }
             if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
             {
                 log.Print(MessageType::ERROR, "Origin frame of actuator '%s' missing!", act->getName().c_str());
-                delete act;
                 return false;
             }
-            robot->AddLinkActuator((LinkActuator*)act, robot->getName() + "/" + std::string(linkName), origin);
+            robot->AddLinkActuator((LinkActuator*)act.release(), robot->getName() + "/" + std::string(linkName), origin);
         }
             break;
 
@@ -2471,7 +2454,6 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
         default:
         {
             log.Print(MessageType::ERROR, "Unsupported actuator type found in definition of robot '%s'!", robot->getName().c_str());
-            delete act;
             return false;
         }
             break;
@@ -2482,7 +2464,7 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
 bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
 {
     //Parse
-    Sensor* sens = ParseSensor(element, robot->getName());
+    std::unique_ptr<Sensor> sens = ParseSensor(element, robot->getName());
     if(sens == nullptr)
         return false;
 
@@ -2498,10 +2480,9 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
                  || item->QueryStringAttribute("name", &jointName) != XML_SUCCESS)
             {
                 log.Print(MessageType::ERROR, "Joint definition for sensor '%s' missing!", sens->getName().c_str());
-                delete sens;
                 return false;
             }
-            robot->AddJointSensor((JointSensor*)sens, robot->getName() + "/" + std::string(jointName));
+            robot->AddJointSensor((JointSensor*)sens.release(), robot->getName() + "/" + std::string(jointName));
         }
             break;
 
@@ -2515,20 +2496,18 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
                 || item->QueryStringAttribute("name", &linkName) != XML_SUCCESS)
             {
                 log.Print(MessageType::ERROR, "Link definition for sensor '%s' missing!", sens->getName().c_str());
-                delete sens;
                 return false;
             }
             if((item = element->FirstChildElement("origin")) == nullptr 
                 || !ParseTransform(item, origin))
             {
                 log.Print(MessageType::ERROR, "Origin frame of sensor '%s' missing!", sens->getName().c_str());
-                delete sens;
                 return false;
             }
             if(sens->getType() == SensorType::LINK)
-                robot->AddLinkSensor((LinkSensor*)sens, robot->getName() + "/" + std::string(linkName), origin);
+                robot->AddLinkSensor((LinkSensor*)sens.release(), robot->getName() + "/" + std::string(linkName), origin);
             else
-                robot->AddVisionSensor((VisionSensor*)sens, robot->getName() + "/" + std::string(linkName), origin);
+                robot->AddVisionSensor((VisionSensor*)sens.release(), robot->getName() + "/" + std::string(linkName), origin);
         }
             break;
 
@@ -2536,7 +2515,6 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
         default:
         {
             log.Print(MessageType::ERROR, "Unsupported sensor type found in definition of robot '%s'!", robot->getName().c_str());
-            delete sens;
             return false;
         }
             break;
@@ -2547,7 +2525,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
 bool ScenarioParser::ParseSensor(XMLElement* element, Entity* ent)
 {
     //Parse
-    Sensor* sens = ParseSensor(element, ent != nullptr ? ent->getName() : "");
+    std::unique_ptr<Sensor> sens = ParseSensor(element, ent != nullptr ? ent->getName() : "");
     if(sens == nullptr)
         return false;
 
@@ -2558,7 +2536,6 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Entity* ent)
         case SensorType::JOINT:
         {
             log.Print(MessageType::ERROR, "Joint sensors can only be attached to robotic joints!");
-            delete sens;
             return false;
         }
             break;
@@ -2569,25 +2546,21 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Entity* ent)
             if((item = element->FirstChildElement("origin")) == nullptr 
                 || !ParseTransform(item, origin))
             {
-                delete sens;
                 return false;
             }
             if(ent == nullptr)
             {
                 log.Print(MessageType::ERROR, "Link sensors can only be attached to robotic links and moving bodies!");
-                delete sens;
                 return false;
             }
             else if(ent->getType() == EntityType::SOLID || ent->getType() == EntityType::ANIMATED)
             {
-                LinkSensor* lsens = (LinkSensor*)sens;
-                lsens->AttachToSolid((MovingEntity*)ent, origin);
-                sm->AddSensor(lsens);
+                static_cast<LinkSensor*>(sens.get())->AttachToSolid(static_cast<MovingEntity*>(ent), origin);
+                sm_->AddSensor(std::move(sens));
             }
             else
             {
                 log.Print(MessageType::ERROR, "Link sensors can only be attached to robotic links and moving bodies!");
-                delete sens;
                 return false;
             }
         }
@@ -2599,29 +2572,25 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Entity* ent)
             if((item = element->FirstChildElement(ent == nullptr ? "world_transform" : "origin")) == nullptr 
                 || !ParseTransform(item, origin))
             {
-                delete sens;
                 return false;
             }
-            VisionSensor* vsens = (VisionSensor*)sens;
             if(ent == nullptr)
-                vsens->AttachToWorld(origin);
+                static_cast<VisionSensor*>(sens.get())->AttachToWorld(origin);
             else if(ent->getType() == EntityType::SOLID || ent->getType() == EntityType::ANIMATED)
-                vsens->AttachToSolid((MovingEntity*)ent, origin);
+                static_cast<VisionSensor*>(sens.get())->AttachToSolid(static_cast<MovingEntity*>(ent), origin);
             else if(ent->getType() == EntityType::STATIC)
-                vsens->AttachToStatic((StaticEntity*)ent, origin);   
+                static_cast<VisionSensor*>(sens.get())->AttachToStatic(static_cast<StaticEntity*>(ent), origin);   
             else
             {
                 log.Print(MessageType::ERROR, "Trying to attach vision sensor to a non-physical body!");
-                delete sens;
                 return false;
             }
-            sm->AddSensor(vsens);
+            sm_->AddSensor(std::move(sens));
         }
             break;
 
         default:
         {
-            delete sens;
             return false;
         }
             break;
@@ -2629,7 +2598,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Entity* ent)
     return true;
 }
 
-Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& namePrefix)
+std::unique_ptr<Actuator> ScenarioParser::ParseActuator(XMLElement* element, const std::string& namePrefix)
 {
     //---- Common ----
     const char* name = nullptr;
@@ -2655,8 +2624,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
     XMLElement* item;
     if(typeStr == "motor")
     {
-        Motor* mtr = new Motor(actuatorName);
-        return mtr;
+        return std::make_unique<Motor>(actuatorName);
     }
     else if(typeStr == "servo")
     {
@@ -2676,7 +2644,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         if((item = element->FirstChildElement("initial")) != nullptr)
             item->QueryAttribute("position", &initialPos);
 
-        Servo* srv = new Servo(actuatorName, kp, kv, maxTau);
+        std::unique_ptr<Servo> srv = std::make_unique<Servo>(actuatorName, kp, kv, maxTau);
         srv->setControlMode(ServoControlMode::POSITION);
         srv->setDesiredPosition(initialPos);
         srv->setMaxVelocity(maxVel);
@@ -2684,13 +2652,12 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
     }
     else if(typeStr == "push")
     {
-        Push* push; 
         if((item = element->FirstChildElement("specs")) != nullptr)
         {
             bool inverted = false;
             item->QueryAttribute("inverted", &inverted);
             
-            push = new Push(actuatorName, inverted);
+            std::unique_ptr<Push> push = std::make_unique<Push>(actuatorName, inverted);
 
             double lower, upper;
             if(item->QueryAttribute("lower_limit", &lower) == XML_SUCCESS 
@@ -2698,10 +2665,13 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             {
                 push->setForceLimits(lower, upper);
             }
+            
+            return push;
         }
         else
-            push = new Push(actuatorName, false);
-        return push;
+        {
+            return std::make_unique<Push>(actuatorName, false);
+        }
     }
     else if (typeStr == "thruster")
     {
@@ -2745,7 +2715,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         phy.collisions = false;
         phy.buoyancy = false;
         phy.mode = PhysicsMode::SUBMERGED;
-        std::shared_ptr<Polyhedron> propeller = std::make_shared<Polyhedron>(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), 
+        std::unique_ptr<Polyhedron> propeller = std::make_unique<Polyhedron>(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), 
             propScale, I4(), std::string(mat), lookStr, -1, GeometryApproxType::CYLINDER);
 
         Scalar maxSetpoint;
@@ -2775,7 +2745,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         }
 
         // Rotor model
-        std::shared_ptr<RotorDynamics> rotorModel;
+        std::unique_ptr<RotorDynamics> rotorModel {};
 
         const char* rotorDynType = nullptr;
         std::string rotorDynTypeStr = "";
@@ -2792,7 +2762,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
 
         if (rotorDynTypeStr == "zero_order")
         {
-            rotorModel = std::make_shared<ZeroOrder>();
+            rotorModel = std::make_unique<ZeroOrder>();
         }
         else if (rotorDynTypeStr == "first_order")
         {
@@ -2800,7 +2770,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             if ((item2 = item->FirstChildElement("time_constant")) != nullptr 
                  && item2->QueryAttribute("value", &timeConstant) == XML_SUCCESS)
             {
-                rotorModel = std::make_shared<FirstOrder>(timeConstant);
+                rotorModel = std::make_unique<FirstOrder>(timeConstant);
             }
             else
             {
@@ -2817,7 +2787,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
                  (item2 = item->FirstChildElement("beta")) != nullptr && //
                  item2->QueryAttribute("value", &beta) == XML_SUCCESS)
             {
-                rotorModel = std::make_shared<Yoerger>(alpha, beta);
+                rotorModel = std::make_unique<Yoerger>(alpha, beta);
             }
             else
             {
@@ -2842,7 +2812,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
                 && (item2 = item->FirstChildElement("rm")) != nullptr
                 && item2->QueryAttribute("value", &rm)== XML_SUCCESS)
             {
-                rotorModel = std::make_shared<Bessa>(jmsp, kv1, kv2, kt, rm);
+                rotorModel = std::make_unique<Bessa>(jmsp, kv1, kv2, kt, rm);
             }
             else
             {
@@ -2872,7 +2842,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
                 && (item2 = item->FirstChildElement("ilimit")) != nullptr
                 && item2->QueryAttribute("value", &iLim) == XML_SUCCESS)
             {
-                rotorModel = std::make_shared<MechanicalPI>(J, kp, ki, iLim);
+                rotorModel = std::make_unique<MechanicalPI>(J, kp, ki, iLim);
             }
             else
             {
@@ -2887,7 +2857,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         }
 
         // Thrust Model
-        std::shared_ptr<ThrustModel> thrustModel;
+        std::unique_ptr<ThrustModel> thrustModel;
 
         if ((item = element->FirstChildElement("thrust_model")) == nullptr)
         {
@@ -2916,7 +2886,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             if ((item2 = item->FirstChildElement("thrust_coeff")) != nullptr
                 && item2->QueryAttribute("value", &kt) == XML_SUCCESS)
             {
-                thrustModel = std::make_shared<QuadraticThrust>(kt);
+                thrustModel = std::make_unique<QuadraticThrust>(kt);
             }
             else
             { 
@@ -2938,7 +2908,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
                  && item2->QueryAttribute("lower", &dl) == XML_SUCCESS
                  && item2->QueryAttribute("upper", &du) == XML_SUCCESS)
             {
-                thrustModel = std::make_shared<DeadbandThrust>(ktn, ktp, dl, du);
+                thrustModel = std::make_unique<DeadbandThrust>(ktn, ktp, dl, du);
             }
             else
             {    
@@ -2978,7 +2948,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
                 input = stringToVector(std::string(cinput));
                 output = stringToVector(std::string(coutput));
                 
-                thrustModel = std::make_shared<InterpolatedThrust>(input, output);
+                thrustModel = std::make_unique<InterpolatedThrust>(input, output);
             }
             else
             {
@@ -2996,7 +2966,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
                 && (item2 = item->FirstChildElement("torque_coeff")) != nullptr
                 && item2->QueryAttribute("value", &kq) == XML_SUCCESS)
             {
-                thrustModel = std::make_shared<FDThrust>(diameter, ktp, ktn, kq, rightHand, sm->getOcean()->getLiquid().density);
+                thrustModel = std::make_unique<FDThrust>(diameter, ktp, ktn, kq, rightHand, sm_->getOcean()->getLiquid().density);
             }
             else
             {
@@ -3010,8 +2980,8 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             return nullptr;
         }
 
-        Thruster* th = new Thruster(actuatorName, propeller, rotorModel, thrustModel, diameter, rightHand, maxSetpoint, inverted, normalized);
-        return th;
+        return std::make_unique<Thruster>(actuatorName, std::move(propeller), std::move(rotorModel), std::move(thrustModel), 
+            diameter, rightHand, maxSetpoint, inverted, normalized);
     }
     else if(typeStr == "simple_thruster")
     {
@@ -3051,14 +3021,14 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         phy.buoyancy = false;
         
         phy.mode = PhysicsMode::SUBMERGED;
-        std::shared_ptr<Polyhedron> propeller = std::make_shared<Polyhedron>(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), lookStr);
+        std::unique_ptr<Polyhedron> propeller = std::make_unique<Polyhedron>(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), lookStr);
         
         if((item = element->FirstChildElement("specs")) != nullptr)
         {
             bool inverted = false;
             item->QueryAttribute("inverted", &inverted); //Optional
 
-            SimpleThruster* th = new SimpleThruster(actuatorName, propeller, rightHand, inverted);
+            std::unique_ptr<SimpleThruster> th = std::make_unique<SimpleThruster>(actuatorName, std::move(propeller), rightHand, inverted);
 
             Scalar lower, upper;
             if(item->QueryAttribute("lower_thrust_limit", &lower) == XML_SUCCESS 
@@ -3070,8 +3040,7 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         }
         else
         {
-            SimpleThruster* th = new SimpleThruster(actuatorName, propeller, rightHand);
-            return th;
+            return std::make_unique<SimpleThruster>(actuatorName, std::move(propeller), rightHand);
         }
     }
     else if(typeStr == "propeller")
@@ -3123,9 +3092,9 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         phy.collisions = false;
         phy.buoyancy = false;
         phy.mode = PhysicsMode::AERODYNAMIC;
-        std::shared_ptr<Polyhedron> propeller = std::make_shared<Polyhedron>(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), lookStr);
-        Propeller* p = new Propeller(actuatorName, propeller, diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
-        return p;
+        std::unique_ptr<Polyhedron> propeller = std::make_unique<Polyhedron>(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), lookStr);
+        
+        return std::make_unique<Propeller>(actuatorName, std::move(propeller), diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
     }
     else if(typeStr == "rudder")
     {
@@ -3189,8 +3158,8 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
         phy.buoyancy = false;
 
         Polyhedron* rudder = new Polyhedron(actuatorName + "/Rudder", phy, GetFullPath(std::string(rudderFile)), rudderScale, graOrigin, std::string(mat), lookStr);
-        Rudder* r = new Rudder(actuatorName, rudder, area, liftCoeff, dragCoeff, stallAngle, maxAngle, inverted, maxAngularRate);
-        return r;
+        
+        return std::make_unique<Rudder>(actuatorName, rudder, area, liftCoeff, dragCoeff, stallAngle, maxAngle, inverted, maxAngularRate);
     }
     else if(typeStr == "vbs")
     {
@@ -3224,13 +3193,12 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
             log.Print(MessageType::ERROR, "Actuator '%s' requires definition of at least two volumes!", actuatorName.c_str());
             return nullptr;
         }
-        VariableBuoyancy* vbs = new VariableBuoyancy(actuatorName, vMeshes, initialV);
-        return vbs;
+        
+        return std::make_unique<VariableBuoyancy>(actuatorName, vMeshes, initialV);
     }
     else if(typeStr == "suction_cup")
     {
-        SuctionCup* suction = new SuctionCup(actuatorName);
-        return suction;
+        return std::make_unique<SuctionCup>(actuatorName);
     }
     else
         return nullptr;
@@ -3270,7 +3238,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
         if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
             history = -1;
             
-        Accelerometer* acc = new Accelerometer(sensorName, rate, history);
+        std::unique_ptr<Accelerometer> acc = std::make_unique<Accelerometer>(sensorName, rate, history);
         
         //Optional range definition
         if((item = element->FirstChildElement("range")) != nullptr)    
@@ -3314,7 +3282,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
                 log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
             }
         }
-        sens = acc;
+        sens = std::move(acc);
     }
     else if(typeStr == "gyro")
     {
@@ -3322,7 +3290,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
         if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
             history = -1;
             
-        Gyroscope* gyro = new Gyroscope(sensorName, rate, history);
+        std::unique_ptr<Gyroscope> gyro = std::make_unique<Gyroscope>(sensorName, rate, history);
         
         //Optional range definition
         if((item = element->FirstChildElement("range")) != nullptr)    
@@ -3381,7 +3349,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             else
                 gyro->setNoise(avxyz, bxyz);
         }
-        sens = gyro;
+        sens = std::move(gyro);
     }
     else if(typeStr == "imu")
     {
@@ -3389,7 +3357,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
         if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
             history = -1;
             
-        IMU* imu = new IMU(sensorName, rate, history);
+        std::unique_ptr<IMU> imu = std::make_unique<IMU>(sensorName, rate, history);
         
         //Optional range definition
         if((item = element->FirstChildElement("range")) != nullptr)    
@@ -3485,7 +3453,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             else
                 imu->setNoise(axyz, avxyz, yawDrift, laxyz);
         }
-        sens = imu;
+        sens = std::move(imu);
     }
     else if(typeStr == "dvl")
     {
@@ -3501,7 +3469,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             item->QueryAttribute("beam_positive_z", &beamPosZ);
         }
 
-        DVL* dvl = new DVL(sensorName, beamAngle, beamPosZ, rate, history);
+        std::unique_ptr<DVL> dvl = std::make_unique<DVL>(sensorName, beamAngle, beamPosZ, rate, history);
 
         //Optional range definition        
         if((item = element->FirstChildElement("range")) != nullptr)    
@@ -3572,7 +3540,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             else
                 dvl->setNoise(vp, v, altitude, wvp, wv);
         }
-        sens = dvl;
+        sens = std::move(dvl);
     }
     else if(typeStr == "gps")
     {
@@ -3580,7 +3548,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
         if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
             history = -1;
             
-        GPS* gps = new GPS(sensorName, rate, history);
+        std::unique_ptr<GPS> gps = std::make_unique<GPS>(sensorName, rate, history);
         
         //Optional noise definition
         if((item = element->FirstChildElement("noise")) != nullptr)    
@@ -3591,7 +3559,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             else
                 log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
         }
-        sens = gps;
+        sens = std::move(gps);
     }
     else if(typeStr == "pressure")
     {
@@ -3599,7 +3567,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
         if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
             history = -1;
             
-        Pressure* press = new Pressure(sensorName, rate, history);
+        std::unique_ptr<Pressure> press = std::make_unique<Pressure>(sensorName, rate, history);
         
         //Optional range definition
         if((item = element->FirstChildElement("range")) != nullptr)    
@@ -3619,7 +3587,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             else
                 log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
         }
-        sens = press;
+        sens = std::move(press);
     }
     else if(typeStr == "odometry")
     {
@@ -3627,7 +3595,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
         if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
             history = -1;
             
-        Odometry* odom = new Odometry(sensorName, rate, history);
+        std::unique_ptr<Odometry> odom = std::make_unique<Odometry>(sensorName, rate, history);
         
         //Optional noise definition
         if((item = element->FirstChildElement("noise")) != nullptr)    
@@ -3652,7 +3620,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             else
                 odom->setNoise(p, v, angle, av);
         }
-        sens = odom;
+        sens = std::move(odom);
     }
     else if(typeStr == "ins")
     {
@@ -3660,7 +3628,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
         if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
             history = -1;
 
-        INS* ins = new INS(sensorName, rate, history);
+        std::unique_ptr<INS> ins = std::make_unique<INS>(sensorName, rate, history);
 
         //Connect with external sensors
         if((item = element->FirstChildElement("external_sensors")) != nullptr)
@@ -3764,7 +3732,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             else
                 ins->setNoise(avxyz, laxyz);
         }
-        sens = ins;
+        sens = std::move(ins);
     }
     else if(typeStr == "compass")
     {
@@ -3772,7 +3740,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
         if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
             history = -1;
             
-        Compass* compass = new Compass(sensorName, rate, history);
+        std::unique_ptr<Compass> compass = std::make_unique<Compass>(sensorName, rate, history);
         
         //Optional noise definition
         if((item = element->FirstChildElement("noise")) != nullptr)    
@@ -3783,7 +3751,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             else
                 log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
         }
-        sens = compass;
+        sens = std::move(compass);
     }
     else if(typeStr == "profiler")
     {
@@ -3798,7 +3766,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             return nullptr;
         }
             
-        Profiler* prof = new Profiler(sensorName, fov, steps, rate, history);
+        std::unique_ptr<Profiler> prof = std::make_unique<Profiler>(sensorName, fov, steps, rate, history);
         
         //Optional range definition
         if((item = element->FirstChildElement("range")) != nullptr)    
@@ -3826,7 +3794,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             else
                 log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
         }
-        sens = prof;
+        sens = std::move(prof);
     }
     else if(typeStr == "multibeam" || typeStr == "multibeam1d")
     {
@@ -3838,7 +3806,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
         if((item = element->FirstChildElement("specs")) == nullptr || item->QueryAttribute("fov", &fov) != XML_SUCCESS || item->QueryAttribute("steps", &steps) != XML_SUCCESS)
             return nullptr;
             
-        Multibeam* mult = new Multibeam(sensorName, fov, steps, rate, history);
+        std::unique_ptr<Multibeam> mult = std::make_unique<Multibeam>(sensorName, fov, steps, rate, history);
         
         //Optional range definition
         if((item = element->FirstChildElement("range")) != nullptr)    
@@ -3866,7 +3834,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             else
                 log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
         }
-        sens = mult;
+        sens = std::move(mult);
     }
     else if(typeStr == "torque")
     {
@@ -3874,7 +3842,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
         if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
             history = -1;
             
-        Torque* torque = new Torque(sensorName, rate, history);
+        std::unique_ptr<Torque> torque = std::make_unique<Torque>(sensorName, rate, history);
         
         //Optional range definition
         if((item = element->FirstChildElement("range")) != nullptr)    
@@ -3894,7 +3862,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             else
                 log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
         }
-        sens = torque;
+        sens = std::move(torque);
     }
     else if(typeStr == "forcetorque")
     {
@@ -3905,7 +3873,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
         if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
             history = -1;
             
-        ForceTorque* ft = new ForceTorque(sensorName, origin, rate, history);
+        std::unique_ptr<ForceTorque> ft = std::make_unique<ForceTorque>(sensorName, origin, rate, history);
         
         //Optional range definition
         if((item = element->FirstChildElement("range")) != nullptr)    
@@ -3940,7 +3908,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             else
                 ft->setNoise(f, t);
         }
-        sens = ft;
+        sens = std::move(ft);
     }
     else if(typeStr == "encoder")
     {
@@ -3948,8 +3916,8 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
         if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
             history = -1;
             
-        RotaryEncoder* enc = new RotaryEncoder(sensorName, rate, history);
-        sens = enc;
+        std::unique_ptr<RotaryEncoder> enc = std::make_unique<RotaryEncoder>(sensorName, rate, history);
+        sens = std::move(enc);
     }
     else if(typeStr == "camera")
     {
@@ -3970,7 +3938,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             return nullptr;
         }
 
-        ColorCamera* cam;
+        std::unique_ptr<ColorCamera> cam;
         
         //Optional parameters
         if((item = element->FirstChildElement("rendering")) != nullptr) 
@@ -3987,14 +3955,14 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             if(c == 0)
             {
                 log.Print(MessageType::WARNING, "Rendering options of camera '%s' not properly defined - using defaults.", sensorName.c_str());
-                cam = new ColorCamera(sensorName, resX, resY, hFov, rate);
+                cam = std::make_unique<ColorCamera>(sensorName, resX, resY, hFov, rate);
             }
             else
-                cam = new ColorCamera(sensorName, resX, resY, hFov, rate, minDist, maxDist);
+                cam = std::make_unique<ColorCamera>(sensorName, resX, resY, hFov, rate, minDist, maxDist);
         }
         else
-            cam = new ColorCamera(sensorName, resX, resY, hFov, rate);
-        sens = cam;
+            cam = std::make_unique<ColorCamera>(sensorName, resX, resY, hFov, rate);
+        sens = std::move(cam);
     }
     else if(typeStr == "depthcamera")
     {
@@ -4018,7 +3986,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             return nullptr;
         }
         
-        DepthCamera* dcam = new DepthCamera(sensorName, resX, resY, hFov, depthMin, depthMax, rate);
+        std::unique_ptr<DepthCamera> dcam = std::make_unique<DepthCamera>(sensorName, resX, resY, hFov, depthMin, depthMax, rate);
 
         //Optional noise definition
         if((item = element->FirstChildElement("noise")) != nullptr)    
@@ -4029,7 +3997,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             else
                 log.Print(MessageType::WARNING, "Noise of depth camera '%s' not properly defined - using defaults.", sensorName.c_str());
         }
-        sens = dcam;
+        sens = std::move(dcam);
     }
     else if(typeStr == "thermalcamera")
     {
@@ -4053,7 +4021,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             return nullptr;
         }
 
-        ThermalCamera* tcam;
+        std::unique_ptr<ThermalCamera> tcam;
         
         //Optional parameters
         if((item = element->FirstChildElement("rendering")) != nullptr) 
@@ -4070,13 +4038,13 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             if(c == 0)
             {
                 log.Print(MessageType::WARNING, "Rendering options of thermal camera '%s' not properly defined - using defaults.", sensorName.c_str());
-                tcam = new ThermalCamera(sensorName, resX, resY, hFov, tempMin, tempMax, rate);
+                tcam = std::make_unique<ThermalCamera>(sensorName, resX, resY, hFov, tempMin, tempMax, rate);
             }
             else
-                tcam = new ThermalCamera(sensorName, resX, resY, hFov, tempMin, tempMax, rate, minDist, maxDist);
+                tcam = std::make_unique<ThermalCamera>(sensorName, resX, resY, hFov, tempMin, tempMax, rate, minDist, maxDist);
         }
         else
-            tcam = new ThermalCamera(sensorName, resX, resY, hFov, tempMin, tempMax, rate);
+            tcam = std::make_unique<ThermalCamera>(sensorName, resX, resY, hFov, tempMin, tempMax, rate);
 
         //Optional noise definition
         if((item = element->FirstChildElement("noise")) != nullptr)    
@@ -4100,7 +4068,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             
             tcam->setDisplaySettings(cMap, tempMin, tempMax);
         }
-        sens = tcam;   
+        sens = std::move(tcam);   
     }
     else if(typeStr == "opticalflow")
     {
@@ -4121,7 +4089,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             return nullptr;
         }
 
-        OpticalFlowCamera* ofcam;
+        std::unique_ptr<OpticalFlowCamera> ofcam;
 
         //Optional parameters
         if((item = element->FirstChildElement("rendering")) != nullptr) 
@@ -4138,13 +4106,13 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             if(c == 0)
             {
                 log.Print(MessageType::WARNING, "Rendering options of optical flow camera '%s' not properly defined - using defaults.", sensorName.c_str());
-                ofcam = new OpticalFlowCamera(sensorName, resX, resY, hFov, rate);
+                ofcam = std::make_unique<OpticalFlowCamera>(sensorName, resX, resY, hFov, rate);
             }
             else
-                ofcam = new OpticalFlowCamera(sensorName, resX, resY, hFov, rate, minDist, maxDist);
+                ofcam = std::make_unique<OpticalFlowCamera>(sensorName, resX, resY, hFov, rate, minDist, maxDist);
         }
         else
-            ofcam = new OpticalFlowCamera(sensorName, resX, resY, hFov, rate);
+            ofcam = std::make_unique<OpticalFlowCamera>(sensorName, resX, resY, hFov, rate);
 
         //Optional noise definition
         if((item = element->FirstChildElement("noise")) != nullptr)    
@@ -4163,7 +4131,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             if(item->QueryAttribute("velocity_max", &maxV) == XML_SUCCESS)
                 ofcam->setDisplaySettings(maxV);
         }
-        sens = ofcam;
+        sens = std::move(ofcam);
     }
     else if(typeStr == "segmentation")
     {
@@ -4184,7 +4152,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             return nullptr;
         }
 
-        SegmentationCamera* scam;
+        std::unique_ptr<SegmentationCamera> scam;
 
         //Optional parameters
         if((item = element->FirstChildElement("rendering")) != nullptr) 
@@ -4201,15 +4169,15 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             if(c == 0)
             {
                 log.Print(MessageType::WARNING, "Rendering options of segmentation camera '%s' not properly defined - using defaults.", sensorName.c_str());
-                scam = new SegmentationCamera(sensorName, resX, resY, hFov, rate);
+                scam = std::make_unique<SegmentationCamera>(sensorName, resX, resY, hFov, rate);
             }
             else
-                scam = new SegmentationCamera(sensorName, resX, resY, hFov, rate, minDist, maxDist);
+                scam = std::make_unique<SegmentationCamera>(sensorName, resX, resY, hFov, rate, minDist, maxDist);
         }
         else
-            scam = new SegmentationCamera(sensorName, resX, resY, hFov, rate);
+            scam = std::make_unique<SegmentationCamera>(sensorName, resX, resY, hFov, rate);
 
-        sens = scam;
+        sens = std::move(scam);
     }
     else if(typeStr == "ebc" || typeStr == "eventbasedcamera")
     {
@@ -4236,8 +4204,8 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             return nullptr;
         }
 
-        EventBasedCamera* ebc;
-        
+        std::unique_ptr<EventBasedCamera> ebc;
+
         //Optional parameters
         if((item = element->FirstChildElement("rendering")) != nullptr) 
         {
@@ -4253,13 +4221,13 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             if(c == 0)
             {
                 log.Print(MessageType::WARNING, "Rendering options of event-based camera '%s' not properly defined - using defaults.", sensorName.c_str());
-                ebc = new EventBasedCamera(sensorName, resX, resY, hFov, Cp, Cm, Tref, rate);
+                ebc = std::make_unique<EventBasedCamera>(sensorName, resX, resY, hFov, Cp, Cm, Tref, rate);
             }
             else
-                ebc = new EventBasedCamera(sensorName, resX, resY, hFov, Cp, Cm, Tref, rate, minDist, maxDist);
+                ebc = std::make_unique<EventBasedCamera>(sensorName, resX, resY, hFov, Cp, Cm, Tref, rate, minDist, maxDist);
         }
         else
-            ebc = new EventBasedCamera(sensorName, resX, resY, hFov, Cp, Cm, Tref, rate);
+            ebc = std::make_unique<EventBasedCamera>(sensorName, resX, resY, hFov, Cp, Cm, Tref, rate);
 
         //Optional noise definition
         if((item = element->FirstChildElement("noise")) != nullptr)    
@@ -4276,7 +4244,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             else
                 ebc->setNoise(sigmaCp, sigmaCm);
         }
-        sens = ebc;
+        sens = std::move(ebc);
     }
     else if(typeStr == "multibeam2d")
     {
@@ -4301,8 +4269,8 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             return nullptr;
         }
 
-        Multibeam2* mb = new Multibeam2(sensorName, resX, resY, hFov, vFov, rangeMin, rangeMax, rate);
-        sens = mb;
+        std::unique_ptr<Multibeam2> mb = std::make_unique<Multibeam2>(sensorName, resX, resY, hFov, vFov, rangeMin, rangeMax, rate);
+        sens = std::move(mb);
     }
     else if(typeStr == "fls")
     {
@@ -4363,7 +4331,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
         if((item = element->FirstChildElement("display")) != nullptr)
             ParseColorMap(item, cMap);
         
-        FLS* fls = new FLS(sensorName, nBeams, nBins, hFov, vFov, rangeMin, rangeMax, cMap, outFormat, rate);
+        std::unique_ptr<FLS> fls = std::make_unique<FLS>(sensorName, nBeams, nBins, hFov, vFov, rangeMin, rangeMax, cMap, outFormat, rate);
         fls->setGain(gain);
 
         //Optional noise definition
@@ -4385,7 +4353,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             fls->setNoise(0.025f, 0.035f); //Default values that look realistic
             log.Print(MessageType::WARNING, "Noise of sensor '%s' not defined - using defaults.", sensorName.c_str());
         }
-        sens = fls;
+        sens = std::move(fls);
     }
     else if(typeStr == "sss")
     {
@@ -4448,7 +4416,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
         if((item = element->FirstChildElement("display")) != nullptr)
             ParseColorMap(item, cMap);
         
-        SSS* sss = new SSS(sensorName, nBins, nLines, vFov, hFov, tilt, rangeMin, rangeMax, cMap, outFormat, rate);
+        std::unique_ptr<SSS> sss = std::make_unique<SSS>(sensorName, nBins, nLines, vFov, hFov, tilt, rangeMin, rangeMax, cMap, outFormat, rate);
         sss->setGain(gain);
 
         //Optional noise definition
@@ -4470,7 +4438,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             sss->setNoise(0.01f, 0.02f); //Default values that look realistic
             log.Print(MessageType::WARNING, "Noise of sensor '%s' not defined - using defaults.", sensorName.c_str());
         }
-        sens = sss;
+        sens = std::move(sss);
     }
     else if(typeStr == "msis")
     {
@@ -4538,7 +4506,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
         if((item = element->FirstChildElement("display")) != nullptr)
             ParseColorMap(item, cMap);
         
-        MSIS* msis = new MSIS(sensorName, stepAngle, nBins, hFov, vFov, rotMin, rotMax, rangeMin, rangeMax, cMap, outFormat, rate);
+        std::unique_ptr<MSIS> msis = std::make_unique<MSIS>(sensorName, stepAngle, nBins, hFov, vFov, rotMin, rotMax, rangeMin, rangeMax, cMap, outFormat, rate);
         msis->setGain(gain);
 
         //Optional noise definition
@@ -4560,7 +4528,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
             msis->setNoise(0.02f, 0.04f); //Default values that look realistic
             log.Print(MessageType::WARNING, "Noise of sensor '%s' not defined - using defaults.", sensorName.c_str());
         }
-        sens = msis;
+        sens = std::move(msis);
     }
     else
     {
@@ -4899,13 +4867,13 @@ bool ScenarioParser::ParseContact(XMLElement* element)
     
     Entity* entA;
     Entity* entB;
-    entA = sm->getEntity(std::string(nameA));
-    entB = sm->getEntity(std::string(nameB));
+    entA = sm_->getEntity(std::string(nameA));
+    entB = sm_->getEntity(std::string(nameB));
     if(entA == nullptr)
     {
         Robot* rob;
         unsigned int i = 0;
-        while((rob = sm->getRobot(i++)) != nullptr)
+        while((rob = sm_->getRobot(i++)) != nullptr)
         {
             entA = rob->getLink(std::string(nameA));
             if(entA != nullptr)
@@ -4916,7 +4884,7 @@ bool ScenarioParser::ParseContact(XMLElement* element)
     {
         Robot* rob;
         unsigned int i = 0;
-        while((rob = sm->getRobot(i++)) != nullptr)
+        while((rob = sm_->getRobot(i++)) != nullptr)
         {
             entB = rob->getLink(std::string(nameB));
             if(entB != nullptr)
@@ -4959,7 +4927,7 @@ bool ScenarioParser::ParseContact(XMLElement* element)
     
     std::unique_ptr<Contact> cnt = std::make_unique<Contact>(contactName, entA, entB, history);
     cnt->setDisplayMask(displayMask);
-    sm->AddContact(std::move(cnt));
+    sm_->AddContact(std::move(cnt));
     
     return true;
 }
@@ -4996,8 +4964,8 @@ FixedJoint* ScenarioParser::ParseGlue(XMLElement* element)
     element->QueryAttribute("activated", &activated); // Optional
 
     //Find if bodies are independent dynamic bodies or links of robots
-    Entity* entA = sm->getEntity(std::string(nameA));
-    Entity* entB = sm->getEntity(std::string(nameB));
+    Entity* entA = sm_->getEntity(std::string(nameA));
+    Entity* entB = sm_->getEntity(std::string(nameB));
     FeatherstoneRobot* robotA = nullptr;
     FeatherstoneRobot* robotB = nullptr;
     int linkIdA = -2;
@@ -5007,7 +4975,7 @@ FixedJoint* ScenarioParser::ParseGlue(XMLElement* element)
     {
         Robot* rob;
         unsigned int i = 0;
-        while((rob = sm->getRobot(i++)) != nullptr)
+        while((rob = sm_->getRobot(i++)) != nullptr)
         {
             if(rob->getType() == RobotType::FEATHERSTONE)
             {
@@ -5032,7 +5000,7 @@ FixedJoint* ScenarioParser::ParseGlue(XMLElement* element)
     {
         Robot* rob;
         unsigned int i = 0;
-        while((rob = sm->getRobot(i++)) != nullptr)
+        while((rob = sm_->getRobot(i++)) != nullptr)
         {
             if(rob->getType() == RobotType::FEATHERSTONE)
             {
@@ -5090,9 +5058,9 @@ FixedJoint* ScenarioParser::ParseGlue(XMLElement* element)
     if(fix != nullptr)
     {
         FixedJoint* fixPtr = fix.get();
-        sm->AddJoint(std::move(fix));
+        sm_->AddJoint(std::move(fix));
         if(!activated)
-            fixPtr->RemoveFromSimulation(sm);
+            fixPtr->RemoveFromSimulation(sm_);
         log.Print(MessageType::INFO, "Glue created between '%s' and '%s'.", nameA, nameB);
         return fixPtr;
     }
@@ -5226,7 +5194,7 @@ bool ScenarioParser::ParseColorMap(XMLElement* element, ColorMap& cm)
 
 bool ScenarioParser::isGraphicalSim()
 {
-    return graphical;
+    return graphical_;
 }
 
 }

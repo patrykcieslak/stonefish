@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 31/07/2018.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Profiler__
@@ -70,11 +70,11 @@ namespace sf
         ScalarSensorType getScalarSensorType() const override;
         
     private:
-        Scalar angRange;
-        unsigned int angSteps;
-        unsigned int currentAngStep;
-        Scalar distance;
-        bool clockwise;
+        Scalar angRange_;
+        unsigned int angSteps_;
+        unsigned int currentAngStep_;
+        Scalar distance_;
+        bool clockwise_;
     };
 }
 

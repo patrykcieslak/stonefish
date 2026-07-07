@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 07/11/2019.
-//  Copyright (c) 2019-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_VariableBuoyancy__
@@ -73,15 +73,15 @@ namespace sf
     private:
         void InterpolateVProps(Scalar volume, Scalar& m, Vector3& cg);
     
-        Scalar V;
-        Vector3 CG;
-        Scalar Vmin;
-        Scalar Vmax;
-        Scalar flowRate;
-        Scalar density;
-        Vector3 force;
-        Vector3 gravity;
-        std::vector<MeshProperties> Vprops;
+        Scalar V_;
+        Vector3 CG_;
+        Scalar Vmin_;
+        Scalar Vmax_;
+        Scalar flowRate_;
+        Scalar density_;
+        Vector3 force_;
+        Vector3 gravity_;
+        std::vector<MeshProperties> Vprops_;
     };
 }
 

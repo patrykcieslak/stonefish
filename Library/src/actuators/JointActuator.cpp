@@ -33,17 +33,17 @@ namespace sf
 
 JointActuator::JointActuator(std::string uniqueName) : Actuator(uniqueName)
 {
-    fe = nullptr;
-    jId = 0;
-    j = nullptr;
+    fe_ = nullptr;
+    jId_ = 0;
+    j_ = nullptr;
 }
 
 std::string JointActuator::getJointName() const
 {
-    if(fe != nullptr)
-        return fe->getJointName(jId);
-    else if(j != nullptr)
-        return j->getName();
+    if(fe_ != nullptr)
+        return fe_->getJointName(jId_);
+    else if(j_ != nullptr)
+        return j_->getName();
     else
         return std::string("");
 }
@@ -52,15 +52,15 @@ void JointActuator::AttachToJoint(FeatherstoneEntity* multibody, unsigned int jo
 {
     if(multibody != nullptr && jointId < multibody->getNumOfJoints())
     {
-        fe = multibody;
-        jId = jointId;
+        fe_ = multibody;
+        jId_ = jointId;
     }
 }
 
 void JointActuator::AttachToJoint(Joint* joint)
 {
     if(joint != nullptr)
-        j = joint;
+        j_ = joint;
 }
     
 }

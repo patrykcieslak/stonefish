@@ -20,11 +20,12 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/11/2018.
-//  Copyright(c) 2018-2025 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/Robot.h"
 
+#include <algorithm>
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
 #include "entities/SolidEntity.h"
@@ -57,13 +58,11 @@ std::string Robot::getName()
 
 SolidEntity* Robot::getLink(const std::string& lname)
 {
-    for(size_t i=0; i<links_.size(); ++i)
-        if(links_[i]->getName() == lname) return links_[i];
-
-    for(size_t i=0; i<detachedLinks_.size(); ++i)
-        if(detachedLinks_[i]->getName() == lname) return detachedLinks_[i];
-    
-    return nullptr;
+    auto it = std::find_if(links_.begin(), links_.end(), [&lname](SolidEntity* link) { return link->getName() == lname; });
+    if(it != links_.end())
+        return *it;
+    else
+        return nullptr;
 }
 
 SolidEntity* Robot::getLink(size_t index)
@@ -220,11 +219,11 @@ void Robot::AddComm(Comm* c, const std::string& attachmentLinkName, const Transf
 void Robot::AddToSimulation(SimulationManager* sm, const Transform& origin)
 {
     for(size_t i=0; i<sensors_.size(); ++i)
-        sm->AddSensor(std::make_unique<Sensor>(sensors_[i]));
+        sm->AddSensor(std::unique_ptr<Sensor>(sensors_[i]));
     for(size_t i=0; i<actuators_.size(); ++i)
-        sm->AddActuator(std::make_unique<Actuator>(actuators_[i]));
+        sm->AddActuator(std::unique_ptr<Actuator>(actuators_[i]));
     for(size_t i=0; i<comms_.size(); ++i)
-        sm->AddComm(std::make_unique<Comm>(comms_[i]));
+        sm->AddComm(std::unique_ptr<Comm>(comms_[i]));
 }
 
 void Robot::Respawn(SimulationManager* sm, const Transform& origin)

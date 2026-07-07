@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/05/2014.
-//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/Contact.h"
@@ -29,59 +29,58 @@
 #include "core/SimulationManager.h"
 #include "graphics/OpenGLPipeline.h"
 #include "entities/SolidEntity.h"
-#include "utils/ScientificFileUtil.h"
 
 namespace sf
 {
     
 Contact::Contact(std::string uniqueName, Entity* entityA, Entity* entityB, unsigned int inclusiveHistoryLength)
 {
-    name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
-    A = entityA;
-    B = entityB;
-    historyLen = inclusiveHistoryLength;
-    displayMask = CONTACT_DISPLAY_NONE;
-    newDataAvailable = false;
-    pointsLastBeg = points.begin();
+    name_ = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
+    A_ = entityA;
+    B_ = entityB;
+    historyLen_ = inclusiveHistoryLength;
+    displayMask_ = CONTACT_DISPLAY_NONE;
+    newDataAvailable_ = false;
+    pointsLastBeg_ = points_.begin();
 }
 
 Contact::~Contact()
 {
     if(SimulationApp::getApp() != NULL)
-        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
-    A = NULL;
-    B = NULL;
-    points.clear();
+        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name_);
+    A_ = NULL;
+    B_ = NULL;
+    points_.clear();
 }
 
 std::string Contact::getName() const
 {
-    return name;
+    return name_;
 }
 
 const Entity* Contact::getEntityA()
 {
-    return A;
+    return A_;
 }
 
 const Entity* Contact::getEntityB()
 {
-    return B;
+    return B_;
 }
 
 void Contact::setDisplayMask(int16_t mask)
 {
-    displayMask = mask;
+    displayMask_ = mask;
 }
 
 void Contact::MarkDataOld()
 {
-    newDataAvailable = false;
+    newDataAvailable_ = false;
 }
 
 bool Contact::isNewDataAvailable() const
 {
-    return newDataAvailable;
+    return newDataAvailable_;
 }
 
 void Contact::AddContactPoint(const btPersistentManifold* manifold, bool swapped, Scalar dt)
@@ -94,9 +93,9 @@ void Contact::AddContactPoint(const btPersistentManifold* manifold, bool swapped
         Vector3 normalForceA = (swapped ? Scalar(1.) : Scalar(-1.)) * mp.m_normalWorldOnB * mp.getAppliedImpulse() / dt;
 
         //Filtering
-        if(points.size() > 0
-           && (locationA - points.back().locationA).length2() < (Scalar(0.001)*Scalar(0.001)) //Closer than 1 mm from the last point
-           && (normalForceA - points.back().normalForceA).fuzzyZero())  //No change in normal force
+        if(points_.size() > 0
+           && (locationA - points_.back().locationA).length2() < (Scalar(0.001)*Scalar(0.001)) //Closer than 1 mm from the last point
+           && (normalForceA - points_.back().normalForceA).fuzzyZero())  //No change in normal force
             continue;
 
         ContactPoint p;
@@ -108,75 +107,36 @@ void Contact::AddContactPoint(const btPersistentManifold* manifold, bool swapped
         AddContactPoint(p);
         ++added;
     }
-    pointsLastBeg = points.end()-added; // Save iterator to the beginning of new points
+    pointsLastBeg_ = points_.end()-added; // Save iterator to the beginning of new points
 }
 
 void Contact::AddContactPoint(ContactPoint p)
 {
     //historyLen = 0 means "full history"
-    if(historyLen > 0 && points.size() == historyLen)
-        points.pop_front();
+    if(historyLen_ > 0 && points_.size() == historyLen_)
+        points_.pop_front();
 
     p.timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true);
-    points.push_back(p);
+    points_.push_back(p);
     
-    newDataAvailable = true;
+    newDataAvailable_ = true;
 }
 
 void Contact::ClearHistory()
 {
-    points.clear();
+    points_.clear();
 }
 
 const std::deque<ContactPoint>& Contact::getHistory()
 {
-    return points;
-}
-
-void Contact::SaveContactDataToOctaveFile(const std::string& path, bool includeTime)
-{
-    if(points.size() == 0)
-        return;
-    
-    //build data structure
-    ScientificData data("");
-    
-    ScientificDataItem* it = new ScientificDataItem();
-    it->name = A->getName() + "_" + B->getName();
-    it->type = DATA_MATRIX;
-    
-    btMatrixXu* matrix = new btMatrixXu((unsigned int)points.size(), includeTime ? 10 : 9);
-    it->value = matrix;
-    
-    int offset = includeTime ? 1 : 0;
-    
-    for(unsigned int i = 0; i < points.size(); ++i)
-    {
-        if(includeTime)
-            matrix->setElem(i, 0, points[i].timeStamp);
-        
-        matrix->setElem(i, offset, points[i].locationA.x());
-        matrix->setElem(i, offset + 1, points[i].locationA.y());
-        matrix->setElem(i, offset + 2, points[i].locationA.z());
-        matrix->setElem(i, offset + 3, points[i].slippingVelocityA.x());
-        matrix->setElem(i, offset + 4, points[i].slippingVelocityA.y());
-        matrix->setElem(i, offset + 5, points[i].slippingVelocityA.z());
-        matrix->setElem(i, offset + 6, points[i].normalForceA.x());
-        matrix->setElem(i, offset + 7, points[i].normalForceA.y());
-        matrix->setElem(i, offset + 8, points[i].normalForceA.z());
-    }
-    
-    data.addItem(it);
-    
-    //save data structure to file
-    SaveOctaveData(path, data);
+    return points_;
 }
 
 std::vector<Renderable> Contact::Render()
 {
     std::vector<Renderable> items(0);
     
-    if(points.size() == 0)
+    if(points_.size() == 0)
         return items;
     
     //Drawing points
@@ -191,25 +151,25 @@ std::vector<Renderable> Contact::Render()
     //Drawing lines
     std::vector<glm::vec3> vertices;
     
-    if(displayMask & CONTACT_DISPLAY_LAST_SLIP_VELOCITY_A)
+    if(displayMask_ & CONTACT_DISPLAY_LAST_SLIP_VELOCITY_A)
     {
-        Vector3 p1 = points.back().locationA;
-        Vector3 p2 = points.back().locationA + points.back().slippingVelocityA;
+        Vector3 p1 = points_.back().locationA;
+        Vector3 p2 = points_.back().locationA + points_.back().slippingVelocityA;
         vertices.push_back(glm::vec3((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ()));
         vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
     }
     
-    if(displayMask & CONTACT_DISPLAY_LAST_SLIP_VELOCITY_B)
+    if(displayMask_ & CONTACT_DISPLAY_LAST_SLIP_VELOCITY_B)
     {
-        Vector3 p1 = points.back().locationB;
-        Vector3 p2 = points.back().locationB - points.back().slippingVelocityA;
+        Vector3 p1 = points_.back().locationB;
+        Vector3 p2 = points_.back().locationB - points_.back().slippingVelocityA;
         vertices.push_back(glm::vec3((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ()));
         vertices.push_back(glm::vec3((GLfloat)p2.getX(), (GLfloat)p2.getY(), (GLfloat)p2.getZ()));
     }
     
-    if(displayMask & CONTACT_DISPLAY_NORMAL_FORCE_A)
+    if(displayMask_ & CONTACT_DISPLAY_NORMAL_FORCE_A)
     {
-        for(auto it=pointsLastBeg; it != points.end(); ++it)
+        for(auto it=pointsLastBeg_; it != points_.end(); ++it)
         {
             Vector3 p1 = (*it).locationA;
             Vector3 p2 = (*it).locationA + (*it).normalForceA;
@@ -218,9 +178,9 @@ std::vector<Renderable> Contact::Render()
         }
     }
     
-    if(displayMask & CONTACT_DISPLAY_NORMAL_FORCE_B)
+    if(displayMask_ & CONTACT_DISPLAY_NORMAL_FORCE_B)
     {
-        for(auto it=pointsLastBeg; it != points.end(); ++it)
+        for(auto it=pointsLastBeg_; it != points_.end(); ++it)
         {
             Vector3 p1 = (*it).locationB;
             Vector3 p2 = (*it).locationB - (*it).normalForceA;
@@ -240,7 +200,7 @@ std::vector<Renderable> Contact::Render()
     }
         
     //Drawing line strips
-    if(displayMask & CONTACT_DISPLAY_PATH_A)
+    if(displayMask_ & CONTACT_DISPLAY_PATH_A)
     {
         Renderable item;
         item.model = glm::mat4(1.f);
@@ -248,16 +208,16 @@ std::vector<Renderable> Contact::Render()
         item.data = std::make_shared<std::vector<glm::vec3>>();
         auto itemPoints = item.getDataAsPoints();
         
-        for(size_t i = 0; i < points.size(); ++i)
+        for(size_t i = 0; i < points_.size(); ++i)
         {	
-            Vector3 p = points[i].locationA;
+            Vector3 p = points_[i].locationA;
             itemPoints->push_back(glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ()));
         }
         
         items.push_back(item);
     }
     
-    if(displayMask & CONTACT_DISPLAY_PATH_B)
+    if(displayMask_ & CONTACT_DISPLAY_PATH_B)
     {
         Renderable item;
         item.model = glm::mat4(1.f);
@@ -265,9 +225,9 @@ std::vector<Renderable> Contact::Render()
         item.data = std::make_shared<std::vector<glm::vec3>>();
         auto itemPoints = item.getDataAsPoints();
         
-        for(size_t i = 0; i < points.size(); ++i)
+        for(size_t i = 0; i < points_.size(); ++i)
         {	
-            Vector3 p = points[i].locationB;
+            Vector3 p = points_[i].locationB;
             itemPoints->push_back(glm::vec3((GLfloat)p.getX(), (GLfloat)p.getY(), (GLfloat)p.getZ()));
         }
         

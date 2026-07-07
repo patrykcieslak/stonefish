@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 08/02/24.
-//  Copyright (c) 2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpticalFlowCamera__
@@ -112,13 +112,13 @@ namespace sf
     private:
         void InitGraphics(bool& seesParticles);
         
-        OpenGLOpticalFlowCamera* glCamera;
-        GLfloat* flowData;
-        GLubyte* displayData;
-        glm::vec2 depthRange;
-        glm::vec2 noiseStdDev;
-        GLfloat displayMaxVelocity;
-        std::function<void(OpticalFlowCamera*)> newDataCallback;
+        OpenGLOpticalFlowCamera* glCamera_;
+        GLfloat* flowData_;
+        GLubyte* displayData_;
+        glm::vec2 depthRange_;
+        glm::vec2 noiseStdDev_;
+        GLfloat displayMaxVelocity_;
+        std::function<void(OpticalFlowCamera*)> newDataCallback_;
     };
 }
 

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 07/05/18.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_DepthCamera__
@@ -105,11 +105,11 @@ namespace sf
     private:
         void InitGraphics(bool& seesParticles);
         
-        OpenGLDepthCamera* glCamera;
-        GLfloat* imageData;
-        glm::vec2 depthRange;
-        GLfloat noiseStdDev;
-        std::function<void(DepthCamera*)> newDataCallback;
+        OpenGLDepthCamera* glCamera_;
+        GLfloat* imageData_;
+        glm::vec2 depthRange_;
+        GLfloat noiseStdDev_;
+        std::function<void(DepthCamera*)> newDataCallback_;
     };
 }
 

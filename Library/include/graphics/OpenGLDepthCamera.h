@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/05/18.
-//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLDepthCamera__
@@ -149,28 +149,28 @@ namespace sf
         void LinearizeDepth();
         void Depth2LinearRanges();
         
-        Camera* camera;
-        unsigned int idx;
-        glm::mat4 cameraTransform;
-        glm::vec3 eye;
-        glm::vec3 dir;
-        glm::vec3 up;
-        glm::vec3 tempEye;
-        glm::vec3 tempDir;
-        glm::vec3 tempUp;
-        glm::mat4 projection;
-        glm::vec2 fov;
-        bool _needsUpdate;
-        bool newData;
-        glm::vec2 range;
-        GLfloat noiseDepth;
-        std::default_random_engine randGen;
-        std::uniform_real_distribution<float> randDist;
-        bool usesRanges;
-        GLuint renderDepthTex;
-        GLuint linearDepthTex;
-        GLuint linearDepthFBO;
-        GLuint linearDepthPBO;
+        Camera* camera_;
+        unsigned int idx_;
+        glm::mat4 cameraTransform_;
+        glm::vec3 eye_;
+        glm::vec3 dir_;
+        glm::vec3 up_;
+        glm::vec3 tempEye_;
+        glm::vec3 tempDir_;
+        glm::vec3 tempUp_;
+        glm::mat4 projection_;
+        glm::vec2 fov_;
+        bool needsUpdate_;
+        bool newData_;
+        glm::vec2 range_;
+        GLfloat noiseDepth_;
+        std::default_random_engine randGen_;
+        std::uniform_real_distribution<float> randDist_;
+        bool usesRanges_;
+        GLuint renderDepthTex_;
+        GLuint linearDepthTex_;
+        GLuint linearDepthFBO_;
+        GLuint linearDepthPBO_;
         static GLSLShader** depthCameraOutputShader;
         static GLSLShader* depthVisualizeShader;
     };

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 07/04/2024.
-//  Copyright (c) 2024-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/SimpleThruster.h"
@@ -34,16 +34,16 @@
 namespace sf
 {
 
-SimpleThruster::SimpleThruster(std::string uniqueName, std::shared_ptr<SolidEntity> propeller, bool rightHand, bool inverted) : LinkActuator(uniqueName)
+SimpleThruster::SimpleThruster(std::string uniqueName, std::unique_ptr<SolidEntity> propeller, bool rightHand, bool inverted) : LinkActuator(uniqueName)
 {
-    RH = rightHand;
-    inv = inverted;
-    theta = Scalar(0);
-    thrust = Scalar(0);
-    torque = Scalar(0);
+    RH_ = rightHand;
+    inv_ = inverted;
+    theta_ = Scalar(0);
+    thrust_ = Scalar(0);
+    torque_ = Scalar(0);
     setThrustLimits(1, -1); // No limits
     
-    propeller_ = propeller;
+    propeller_ = std::move(propeller);
     propeller_->BuildGraphicalObject();
 }
 
@@ -54,17 +54,17 @@ ActuatorType SimpleThruster::getType() const
 
 void SimpleThruster::setSetpoint(Scalar _thrust, Scalar _torque)
 {
-    if(limits.second > limits.first) // Limitted
-        sThrust = btClamped(_thrust, limits.first, limits.second);
+    if(limits_.second > limits_.first) // Limitted
+        sThrust_ = btClamped(_thrust, limits_.first, limits_.second);
     else // No limits
-        sThrust = _thrust;
+        sThrust_ = _thrust;
     
-    sTorque = _torque;
+    sTorque_ = _torque;
 
-    if(inv)
+    if(inv_)
     { 
-        sThrust *= Scalar(-1);
-        sTorque *= Scalar(-1);
+        sThrust_ *= Scalar(-1);
+        sTorque_ *= Scalar(-1);
     }
 
     ResetWatchdog();
@@ -72,67 +72,67 @@ void SimpleThruster::setSetpoint(Scalar _thrust, Scalar _torque)
 
 void SimpleThruster::setThrustLimits(Scalar lower, Scalar upper)
 {
-    limits.first = lower;
-    limits.second = upper;
+    limits_.first = lower;
+    limits_.second = upper;
 }
 
 Scalar SimpleThruster::getAngle() const
 {
-    return theta;
+    return theta_;
 }
 
 Scalar SimpleThruster::getThrustSetpoint() const
 {
-    return sThrust;
+    return sThrust_;
 }
 
 Scalar SimpleThruster::getThrust() const
 {
-    return thrust;
+    return thrust_;
 }
 
 Scalar SimpleThruster::getTorque() const
 {
-    return torque;
+    return torque_;
 }
 
 void SimpleThruster::Update(Scalar dt)
 {
     Actuator::Update(dt);
 
-    if(attach != nullptr)
+    if(attach_ != nullptr)
     {
         //Update thruster rotation (visualization only)
         Scalar omega(0);
-        if(!btFuzzyZero(sThrust))
+        if(!btFuzzyZero(sThrust_))
         {
-            omega = sThrust > Scalar(0) ? Scalar(2.0*M_PI) : Scalar(-2.0*M_PI);
-            omega = RH ? omega : -omega; 
+            omega = sThrust_ > Scalar(0) ? Scalar(2.0*M_PI) : Scalar(-2.0*M_PI);
+            omega = RH_ ? omega : -omega; 
         }
-        theta += omega * dt; //Just for animation
+        theta_ += omega * dt; //Just for animation
     
         //Get transforms
-        Transform solidTrans = attach->getCGTransform();
-        Transform thrustTrans = attach->getOTransform() * o2a;
+        Transform solidTrans = attach_->getCGTransform();
+        Transform thrustTrans = attach_->getOTransform() * o2a_;
         
         //Calculate thrust
         Ocean* ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();
         if(ocn != nullptr && ocn->IsInsideFluid(thrustTrans.getOrigin()))
         {
-            thrust = sThrust;
-            torque = sTorque;
+            thrust_ = sThrust_;
+            torque_ = sTorque_;
 
             //Apply forces and torques
-            Vector3 thrustV(thrust, 0, 0);
-            Vector3 torqueV(torque, 0, 0);
-            attach->ApplyCentralForce(thrustTrans.getBasis() * thrustV);
-            attach->ApplyTorque((thrustTrans.getOrigin() - solidTrans.getOrigin()).cross(thrustTrans.getBasis() * thrustV));
-            attach->ApplyTorque(thrustTrans.getBasis() * torqueV);
+            Vector3 thrustV(thrust_, 0, 0);
+            Vector3 torqueV(torque_, 0, 0);
+            attach_->ApplyCentralForce(thrustTrans.getBasis() * thrustV);
+            attach_->ApplyTorque((thrustTrans.getOrigin() - solidTrans.getOrigin()).cross(thrustTrans.getBasis() * thrustV));
+            attach_->ApplyTorque(thrustTrans.getBasis() * torqueV);
         }
         else
         {
-            thrust = Scalar(0);
-            torque = Scalar(0);
+            thrust_ = Scalar(0);
+            torque_ = Scalar(0);
         }
     }
 }
@@ -140,13 +140,13 @@ void SimpleThruster::Update(Scalar dt)
 std::vector<Renderable> SimpleThruster::Render()
 {
     Transform thrustTrans = Transform::getIdentity();
-    if(attach != nullptr)
-        thrustTrans = attach->getOTransform() * o2a;
+    if(attach_ != nullptr)
+        thrustTrans = attach_->getOTransform() * o2a_;
     else
         LinkActuator::Render();
     
     //Rotate propeller
-    thrustTrans *= Transform(Quaternion(0, 0, theta), Vector3(0,0,0));
+    thrustTrans *= Transform(Quaternion(0, 0, theta_), Vector3(0,0,0));
     
     //Add renderable
     std::vector<Renderable> items(0);
@@ -154,7 +154,7 @@ std::vector<Renderable> SimpleThruster::Render()
     item.type = RenderableType::SOLID;
     item.materialName = propeller_->getMaterial().name;
     item.objectId = propeller_->getGraphicalObject();
-    item.lookId = dm == DisplayMode::GRAPHICAL ? propeller_->getLook() : -1;
+    item.lookId = dm_ == DisplayMode::GRAPHICAL ? propeller_->getLook() : -1;
 	item.model = glMatrixFromTransform(thrustTrans);
     items.push_back(item);
     
@@ -162,7 +162,7 @@ std::vector<Renderable> SimpleThruster::Render()
     item.data = std::make_shared<std::vector<glm::vec3>>();
     auto points = item.getDataAsPoints();
     points->push_back(glm::vec3(0,0,0));
-    points->push_back(glm::vec3(0.1f*thrust,0,0));
+    points->push_back(glm::vec3(0.1f*thrust_,0,0));
     items.push_back(item);
     
     return items;

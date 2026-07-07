@@ -30,26 +30,26 @@ namespace sf
 
 ManualTrajectory::ManualTrajectory() : Trajectory(PlaybackMode::ONETIME)
 {
-    interpTrans = I4();
-    interpVel = V0();
-    interpAngVel = V0();
-    interpAcc = V0();
-    endTime = 1e16; //Never ends
+    interpTrans_ = I4();
+    interpVel_ = V0();
+    interpAngVel_ = V0();
+    interpAcc_ = V0();
+    endTime_ = 1e16; //Never ends
 }
 
 void ManualTrajectory::setTransform(const Transform& T)
 {
-    interpTrans = T;
+    interpTrans_ = T;
 }
 
 void ManualTrajectory::setLinearVelocity(const Vector3& v)
 {
-    interpVel = v;
+    interpVel_ = v;
 }
 
 void ManualTrajectory::setAngularVelocity(const Vector3& omega)
 {
-    interpAngVel = omega;
+    interpAngVel_ = omega;
 }
 
 void ManualTrajectory::Interpolate()
@@ -61,7 +61,7 @@ std::vector<Renderable> ManualTrajectory::Render()
 {
     Renderable frame;
     frame.type = RenderableType::SENSOR_CS;
-    frame.model = glMatrixFromTransform(interpTrans);
+    frame.model = glMatrixFromTransform(interpTrans_);
     return {frame};
 }
 

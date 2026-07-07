@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/11/25.
-//  Copyright(c) 2025 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2025-2026 Patryk Cieslak. All rights reserved.
 //
 
 #pragma once

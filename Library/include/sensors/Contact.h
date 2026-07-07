@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/05/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Contact__
@@ -105,13 +105,6 @@ namespace sf
         //! A method to check if new data is available.
         bool isNewDataAvailable() const;
         
-        //! A method that saves contact data to an Octave file.
-        /*!
-         \param path a path to the output file
-         \param includeTime a flag to specify if time should be written
-         */
-        void SaveContactDataToOctaveFile(const std::string& path, bool includeTime = true);
-        
         //! A method that implements rendering of the contact.
         std::vector<Renderable> Render();
         
@@ -134,14 +127,14 @@ namespace sf
         const std::deque<ContactPoint>& getHistory();
         
     private:
-        std::string name;
-        Entity* A;
-        Entity* B;
-        std::deque<ContactPoint> points;
-        std::deque<ContactPoint>::iterator pointsLastBeg;
-        unsigned int historyLen;
-        int16_t displayMask;
-        bool newDataAvailable;
+        std::string name_;
+        Entity* A_;
+        Entity* B_;
+        std::deque<ContactPoint> points_;
+        std::deque<ContactPoint>::iterator pointsLastBeg_;
+        unsigned int historyLen_;
+        int16_t displayMask_;
+        bool newDataAvailable_;
     };
 }
 

@@ -47,50 +47,50 @@ GLuint OpenGLAtmosphere::atmosphereAPI = 0;
 OpenGLAtmosphere::OpenGLAtmosphere(const std::string& modelFilename, RenderQuality shadow)
 {
     //Prepare for rendering
-    for(unsigned short i=0; i<AtmosphereTextures::TEXTURE_COUNT; ++i) textures[i] = 0;
-    skySunShaders[0] = nullptr;
-    skySunShaders[1] = nullptr;
+    for(unsigned short i=0; i<AtmosphereTextures::TEXTURE_COUNT; ++i) textures_[i] = 0;
+    skySunShaders_[0] = nullptr;
+    skySunShaders_[1] = nullptr;
     
     //Init shadow baking
-    sunShadowmapShader = nullptr;
-    sunShadowmapArray = 0;
-    sunDepthSampler = 0;
-    sunShadowSampler = 0;
-    sunShadowmapSplits = 4;
-    sunShadowmapSize = 4096;
-    sunShadowFBO = 0;
-    sunSkyUBO = 0;
-    sunDirection = glm::vec3(0,0,1.f);
-    sunModelView = glm::mat4x4(0);
-    sunShadowFrustum = nullptr;
-    sunShadowCPM = nullptr;
+    sunShadowmapShader_ = nullptr;
+    sunShadowmapArray_ = 0;
+    sunDepthSampler_ = 0;
+    sunShadowSampler_ = 0;
+    sunShadowmapSplits_ = 4;
+    sunShadowmapSize_ = 4096;
+    sunShadowFBO_ = 0;
+    sunSkyUBO_ = 0;
+    sunDirection_ = glm::vec3(0,0,1.f);
+    sunModelView_ = glm::mat4x4(0);
+    sunShadowFrustum_ = nullptr;
+    sunShadowCPM_ = nullptr;
     
     //Set shadow quality
     switch(shadow)
     {
         case RenderQuality::DISABLED:
-            sunShadowmapSize = 0;
-            sunShadowmapSplits = 0;
+            sunShadowmapSize_ = 0;
+            sunShadowmapSplits_ = 0;
             break;
         
         case RenderQuality::LOW:
-            sunShadowmapSize = 1024;
-            sunShadowmapSplits = 4;
+            sunShadowmapSize_ = 1024;
+            sunShadowmapSplits_ = 4;
             break;
         
         case RenderQuality::MEDIUM:
-            sunShadowmapSize = 2048;
-            sunShadowmapSplits = 4;
+            sunShadowmapSize_ = 2048;
+            sunShadowmapSplits_ = 4;
             break;
         
         case RenderQuality::HIGH:
-            sunShadowmapSize = 4096;
-            sunShadowmapSplits = 4;
+            sunShadowmapSize_ = 4096;
+            sunShadowmapSplits_ = 4;
             break;
     }
 
     //Load API and Data
-    memset(&sunSkyUBOData, 0, sizeof(SunSkyUBO));
+    memset(&sunSkyUBOData_, 0, sizeof(SunSkyUBO));
     LoadAtmosphereData(modelFilename);
     
     //Set initial coditions
@@ -99,9 +99,9 @@ OpenGLAtmosphere::OpenGLAtmosphere(const std::string& modelFilename, RenderQuali
     setAirHumidity(0.5);
 
     //Permanently bind atmosphere textures
-    OpenGLState::BindTexture(TEX_ATM_TRANSMITTANCE, GL_TEXTURE_2D, textures[AtmosphereTextures::TRANSMITTANCE]);
-    OpenGLState::BindTexture(TEX_ATM_SCATTERING, GL_TEXTURE_3D, textures[AtmosphereTextures::SCATTERING]);
-    OpenGLState::BindTexture(TEX_ATM_IRRADIANCE, GL_TEXTURE_2D, textures[AtmosphereTextures::IRRADIANCE]);
+    OpenGLState::BindTexture(TEX_ATM_TRANSMITTANCE, GL_TEXTURE_2D, textures_[AtmosphereTextures::TRANSMITTANCE]);
+    OpenGLState::BindTexture(TEX_ATM_SCATTERING, GL_TEXTURE_3D, textures_[AtmosphereTextures::SCATTERING]);
+    OpenGLState::BindTexture(TEX_ATM_IRRADIANCE, GL_TEXTURE_2D, textures_[AtmosphereTextures::IRRADIANCE]);
     
     //Build rendering shaders
     std::vector<GLuint> compiledShaders;
@@ -111,78 +111,78 @@ OpenGLAtmosphere::OpenGLAtmosphere(const std::string& modelFilename, RenderQuali
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "atmSkySun.frag"));
     
     //Sky rendering
-    skySunShaders[0] = new GLSLShader(sources, compiledShaders);
-    skySunShaders[0]->AddUniform("transmittance_texture", ParameterType::INT);
-    skySunShaders[0]->AddUniform("scattering_texture", ParameterType::INT);
-    skySunShaders[0]->AddUniform("single_mie_scattering_texture", ParameterType::INT);
-    skySunShaders[0]->AddUniform("eyePos", ParameterType::VEC3);
-    skySunShaders[0]->AddUniform("sunDir", ParameterType::VEC3);
-    skySunShaders[0]->AddUniform("invView", ParameterType::MAT4);
-    skySunShaders[0]->AddUniform("invProj", ParameterType::MAT4);
-    skySunShaders[0]->AddUniform("whitePoint", ParameterType::VEC3);
-    skySunShaders[0]->AddUniform("cosSunSize", ParameterType::FLOAT);
-	skySunShaders[0]->AddUniform("bottomRadius", ParameterType::FLOAT);
-	skySunShaders[0]->AddUniform("groundAlbedo", ParameterType::FLOAT);
+    skySunShaders_[0] = new GLSLShader(sources, compiledShaders);
+    skySunShaders_[0]->AddUniform("transmittance_texture", ParameterType::INT);
+    skySunShaders_[0]->AddUniform("scattering_texture", ParameterType::INT);
+    skySunShaders_[0]->AddUniform("single_mie_scattering_texture", ParameterType::INT);
+    skySunShaders_[0]->AddUniform("eyePos", ParameterType::VEC3);
+    skySunShaders_[0]->AddUniform("sunDir", ParameterType::VEC3);
+    skySunShaders_[0]->AddUniform("invView", ParameterType::MAT4);
+    skySunShaders_[0]->AddUniform("invProj", ParameterType::MAT4);
+    skySunShaders_[0]->AddUniform("whitePoint", ParameterType::VEC3);
+    skySunShaders_[0]->AddUniform("cosSunSize", ParameterType::FLOAT);
+	skySunShaders_[0]->AddUniform("bottomRadius", ParameterType::FLOAT);
+	skySunShaders_[0]->AddUniform("groundAlbedo", ParameterType::FLOAT);
 
     sources.pop_back();
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "atmSkySunTemp.frag"));
-    skySunShaders[1] = new GLSLShader(sources, compiledShaders);
-    skySunShaders[1]->AddUniform("transmittance_texture", ParameterType::INT);
-    skySunShaders[1]->AddUniform("scattering_texture", ParameterType::INT);
-    skySunShaders[1]->AddUniform("single_mie_scattering_texture", ParameterType::INT);
-    skySunShaders[1]->AddUniform("eyePos", ParameterType::VEC3);
-    skySunShaders[1]->AddUniform("sunDir", ParameterType::VEC3);
-    skySunShaders[1]->AddUniform("invView", ParameterType::MAT4);
-    skySunShaders[1]->AddUniform("invProj", ParameterType::MAT4);
-    skySunShaders[1]->AddUniform("whitePoint", ParameterType::VEC3);
-    skySunShaders[1]->AddUniform("cosSunSize", ParameterType::FLOAT);
-	skySunShaders[1]->AddUniform("bottomRadius", ParameterType::FLOAT);
-	skySunShaders[1]->AddUniform("groundAlbedo", ParameterType::FLOAT);
-    skySunShaders[1]->AddUniform("skyEmissivity", ParameterType::FLOAT);
-    skySunShaders[1]->AddUniform("airTemperature", ParameterType::FLOAT);
+    skySunShaders_[1] = new GLSLShader(sources, compiledShaders);
+    skySunShaders_[1]->AddUniform("transmittance_texture", ParameterType::INT);
+    skySunShaders_[1]->AddUniform("scattering_texture", ParameterType::INT);
+    skySunShaders_[1]->AddUniform("single_mie_scattering_texture", ParameterType::INT);
+    skySunShaders_[1]->AddUniform("eyePos", ParameterType::VEC3);
+    skySunShaders_[1]->AddUniform("sunDir", ParameterType::VEC3);
+    skySunShaders_[1]->AddUniform("invView", ParameterType::MAT4);
+    skySunShaders_[1]->AddUniform("invProj", ParameterType::MAT4);
+    skySunShaders_[1]->AddUniform("whitePoint", ParameterType::VEC3);
+    skySunShaders_[1]->AddUniform("cosSunSize", ParameterType::FLOAT);
+	skySunShaders_[1]->AddUniform("bottomRadius", ParameterType::FLOAT);
+	skySunShaders_[1]->AddUniform("groundAlbedo", ParameterType::FLOAT);
+    skySunShaders_[1]->AddUniform("skyEmissivity", ParameterType::FLOAT);
+    skySunShaders_[1]->AddUniform("airTemperature", ParameterType::FLOAT);
 
     //Initialize shadows
-    sunShadowFrustum = new ViewFrustum[sunShadowmapSplits];
-    sunShadowCPM = new glm::mat4x4[sunShadowmapSplits];
+    sunShadowFrustum_ = new ViewFrustum[sunShadowmapSplits_];
+    sunShadowCPM_ = new glm::mat4x4[sunShadowmapSplits_];
 
     //Create sun & sky UBO
-    glGenBuffers(1, &sunSkyUBO);
-    glBindBuffer(GL_UNIFORM_BUFFER, sunSkyUBO);
+    glGenBuffers(1, &sunSkyUBO_);
+    glBindBuffer(GL_UNIFORM_BUFFER, sunSkyUBO_);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(SunSkyUBO), NULL, GL_STATIC_DRAW);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    glBindBufferRange(GL_UNIFORM_BUFFER, UBO_SUNSKY, sunSkyUBO, 0, sizeof(SunSkyUBO));
+    glBindBufferRange(GL_UNIFORM_BUFFER, UBO_SUNSKY, sunSkyUBO_, 0, sizeof(SunSkyUBO));
 
     if(shadow > RenderQuality::DISABLED)
     {
-        sunShadowmapShader = new GLSLShader("sunCSM.frag");
-        sunShadowmapShader->AddUniform("shadowmapArray", ParameterType::INT);
-        sunShadowmapShader->AddUniform("shadowmapLayer", ParameterType::FLOAT);
+        sunShadowmapShader_ = new GLSLShader("sunCSM.frag");
+        sunShadowmapShader_->AddUniform("shadowmapArray", ParameterType::INT);
+        sunShadowmapShader_->AddUniform("shadowmapLayer", ParameterType::FLOAT);
         
         //Generate shadowmap array
-        glGenTextures(1, &sunShadowmapArray);
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
-        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, sunShadowmapSize, sunShadowmapSize, sunShadowmapSplits, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+        glGenTextures(1, &sunShadowmapArray_);
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D_ARRAY, sunShadowmapArray_);
+        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F, sunShadowmapSize_, sunShadowmapSize_, sunShadowmapSplits_, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
         OpenGLState::UnbindTexture(TEX_BASE);
         
         //Generate samplers
-        glGenSamplers(1, &sunDepthSampler);
-        glSamplerParameteri(sunDepthSampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glSamplerParameteri(sunDepthSampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glSamplerParameteri(sunDepthSampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glSamplerParameteri(sunDepthSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glGenSamplers(1, &sunDepthSampler_);
+        glSamplerParameteri(sunDepthSampler_, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glSamplerParameteri(sunDepthSampler_, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glSamplerParameteri(sunDepthSampler_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glSamplerParameteri(sunDepthSampler_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         
-        glGenSamplers(1, &sunShadowSampler);
-        glSamplerParameteri(sunShadowSampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glSamplerParameteri(sunShadowSampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glSamplerParameteri(sunShadowSampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glSamplerParameteri(sunShadowSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glSamplerParameteri(sunShadowSampler, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
-        glSamplerParameteri(sunShadowSampler, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+        glGenSamplers(1, &sunShadowSampler_);
+        glSamplerParameteri(sunShadowSampler_, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glSamplerParameteri(sunShadowSampler_, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glSamplerParameteri(sunShadowSampler_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glSamplerParameteri(sunShadowSampler_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glSamplerParameteri(sunShadowSampler_, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+        glSamplerParameteri(sunShadowSampler_, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
         
         //Create shadowmap framebuffer
-        glGenFramebuffers(1, &sunShadowFBO);
-        OpenGLState::BindFramebuffer(sunShadowFBO);
-        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, sunShadowmapArray, 0, 0);
+        glGenFramebuffers(1, &sunShadowFBO_);
+        OpenGLState::BindFramebuffer(sunShadowFBO_);
+        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, sunShadowmapArray_, 0, 0);
         glDrawBuffer(GL_NONE);
         glReadBuffer(GL_NONE);
         
@@ -193,35 +193,35 @@ OpenGLAtmosphere::OpenGLAtmosphere(const std::string& modelFilename, RenderQuali
         OpenGLState::BindFramebuffer(0);
 
         //Permanently bind shadow textures and samplers
-        OpenGLState::BindTexture(TEX_SUN_SHADOW, GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
-        glBindSampler(TEX_SUN_SHADOW, sunShadowSampler);
+        OpenGLState::BindTexture(TEX_SUN_SHADOW, GL_TEXTURE_2D_ARRAY, sunShadowmapArray_);
+        glBindSampler(TEX_SUN_SHADOW, sunShadowSampler_);
 
-        OpenGLState::BindTexture(TEX_SUN_DEPTH, GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
-        glBindSampler(TEX_SUN_DEPTH, sunDepthSampler);
+        OpenGLState::BindTexture(TEX_SUN_DEPTH, GL_TEXTURE_2D_ARRAY, sunShadowmapArray_);
+        glBindSampler(TEX_SUN_DEPTH, sunDepthSampler_);
     }
 }
 
 OpenGLAtmosphere::~OpenGLAtmosphere()
 {
     for(unsigned short i=0; i< AtmosphereTextures::TEXTURE_COUNT; ++i)
-        if(textures[i] != 0) glDeleteTextures(1, &textures[i]);
+        if(textures_[i] != 0) glDeleteTextures(1, &textures_[i]);
 
-    if(skySunShaders[0] != nullptr) delete skySunShaders[0];
-    if(skySunShaders[1] != nullptr) delete skySunShaders[1];
+    if(skySunShaders_[0] != nullptr) delete skySunShaders_[0];
+    if(skySunShaders_[1] != nullptr) delete skySunShaders_[1];
     //if(atmosphereAPI > 0) glDeleteShader(atmosphereAPI);
 
-    if(sunShadowmapArray != 0) glDeleteTextures(1, &sunShadowmapArray);
+    if(sunShadowmapArray_ != 0) glDeleteTextures(1, &sunShadowmapArray_);
 
-    delete [] sunShadowFrustum;
-    delete [] sunShadowCPM;
-    glDeleteBuffers(1, &sunSkyUBO);
+    delete [] sunShadowFrustum_;
+    delete [] sunShadowCPM_;
+    glDeleteBuffers(1, &sunSkyUBO_);
 
-    if(sunShadowmapSize > 0)
+    if(sunShadowmapSize_ > 0)
     {
-        glDeleteSamplers(1, &sunDepthSampler);
-        glDeleteSamplers(1, &sunShadowSampler);
-        glDeleteFramebuffers(1, &sunShadowFBO);
-        delete sunShadowmapShader;
+        glDeleteSamplers(1, &sunDepthSampler_);
+        glDeleteSamplers(1, &sunShadowSampler_);
+        glDeleteFramebuffers(1, &sunShadowFBO_);
+        delete sunShadowmapShader_;
     }
 }
 
@@ -230,58 +230,58 @@ void OpenGLAtmosphere::SetSunPosition(float azimuthDeg, float elevationDeg)
     azimuthDeg = azimuthDeg < -180.f ? -180.f : (azimuthDeg > 180.f ? 180.f : azimuthDeg);
     elevationDeg = elevationDeg < -90.f ? -90.f : (elevationDeg > 90.f ? 90.f : elevationDeg);
 
-    sunAzimuth = azimuthDeg;
-    sunElevation = elevationDeg;
+    sunAzimuth_ = azimuthDeg;
+    sunElevation_ = elevationDeg;
 
     //Calculate sun dir vector
-    float sunAzimuthAngle = -sunAzimuth/180.f*M_PI + M_PI;
-    float sunZenithAngle =  (90.f - sunElevation)/180.f*M_PI;
-    sunDirection = glm::normalize(glm::rotate(glm::vec3(cos(sunAzimuthAngle) * sin(sunZenithAngle), sin(sunAzimuthAngle) * sin(sunZenithAngle), cos(sunZenithAngle)), (float)M_PI, glm::vec3(0,1.f,0)));
+    float sunAzimuthAngle = -sunAzimuth_/180.f*M_PI + M_PI;
+    float sunZenithAngle =  (90.f - sunElevation_)/180.f*M_PI;
+    sunDirection_ = glm::normalize(glm::rotate(glm::vec3(cos(sunAzimuthAngle) * sin(sunZenithAngle), sin(sunAzimuthAngle) * sin(sunZenithAngle), cos(sunZenithAngle)), (float)M_PI, glm::vec3(0,1.f,0)));
     
     //Build sun modelview matrix
     glm::vec3 up(0,0,-1.f);
-    glm::vec3 right = glm::cross(sunDirection, up);
+    glm::vec3 right = glm::cross(sunDirection_, up);
     right = glm::normalize(right);
-    up = glm::normalize(glm::cross(right, sunDirection));
-    sunModelView = glm::lookAt(glm::vec3(0,0,0), -sunDirection, up) * glm::mat4(1.f);
+    up = glm::normalize(glm::cross(right, sunDirection_));
+    sunModelView_ = glm::lookAt(glm::vec3(0,0,0), -sunDirection_, up) * glm::mat4(1.f);
 }
 
 void OpenGLAtmosphere::GetSunPosition(GLfloat& azimuthDeg, GLfloat& elevationDeg)
 {
-    azimuthDeg = sunAzimuth;
-    elevationDeg = sunElevation;
+    azimuthDeg = sunAzimuth_;
+    elevationDeg = sunElevation_;
 }
 
 glm::vec3 OpenGLAtmosphere::GetSunDirection()
 {
-    return sunDirection;
+    return sunDirection_;
 }
 
 void OpenGLAtmosphere::setAirTemperature(GLfloat temperature)
 {
-    airTemperature = glm::clamp(temperature, -273.15f, 100.f);
+    airTemperature_ = glm::clamp(temperature, -273.15f, 100.f);
     UpdateSkyEmissivity();
 }
 
 GLfloat OpenGLAtmosphere::getAirTemperature()
 {
-    return airTemperature;
+    return airTemperature_;
 }
 
 void OpenGLAtmosphere::setAirHumidity(GLfloat humidity)
 {
-    airHumidity = glm::clamp(humidity, 0.f, 1.f);
+    airHumidity_ = glm::clamp(humidity, 0.f, 1.f);
     UpdateSkyEmissivity();
 }
 
 GLfloat OpenGLAtmosphere::getAirHumidity()
 {
-    return airHumidity;
+    return airHumidity_;
 }
 
 GLuint OpenGLAtmosphere::getAtmosphereTexture(AtmosphereTextures id)
 {
-    return textures[id];
+    return textures_[id];
 }
 
 void OpenGLAtmosphere::LoadAtmosphereData(const std::string& filename)
@@ -305,84 +305,84 @@ void OpenGLAtmosphere::LoadAtmosphereData(const std::string& filename)
     data.read((char*)&scatteringSize, sizeof(scatteringSize));
     data.read((char*)&lengthUnitInMeters, sizeof(lengthUnitInMeters));
     data.read((char*)&bottomRadius, sizeof(bottomRadius));
-    data.read((char*)&sunSkyUBOData.whitePoint, sizeof(sunSkyUBOData.whitePoint));
-    data.read((char*)&nPrecomputedWavelengths, sizeof(nPrecomputedWavelengths));
-    data.read((char*)&nScatteringOrders, sizeof(nScatteringOrders));
+    data.read((char*)&sunSkyUBOData_.whitePoint, sizeof(sunSkyUBOData_.whitePoint));
+    data.read((char*)&nPrecomputedWavelengths_, sizeof(nPrecomputedWavelengths_));
+    data.read((char*)&nScatteringOrders_, sizeof(nScatteringOrders_));
 
-    sunSkyUBOData.atmLengthUnitInMeters = lengthUnitInMeters;
-    sunSkyUBOData.planetRadiusInUnits = bottomRadius/lengthUnitInMeters;
+    sunSkyUBOData_.atmLengthUnitInMeters = lengthUnitInMeters;
+    sunSkyUBOData_.planetRadiusInUnits = bottomRadius/lengthUnitInMeters;
 
     //Load atmosphere textures
     glm::vec4* pixels;
     pixels = new glm::vec4[transmittanceSize.x * transmittanceSize.y];
     data.read((char*)pixels, sizeof(glm::vec4) * transmittanceSize.x * transmittanceSize.y);
-    textures[AtmosphereTextures::TRANSMITTANCE] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, transmittanceSize, GL_RGBA32F, GL_RGBA, GL_FLOAT, pixels, FilteringMode::BILINEAR, false);
+    textures_[AtmosphereTextures::TRANSMITTANCE] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, transmittanceSize, GL_RGBA32F, GL_RGBA, GL_FLOAT, pixels, FilteringMode::BILINEAR, false);
     delete [] pixels;
     pixels = new glm::vec4[irradianceSize.x * irradianceSize.y];
     data.read((char*)pixels, sizeof(glm::vec4) * irradianceSize.x * irradianceSize.y);
-    textures[AtmosphereTextures::IRRADIANCE] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, irradianceSize, GL_RGBA32F, GL_RGBA, GL_FLOAT, pixels, FilteringMode::BILINEAR, false);
+    textures_[AtmosphereTextures::IRRADIANCE] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, irradianceSize, GL_RGBA32F, GL_RGBA, GL_FLOAT, pixels, FilteringMode::BILINEAR, false);
     delete [] pixels;
     pixels = new glm::vec4[scatteringSize.x * scatteringSize.y * scatteringSize.z];
     data.read((char*)pixels, sizeof(glm::vec4) * scatteringSize.x * scatteringSize.y * scatteringSize.z);
-    textures[AtmosphereTextures::SCATTERING] = OpenGLContent::GenerateTexture(GL_TEXTURE_3D, scatteringSize, GL_RGBA16F, GL_RGBA, GL_FLOAT, pixels, FilteringMode::BILINEAR, false);
+    textures_[AtmosphereTextures::SCATTERING] = OpenGLContent::GenerateTexture(GL_TEXTURE_3D, scatteringSize, GL_RGBA16F, GL_RGBA, GL_FLOAT, pixels, FilteringMode::BILINEAR, false);
     delete [] pixels;
 #ifndef EMBEDDED_RESOURCES
     dataFile.close();
 #endif
     cInfo("Loaded precomputed atmosphere model (%u wavelengths, %u scattering orders)", 
-           nPrecomputedWavelengths, nScatteringOrders);
+           nPrecomputedWavelengths_, nScatteringOrders_);
 }
 
 void OpenGLAtmosphere::DrawSkyAndSun(const OpenGLView* view)
 {
-	glm::vec3 eyePos = view->GetEyePosition()/sunSkyUBOData.atmLengthUnitInMeters;
-	eyePos.z = eyePos.z > -0.5/sunSkyUBOData.atmLengthUnitInMeters ? -0.5/sunSkyUBOData.atmLengthUnitInMeters : eyePos.z;
+	glm::vec3 eyePos = view->GetEyePosition()/sunSkyUBOData_.atmLengthUnitInMeters;
+	eyePos.z = eyePos.z > -0.5/sunSkyUBOData_.atmLengthUnitInMeters ? -0.5/sunSkyUBOData_.atmLengthUnitInMeters : eyePos.z;
     glm::mat4 invViewMatrix = glm::inverse(view->GetViewMatrix());
 	invViewMatrix[3].x = eyePos.x;
 	invViewMatrix[3].y = eyePos.y;
 	invViewMatrix[3].z = eyePos.z;
     glm::mat4 invProjectionMatrix = glm::inverse(view->GetProjectionMatrix());
 
-    skySunShaders[0]->Use();
-	skySunShaders[0]->SetUniform("bottomRadius", sunSkyUBOData.planetRadiusInUnits);
-	skySunShaders[0]->SetUniform("groundAlbedo", 0.7f);
-    skySunShaders[0]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
-    skySunShaders[0]->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
-    skySunShaders[0]->SetUniform("single_mie_scattering_texture", TEX_ATM_SCATTERING);
-    skySunShaders[0]->SetUniform("eyePos", eyePos);
-    skySunShaders[0]->SetUniform("sunDir", GetSunDirection());
-    skySunShaders[0]->SetUniform("invProj", invProjectionMatrix);
-    skySunShaders[0]->SetUniform("invView", invViewMatrix);
-    skySunShaders[0]->SetUniform("whitePoint", sunSkyUBOData.whitePoint);
-    skySunShaders[0]->SetUniform("cosSunSize", (GLfloat)cosf(0.00935f/2.f));
+    skySunShaders_[0]->Use();
+	skySunShaders_[0]->SetUniform("bottomRadius", sunSkyUBOData_.planetRadiusInUnits);
+	skySunShaders_[0]->SetUniform("groundAlbedo", 0.7f);
+    skySunShaders_[0]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
+    skySunShaders_[0]->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
+    skySunShaders_[0]->SetUniform("single_mie_scattering_texture", TEX_ATM_SCATTERING);
+    skySunShaders_[0]->SetUniform("eyePos", eyePos);
+    skySunShaders_[0]->SetUniform("sunDir", GetSunDirection());
+    skySunShaders_[0]->SetUniform("invProj", invProjectionMatrix);
+    skySunShaders_[0]->SetUniform("invView", invViewMatrix);
+    skySunShaders_[0]->SetUniform("whitePoint", sunSkyUBOData_.whitePoint);
+    skySunShaders_[0]->SetUniform("cosSunSize", (GLfloat)cosf(0.00935f/2.f));
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
 }
 
 void OpenGLAtmosphere::DrawSkyAndSunTemperature(const OpenGLView* view)
 {
-	glm::vec3 eyePos = view->GetEyePosition()/sunSkyUBOData.atmLengthUnitInMeters;
-	eyePos.z = eyePos.z > -0.5/sunSkyUBOData.atmLengthUnitInMeters ? -0.5/sunSkyUBOData.atmLengthUnitInMeters : eyePos.z;
+	glm::vec3 eyePos = view->GetEyePosition()/sunSkyUBOData_.atmLengthUnitInMeters;
+	eyePos.z = eyePos.z > -0.5/sunSkyUBOData_.atmLengthUnitInMeters ? -0.5/sunSkyUBOData_.atmLengthUnitInMeters : eyePos.z;
     glm::mat4 invViewMatrix = glm::inverse(view->GetViewMatrix());
 	invViewMatrix[3].x = eyePos.x;
 	invViewMatrix[3].y = eyePos.y;
 	invViewMatrix[3].z = eyePos.z;
     glm::mat4 invProjectionMatrix = glm::inverse(view->GetProjectionMatrix());
 
-    skySunShaders[1]->Use();
-	skySunShaders[1]->SetUniform("bottomRadius", sunSkyUBOData.planetRadiusInUnits);
-	skySunShaders[1]->SetUniform("groundAlbedo", 0.7f);
-    skySunShaders[1]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
-    skySunShaders[1]->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
-    skySunShaders[1]->SetUniform("single_mie_scattering_texture", TEX_ATM_SCATTERING);
-    skySunShaders[1]->SetUniform("eyePos", eyePos);
-    skySunShaders[1]->SetUniform("sunDir", GetSunDirection());
-    skySunShaders[1]->SetUniform("invProj", invProjectionMatrix);
-    skySunShaders[1]->SetUniform("invView", invViewMatrix);
-    skySunShaders[1]->SetUniform("whitePoint", sunSkyUBOData.whitePoint);
-    skySunShaders[1]->SetUniform("cosSunSize", (GLfloat)cosf(0.00935f/2.f));
-    skySunShaders[1]->SetUniform("skyEmissivity", sunSkyUBOData.skyEmissivity);
-    skySunShaders[1]->SetUniform("airTemperature", airTemperature);
+    skySunShaders_[1]->Use();
+	skySunShaders_[1]->SetUniform("bottomRadius", sunSkyUBOData_.planetRadiusInUnits);
+	skySunShaders_[1]->SetUniform("groundAlbedo", 0.7f);
+    skySunShaders_[1]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
+    skySunShaders_[1]->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
+    skySunShaders_[1]->SetUniform("single_mie_scattering_texture", TEX_ATM_SCATTERING);
+    skySunShaders_[1]->SetUniform("eyePos", eyePos);
+    skySunShaders_[1]->SetUniform("sunDir", GetSunDirection());
+    skySunShaders_[1]->SetUniform("invProj", invProjectionMatrix);
+    skySunShaders_[1]->SetUniform("invView", invViewMatrix);
+    skySunShaders_[1]->SetUniform("whitePoint", sunSkyUBOData_.whitePoint);
+    skySunShaders_[1]->SetUniform("cosSunSize", (GLfloat)cosf(0.00935f/2.f));
+    skySunShaders_[1]->SetUniform("skyEmissivity", sunSkyUBOData_.skyEmissivity);
+    skySunShaders_[1]->SetUniform("airTemperature", airTemperature_);
 
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
@@ -390,15 +390,15 @@ void OpenGLAtmosphere::DrawSkyAndSunTemperature(const OpenGLView* view)
 
 void OpenGLAtmosphere::BakeShadowmaps(OpenGLPipeline* pipe, OpenGLView* view)
 {
-    if(sunShadowmapSize == 0)
+    if(sunShadowmapSize_ == 0)
         return;
     
     //Pre-set splits
-    for(unsigned int i = 0; i < sunShadowmapSplits; ++i)
+    for(unsigned int i = 0; i < sunShadowmapSplits_; ++i)
     {
-        sunShadowFrustum[i].fov = view->GetFOVY() + 0.2f; //avoid artifacts in the borders
+        sunShadowFrustum_[i].fov = view->GetFOVY() + 0.2f; //avoid artifacts in the borders
         GLint* viewport = view->GetViewport();
-        sunShadowFrustum[i].ratio = (GLfloat)viewport[2]/(GLfloat)viewport[3];
+        sunShadowFrustum_[i].ratio = (GLfloat)viewport[2]/(GLfloat)viewport[3];
         delete [] viewport;
     }
 
@@ -409,28 +409,28 @@ void OpenGLAtmosphere::BakeShadowmaps(OpenGLPipeline* pipe, OpenGLView* view)
     glCullFace(GL_FRONT); //GL_FRONT -> no shadow acne but problems with filtering
     glDisable(GL_DEPTH_CLAMP);
 
-    OpenGLState::BindFramebuffer(sunShadowFBO);
-    OpenGLState::Viewport(0, 0, sunShadowmapSize, sunShadowmapSize);
+    OpenGLState::BindFramebuffer(sunShadowFBO_);
+    OpenGLState::Viewport(0, 0, sunShadowmapSize_, sunShadowmapSize_);
 
     glm::vec3 camPos = view->GetEyePosition();
     glm::vec3 camDir = view->GetLookingDirection();
     glm::vec3 camUp = view->GetUpDirection();
 
     // for all shadow splits
-    for(unsigned int i = 0; i < sunShadowmapSplits; ++i)
+    for(unsigned int i = 0; i < sunShadowmapSplits_; ++i)
     {
         //Compute the camera frustum slice boundary points in world space
-        UpdateFrustumCorners(sunShadowFrustum[i], camPos, camDir, camUp);
+        UpdateFrustumCorners(sunShadowFrustum_[i], camPos, camDir, camUp);
 
         //Adjust the view frustum of the light, so that it encloses the camera frustum slice fully.
         //note that this function sets the projection matrix as it sees best fit
-        glm::mat4 cp = BuildCropProjMatrix(sunShadowFrustum[i]);
-        sunShadowCPM[i] =  cp * sunModelView;
+        glm::mat4 cp = BuildCropProjMatrix(sunShadowFrustum_[i]);
+        sunShadowCPM_[i] =  cp * sunModelView_;
 
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetProjectionMatrix(cp);
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetViewMatrix(sunModelView);
+        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetViewMatrix(sunModelView_);
         //Draw current depth map
-        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, sunShadowmapArray, 0, i);
+        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, sunShadowmapArray_, 0, i);
         glClear(GL_DEPTH_BUFFER_BIT);
         pipe->DrawObjects();
     }
@@ -444,8 +444,8 @@ void OpenGLAtmosphere::BakeShadowmaps(OpenGLPipeline* pipe, OpenGLView* view)
 void OpenGLAtmosphere::UpdateSkyEmissivity()
 {
     //Input data
-    GLfloat T = airTemperature + 273.15f;
-    GLfloat RH = 100.f * airHumidity;
+    GLfloat T = airTemperature_ + 273.15f;
+    GLfloat RH = 100.f * airHumidity_;
     GLfloat N = 0.f; // Cloud cover in tenths (clear sky)
     
     //Calculate dewpoint temperature
@@ -455,8 +455,8 @@ void OpenGLAtmosphere::UpdateSkyEmissivity()
     GLfloat eps = 0.787 + 0.767 * logf(Td/273.15f) + 0.0224*N + 0.0035*N*N + 0.00028*N*N*N;
 
     //Update the UBO
-    sunSkyUBOData.skyEmissivity = eps;
-    sunSkyUBOData.airTemperature = airTemperature;
+    sunSkyUBOData_.skyEmissivity = eps;
+    sunSkyUBOData_.airTemperature = airTemperature_;
 }
 
 //Computes the near and far distances for every frustum slice in camera eye space
@@ -466,17 +466,17 @@ void OpenGLAtmosphere::UpdateSplitDist(GLfloat nd, GLfloat fd)
     nd = 0.1f;
     GLfloat lambda = 0.95f;
     GLfloat ratio = fd/nd;
-    sunShadowFrustum[0].near = nd;
+    sunShadowFrustum_[0].near = nd;
 
-    for(unsigned int i = 1; i < sunShadowmapSplits; ++i) 
+    for(unsigned int i = 1; i < sunShadowmapSplits_; ++i) 
     {
-        GLfloat si = i / (GLfloat)sunShadowmapSplits;
+        GLfloat si = i / (GLfloat)sunShadowmapSplits_;
 
-        sunShadowFrustum[i].near = lambda*(nd*powf(ratio, si)) + (1.f-lambda)*(nd + (fd - nd)*si);
-        sunShadowFrustum[i-1].far = sunShadowFrustum[i].near * 1.05f;
+        sunShadowFrustum_[i].near = lambda*(nd*powf(ratio, si)) + (1.f-lambda)*(nd + (fd - nd)*si);
+        sunShadowFrustum_[i-1].far = sunShadowFrustum_[i].near * 1.05f;
     }
 
-    sunShadowFrustum[sunShadowmapSplits-1].far = fd;
+    sunShadowFrustum_[sunShadowmapSplits_-1].far = fd;
     //for(int i=0; i<sunShadowmapSplits; i++) printf("Frustum%d Near: %f Far: %f\n", i, sunShadowFrustum[i].near, sunShadowFrustum[i].far);
 }
 
@@ -522,7 +522,7 @@ glm::mat4 OpenGLAtmosphere::BuildCropProjMatrix(ViewFrustum &f)
     glm::vec4 transf;
 
     //Find the z-range of the current frustum as seen from the light in order to increase precision
-    glm::mat4 shad_mv = sunModelView;
+    glm::mat4 shad_mv = sunModelView_;
 
     //Note: only the z-component is needed and thus the multiplication can be simplified
     //transf.z = shad_modelview[2] * f.point[0].x + shad_modelview[6] * f.point[0].y + shad_modelview[10] * f.point[0].z + shad_modelview[14]
@@ -595,44 +595,44 @@ void OpenGLAtmosphere::SetupMaterialShaders()
     GLfloat frustumNear[4];
 
     //For every inactive split
-    for(unsigned int i = sunShadowmapSplits; i<4; ++i)
+    for(unsigned int i = sunShadowmapSplits_; i<4; ++i)
     {
         frustumNear[i] = 0;
         frustumFar[i] = 0;
-        sunSkyUBOData.sunClipSpace[i] = glm::mat4();
+        sunSkyUBOData_.sunClipSpace[i] = glm::mat4();
     }
 
     //For every active split
-    for(unsigned int i = 0; i < sunShadowmapSplits; ++i)
+    for(unsigned int i = 0; i < sunShadowmapSplits_; ++i)
     {
-        frustumNear[i] = sunShadowFrustum[i].near;
-        frustumFar[i] = sunShadowFrustum[i].far;
-        sunSkyUBOData.sunClipSpace[i] = (bias * sunShadowCPM[i]); // compute a matrix that transforms from world space to light clip space
+        frustumNear[i] = sunShadowFrustum_[i].near;
+        frustumFar[i] = sunShadowFrustum_[i].far;
+        sunSkyUBOData_.sunClipSpace[i] = (bias * sunShadowCPM_[i]); // compute a matrix that transforms from world space to light clip space
     }
 
-    sunSkyUBOData.sunFrustumNear = glm::vec4(frustumNear[0], frustumNear[1], frustumNear[2], frustumNear[3]);
-    sunSkyUBOData.sunFrustumFar = glm::vec4(frustumFar[0], frustumFar[1], frustumFar[2], frustumFar[3]);
-    sunSkyUBOData.sunDirection = GetSunDirection();
+    sunSkyUBOData_.sunFrustumNear = glm::vec4(frustumNear[0], frustumNear[1], frustumNear[2], frustumNear[3]);
+    sunSkyUBOData_.sunFrustumFar = glm::vec4(frustumFar[0], frustumFar[1], frustumFar[2], frustumFar[3]);
+    sunSkyUBOData_.sunDirection = GetSunDirection();
 
-    glBindBuffer(GL_UNIFORM_BUFFER, sunSkyUBO);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(SunSkyUBO), &sunSkyUBOData);
+    glBindBuffer(GL_UNIFORM_BUFFER, sunSkyUBO_);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(SunSkyUBO), &sunSkyUBOData_);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
 void OpenGLAtmosphere::ShowSunShadowmaps(GLfloat x, GLfloat y, GLfloat scale)
 {
     //Texture setup
-    OpenGLState::BindTexture(TEX_SUN_SHADOW, GL_TEXTURE_2D_ARRAY, sunShadowmapArray);
+    OpenGLState::BindTexture(TEX_SUN_SHADOW, GL_TEXTURE_2D_ARRAY, sunShadowmapArray_);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_COMPARE_MODE, GL_NONE);
     OpenGLState::DisableBlend();
     OpenGLState::DisableDepthTest();
 
     //Render the shadowmaps
-    sunShadowmapShader->Use();
-    sunShadowmapShader->SetUniform("shadowmapArray", TEX_SUN_SHADOW);
-    for(unsigned int i = 0; i < sunShadowmapSplits; ++i) {
-        OpenGLState::Viewport(x + sunShadowmapSize * scale * i, y, sunShadowmapSize * scale, sunShadowmapSize * scale);
-        sunShadowmapShader->SetUniform("shadowmapLayer", (GLfloat)i);
+    sunShadowmapShader_->Use();
+    sunShadowmapShader_->SetUniform("shadowmapArray", TEX_SUN_SHADOW);
+    for(unsigned int i = 0; i < sunShadowmapSplits_; ++i) {
+        OpenGLState::Viewport(x + sunShadowmapSize_ * scale * i, y, sunShadowmapSize_ * scale, sunShadowmapSize_ * scale);
+        sunShadowmapShader_->SetUniform("shadowmapLayer", (GLfloat)i);
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     }
     OpenGLState::UseProgram(0);

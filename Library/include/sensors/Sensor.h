@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/4/13.
-//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Sensor__
@@ -116,20 +116,20 @@ namespace sf
         virtual void getSensorVelocity(Vector3& linear, Vector3& angular) const = 0;
         
     protected:
-        Scalar freq;
-        SDL_mutex* updateMutex;
+        Scalar freq_;
+        SDL_mutex* updateMutex_;
         
         static std::random_device randomDevice;
         static std::mt19937 randomGenerator;
         
     private:
-        std::string name;
-        Scalar eleapsedTime;
-        bool newDataAvailable;
-        bool renderable;
-        bool enabled;
-        int lookId;
-        int graObjectId;
+        std::string name_;
+        Scalar eleapsedTime_;
+        bool newDataAvailable_;
+        bool renderable_;
+        bool enabled_;
+        int lookId_;
+        int graObjectId_;
     };
 }
 

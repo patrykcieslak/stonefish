@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 20/11/2018.
-//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_LinkSensor__
@@ -81,8 +81,8 @@ namespace sf
         std::string getLinkName() const;
         
     protected:
-        MovingEntity* attach;
-        Transform o2s;
+        MovingEntity* attach_;
+        Transform o2s_;
     };
 }
 

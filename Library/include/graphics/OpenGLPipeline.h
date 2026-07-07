@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/03/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLPipeline__
@@ -112,18 +112,18 @@ namespace sf
         void PerformDrawingQueueCopy(SimulationManager* sim);
         void DrawHelpers();
         
-        RenderSettings rSettings;
-        HelperSettings hSettings;
-        std::vector<Renderable> drawingQueue;
-        std::vector<Renderable> drawingQueueCopy;
-        std::vector<Renderable> selectedDrawingQueue;
-        std::vector<Renderable> selectedDrawingQueueCopy;
-        SDL_mutex* drawingQueueMutex;
-        std::deque<unsigned int> viewsQueue;
-        GLuint screenFBO;
-        GLuint screenTex;
-        OpenGLContent* content;
-        Scalar lastSimTime;
+        RenderSettings rSettings_;
+        HelperSettings hSettings_;
+        std::vector<Renderable> drawingQueue_;
+        std::vector<Renderable> drawingQueueCopy_;
+        std::vector<Renderable> selectedDrawingQueue_;
+        std::vector<Renderable> selectedDrawingQueueCopy_;
+        SDL_mutex* drawingQueueMutex_;
+        std::deque<unsigned int> viewsQueue_;
+        GLuint screenFBO_;
+        GLuint screenTex_;
+        OpenGLContent* content_;
+        Scalar lastSimTime_;
     };
 }
 

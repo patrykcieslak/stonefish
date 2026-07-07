@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 20/11/2018.
-//  Copyright (c) 2018-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_VisionSensor__
@@ -111,8 +111,8 @@ namespace sf
         virtual void InitGraphics(bool& seesParticles) = 0;
         
     private:
-        Entity* attach;
-        Transform o2s;
+        Entity* attach_;
+        Transform o2s_;
     };
 }
 

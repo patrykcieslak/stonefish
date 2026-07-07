@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 24/05/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -112,12 +112,12 @@ namespace sf
         void BuildRigidBody(btCollisionShape* shape);
         virtual void BuildGraphicalObject();
         
-        btRigidBody* rigidBody;
-        Material mat;
-        Mesh* phyMesh;
+        btRigidBody* rigidBody_;
+        Material mat_;
+        Mesh* phyMesh_;
         
-        int lookId;
-        int phyObjectId;
-        DisplayMode dm;
+        int lookId_;
+        int phyObjectId_;
+        DisplayMode dm_;
     };
 }

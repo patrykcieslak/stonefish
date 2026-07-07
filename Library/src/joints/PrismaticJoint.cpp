@@ -32,8 +32,8 @@ namespace sf
 
 PrismaticJoint::PrismaticJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& axis, bool collideLinked) : Joint(uniqueName, collideLinked)
 {
-    btRigidBody* bodyA = solidA->rigidBody;
-    btRigidBody* bodyB = solidB->rigidBody;
+    btRigidBody* bodyA = solidA->rigidBody_;
+    btRigidBody* bodyB = solidB->rigidBody_;
     
     Vector3 sliderAxis = axis.normalized();
     Vector3 v2;
@@ -47,7 +47,7 @@ PrismaticJoint::PrismaticJoint(std::string uniqueName, SolidEntity* solidA, Soli
     
     Transform frameInA = bodyA->getCenterOfMassTransform().inverse() * sliderFrame;
     Transform frameInB = bodyB->getCenterOfMassTransform().inverse() * sliderFrame;
-    axisInA = frameInA.getBasis().getColumn(0).normalized();
+    axisInA_ = frameInA.getBasis().getColumn(0).normalized();
     
     btSliderConstraint* slider = new btSliderConstraint(*bodyA, *bodyB, frameInA, frameInB, true);
     slider->setLowerLinLimit(Scalar(1));
@@ -56,15 +56,15 @@ PrismaticJoint::PrismaticJoint(std::string uniqueName, SolidEntity* solidA, Soli
     slider->setUpperAngLimit(Scalar(0));
     setConstraint(slider);
     
-    sigDamping = Scalar(0);
-    velDamping = Scalar(0);
-    displacementIC = Scalar(0);
+    sigDamping_ = Scalar(0);
+    velDamping_ = Scalar(0);
+    displacementIC_ = Scalar(0);
 }
 
 void PrismaticJoint::setDamping(Scalar constantFactor, Scalar viscousFactor)
 {
-    sigDamping = constantFactor > Scalar(0) ? constantFactor : Scalar(0);
-    velDamping = viscousFactor > Scalar(0) ? viscousFactor : Scalar(0);
+    sigDamping_ = constantFactor > Scalar(0) ? constantFactor : Scalar(0);
+    velDamping_ = viscousFactor > Scalar(0) ? viscousFactor : Scalar(0);
 }
 
 void PrismaticJoint::setLimits(Scalar min, Scalar max)
@@ -84,7 +84,7 @@ void PrismaticJoint::setLimits(Scalar min, Scalar max)
 
 void PrismaticJoint::setIC(Scalar displacement)
 {
-    displacementIC = displacement;
+    displacementIC_ = displacement;
 }
 
 JointType PrismaticJoint::getType() const
@@ -96,7 +96,7 @@ void PrismaticJoint::ApplyForce(Scalar F)
 {
     btRigidBody& bodyA = getConstraint()->getRigidBodyA();
     btRigidBody& bodyB = getConstraint()->getRigidBodyB();
-    Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
+    Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA_).normalized();
     Vector3 force = axis * F;
     bodyA.applyCentralForce(force);
     bodyB.applyCentralForce(-force);
@@ -104,17 +104,17 @@ void PrismaticJoint::ApplyForce(Scalar F)
 
 void PrismaticJoint::ApplyDamping()
 {
-    if(sigDamping > Scalar(0) || velDamping > Scalar(0))
+    if(sigDamping_ > Scalar(0) || velDamping_ > Scalar(0))
     {
         btRigidBody& bodyA = getConstraint()->getRigidBodyA();
         btRigidBody& bodyB = getConstraint()->getRigidBodyB();
-        Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
+        Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA_).normalized();
         Vector3 relativeV = bodyA.getLinearVelocity() - bodyB.getLinearVelocity();
         Scalar v = relativeV.dot(axis);
         
         if(v != Scalar(0.))
         {
-            Scalar F = sigDamping * v/fabs(v) + velDamping * v;
+            Scalar F = sigDamping_ * v/fabs(v) + velDamping_ * v;
             Vector3 force = axis * -F;
             
             bodyA.applyCentralForce(force);
@@ -136,7 +136,7 @@ std::vector<Renderable> PrismaticJoint::Render()
     Vector3 A = slider->getRigidBodyA().getCenterOfMassPosition();
     Vector3 B = slider->getRigidBodyB().getCenterOfMassPosition();
     Vector3 pivot = (A+B)/Scalar(2.);
-    Vector3 axis = (slider->getRigidBodyA().getCenterOfMassTransform().getBasis() * axisInA).normalized();
+    Vector3 axis = (slider->getRigidBodyA().getCenterOfMassTransform().getBasis() * axisInA_).normalized();
     
     //calculate axis ends
     Scalar e1 = (A-pivot).dot(axis);

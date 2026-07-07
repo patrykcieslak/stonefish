@@ -25,6 +25,7 @@
 
 #include "core/GeneralRobot.h"
 
+#include <algorithm>
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
 #include "entities/SolidEntity.h"
@@ -40,10 +41,6 @@ namespace sf
 
 GeneralRobot::GeneralRobot(std::string uniqueName, bool fixedBase) : Robot(uniqueName, fixedBase)
 {
-}       
-
-GeneralRobot::~GeneralRobot()
-{
 }
 
 RobotType GeneralRobot::getType() const
@@ -53,10 +50,11 @@ RobotType GeneralRobot::getType() const
 
 Joint* GeneralRobot::getJoint(const std::string& name)
 {
-    for(size_t i=0; i<joints_.size(); ++i)
-        if(joints_[i]->getName() == name) return joints_[i];
- 
-    return nullptr;
+    auto it = std::find_if(joints_.begin(), joints_.end(), [&name](Joint* joint) { return joint->getName() == name; });
+    if(it != joints_.end())
+        return *it;
+    else
+        return nullptr;
 }
 
 Transform GeneralRobot::getTransform() const
@@ -67,10 +65,14 @@ Transform GeneralRobot::getTransform() const
         return Transform::getIdentity();
 }
 
-void GeneralRobot::DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLinks, bool selfCollision)
+void GeneralRobot::DefineLinks(std::unique_ptr<SolidEntity> baseLink, std::vector<std::unique_ptr<SolidEntity>> otherLinks, bool selfCollision)
 {
-    links_.push_back(baseLink);
-    links_.insert(links_.end(), otherLinks.begin(), otherLinks.end());
+    detachedLinks_.push_back(std::move(baseLink));
+    detachedLinks_.insert(detachedLinks_.end(), std::make_move_iterator(otherLinks.begin()), std::make_move_iterator(otherLinks.end()));
+
+    // Save pointers to links only referencing the memory managed originals
+    for (size_t i = 0; i < detachedLinks_.size(); ++i)
+        links_.push_back(detachedLinks_[i].get());
 }
         
 void GeneralRobot::BuildKinematicStructure()
@@ -103,8 +105,12 @@ void GeneralRobot::AddToSimulation(SimulationManager* sm, const Transform& origi
 {
     Robot::AddToSimulation(sm, origin);   
     
-    // Base link
-    sm->AddSolidEntity(std::make_unique<SolidEntity>(links_[0]), origin);
+    // All links
+    for(size_t i = 0; i < detachedLinks_.size(); ++i)
+        sm->AddSolidEntity(std::move(detachedLinks_[i]), origin);
+    detachedLinks_.clear();
+
+    // Base link joint    
     if(fixed_)
     {
         FixedJoint* fix = new FixedJoint(name_ + "_fix", links_[0]);
@@ -112,11 +118,6 @@ void GeneralRobot::AddToSimulation(SimulationManager* sm, const Transform& origi
     }
 
     // Rest of the links and joints
-    for(size_t i = 1; i < links_.size(); ++i)
-    {
-        sm->AddSolidEntity(std::make_unique<SolidEntity>(links_[i]), origin);       
-    }
-
     for(size_t i = 0; i < jointsData_.size(); ++i)
     {
         size_t parentId;
@@ -174,7 +175,7 @@ void GeneralRobot::AddToSimulation(SimulationManager* sm, const Transform& origi
     }
 
     for(size_t i = 0; i < joints_.size(); ++i)
-        sm->AddJoint(std::make_unique<Joint>(joints_[i]));
+        sm->AddJoint(std::unique_ptr<Joint>(joints_[i]));
 
     // Attach joint sensors
     for(size_t i = 0; i < jsAttachments_.size(); ++i)

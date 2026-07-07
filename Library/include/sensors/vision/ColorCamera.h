@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 4/5/18.
-//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_ColorCamera__
@@ -105,10 +105,10 @@ namespace sf
     private:
         void InitGraphics(bool& seesParticles);
         
-        OpenGLRealCamera* glCamera;
-        glm::vec2 depthRange;
-        GLubyte* imageData;
-        std::function<void(ColorCamera*)> newDataCallback;
+        OpenGLRealCamera* glCamera_;
+        glm::vec2 depthRange_;
+        GLubyte* imageData_;
+        std::function<void(ColorCamera*)> newDataCallback_;
     };
 }
 

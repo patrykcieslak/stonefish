@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/29/13.
-//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLCamera__
@@ -261,45 +261,45 @@ namespace sf
         
     protected:
         //Buffers
-        GLuint renderColorTex[2];
-        GLuint renderViewNormalTex;
-        GLuint renderDepthStencilTex;
-        GLuint histogramSSBO;
-        GLuint histogramBins;
-        glm::vec2 histogramRange;
-        GLuint exposureTex;
-        GLfloat exposureComp;
-        bool autoExposure;
-		bool toneMapping;
-        bool antiAliasing;
-        GLuint lastActiveRenderColorBuffer;
+        GLuint renderColorTex_[2];
+        GLuint renderViewNormalTex_;
+        GLuint renderDepthStencilTex_;
+        GLuint histogramSSBO_;
+        GLuint histogramBins_;
+        glm::vec2 histogramRange_;
+        GLuint exposureTex_;
+        GLfloat exposureComp_;
+        bool autoExposure_;
+		bool toneMapping_;
+        bool antiAliasing_;
+        GLuint lastActiveRenderColorBuffer_;
         
         //Postprocessing
-        GLuint linearDepthFBO;
-        GLuint linearDepthTex[2];
-        GLuint postprocessFBO;
-        GLuint postprocessTex[2];
-        GLuint postprocessStencilTex;
-        GLuint quaterPostprocessFBO;
-        GLuint quaterPostprocessTex[2];
+        GLuint linearDepthFBO_;
+        GLuint linearDepthTex_[2];
+        GLuint postprocessFBO_;
+        GLuint postprocessTex_[2];
+        GLuint postprocessStencilTex_;
+        GLuint quaterPostprocessFBO_;
+        GLuint quaterPostprocessTex_[2];
         
         //HBAO Cache-aware (NVIDIA designworks)
-        GLuint aoBlurTex;
-        GLuint aoResultTex;
-        GLuint aoDepthArrayTex;
-        GLuint aoResultArrayTex;
-        GLuint aoFinalFBO;
-        GLuint aoDeinterleaveFBO;
-        GLuint aoCalcFBO;
-        GLuint aoDataUBO;
-        AOData aoData;
+        GLuint aoBlurTex_;
+        GLuint aoResultTex_;
+        GLuint aoDepthArrayTex_;
+        GLuint aoResultArrayTex_;
+        GLuint aoFinalFBO_;
+        GLuint aoDeinterleaveFBO_;
+        GLuint aoCalcFBO_;
+        GLuint aoDataUBO_;
+        AOData aoData_;
         
         //Data
-        GLuint aoFactor;
-        GLfloat fovx;
-        GLfloat near;
-        GLfloat far;
-        glm::mat4 projection;
+        GLuint aoFactor_;
+        GLfloat fovx_;
+        GLfloat near_;
+        GLfloat far_;
+        glm::mat4 projection_;
         
         //Shaders
         static GLSLShader** tonemappingShaders;

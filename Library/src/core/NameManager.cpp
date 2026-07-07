@@ -30,12 +30,12 @@ namespace sf
 
 NameManager::NameManager()
 {
-    names = std::vector<std::string>(0);
+    names_ = std::vector<std::string>(0);
 }
 
 NameManager::~NameManager()
 {
-    names.clear();
+    names_.clear();
 }
 
 std::string NameManager::AddName(std::string proposedName)
@@ -44,9 +44,9 @@ std::string NameManager::AddName(std::string proposedName)
     int number = 1;
     
 checkname:
-    for(unsigned int i = 0; i < names.size(); i++)
+    for(unsigned int i = 0; i < names_.size(); i++)
     {
-        if(goodName == names[i])
+        if(goodName == names_[i])
         {
             goodName = proposedName + std::to_string(number);
             number++;
@@ -54,24 +54,24 @@ checkname:
         }
     }
     
-    names.push_back(goodName);
+    names_.push_back(goodName);
     return goodName;
 }
 
 void NameManager::RemoveName(std::string name)
 {
     std::vector<std::string>::iterator it;
-    for(it = names.begin(); it < names.end(); it++)
+    for(it = names_.begin(); it < names_.end(); it++)
         if(*it == name)
         {
-            names.erase(it);
+            names_.erase(it);
             break;
         }
 }
 
 void NameManager::ClearNames()
 {
-    names.clear();
+    names_.clear();
 }
 
 }

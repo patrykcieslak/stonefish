@@ -44,7 +44,7 @@ OpenGLSonar::OpenGLSonar(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 s
     : OpenGLView(0, 0, displayResolution.x, displayResolution.y), randDist_(0.f, 1.f)
 {
     needsUpdate_ = false;
-    continuous = false;
+    continuous_ = false;
     newData_ = false;
     range_ = range;
     gain_ = 1.f;
@@ -61,7 +61,7 @@ OpenGLSonar::~OpenGLSonar()
 {
     glDeleteTextures(1, &inputRangeIntensityTex_);
     glDeleteRenderbuffers(1, &inputDepthRBO_);
-    glDeleteFramebuffers(1, &renderFBO);
+    glDeleteFramebuffers(1, &renderFBO_);
     glDeleteTextures(1, &displayTex_);
     glDeleteFramebuffers(1, &displayFBO_);
     glDeleteVertexArrays(1, &displayVAO_);
@@ -145,7 +145,7 @@ bool OpenGLSonar::needsUpdate()
     if(needsUpdate_)
     {
         needsUpdate_ = false;
-        return enabled;
+        return enabled_;
     }
     else
         return false;

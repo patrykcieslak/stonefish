@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/08/19.
-//  Copyright (c) 2019-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLParticles__
@@ -44,11 +44,11 @@ namespace sf
         virtual ~OpenGLParticles();	
 		
 	protected:
-		GLuint nParticles;
-        GLuint particlePosSSBO; //Includes position and size
-        GLuint particleVelSSBO; //Includes velocity and opacity
-        GLuint particleVAO; //Vertex array
-        GLuint particleEAB; //Indices of particle triangles
+		GLuint nParticles_;
+        GLuint particlePosSSBO_; //Includes position and size
+        GLuint particleVelSSBO_; //Includes velocity and opacity
+        GLuint particleVAO_; //Vertex array
+        GLuint particleEAB_; //Indices of particle triangles
 	};
 }
 

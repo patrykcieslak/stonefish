@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/15/14.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_TorusShape__
@@ -48,8 +48,8 @@ namespace sf
         
         virtual void getAabb(const Transform& t,Vector3& aabbMin,Vector3& aabbMax) const;
         
-        Scalar getMajorRadius() const { return m_majorRadius; }
-        Scalar getMinorRadius() const { return m_minorRadius; }
+        Scalar getMajorRadius() const { return majorRadius_; }
+        Scalar getMinorRadius() const { return minorRadius_; }
         Scalar getRadius() const { return getMajorRadius(); }
         
         Vector3 getHalfExtentsWithMargin() const;
@@ -61,8 +61,8 @@ namespace sf
         virtual Vector3 getAnisotropicRollingFrictionDirection() const { return Vector3(0,1,0); }
         
     protected:
-        Scalar m_majorRadius;
-        Scalar m_minorRadius;
+        Scalar majorRadius_;
+        Scalar minorRadius_;
     };
 }
     

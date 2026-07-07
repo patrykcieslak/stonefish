@@ -37,28 +37,28 @@ MSIS::MSIS(std::string uniqueName, Scalar stepAngleDeg, unsigned int numOfBins, 
            Scalar minRotationDeg, Scalar maxRotationDeg, Scalar minRange, Scalar maxRange, ColorMap cm, SonarOutputFormat outputFormat, Scalar frequency)
     : Camera(uniqueName, (unsigned int)ceil(Scalar(360)/stepAngleDeg), numOfBins, horizontalBeamWidthDeg, frequency)
 {
-    range.x = 0.f;
-    range.y = 0.f;
-    noise = glm::vec2(0.f);
-    fullRotation = false;
-    stepSize = btRadians(btScalar(360)/ceil(Scalar(360)/stepAngleDeg)); //Corrected step angle in radians
+    range_.x = 0.f;
+    range_.y = 0.f;
+    noise_ = glm::vec2(0.f);
+    fullRotation_ = false;
+    stepSize_ = btRadians(btScalar(360)/ceil(Scalar(360)/stepAngleDeg)); //Corrected step angle in radians
     setRotationLimits(minRotationDeg, maxRotationDeg);
     setRangeMax(maxRange);
     setRangeMin(minRange);
     setGain(1);
-    fovV = verticalBeamWidthDeg <= Scalar(0) ? Scalar(20) : (verticalBeamWidthDeg > Scalar(179) ? Scalar(179) : verticalBeamWidthDeg);
-    cMap = cm;
+    fovV_ = verticalBeamWidthDeg <= Scalar(0) ? Scalar(20) : (verticalBeamWidthDeg > Scalar(179) ? Scalar(179) : verticalBeamWidthDeg);
+    cMap_ = cm;
     outputFormat_ = outputFormat;
-    sonarData = NULL;
-    displayData = NULL;
-    newDataCallback = NULL;
-    glMSIS = nullptr;
+    sonarData_ = NULL;
+    displayData_ = NULL;
+    newDataCallback_ = NULL;
+    glMSIS_ = nullptr;
 }
 
 MSIS::~MSIS()
 {
-    if(displayData != NULL) delete [] displayData;
-    glMSIS = nullptr;
+    if(displayData_ != NULL) delete [] displayData_;
+    glMSIS_ = nullptr;
 }
 
 void MSIS::setRotationLimits(Scalar l1Deg, Scalar l2Deg)
@@ -76,46 +76,46 @@ void MSIS::setRotationLimits(Scalar l1Deg, Scalar l2Deg)
     //Clamp and convert to number of steps
     btClamp(l1Deg, Scalar(-180), Scalar(180));
     btClamp(l2Deg, Scalar(-180), Scalar(180));
-    roi.x = (GLint)round(btRadians(l1Deg)/stepSize);
-    roi.y = (GLint)round(btRadians(l2Deg)/stepSize);
-    fullRotation = (roi.x == -(int)resX/2) && (roi.y == (int)resX/2);
-    if(roi.y == (int)resX/2)
-        --roi.y;
-    currentStep = roi.x;
-    cw = true;
+    roi_.x = (GLint)round(btRadians(l1Deg)/stepSize_);
+    roi_.y = (GLint)round(btRadians(l2Deg)/stepSize_);
+    fullRotation_ = (roi_.x == -(int)resX_/2) && (roi_.y == (int)resX_/2);
+    if(roi_.y == (int)resX_/2)
+        --roi_.y;
+    currentStep_ = roi_.x;
+    cw_ = true;
 }
 
 void MSIS::setRangeMin(Scalar r)
 {
-    range.x = r < Scalar(0.02) ? 0.02f : (r < Scalar(range.y) ? (GLfloat)r : range.x);
+    range_.x = r < Scalar(0.02) ? 0.02f : (r < Scalar(range_.y) ? (GLfloat)r : range_.x);
 }
 
 void MSIS::setRangeMax(Scalar r)
 {
-    range.y = r > Scalar(range.x) ? (GLfloat)r : range.x;
-    Scalar pulseTime = (Scalar(2)*range.y/SOUND_VELOCITY_WATER) * Scalar(1.1);
-    if(freq <= 0.0 || freq > Scalar(1)/pulseTime) // Limit update frequency based on range (physical limit)
-        freq = Scalar(1)/pulseTime;
+    range_.y = r > Scalar(range_.x) ? (GLfloat)r : range_.x;
+    Scalar pulseTime = (Scalar(2)*range_.y/SOUND_VELOCITY_WATER) * Scalar(1.1);
+    if(freq_ <= 0.0 || freq_ > Scalar(1)/pulseTime) // Limit update frequency based on range (physical limit)
+        freq_ = Scalar(1)/pulseTime;
 }
 
 void MSIS::setGain(Scalar g)
 {
-    gain = g > Scalar(0) ? g : Scalar(1);
+    gain_ = g > Scalar(0) ? g : Scalar(1);
 }
 
 void MSIS::setNoise(float multiplicativeStdDev, float additiveStdDev)
 {
     if(multiplicativeStdDev >= 0.f)
-        noise.x = multiplicativeStdDev;
+        noise_.x = multiplicativeStdDev;
     if(additiveStdDev >= 0.f)
-        noise.y = additiveStdDev;
-    if(glMSIS != nullptr)
-        glMSIS->setNoise(noise);
+        noise_.y = additiveStdDev;
+    if(glMSIS_ != nullptr)
+        glMSIS_->setNoise(noise_);
 }
 
 void* MSIS::getImageDataPointer(unsigned int index)
 {
-    return sonarData;
+    return sonarData_;
 }
 
 void MSIS::getDisplayResolution(unsigned int& x, unsigned int& y) const
@@ -126,43 +126,43 @@ void MSIS::getDisplayResolution(unsigned int& x, unsigned int& y) const
 
 GLubyte* MSIS::getDisplayDataPointer()
 {
-    return displayData;
+    return displayData_;
 }
 
 void MSIS::getRotationLimits(Scalar& l1Deg, Scalar& l2Deg) const
 {
-    l1Deg = btDegrees(Scalar(roi.x) * stepSize);
-    l2Deg = btDegrees(Scalar(roi.y) * stepSize);
+    l1Deg = btDegrees(Scalar(roi_.x) * stepSize_);
+    l2Deg = btDegrees(Scalar(roi_.y) * stepSize_);
 }
 
 Scalar MSIS::getRotationStepAngle() const
 {
-    return btDegrees(stepSize);
+    return btDegrees(stepSize_);
 }
 
 int MSIS::getCurrentRotationStep() const
 {
-    return currentStep;
+    return currentStep_;
 }
 
 GLuint MSIS::getCurrentBeamIndex() const
 {
-    return (GLuint)(currentStep + (GLint)(resX/2));
+    return (GLuint)(currentStep_ + (GLint)(resX_/2));
 }
 
 Scalar MSIS::getRangeMin() const
 {
-    return Scalar(range.x);
+    return Scalar(range_.x);
 }
 
 Scalar MSIS::getRangeMax() const
 {
-    return Scalar(range.y);
+    return Scalar(range_.y);
 }
 
 Scalar MSIS::getGain() const
 {
-    return gain;
+    return gain_;
 }
 
 SonarOutputFormat MSIS::getOutputFormat() const
@@ -177,26 +177,26 @@ VisionSensorType MSIS::getVisionSensorType() const
 
 OpenGLView* MSIS::getOpenGLView() const
 {
-    return glMSIS;
+    return glMSIS_;
 }
 
 void MSIS::InitGraphics(bool& seesParticles)
 {
     seesParticles = false;
 
-    glMSIS = new OpenGLMSIS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),
-                           (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, range, outputFormat_);
-    glMSIS->setNoise(noise);
-    glMSIS->setSonar(this);
-    glMSIS->setColorMap(cMap);
+    glMSIS_ = new OpenGLMSIS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),
+                           (GLfloat)fovH_, (GLfloat)fovV_, (GLint)resX_, (GLint)resY_, range_, outputFormat_);
+    glMSIS_->setNoise(noise_);
+    glMSIS_->setSonar(this);
+    glMSIS_->setColorMap(cMap_);
     UpdateTransform();
-    glMSIS->UpdateTransform();
+    glMSIS_->UpdateTransform();
     InternalUpdate(0);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glMSIS);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glMSIS_);
 
     unsigned int w, h;
     getDisplayResolution(w, h);
-    displayData = new GLubyte[w*h*3];
+    displayData_ = new GLubyte[w*h*3];
 }
 
 void MSIS::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
@@ -204,57 +204,57 @@ void MSIS::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up
     glm::vec3 eye_ = glm::vec3((GLfloat)eye.x(), (GLfloat)eye.y(), (GLfloat)eye.z());
     glm::vec3 dir_ = glm::vec3((GLfloat)dir.x(), (GLfloat)dir.y(), (GLfloat)dir.z());
     glm::vec3 up_ = glm::vec3((GLfloat)up.x(), (GLfloat)up.y(), (GLfloat)up.z());
-    glMSIS->SetupSonar(eye_, dir_, up_);
+    glMSIS_->SetupSonar(eye_, dir_, up_);
 }
 
 void MSIS::InstallNewDataHandler(std::function<void(MSIS*)> callback)
 {
-    newDataCallback = callback;
+    newDataCallback_ = callback;
 }
 
 void MSIS::NewDataReady(void* data, unsigned int index)
 {
-    if(newDataCallback != nullptr)
+    if(newDataCallback_ != nullptr)
     {
         if(index == 0)
         {
             unsigned int w, h;
             getDisplayResolution(w, h);
-            memcpy(displayData, data, w*h*3);
+            memcpy(displayData_, data, w*h*3);
         }
         else
         {
-            sonarData = data;
-            newDataCallback(this);
-            sonarData = nullptr;
+            sonarData_ = data;
+            newDataCallback_(this);
+            sonarData_ = nullptr;
         }
     }
 
     if(index == 1)
     {
-        currentStep += cw ? 1 : -1;
+        currentStep_ += cw_ ? 1 : -1;
         
-        if(fullRotation)
+        if(fullRotation_)
         {
-            if(cw && currentStep > roi.y)
-                currentStep = roi.x;
-            else if(!cw && currentStep < roi.x)
-                currentStep = roi.y;
+            if(cw_ && currentStep_ > roi_.y)
+                currentStep_ = roi_.x;
+            else if(!cw_ && currentStep_ < roi_.x)
+                currentStep_ = roi_.y;
         }
         else
         {
-            if(cw && currentStep == roi.y)
-                cw = false;
-            else if(!cw && currentStep == roi.x)
-                cw = true;
+            if(cw_ && currentStep_ == roi_.y)
+                cw_ = false;
+            else if(!cw_ && currentStep_ == roi_.x)
+                cw_ = true;
         }
     }
 }
 
 void MSIS::InternalUpdate(Scalar dt)
 {
-    if(glMSIS != nullptr)
-        glMSIS->Update();
+    if(glMSIS_ != nullptr)
+        glMSIS_->Update();
 }
 
 std::vector<Renderable> MSIS::Render()
@@ -272,10 +272,10 @@ std::vector<Renderable> MSIS::Render()
         int div = 24;
         Scalar l1Deg, l2Deg;
         getRotationLimits(l1Deg, l2Deg);
-        GLfloat fovStep = fullRotation ? 2.f*M_PI/(GLfloat)div : glm::radians(l2Deg-l1Deg)/(GLfloat)div;
+        GLfloat fovStep = fullRotation_ ? 2.f*M_PI/(GLfloat)div : glm::radians(l2Deg-l1Deg)/(GLfloat)div;
         //Arcs min
-        GLfloat cosVAngle = cosf(glm::radians(fovV)/2.f) * range.x;
-        GLfloat sinVAngle = sinf(glm::radians(fovV)/2.f) * range.x;
+        GLfloat cosVAngle = cosf(glm::radians(fovV_)/2.f) * range_.x;
+        GLfloat sinVAngle = sinf(glm::radians(fovV_)/2.f) * range_.x;
         GLfloat hAngle = glm::radians(l1Deg);
         for(int i=0; i<=div; ++i)
         {
@@ -297,8 +297,8 @@ std::vector<Renderable> MSIS::Render()
             hAngle += fovStep;
         }
         //Arcs max
-        cosVAngle = cosf(glm::radians(fovV)/2.f) * range.y;
-        sinVAngle = sinf(glm::radians(fovV)/2.f) * range.y;
+        cosVAngle = cosf(glm::radians(fovV_)/2.f) * range_.y;
+        sinVAngle = sinf(glm::radians(fovV_)/2.f) * range_.y;
         hAngle = glm::radians(l1Deg);
         for(int i=0; i<=div; ++i)
         {
@@ -320,7 +320,7 @@ std::vector<Renderable> MSIS::Render()
             hAngle += fovStep;
         }
         //Current beam position
-        hAngle = currentStep * stepSize;
+        hAngle = currentStep_ * stepSize_;
         GLfloat zc = cosf(hAngle) * cosVAngle;
         GLfloat xc = sinf(hAngle) * cosVAngle;
         points->push_back(glm::vec3(0,0,0));
@@ -330,7 +330,7 @@ std::vector<Renderable> MSIS::Render()
         points->push_back(glm::vec3(xc, -sinVAngle, zc));
         points->push_back(glm::vec3(0,0,0));
         
-        if(!fullRotation)
+        if(!fullRotation_)
         {
             //Ends
             hAngle = glm::radians(l1Deg);

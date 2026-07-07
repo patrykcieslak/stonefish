@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 14/03/25.
-//  Copyright (c) 2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2025-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_SegmentationCamera__
@@ -99,11 +99,11 @@ namespace sf
     private:
         void InitGraphics(bool& seesParticles);
         
-        OpenGLSegmentationCamera* glCamera;
-        GLushort* segmentationData;
-        GLubyte* displayData;
-        glm::vec2 depthRange;
-        std::function<void(SegmentationCamera*)> newDataCallback;
+        OpenGLSegmentationCamera* glCamera_;
+        GLushort* segmentationData_;
+        GLubyte* displayData_;
+        glm::vec2 depthRange_;
+        std::function<void(SegmentationCamera*)> newDataCallback_;
     };
 }
 

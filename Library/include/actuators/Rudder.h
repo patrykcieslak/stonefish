@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Nils Bore on 29/01/2021.
-//  Copyright (c) 2021-2023 Nils Bore, Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2021-2026 Nils Bore, Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Rudder__
@@ -77,20 +77,20 @@ namespace sf
         
     private:
         //Params
-        Scalar dragCoeff;
-        Scalar liftCoeff;
-        Scalar area;
-        Scalar stallAngle;
-        Scalar maxAngle;
-        Scalar maxAngularRate;
-        SolidEntity* rudder;
-        bool inv;
+        Scalar dragCoeff_;
+        Scalar liftCoeff_;
+        Scalar area_;
+        Scalar stallAngle_;
+        Scalar maxAngle_;
+        Scalar maxAngularRate_;
+        SolidEntity* rudder_;
+        bool inv_;
         
         //States
-        Scalar theta;
-        Scalar setpoint;
-        Vector3 liftV;
-        Vector3 dragV;
+        Scalar theta_;
+        Scalar setpoint_;
+        Vector3 liftV_;
+        Vector3 dragV_;
     };
 }
 

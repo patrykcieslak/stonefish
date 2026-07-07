@@ -33,8 +33,8 @@ namespace sf
 
 Push::Push(std::string uniqueName, bool inverted) : LinkActuator(uniqueName)
 {
-    setpoint = Scalar(0);
-    inv = inverted;
+    setpoint_ = Scalar(0);
+    inv_ = inverted;
     setForceLimits(1, -1); // No limits
 }
 
@@ -45,47 +45,47 @@ ActuatorType Push::getType() const
 
 void Push::setForceLimits(Scalar lower, Scalar upper)
 {
-    limits.first = lower;
-    limits.second = upper;
+    limits_.first = lower;
+    limits_.second = upper;
 }
 
 void Push::setForce(Scalar f)
 {
-    if(limits.second > limits.first) // Limitted
-        setpoint = f < limits.first ? limits.first : (f > limits.second ? limits.second : f);
+    if(limits_.second > limits_.first) // Limitted
+        setpoint_ = f < limits_.first ? limits_.first : (f > limits_.second ? limits_.second : f);
     else
-        setpoint = f;
+        setpoint_ = f;
     ResetWatchdog();
 }
 
 Scalar Push::getForce() const
 {
-    return setpoint;
+    return setpoint_;
 }
 
 void Push::Update(Scalar dt)
 {    
     Actuator::Update(dt);
 
-    if(attach != nullptr)
+    if(attach_ != nullptr)
     {
         //Get transforms
-        Transform solidTrans = attach->getCGTransform();
-        Transform pushTrans = attach->getOTransform() * o2a;
+        Transform solidTrans = attach_->getCGTransform();
+        Transform pushTrans = attach_->getOTransform() * o2a_;
         
-        Scalar force = inv ? -setpoint : setpoint;
+        Scalar force = inv_ ? -setpoint_ : setpoint_;
         
         Vector3 forceV(force, 0, 0);
-        attach->ApplyCentralForce(pushTrans.getBasis() * forceV);
-        attach->ApplyTorque((pushTrans.getOrigin() - solidTrans.getOrigin()).cross(pushTrans.getBasis() * forceV));    
+        attach_->ApplyCentralForce(pushTrans.getBasis() * forceV);
+        attach_->ApplyTorque((pushTrans.getOrigin() - solidTrans.getOrigin()).cross(pushTrans.getBasis() * forceV));    
     }
 }
 
 std::vector<Renderable> Push::Render()
 {
     Transform pushTrans = Transform::getIdentity();
-    if(attach != nullptr)
-        pushTrans = attach->getOTransform() * o2a;
+    if(attach_ != nullptr)
+        pushTrans = attach_->getOTransform() * o2a_;
     else
         LinkActuator::Render();
     
@@ -97,7 +97,7 @@ std::vector<Renderable> Push::Render()
     item.data = std::make_shared<std::vector<glm::vec3>>();
     auto points = item.getDataAsPoints();
     points->push_back(glm::vec3(0,0,0));
-    points->push_back(glm::vec3(0.1f*(inv ? -setpoint : setpoint),0,0));
+    points->push_back(glm::vec3(0.1f*(inv_ ? -setpoint_ : setpoint_),0,0));
     items.push_back(item);
     
     return items;

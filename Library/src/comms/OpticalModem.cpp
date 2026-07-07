@@ -160,13 +160,13 @@ std::vector<uint8_t> OpticalModem::introduceErrors(
 OpticalModem::OpticalModem(std::string uniqueName, uint64_t deviceId, Scalar fovDeg, Scalar operatingRange, Scalar ambientLightSensitivity)
                                 : Comm(uniqueName, deviceId)
 {
-    maxRange = operatingRange <= Scalar(0) ? Scalar(100) : operatingRange;
+    maxRange_ = operatingRange <= Scalar(0) ? Scalar(100) : operatingRange;
     btClamp(fovDeg, Scalar(0), Scalar(360));
-    fov = btRadians(fovDeg);
-    ambientLightSens = btClamped(ambientLightSensitivity, Scalar(0), Scalar(1));
+    fov_ = btRadians(fovDeg);
+    ambientLightSens_ = btClamped(ambientLightSensitivity, Scalar(0), Scalar(1));
     
-    trueRange = maxRange;
-    receptionQuality = Scalar(1);
+    trueRange_ = maxRange_;
+    receptionQuality_ = Scalar(1);
 
     addNode(this);
 }
@@ -179,7 +179,7 @@ OpticalModem::~OpticalModem()
 bool OpticalModem::isReceptionPossible(Vector3 worldDir, Scalar distance)
 {
     // Check if modems are close enough
-    if(distance > trueRange) 
+    if(distance > trueRange_) 
     {
         return false;
     }
@@ -192,13 +192,13 @@ bool OpticalModem::isReceptionPossible(Vector3 worldDir, Scalar distance)
     {
         vAngle = btAtan2(d, dir.getZ());
     }
-    bool possible = btFabs(vAngle) < fov/Scalar(2);
+    bool possible = btFabs(vAngle) < fov_/Scalar(2);
     return possible;
 }
 
 Scalar OpticalModem::getReceptionQuality() const
 {
-    return receptionQuality;
+    return receptionQuality_;
 }
 
 CommType OpticalModem::getType() const
@@ -208,9 +208,9 @@ CommType OpticalModem::getType() const
 
 void OpticalModem::MessageReceived(std::shared_ptr<CommDataFrame> message)
 {
-    if(receptionQuality > Scalar(0))
+    if(receptionQuality_ > Scalar(0))
     {
-        message->data = introduceErrors(message->data, receptionQuality);
+        message->data = introduceErrors(message->data, receptionQuality_);
         Comm::MessageReceived(message);
     }
 }
@@ -220,7 +220,7 @@ void OpticalModem::InternalUpdate(Scalar dt)
     // Check if connected to something
     if(getConnectedId() <= 0) 
     {
-        receptionQuality = Scalar(0);
+        receptionQuality_ = Scalar(0);
         return;
     }
 
@@ -228,7 +228,7 @@ void OpticalModem::InternalUpdate(Scalar dt)
     OpticalModem* connectedNode = getNode(getConnectedId());
     if(connectedNode == nullptr)
     {
-        receptionQuality = Scalar(0);
+        receptionQuality_ = Scalar(0);
         return;
     }
 
@@ -265,11 +265,11 @@ void OpticalModem::InternalUpdate(Scalar dt)
     if (underwater)
     {
         Scalar turbidity = ocean->getWaterType(); // 0.0 (clear) to 1.0 (very turbid)
-        trueRange = maxRange * (Scalar(1) - turbidity);
+        trueRange_ = maxRange_ * (Scalar(1) - turbidity);
     }
     else 
     {
-        trueRange = maxRange;
+        trueRange_ = maxRange_;
     }
 
     // Check if devices see each other
@@ -290,12 +290,12 @@ void OpticalModem::InternalUpdate(Scalar dt)
             if(closest.hasHit())
             {
                 receptionPossible = false;
-                receptionQuality = Scalar(0);
+                receptionQuality_ = Scalar(0);
             }
             else
             {
                 // Exponentially decay the reception quality with distance
-                receptionQuality = Scalar(1) - btExp(-Scalar(10)*(trueRange - distance)/trueRange);
+                receptionQuality_ = Scalar(1) - btExp(-Scalar(10)*(trueRange_ - distance)/trueRange_);
             }
         }
     }
@@ -319,7 +319,7 @@ void OpticalModem::InternalUpdate(Scalar dt)
             };
             Scalar depthRX {ocean->GetDepth(posRX)};
             Scalar turbidity = ocean->getWaterType(); // 0.0 (clear) to 1.0 (very turbid)   
-            receptionQuality -= ambientLightSens * lightIntensity * directionalFactor * btExp(-turbidity * depthRX);
+            receptionQuality_ -= ambientLightSens_ * lightIntensity * directionalFactor * btExp(-turbidity * depthRX);
         }
         else
         {
@@ -329,20 +329,20 @@ void OpticalModem::InternalUpdate(Scalar dt)
                 + Scalar(1)) // Offset to (0,2) range
                 * Scalar(0.5) // Scale to (0,1) range
             };
-            receptionQuality -= ambientLightSens * lightIntensity;
+            receptionQuality_ -= ambientLightSens_ * lightIntensity;
         }
     }
     else
     {
-        receptionQuality = Scalar(0);
+        receptionQuality_ = Scalar(0);
     }
 
     // Send all messages from the TX buffer
-    for(size_t i=0; i<txBuffer.size(); ++i)
+    for(size_t i=0; i<txBuffer_.size(); ++i)
     {
-        connectedNode->MessageReceived(txBuffer[i]);
+        connectedNode->MessageReceived(txBuffer_[i]);
     }
-    txBuffer.clear();
+    txBuffer_.clear();
 }
 
 std::vector<Renderable> OpticalModem::Render()
@@ -359,7 +359,7 @@ std::vector<Renderable> OpticalModem::Render()
     GLfloat iconSize = 0.25f;
     unsigned int div = 24;
     
-    GLfloat r = iconSize * tanf((GLfloat)fov/2.f);    
+    GLfloat r = iconSize * tanf((GLfloat)fov_/2.f);    
     for(unsigned int i=0; i<div; ++i)
     {
         GLfloat angle1 = (GLfloat)i/(GLfloat)div * 2.f * M_PI;

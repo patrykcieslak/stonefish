@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 08/01/2019.
-//  Copyright (c) 2019-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_ServoMotor__
@@ -116,13 +116,13 @@ namespace sf
     private:
         void WatchdogTimeout() override;
 
-        ServoControlMode mode;
-        Scalar pSetpoint;
-        Scalar vSetpoint;
-        Scalar vLimit;
-        Scalar Kp;
-        Scalar Kv;
-        Scalar tauMax;
+        ServoControlMode mode_;
+        Scalar pSetpoint_;
+        Scalar vSetpoint_;
+        Scalar vLimit_;
+        Scalar Kp_;
+        Scalar Kv_;
+        Scalar tauMax_;
     };
 }
 

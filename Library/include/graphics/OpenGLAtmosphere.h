@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 22/07/2017.
-//  Copyright (c) 2017-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLAtmosphere__
@@ -167,35 +167,35 @@ namespace sf
     private:
         //Data
         void UpdateSkyEmissivity();
-        unsigned int nPrecomputedWavelengths;
-        unsigned int nScatteringOrders;
-        GLuint sunSkyUBO;
-        SunSkyUBO sunSkyUBOData;
+        unsigned int nPrecomputedWavelengths_;
+        unsigned int nScatteringOrders_;
+        GLuint sunSkyUBO_;
+        SunSkyUBO sunSkyUBOData_;
         
         //Shadows
         glm::mat4 BuildCropProjMatrix(ViewFrustum &f);
         void UpdateFrustumCorners(ViewFrustum &f, glm::vec3 center, glm::vec3 dir, glm::vec3 up);
         void UpdateSplitDist(GLfloat nd, GLfloat fd);
-        GLuint sunShadowmapArray;
-        GLuint sunDepthSampler;
-        GLuint sunShadowSampler;
-        GLuint sunShadowmapSplits;
-        GLuint sunShadowmapSize;
-        glm::vec3 sunDirection;
-        glm::mat4x4* sunShadowCPM;
-        glm::mat4x4 sunModelView;
-        ViewFrustum* sunShadowFrustum;
-        GLuint sunShadowFBO;
-		GLSLShader* sunShadowmapShader; //debug draw shadowmap
+        GLuint sunShadowmapArray_;
+        GLuint sunDepthSampler_;
+        GLuint sunShadowSampler_;
+        GLuint sunShadowmapSplits_;
+        GLuint sunShadowmapSize_;
+        glm::vec3 sunDirection_;
+        glm::mat4x4* sunShadowCPM_;
+        glm::mat4x4 sunModelView_;
+        ViewFrustum* sunShadowFrustum_;
+        GLuint sunShadowFBO_;
+		GLSLShader* sunShadowmapShader_; //debug draw shadowmap
         
         //Rendering
-        GLfloat sunAzimuth;
-        GLfloat sunElevation;
-        GLfloat airTemperature;
-        GLfloat airHumidity;
+        GLfloat sunAzimuth_;
+        GLfloat sunElevation_;
+        GLfloat airTemperature_;
+        GLfloat airHumidity_;
 
-        GLSLShader* skySunShaders[2];
-        GLuint textures[AtmosphereTextures::TEXTURE_COUNT];
+        GLSLShader* skySunShaders_[2];
+        GLuint textures_[AtmosphereTextures::TEXTURE_COUNT];
         static GLuint atmosphereAPI;
     };
 }

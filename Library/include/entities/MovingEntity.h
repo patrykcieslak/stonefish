@@ -136,20 +136,20 @@ namespace sf
         
     protected:
         //Body
-        btRigidBody* rigidBody;
-        Material mat;
+        btRigidBody* rigidBody_;
+        Material mat_;
 
         //Motion
-        Vector3 filteredLinearVel;
-        Vector3 filteredAngularVel;
-        Vector3 linearAcc;
-        Vector3 angularAcc;
+        Vector3 filteredLinearVel_;
+        Vector3 filteredAngularVel_;
+        Vector3 linearAcc_;
+        Vector3 angularAcc_;
         
         //Display
-        int lookId;
-        int graObjectId;
-        DisplayMode dm;
-        std::shared_ptr<OpenGLOceanParticles> particles;
+        int lookId_;
+        int graObjectId_;
+        DisplayMode dm_;
+        std::shared_ptr<OpenGLOceanParticles> particles_;
         
     private:
     };

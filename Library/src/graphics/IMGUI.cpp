@@ -40,103 +40,103 @@ namespace sf
 
 IMGUI::IMGUI(GLint windowWidth, GLint windowHeight, GLfloat hue)
 {
-    shaders = false;
-    mouseX = 0;
-    mouseY = 0;
-    mouseLeftDown = false;
-    mouseRightDown = false;
+    shaders_ = false;
+    mouseX_ = 0;
+    mouseY_ = 0;
+    mouseLeftDown_ = false;
+    mouseRightDown_ = false;
     clearActive();
-    guiVAO = 0;
-    translucentFBO = 0;
-    translucentTexture[0] = 0;
-    translucentTexture[1] = 0;
-    downsampleShader = NULL;
-    gaussianShader = NULL;
-    guiShader[0] = NULL;
-    guiShader[1] = NULL;
-    plainPrinter = NULL;
-    logoTexture = 0;
-    guiTexture = 0;
+    guiVAO_ = 0;
+    translucentFBO_ = 0;
+    translucentTexture_[0] = 0;
+    translucentTexture_[1] = 0;
+    downsampleShader_ = NULL;
+    gaussianShader_ = NULL;
+    guiShader_[0] = NULL;
+    guiShader_[1] = NULL;
+    plainPrinter_ = NULL;
+    logoTexture_ = 0;
+    guiTexture_ = 0;
     
     //Set interface colors
-    theme[PANEL_COLOR] = glm::vec4(0.98f, 0.98f, 0.98f, 1.f);
-    theme[ACTIVE_TEXT_COLOR] = glm::vec4(0.1f, 0.1f, 0.1f, 1.f);
-    theme[INACTIVE_TEXT_COLOR] = glm::vec4(0.7f, 0.7f, 0.7f, 0.5f);
-    theme[ACTIVE_CONTROL_COLOR] = glm::vec4(1.0f, 1.0f, 1.0f, 0.8f);
-    theme[INACTIVE_CONTROL_COLOR] = glm::vec4(0.9f, 0.9f, 0.9f, 0.5f);
-    theme[HOT_CONTROL_COLOR] = glm::vec4(Color::HSV(hue, 0.1f, 1.0f).rgb, 1.f);
-    theme[PUSHED_CONTROL_COLOR] = glm::vec4(Color::HSV(hue, 0.2f, 0.8f).rgb, 1.f);
-    theme[EMPTY_COLOR] = glm::vec4(0.6f, 0.6f, 0.6f, 0.9f);
-    theme[FILLED_COLOR] = glm::vec4(Color::HSV(hue, 1.f, 0.8f).rgb, 0.9f);
-    theme[PLOT_COLOR] = glm::vec4(0.3f, 0.3f, 0.3f, 1.0f);
-    theme[PLOT_TEXT_COLOR] = glm::vec4(0.9f, 0.9f, 0.9f, 0.9f);
+    theme_[PANEL_COLOR] = glm::vec4(0.98f, 0.98f, 0.98f, 1.f);
+    theme_[ACTIVE_TEXT_COLOR] = glm::vec4(0.1f, 0.1f, 0.1f, 1.f);
+    theme_[INACTIVE_TEXT_COLOR] = glm::vec4(0.7f, 0.7f, 0.7f, 0.5f);
+    theme_[ACTIVE_CONTROL_COLOR] = glm::vec4(1.0f, 1.0f, 1.0f, 0.8f);
+    theme_[INACTIVE_CONTROL_COLOR] = glm::vec4(0.9f, 0.9f, 0.9f, 0.5f);
+    theme_[HOT_CONTROL_COLOR] = glm::vec4(Color::HSV(hue, 0.1f, 1.0f).rgb, 1.f);
+    theme_[PUSHED_CONTROL_COLOR] = glm::vec4(Color::HSV(hue, 0.2f, 0.8f).rgb, 1.f);
+    theme_[EMPTY_COLOR] = glm::vec4(0.6f, 0.6f, 0.6f, 0.9f);
+    theme_[FILLED_COLOR] = glm::vec4(Color::HSV(hue, 1.f, 0.8f).rgb, 0.9f);
+    theme_[PLOT_COLOR] = glm::vec4(0.3f, 0.3f, 0.3f, 1.0f);
+    theme_[PLOT_TEXT_COLOR] = glm::vec4(0.9f, 0.9f, 0.9f, 0.9f);
     
     //Set size
     Resize(windowWidth, windowHeight);
     
     //Create printers
-    plainPrinter = new OpenGLPrinter(GetShaderPath() + std::string(STANDARD_FONT_NAME), STANDARD_FONT_SIZE);
-    backgroundMargin = 5.f;
+    plainPrinter_ = new OpenGLPrinter(GetShaderPath() + std::string(STANDARD_FONT_NAME), STANDARD_FONT_SIZE);
+    backgroundMargin_ = 5.f;
     
     //Load logo texture
-    logoTexture = OpenGLContent::LoadInternalTexture("logo_gray_64.png", false, true);
+    logoTexture_ = OpenGLContent::LoadInternalTexture("logo_gray_64.png", false, true);
     //Load corner texture
-    guiTexture = OpenGLContent::LoadInternalTexture("gui.png", false, true);
+    guiTexture_ = OpenGLContent::LoadInternalTexture("gui.png", false, true);
     
     //Generate VAO
-    glGenVertexArrays(1, &guiVAO);
-    OpenGLState::BindVertexArray(guiVAO);
+    glGenVertexArrays(1, &guiVAO_);
+    OpenGLState::BindVertexArray(guiVAO_);
     glEnableVertexAttribArray(0);
     OpenGLState::BindVertexArray(0);
     
     //Load translucent shaders
-    downsampleShader = new GLSLShader("downsample2x.frag");
-    downsampleShader->AddUniform("source", INT);
-    downsampleShader->AddUniform("srcViewport", VEC2);
-    gaussianShader = new GLSLShader("gaussianBlur.frag", "gaussianBlur.vert");
-    gaussianShader->AddUniform("source", INT);
-    gaussianShader->AddUniform("texelOffset", VEC2);
-    guiShader[0] = new GLSLShader("guiFlat.frag","guiFlat.vert");
-    guiShader[0]->AddUniform("color", VEC4);
-    guiShader[1] = new GLSLShader("guiTex.frag","guiTex.vert");
-    guiShader[1]->AddUniform("tex", INT);
-    guiShader[1]->AddUniform("backTex", INT);
-    guiShader[1]->AddUniform("color", VEC4);
+    downsampleShader_ = new GLSLShader("downsample2x.frag");
+    downsampleShader_->AddUniform("source", INT);
+    downsampleShader_->AddUniform("srcViewport", VEC2);
+    gaussianShader_ = new GLSLShader("gaussianBlur.frag", "gaussianBlur.vert");
+    gaussianShader_->AddUniform("source", INT);
+    gaussianShader_->AddUniform("texelOffset", VEC2);
+    guiShader_[0] = new GLSLShader("guiFlat.frag","guiFlat.vert");
+    guiShader_[0]->AddUniform("color", VEC4);
+    guiShader_[1] = new GLSLShader("guiTex.frag","guiTex.vert");
+    guiShader_[1]->AddUniform("tex", INT);
+    guiShader_[1]->AddUniform("backTex", INT);
+    guiShader_[1]->AddUniform("color", VEC4);
 }
 
 void IMGUI::Resize(GLint windowWidth, GLint windowHeight)
 {
-    windowW = windowWidth;
-    windowH = windowHeight;
+    windowW_ = windowWidth;
+    windowH_ = windowHeight;
     
     //Resize printing area
-    OpenGLPrinter::SetWindowSize(windowW, windowH);
+    OpenGLPrinter::SetWindowSize(windowW_, windowH_);
     
     //Destroy translucent background textures and framebuffers
-    if(translucentTexture[0] != 0) glDeleteTextures(2, translucentTexture);
-    if(translucentFBO != 0) glDeleteFramebuffers(1, &translucentFBO);
+    if(translucentTexture_[0] != 0) glDeleteTextures(2, translucentTexture_);
+    if(translucentFBO_ != 0) glDeleteFramebuffers(1, &translucentFBO_);
     
     //Create translucent background resources
-    glGenFramebuffers(1, &translucentFBO);
-    OpenGLState::BindFramebuffer(translucentFBO);
+    glGenFramebuffers(1, &translucentFBO_);
+    OpenGLState::BindFramebuffer(translucentFBO_);
     
-    glGenTextures(1, &translucentTexture[0]);
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, translucentTexture[0]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, windowW/4, windowH/4, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glGenTextures(1, &translucentTexture_[0]);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, translucentTexture_[0]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, windowW_/4, windowH_/4, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, translucentTexture[0], 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, translucentTexture_[0], 0);
     
-    glGenTextures(1, &translucentTexture[1]);
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, translucentTexture[1]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, windowW/4, windowH/4, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glGenTextures(1, &translucentTexture_[1]);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, translucentTexture_[1]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, windowW_/4, windowH_/4, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, translucentTexture[1], 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, translucentTexture_[1], 0);
     
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if(status != GL_FRAMEBUFFER_COMPLETE)
@@ -147,120 +147,120 @@ void IMGUI::Resize(GLint windowWidth, GLint windowHeight)
 
 IMGUI::~IMGUI()
 {
-    if(plainPrinter != NULL)
-        delete plainPrinter;
-    if(logoTexture > 0)
-        glDeleteTextures(1, &logoTexture);
-    if(guiTexture > 0) 
-        glDeleteTextures(1, &guiTexture);
-    if(downsampleShader != NULL)
-        delete downsampleShader;
-    if(gaussianShader != NULL)
-        delete gaussianShader;
-    if(guiShader[0] != NULL)
-        delete guiShader[0];
-    if(guiShader[1] != NULL)
-        delete guiShader[1];
-    if(translucentTexture[0] > 0)
-        glDeleteTextures(2, translucentTexture);
-    if(guiVAO > 0)
-        glDeleteVertexArrays(1, &guiVAO);
-    if(translucentFBO > 0)
-        glDeleteFramebuffers(1, &translucentFBO);
+    if(plainPrinter_ != NULL)
+        delete plainPrinter_;
+    if(logoTexture_ > 0)
+        glDeleteTextures(1, &logoTexture_);
+    if(guiTexture_ > 0) 
+        glDeleteTextures(1, &guiTexture_);
+    if(downsampleShader_ != NULL)
+        delete downsampleShader_;
+    if(gaussianShader_ != NULL)
+        delete gaussianShader_;
+    if(guiShader_[0] != NULL)
+        delete guiShader_[0];
+    if(guiShader_[1] != NULL)
+        delete guiShader_[1];
+    if(translucentTexture_[0] > 0)
+        glDeleteTextures(2, translucentTexture_);
+    if(guiVAO_ > 0)
+        glDeleteVertexArrays(1, &guiVAO_);
+    if(translucentFBO_ > 0)
+        glDeleteFramebuffers(1, &translucentFBO_);
 }
 
 Uid IMGUI::getHot()
 {
-    return hot;
+    return hot_;
 }
 
 Uid IMGUI::getActive()
 {
-    return active;
+    return active_;
 }
 
 void IMGUI::setHot(Uid newHot)
 {
-    hot = newHot;
+    hot_ = newHot;
 }
 
 void IMGUI::setActive(Uid newActive)
 {
-    active = newActive;
+    active_ = newActive;
 }
 
 bool IMGUI::isHot(Uid id)
 {
-    return (hot.owner == id.owner && hot.item == id.item && hot.index == id.index);
+    return (hot_.owner_ == id.owner_ && hot_.item_ == id.item_ && hot_.index_ == id.index_);
 }
 
 bool IMGUI::isActive(Uid id)
 {
-    return (active.owner == id.owner && active.item == id.item && active.index == id.index);
+    return (active_.owner_ == id.owner_ && active_.item_ == id.item_ && active_.index_ == id.index_);
 }
 
 bool IMGUI::isAnyActive()
 {
-    return (active.owner != -1);
+    return (active_.owner_ != -1);
 }
 
 void IMGUI::clearActive()
 {
-    active.owner = -1;
+    active_.owner_ = -1;
 }
 
 void IMGUI::clearHot()
 {
-    hot.owner = -1;
+    hot_.owner_ = -1;
 }
 
 int IMGUI::getMouseX()
 {
-    return mouseX;
+    return mouseX_;
 }
 
 int IMGUI::getMouseY()
 {
-    return mouseY;
+    return mouseY_;
 }
 
 int IMGUI::getWindowHeight()
 {
-    return windowH;
+    return windowH_;
 }
 
 int IMGUI::getWindowWidth()
 {
-    return windowW;
+    return windowW_;
 }
 
 GLuint IMGUI::getTranslucentTexture()
 {
-    return translucentTexture[0];
+    return translucentTexture_[0];
 }
 
 void IMGUI::GenerateBackground()
 {
-    OpenGLState::BindFramebuffer(translucentFBO);
-    OpenGLState::Viewport(0, 0, windowW/4, windowH/4);
+    OpenGLState::BindFramebuffer(translucentFBO_);
+    OpenGLState::Viewport(0, 0, windowW_/4, windowH_/4);
     OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getScreenTexture());
-    downsampleShader->Use();
-    downsampleShader->SetUniform("source", TEX_BASE);
-    downsampleShader->SetUniform("srcViewport", glm::vec2((GLfloat)windowW, (GLfloat)windowH));
+    downsampleShader_->Use();
+    downsampleShader_->SetUniform("source", TEX_BASE);
+    downsampleShader_->SetUniform("srcViewport", glm::vec2((GLfloat)windowW_, (GLfloat)windowH_));
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     
-    gaussianShader->Use();
-    gaussianShader->SetUniform("source", TEX_BASE);
+    gaussianShader_->Use();
+    gaussianShader_->SetUniform("source", TEX_BASE);
     for(int i=0; i<3; ++i)
     {
         glDrawBuffer(GL_COLOR_ATTACHMENT1);
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, translucentTexture[0]);
-        gaussianShader->SetUniform("texelOffset", glm::vec2(4.f/(GLfloat)windowW, 0.f));
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, translucentTexture_[0]);
+        gaussianShader_->SetUniform("texelOffset", glm::vec2(4.f/(GLfloat)windowW_, 0.f));
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
         
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, translucentTexture[1]);
-        gaussianShader->SetUniform("texelOffset", glm::vec2(0.f, 4.f/(GLfloat)windowH));
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, translucentTexture_[1]);
+        gaussianShader_->SetUniform("texelOffset", glm::vec2(0.f, 4.f/(GLfloat)windowH_));
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     }
     OpenGLState::UseProgram(0);
@@ -277,10 +277,10 @@ void IMGUI::Begin()
     OpenGLState::EnableBlend();
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
-    glScissor(0, 0, windowW, windowH);
-    OpenGLState::Viewport(0, 0, windowW, windowH);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetViewportSize(windowW, windowH);
-    OpenGLState::BindVertexArray(guiVAO);
+    glScissor(0, 0, windowW_, windowH_);
+    OpenGLState::Viewport(0, 0, windowW_, windowH_);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetViewportSize(windowW_, windowH_);
+    OpenGLState::BindVertexArray(guiVAO_);
 }
 
 void IMGUI::End()
@@ -290,7 +290,7 @@ void IMGUI::End()
     //draw logo on top
     GLfloat logoSize = 64.f;
     GLfloat logoMargin = 10.f;
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(windowW - logoSize - logoMargin, logoMargin, logoSize, logoSize, logoTexture, glm::vec4(1.f,1.f,1.f,0.2f));
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(windowW_ - logoSize - logoMargin, logoMargin, logoSize, logoSize, logoTexture_, glm::vec4(1.f,1.f,1.f,0.2f));
    
     OpenGLState::EnableDepthTest();
     OpenGLState::EnableCullFace();
@@ -299,58 +299,58 @@ void IMGUI::End()
 
 void IMGUI::DrawPlainText(GLfloat x, GLfloat y, glm::vec4 color, const std::string& text, GLfloat scale)
 {
-    plainPrinter->Print(text, color, x, windowH - y - STANDARD_FONT_BASELINE * scale, STANDARD_FONT_SIZE * scale);
+    plainPrinter_->Print(text, color, x, windowH_ - y - STANDARD_FONT_BASELINE * scale, STANDARD_FONT_SIZE * scale);
 }
 
 GLfloat IMGUI::PlainTextLength(const std::string& text)
 {
-    return plainPrinter->TextLength(text);
+    return plainPrinter_->TextLength(text);
 }
 
 glm::vec2 IMGUI::PlainTextDimensions(const std::string& text)
 {
-    return plainPrinter->TextDimensions(text);
+    return plainPrinter_->TextDimensions(text);
 }
 
 bool IMGUI::MouseInRect(int x, int y, int w, int h)
 {
-    return (mouseX >= x && mouseX <= (x+w) && mouseY >= y && mouseY <= (y+h));
+    return (mouseX_ >= x && mouseX_ <= (x+w) && mouseY_ >= y && mouseY_ <= (y+h));
 }
 
 bool IMGUI::MouseIsDown(bool leftButton)
 {
     if(leftButton)
-        return mouseLeftDown;
+        return mouseLeftDown_;
     else
-        return mouseRightDown;
+        return mouseRightDown_;
 }
 
 void IMGUI::MouseDown(int x, int y, bool leftButton)
 {
-    mouseX = x;
-    mouseY = y;
+    mouseX_ = x;
+    mouseY_ = y;
     
     if(leftButton)
-        mouseLeftDown = true;
+        mouseLeftDown_ = true;
     else
-        mouseRightDown = true;
+        mouseRightDown_ = true;
 }
 
 void IMGUI::MouseUp(int x, int y, bool leftButton)
 {
-    mouseX = x;
-    mouseY = y;
+    mouseX_ = x;
+    mouseY_ = y;
     
     if(leftButton)
-        mouseLeftDown = false;
+        mouseLeftDown_ = false;
     else
-        mouseRightDown = false;
+        mouseRightDown_ = false;
 }
 
 void IMGUI::MouseMove(int x, int y)
 {
-    mouseX = x;
-    mouseY = y;
+    mouseX_ = x;
+    mouseY_ = y;
 }
 
 void IMGUI::KeyDown(SDL_Keycode key)
@@ -363,12 +363,12 @@ void IMGUI::KeyUp(SDL_Keycode key)
 
 void IMGUI::DrawArrow(GLfloat x, GLfloat y, GLfloat h, bool up, glm::vec4 color)
 {
-    y = windowH - y;
+    y = windowH_ - y;
     
-    GLfloat hx = h/windowW * 2.f;
-    GLfloat hy = h/windowH * 2.f;
-    x = x/windowW * 2.f - 1.f;
-    y = y/windowH * 2.f - 1.f;
+    GLfloat hx = h/windowW_ * 2.f;
+    GLfloat hy = h/windowH_ * 2.f;
+    x = x/windowW_ * 2.f - 1.f;
+    y = y/windowH_ * 2.f - 1.f;
     
     GLfloat triData[3][2];
     if(up)
@@ -393,8 +393,8 @@ void IMGUI::DrawArrow(GLfloat x, GLfloat y, GLfloat h, bool up, glm::vec4 color)
     GLuint vbo;
     glGenBuffers(1, &vbo);
         
-    guiShader[0]->Use();
-    guiShader[0]->SetUniform("color", color);
+    guiShader_[0]->Use();
+    guiShader_[0]->SetUniform("color", color);
         
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(triData), triData, GL_STATIC_DRAW);
@@ -408,12 +408,12 @@ void IMGUI::DrawArrow(GLfloat x, GLfloat y, GLfloat h, bool up, glm::vec4 color)
 
 void IMGUI::DrawRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec4 color)
 {
-    y = windowH - y;
+    y = windowH_ - y;
     
-    w = w/windowW * 2.f;
-    h = h/windowH * 2.f;
-    x = x/windowW * 2.f - 1.f;
-    y = y/windowH * 2.f - 1.f;
+    w = w/windowW_ * 2.f;
+    h = h/windowH_ * 2.f;
+    x = x/windowW_ * 2.f - 1.f;
+    y = y/windowH_ * 2.f - 1.f;
     
     GLfloat rectData[4][2]= {{x,     y},
                              {x,   y-h},
@@ -423,8 +423,8 @@ void IMGUI::DrawRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec4 color
     GLuint vbo;
     glGenBuffers(1, &vbo);
         
-    guiShader[0]->Use();
-    guiShader[0]->SetUniform("color", color);
+    guiShader_[0]->Use();
+    guiShader_[0]->SetUniform("color", color);
         
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(rectData), rectData, GL_STATIC_DRAW);
@@ -440,13 +440,13 @@ void IMGUI::DrawRoundedRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec
 {
     w = w < 4.f*CORNER_RADIUS ? 4.f*CORNER_RADIUS : w;
     h = h < 4.f*CORNER_RADIUS ? 4.f*CORNER_RADIUS : h;
-    y = windowH - y;
+    y = windowH_ - y;
     
-    glm::vec2 cs(CORNER_RADIUS/windowW*2.f, CORNER_RADIUS/windowH*2.f);
-    w = w/windowW * 2.f;
-    h = h/windowH * 2.f;
-    x = x/windowW * 2.f - 1.f;
-    y = y/windowH * 2.f - 1.f;
+    glm::vec2 cs(CORNER_RADIUS/windowW_*2.f, CORNER_RADIUS/windowH_*2.f);
+    w = w/windowW_ * 2.f;
+    h = h/windowH_ * 2.f;
+    x = x/windowW_ * 2.f - 1.f;
+    y = y/windowH_ * 2.f - 1.f;
     
     GLfloat rectData[24][4]= {{x,             y, 0.f, 0.f},
                               {x,        y-cs.y, 0.f, 0.333f},
@@ -476,16 +476,16 @@ void IMGUI::DrawRoundedRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec
                               {x+w,           y-h, 1.f, 1.f}};
     
     //Get translucent texture
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, guiTexture);
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, guiTexture_);
     OpenGLState::BindTexture(TEX_GUI1, GL_TEXTURE_2D, getTranslucentTexture());
     
     GLuint vbo;
     glGenBuffers(1, &vbo);
         
-    guiShader[1]->Use();
-    guiShader[1]->SetUniform("tex", 0);
-    guiShader[1]->SetUniform("backTex", 1);
-    guiShader[1]->SetUniform("color", color);
+    guiShader_[1]->Use();
+    guiShader_[1]->SetUniform("tex", 0);
+    guiShader_[1]->SetUniform("backTex", 1);
+    guiShader_[1]->SetUniform("color", color);
     
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(rectData), rectData, GL_STATIC_DRAW);
@@ -501,13 +501,13 @@ void IMGUI::DrawRoundedRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec
 
 void IMGUI::DoPanel(GLfloat x, GLfloat y, GLfloat w, GLfloat h)
 {
-    DrawRoundedRect(x, y, w, h, theme[PANEL_COLOR]);
+    DrawRoundedRect(x, y, w, h, theme_[PANEL_COLOR]);
 }
 
 void IMGUI::DoLabel(GLfloat x, GLfloat y, const std::string& text, glm::vec4 color, GLfloat scale)
 {
     if(color.r < 0.f)
-        DrawPlainText(x, y, theme[ACTIVE_TEXT_COLOR], text, scale);
+        DrawPlainText(x, y, theme_[ACTIVE_TEXT_COLOR], text, scale);
     else
         DrawPlainText(x, y, color, text, scale);
 }
@@ -536,14 +536,14 @@ bool IMGUI::DoButton(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const s
     
     //drawing
     if(isActive(id))
-        DrawRoundedRect(x, y, w, h, theme[PUSHED_CONTROL_COLOR]);
+        DrawRoundedRect(x, y, w, h, theme_[PUSHED_CONTROL_COLOR]);
     else if(isHot(id))
-        DrawRoundedRect(x, y, w, h, theme[HOT_CONTROL_COLOR]);
+        DrawRoundedRect(x, y, w, h, theme_[HOT_CONTROL_COLOR]);
     else
-        DrawRoundedRect(x, y, w, h, theme[PANEL_COLOR]);
+        DrawRoundedRect(x, y, w, h, theme_[PANEL_COLOR]);
         
     glm::vec2 textDim = PlainTextDimensions(title);
-    DrawPlainText(x + floorf((w - textDim.x)/2.f), y + floorf((h - textDim.y)/2.f), theme[ACTIVE_TEXT_COLOR], title);
+    DrawPlainText(x + floorf((w - textDim.x)/2.f), y + floorf((h - textDim.y)/2.f), theme_[ACTIVE_TEXT_COLOR], title);
     
     return result;
 }
@@ -551,30 +551,30 @@ bool IMGUI::DoButton(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const s
 Scalar IMGUI::DoSlider(Uid id, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scalar max, Scalar value, const std::string& title, unsigned int decimalPlaces)
 {
     //Check and correct dimensions
-    w = w < 8*backgroundMargin ? 8.f*backgroundMargin : w;
+    w = w < 8*backgroundMargin_ ? 8.f*backgroundMargin_ : w;
     
-    GLfloat railW = w - 4.f*backgroundMargin;
+    GLfloat railW = w - 4.f*backgroundMargin_;
     GLfloat railH = 5.f;
     GLfloat sliderW = 5.f;
     GLfloat sliderH = 20.f;
-    GLfloat h = sliderH + 2.f * backgroundMargin + 5.f + STANDARD_FONT_SIZE;
+    GLfloat h = sliderH + 2.f * backgroundMargin_ + 5.f + STANDARD_FONT_SIZE;
     
     //Check mouse position
     Scalar result = value;
     GLfloat sliderPosition = (value-min)/(max-min);
     
-    if(MouseInRect(x + backgroundMargin*2.f + sliderPosition * railW - sliderW/2.f, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f, sliderW, sliderH))
+    if(MouseInRect(x + backgroundMargin_*2.f + sliderPosition * railW - sliderW/2.f, y + backgroundMargin_ + STANDARD_FONT_SIZE + 5.f, sliderW, sliderH))
         setHot(id);
     
     if(isActive(id))
     {
         GLfloat mouseX = getMouseX();
-        if(mouseX <= x + backgroundMargin*2.f)
+        if(mouseX <= x + backgroundMargin_*2.f)
             sliderPosition = 0;
-        else if(mouseX >= x + backgroundMargin*2.f + railW)
+        else if(mouseX >= x + backgroundMargin_*2.f + railW)
             sliderPosition = 1.f;
         else
-            sliderPosition = (mouseX - x - backgroundMargin*2.f)/railW;
+            sliderPosition = (mouseX - x - backgroundMargin_*2.f)/railW;
         
         result = min + sliderPosition * (max - min);
         
@@ -589,26 +589,26 @@ Scalar IMGUI::DoSlider(Uid id, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scal
     
     //Drawing
     //Background and text
-    DrawRoundedRect(x, y, w, h, theme[PANEL_COLOR]);
-    DrawPlainText(x + backgroundMargin, y + backgroundMargin, theme[ACTIVE_TEXT_COLOR], title);
+    DrawRoundedRect(x, y, w, h, theme_[PANEL_COLOR]);
+    DrawPlainText(x + backgroundMargin_, y + backgroundMargin_, theme_[ACTIVE_TEXT_COLOR], title);
     
     char buffer[16];
     std::string format = "%1." + std::to_string(decimalPlaces) + "lf";
     sprintf(buffer, format.c_str(), result);
     glm::vec2 textDim = PlainTextDimensions(buffer);
-    DrawPlainText(x + railW + 3.f*backgroundMargin - textDim.x, y + backgroundMargin, theme[ACTIVE_TEXT_COLOR], buffer);
+    DrawPlainText(x + railW + 3.f*backgroundMargin_ - textDim.x, y + backgroundMargin_, theme_[ACTIVE_TEXT_COLOR], buffer);
     
     //Bar
-    DrawRect(x+backgroundMargin*2.f, y+backgroundMargin+STANDARD_FONT_SIZE+5.f+sliderH/2.f-railH/2.f, sliderPosition * railW, railH, theme[FILLED_COLOR]);
-    DrawRect(x+backgroundMargin*2.f + sliderPosition * railW, y + backgroundMargin+STANDARD_FONT_SIZE+5.f+sliderH/2.f-railH/2.f, railW - sliderPosition*railW, railH, theme[EMPTY_COLOR]);
+    DrawRect(x+backgroundMargin_*2.f, y+backgroundMargin_+STANDARD_FONT_SIZE+5.f+sliderH/2.f-railH/2.f, sliderPosition * railW, railH, theme_[FILLED_COLOR]);
+    DrawRect(x+backgroundMargin_*2.f + sliderPosition * railW, y + backgroundMargin_+STANDARD_FONT_SIZE+5.f+sliderH/2.f-railH/2.f, railW - sliderPosition*railW, railH, theme_[EMPTY_COLOR]);
     
     //Slider
     if(isActive(id))
-        DrawRect(x+backgroundMargin*2.f + sliderPosition * railW - sliderW/2.f, y+backgroundMargin+STANDARD_FONT_SIZE+5.f, sliderW, sliderH, theme[PUSHED_CONTROL_COLOR]);
+        DrawRect(x+backgroundMargin_*2.f + sliderPosition * railW - sliderW/2.f, y+backgroundMargin_+STANDARD_FONT_SIZE+5.f, sliderW, sliderH, theme_[PUSHED_CONTROL_COLOR]);
     else if(isHot(id))
-        DrawRect(x+backgroundMargin*2.f + sliderPosition * railW - sliderW/2.f, y+backgroundMargin+STANDARD_FONT_SIZE+5.f, sliderW, sliderH, theme[HOT_CONTROL_COLOR]);
+        DrawRect(x+backgroundMargin_*2.f + sliderPosition * railW - sliderW/2.f, y+backgroundMargin_+STANDARD_FONT_SIZE+5.f, sliderW, sliderH, theme_[HOT_CONTROL_COLOR]);
     else
-        DrawRect(x+backgroundMargin*2.f + sliderPosition * railW - sliderW/2.f, y+backgroundMargin+STANDARD_FONT_SIZE+5.f, sliderW, sliderH, theme[ACTIVE_CONTROL_COLOR]);
+        DrawRect(x+backgroundMargin_*2.f + sliderPosition * railW - sliderW/2.f, y+backgroundMargin_+STANDARD_FONT_SIZE+5.f, sliderW, sliderH, theme_[ACTIVE_CONTROL_COLOR]);
     
     return result;
 }
@@ -616,36 +616,36 @@ Scalar IMGUI::DoSlider(Uid id, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scal
 void IMGUI::DoProgressBar(GLfloat x, GLfloat y, GLfloat w, Scalar progress, const std::string& title)
 {
     //Check and correct dimensions
-    w = w < 8*backgroundMargin ? 8.f*backgroundMargin : w;
-    GLfloat barW = w - 4.f*backgroundMargin;
+    w = w < 8*backgroundMargin_ ? 8.f*backgroundMargin_ : w;
+    GLfloat barW = w - 4.f*backgroundMargin_;
     GLfloat barH = 5.f;
-    GLfloat h =  barH + 2.f * backgroundMargin + 5.f + STANDARD_FONT_SIZE;
+    GLfloat h =  barH + 2.f * backgroundMargin_ + 5.f + STANDARD_FONT_SIZE;
     
     //Check and correct progress value
     progress = progress < Scalar(0.) ? Scalar(0.) : (progress > Scalar(1.) ? Scalar(1.) : progress);
     
     //Draw background and title
-    DrawRoundedRect(x, y, w, h, theme[PANEL_COLOR]);
-    DrawPlainText(x + backgroundMargin, y + backgroundMargin, theme[ACTIVE_TEXT_COLOR], title);
+    DrawRoundedRect(x, y, w, h, theme_[PANEL_COLOR]);
+    DrawPlainText(x + backgroundMargin_, y + backgroundMargin_, theme_[ACTIVE_TEXT_COLOR], title);
     
     char buffer[16];
     sprintf(buffer, "%1.1lf%%", progress * 100.0);
     GLfloat len = PlainTextLength(buffer);
-    DrawPlainText(x + 3.f*backgroundMargin + barW - len, y + backgroundMargin, theme[ACTIVE_TEXT_COLOR], buffer);
+    DrawPlainText(x + 3.f*backgroundMargin_ + barW - len, y + backgroundMargin_, theme_[ACTIVE_TEXT_COLOR], buffer);
     
     //Draw bar
-    DrawRect(x+backgroundMargin*2.f, y+backgroundMargin+STANDARD_FONT_SIZE+5.f-barH/2.f, progress * barW, barH, theme[FILLED_COLOR]);
-    DrawRect(x+backgroundMargin*2.f + progress * barW, y + backgroundMargin+STANDARD_FONT_SIZE+5.f-barH/2.f, barW - progress*barW, barH, theme[EMPTY_COLOR]);
+    DrawRect(x+backgroundMargin_*2.f, y+backgroundMargin_+STANDARD_FONT_SIZE+5.f-barH/2.f, progress * barW, barH, theme_[FILLED_COLOR]);
+    DrawRect(x+backgroundMargin_*2.f + progress * barW, y + backgroundMargin_+STANDARD_FONT_SIZE+5.f-barH/2.f, barW - progress*barW, barH, theme_[EMPTY_COLOR]);
 }
 
 bool IMGUI::DoCheckBox(Uid id, GLfloat x, GLfloat y, GLfloat w, bool value, const std::string& title)
 {
     bool result = value;
     GLfloat size = 14.f;
-    w = w < size + 2.f*backgroundMargin ? size + 2.f*backgroundMargin : w;
-    GLfloat h = size + 2.f * backgroundMargin;
+    w = w < size + 2.f*backgroundMargin_ ? size + 2.f*backgroundMargin_ : w;
+    GLfloat h = size + 2.f * backgroundMargin_;
     
-    if(MouseInRect(x + backgroundMargin, y + backgroundMargin, size, size))
+    if(MouseInRect(x + backgroundMargin_, y + backgroundMargin_, size, size))
         setHot(id);
     
     if(isActive(id))
@@ -666,18 +666,18 @@ bool IMGUI::DoCheckBox(Uid id, GLfloat x, GLfloat y, GLfloat w, bool value, cons
     
     //drawing
     glm::vec2 textDim = PlainTextDimensions(title);
-    DrawRoundedRect(x, y, w, h, theme[PANEL_COLOR]);
-    DrawPlainText(x + size + backgroundMargin + 5.f, y + backgroundMargin + size/2.f - textDim.y/2.f, theme[ACTIVE_TEXT_COLOR], title);
+    DrawRoundedRect(x, y, w, h, theme_[PANEL_COLOR]);
+    DrawPlainText(x + size + backgroundMargin_ + 5.f, y + backgroundMargin_ + size/2.f - textDim.y/2.f, theme_[ACTIVE_TEXT_COLOR], title);
     
     if(isActive(id))
-        DrawRect(x+backgroundMargin, y+backgroundMargin, size, size, theme[PUSHED_CONTROL_COLOR]);
+        DrawRect(x+backgroundMargin_, y+backgroundMargin_, size, size, theme_[PUSHED_CONTROL_COLOR]);
     else if(isHot(id))
-        DrawRect(x+backgroundMargin, y+backgroundMargin, size, size, theme[HOT_CONTROL_COLOR]);
+        DrawRect(x+backgroundMargin_, y+backgroundMargin_, size, size, theme_[HOT_CONTROL_COLOR]);
     else
-        DrawRect(x+backgroundMargin, y+backgroundMargin, size, size, theme[ACTIVE_CONTROL_COLOR]);
+        DrawRect(x+backgroundMargin_, y+backgroundMargin_, size, size, theme_[ACTIVE_CONTROL_COLOR]);
     
     if(result)
-        DrawRect(x+backgroundMargin + 0.2f*size, y+backgroundMargin+0.2f*size, 0.6*size, 0.6*size, theme[FILLED_COLOR]);
+        DrawRect(x+backgroundMargin_ + 0.2f*size, y+backgroundMargin_+0.2f*size, 0.6*size, 0.6*size, theme_[FILLED_COLOR]);
     
     return result;
 }
@@ -700,8 +700,8 @@ unsigned int IMGUI::DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const st
     
     GLfloat comboW = maxTextDim.x + 10.f;
     GLfloat comboH = maxTextDim.y + 10.f;
-    GLfloat minW = comboW + 2.f*backgroundMargin + 2.f*size + 5.f;
-    GLfloat h = comboH + 2.f * backgroundMargin + 5.f + STANDARD_FONT_SIZE;
+    GLfloat minW = comboW + 2.f*backgroundMargin_ + 2.f*size + 5.f;
+    GLfloat h = comboH + 2.f * backgroundMargin_ + 5.f + STANDARD_FONT_SIZE;
     
     if(w <= minW)
         w = minW;
@@ -709,43 +709,43 @@ unsigned int IMGUI::DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const st
         comboW = w - (minW - comboW);
     
     //Background and title
-    DrawRoundedRect(x, y, w, h, theme[PANEL_COLOR]);
-    DrawPlainText(x + backgroundMargin, y + backgroundMargin, theme[ACTIVE_TEXT_COLOR], title);
+    DrawRoundedRect(x, y, w, h, theme_[PANEL_COLOR]);
+    DrawPlainText(x + backgroundMargin_, y + backgroundMargin_, theme_[ACTIVE_TEXT_COLOR], title);
     
     //Combo box
     if(options.size() == 0)
     {
-        DrawRect(x + backgroundMargin, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f, comboW, comboH, theme[EMPTY_COLOR]);
+        DrawRect(x + backgroundMargin_, y + backgroundMargin_ + STANDARD_FONT_SIZE + 5.f, comboW, comboH, theme_[EMPTY_COLOR]);
     }
     else
     {
-        DrawRect(x + backgroundMargin, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f, comboW, comboH, theme[FILLED_COLOR]);
-        DrawPlainText(x + backgroundMargin + 5.f, y + backgroundMargin + STANDARD_FONT_SIZE + 10.f, theme[ACTIVE_TEXT_COLOR], options[value]);
+        DrawRect(x + backgroundMargin_, y + backgroundMargin_ + STANDARD_FONT_SIZE + 5.f, comboW, comboH, theme_[FILLED_COLOR]);
+        DrawPlainText(x + backgroundMargin_ + 5.f, y + backgroundMargin_ + STANDARD_FONT_SIZE + 10.f, theme_[ACTIVE_TEXT_COLOR], options[value]);
     }
     
     //Buttons
     if(options.size() <= 1)
     {
-        DrawArrow(x + backgroundMargin + comboW + 5.f + size/2.f, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, false, theme[INACTIVE_CONTROL_COLOR]);
-        DrawArrow(x + backgroundMargin + comboW + 5.f + size/2.f + size, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, true, theme[INACTIVE_CONTROL_COLOR]);
+        DrawArrow(x + backgroundMargin_ + comboW + 5.f + size/2.f, y + backgroundMargin_ + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, false, theme_[INACTIVE_CONTROL_COLOR]);
+        DrawArrow(x + backgroundMargin_ + comboW + 5.f + size/2.f + size, y + backgroundMargin_ + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, true, theme_[INACTIVE_CONTROL_COLOR]);
         return 0;
     }
     
-    if(MouseInRect(x + backgroundMargin + comboW + 5.f, y + backgroundMargin + STANDARD_FONT_SIZE + 10.f, size, size))
+    if(MouseInRect(x + backgroundMargin_ + comboW + 5.f, y + backgroundMargin_ + STANDARD_FONT_SIZE + 10.f, size, size))
     {
-        id.index = 0;
+        id.index_ = 0;
         setHot(id);
     }
-    else if(MouseInRect(x + backgroundMargin + comboW + 5.f + size, y + backgroundMargin + STANDARD_FONT_SIZE + 10.f, size, size))
+    else if(MouseInRect(x + backgroundMargin_ + comboW + 5.f + size, y + backgroundMargin_ + STANDARD_FONT_SIZE + 10.f, size, size))
     {
-        id.index = 1;
+        id.index_ = 1;
         setHot(id);
     }
     
     int change = 0;
     
     //Arrow down
-    id.index = 0;
+    id.index_ = 0;
     
     if(isActive(id))
     {
@@ -763,14 +763,14 @@ unsigned int IMGUI::DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const st
     }
     
     if(isActive(id))
-        DrawArrow(x + backgroundMargin + comboW + 5.f + size/2.f, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, false, theme[PUSHED_CONTROL_COLOR]);
+        DrawArrow(x + backgroundMargin_ + comboW + 5.f + size/2.f, y + backgroundMargin_ + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, false, theme_[PUSHED_CONTROL_COLOR]);
     else if(isHot(id))
-        DrawArrow(x + backgroundMargin + comboW + 5.f + size/2.f, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, false, theme[HOT_CONTROL_COLOR]);  
+        DrawArrow(x + backgroundMargin_ + comboW + 5.f + size/2.f, y + backgroundMargin_ + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, false, theme_[HOT_CONTROL_COLOR]);  
     else
-        DrawArrow(x + backgroundMargin + comboW + 5.f + size/2.f, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, false, theme[ACTIVE_CONTROL_COLOR]);
+        DrawArrow(x + backgroundMargin_ + comboW + 5.f + size/2.f, y + backgroundMargin_ + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, false, theme_[ACTIVE_CONTROL_COLOR]);
     
     //Arrow up
-    id.index = 1;
+    id.index_ = 1;
     
     if(isActive(id))
     {
@@ -788,11 +788,11 @@ unsigned int IMGUI::DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const st
     }
     
     if(isActive(id))
-        DrawArrow(x + backgroundMargin + comboW + 5.f + size/2.f + size, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, true, theme[PUSHED_CONTROL_COLOR]);
+        DrawArrow(x + backgroundMargin_ + comboW + 5.f + size/2.f + size, y + backgroundMargin_ + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, true, theme_[PUSHED_CONTROL_COLOR]);
     else if(isHot(id))
-        DrawArrow(x + backgroundMargin + comboW + 5.f + size/2.f + size, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, true, theme[HOT_CONTROL_COLOR]);  
+        DrawArrow(x + backgroundMargin_ + comboW + 5.f + size/2.f + size, y + backgroundMargin_ + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, true, theme_[HOT_CONTROL_COLOR]);  
     else
-        DrawArrow(x + backgroundMargin + comboW + 5.f + size/2.f + size, y + backgroundMargin + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, true, theme[ACTIVE_CONTROL_COLOR]);
+        DrawArrow(x + backgroundMargin_ + comboW + 5.f + size/2.f + size, y + backgroundMargin_ + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, true, theme_[ACTIVE_CONTROL_COLOR]);
     
     if(options.size() > 1)
     {
@@ -808,11 +808,11 @@ unsigned int IMGUI::DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const st
 bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sens, std::vector<unsigned short>& dims, const std::string& title, Scalar fixedRange[2])
 {
     bool result = false;
-    GLfloat pltW = w/windowW * 2.f;
-    GLfloat pltH = h/windowH * 2.f;
-    GLfloat pltX = x/windowW * 2.f - 1.f;
-    GLfloat pltY = (windowH-y)/windowH * 2.f - 1.f;
-    GLfloat pltMargin = 10.f/windowH*2.f; 
+    GLfloat pltW = w/windowW_ * 2.f;
+    GLfloat pltH = h/windowH_ * 2.f;
+    GLfloat pltX = x/windowW_ * 2.f - 1.f;
+    GLfloat pltY = (windowH_-y)/windowH_ * 2.f - 1.f;
+    GLfloat pltMargin = 10.f/windowH_*2.f; 
     
     if(MouseInRect(x, y, w, h))
         setHot(id);
@@ -833,7 +833,7 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
     }
     
     //Drawing
-    DrawRoundedRect(x, y, w, h, theme[PLOT_COLOR]);
+    DrawRoundedRect(x, y, w, h, theme_[PLOT_COLOR]);
     
     //data
     const std::vector<Sample>* data = sens->getHistory();
@@ -886,7 +886,7 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
             if(dims.size() > 1)
                 color = glm::vec4(Color::HSV(n/(GLfloat)(dims.size()-1)*0.5, 1.f, 1.f).rgb, 1.f);
             else
-                color = theme[FILLED_COLOR];
+                color = theme_[FILLED_COLOR];
             
             //draw graph
             std::vector<glm::vec2> points;
@@ -899,8 +899,8 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
             GLuint vbo;
             glGenBuffers(1, &vbo);
         
-            guiShader[0]->Use();
-            guiShader[0]->SetUniform("color", color);
+            guiShader_[0]->Use();
+            guiShader_[0]->SetUniform("color", color);
         
             glBindBuffer(GL_ARRAY_BUFFER, vbo);
             glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*points.size(), &points[0].x, GL_STATIC_DRAW);
@@ -925,8 +925,8 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
             GLuint vbo;
             glGenBuffers(1, &vbo);
         
-            guiShader[0]->Use();
-            guiShader[0]->SetUniform("color", theme[PLOT_TEXT_COLOR]);
+            guiShader_[0]->Use();
+            guiShader_[0]->SetUniform("color", theme_[PLOT_TEXT_COLOR]);
         
             glBindBuffer(GL_ARRAY_BUFFER, vbo);
             glBufferData(GL_ARRAY_BUFFER, sizeof(axisData), axisData, GL_STATIC_DRAW);
@@ -942,7 +942,7 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
         //Check if mouse cursor above legend item and display signal info
         if(MouseInRect(x - 10.f, y + 5.f, 10.f, dims.size() * 10.f)) //mouse above legend
         {
-            long selectedDim = (long)floorf((mouseY - y - 5.f)/10.f);
+            long selectedDim = (long)floorf((mouseY_ - y - 5.f)/10.f);
             if(selectedDim < 0)
                 selectedDim = 0;
             if(selectedDim > (int)dims.size()-1)
@@ -950,7 +950,7 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
             
             char buffer[64];
             sprintf(buffer, "%1.6f", sens->getLastSample().getValue(dims[selectedDim]));
-            DrawPlainText(x + backgroundMargin, y + backgroundMargin, theme[PLOT_TEXT_COLOR], buffer);
+            DrawPlainText(x + backgroundMargin_, y + backgroundMargin_, theme_[PLOT_TEXT_COLOR], buffer);
         }
     }
     
@@ -958,7 +958,7 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
         
     //title
     glm::vec2 titleDim = PlainTextDimensions(title);
-    DrawPlainText(x + floorf((w - titleDim.x) / 2.f), y + backgroundMargin, theme[PLOT_TEXT_COLOR], title);
+    DrawPlainText(x + floorf((w - titleDim.x) / 2.f), y + backgroundMargin_, theme_[PLOT_TEXT_COLOR], title);
     
     return result;
 }
@@ -1030,13 +1030,13 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, std::
     }
     
     //Drawing
-    GLfloat pltW = w/windowW * 2.f;
-    GLfloat pltH = h/windowH * 2.f;
-    GLfloat pltX = x/windowW * 2.f - 1.f;
-    GLfloat pltY = (windowH-y)/windowH * 2.f - 1.f;
-    GLfloat pltMargin = 10.f/windowH*2.f; 
+    GLfloat pltW = w/windowW_ * 2.f;
+    GLfloat pltH = h/windowH_ * 2.f;
+    GLfloat pltX = x/windowW_ * 2.f - 1.f;
+    GLfloat pltY = (windowH_-y)/windowH_ * 2.f - 1.f;
+    GLfloat pltMargin = 10.f/windowH_*2.f; 
     
-    DrawRoundedRect(x, y, w, h, theme[PLOT_COLOR]);
+    DrawRoundedRect(x, y, w, h, theme_[PLOT_COLOR]);
     GLfloat dy = (pltH-2.f*pltMargin)/(maxValue-minValue);
     GLfloat dt = pltW/(GLfloat)(data[0].size()-1); //Autostretch
 
@@ -1053,8 +1053,8 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, std::
         GLuint vbo;
         glGenBuffers(1, &vbo);
     
-        guiShader[0]->Use();
-        guiShader[0]->SetUniform("color", color);
+        guiShader_[0]->Use();
+        guiShader_[0]->SetUniform("color", color);
     
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*points.size(), &points[0].x, GL_STATIC_DRAW);
@@ -1079,8 +1079,8 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, std::
         GLuint vbo;
         glGenBuffers(1, &vbo);
     
-        guiShader[0]->Use();
-        guiShader[0]->SetUniform("color", theme[PLOT_TEXT_COLOR]);
+        guiShader_[0]->Use();
+        guiShader_[0]->SetUniform("color", theme_[PLOT_TEXT_COLOR]);
     
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(axisData), axisData, GL_STATIC_DRAW);
@@ -1096,7 +1096,7 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, std::
     //Check if mouse cursor above legend item and display signal info
     if(MouseInRect(x - 10.f, y + 5.f, 10.f, data.size() * 10.f)) //mouse above legend
     {
-        long selectedDim = (long)floorf((mouseY - y - 5.f)/10.f);
+        long selectedDim = (long)floorf((mouseY_ - y - 5.f)/10.f);
         if(selectedDim < 0)
             selectedDim = 0;
         if(selectedDim > (int)data.size()-1)
@@ -1104,12 +1104,12 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, std::
         
         char buffer[64];
         sprintf(buffer, "%1.6f", data[selectedDim].back());
-        DrawPlainText(x + backgroundMargin, y + backgroundMargin, theme[PLOT_TEXT_COLOR], buffer);
+        DrawPlainText(x + backgroundMargin_, y + backgroundMargin_, theme_[PLOT_TEXT_COLOR], buffer);
     }
         
     //Title
     glm::vec2 titleDim = PlainTextDimensions(title);
-    DrawPlainText(x + floorf((w - titleDim.x) / 2.f), y + backgroundMargin, theme[PLOT_TEXT_COLOR], title);
+    DrawPlainText(x + floorf((w - titleDim.x) / 2.f), y + backgroundMargin_, theme_[PLOT_TEXT_COLOR], title);
     
     return result;
 }
@@ -1117,10 +1117,10 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, std::
 bool IMGUI::DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sensX, unsigned short dimX, ScalarSensor* sensY, unsigned short dimY, const std::string& title)
 {
     bool result = false;
-    GLfloat pltW = w/windowW * 2.f;
-    GLfloat pltH = h/windowH * 2.f;
-    GLfloat pltX = x/windowW * 2.f - 1.f;
-    GLfloat pltY = (windowH-y)/windowH * 2.f - 1.f;
+    GLfloat pltW = w/windowW_ * 2.f;
+    GLfloat pltH = h/windowH_ * 2.f;
+    GLfloat pltX = x/windowW_ * 2.f - 1.f;
+    GLfloat pltY = (windowH_-y)/windowH_ * 2.f - 1.f;
     
     if(MouseInRect(x, y, w, h))
         setHot(id);
@@ -1142,7 +1142,7 @@ bool IMGUI::DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarS
     
     //drawing
     //background
-    DrawRoundedRect(x, y, w, h, theme[PLOT_COLOR]);
+    DrawRoundedRect(x, y, w, h, theme_[PLOT_COLOR]);
     
     //data
     const std::vector<Sample>* dataX = sensX->getHistory();
@@ -1210,8 +1210,8 @@ bool IMGUI::DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarS
         GLuint vbo;
         glGenBuffers(1, &vbo);
         
-        guiShader[0]->Use();
-        guiShader[0]->SetUniform("color", theme[FILLED_COLOR]);
+        guiShader_[0]->Use();
+        guiShader_[0]->SetUniform("color", theme_[FILLED_COLOR]);
         
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*points.size(), &points[0].x, GL_STATIC_DRAW);
@@ -1243,8 +1243,8 @@ bool IMGUI::DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarS
             GLuint vbo;
             glGenBuffers(1, &vbo);
         
-            guiShader[0]->Use();
-            guiShader[0]->SetUniform("color", theme[PLOT_TEXT_COLOR]);
+            guiShader_[0]->Use();
+            guiShader_[0]->SetUniform("color", theme_[PLOT_TEXT_COLOR]);
         
             glBindBuffer(GL_ARRAY_BUFFER, vbo);
             glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2)*axes.size(), &axes[0].x, GL_STATIC_DRAW);
@@ -1263,7 +1263,7 @@ bool IMGUI::DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarS
     
     //title
     glm::vec2 titleDim = PlainTextDimensions(title);
-    DrawPlainText(x + floorf((w - titleDim.x) / 2.f), y + backgroundMargin, theme[PLOT_TEXT_COLOR], title);
+    DrawPlainText(x + floorf((w - titleDim.x) / 2.f), y + backgroundMargin_, theme_[PLOT_TEXT_COLOR], title);
     
     return result;
 }

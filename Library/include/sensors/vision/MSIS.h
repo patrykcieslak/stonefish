@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/07/20.
-//  Copyright (c) 2020-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_MSIS__
@@ -175,21 +175,21 @@ namespace sf
     private:
         void InitGraphics(bool& seesParticles);
         
-        OpenGLMSIS* glMSIS;
-        void* sonarData;
-        GLubyte* displayData;
-        int currentStep;
-        bool cw;
-        glm::ivec2 roi;
-        bool fullRotation;
-        glm::vec2 range;
-        glm::vec2 noise;
-        Scalar gain;
-        Scalar fovV;
-        Scalar stepSize;
-        ColorMap cMap;
+        OpenGLMSIS* glMSIS_;
+        void* sonarData_;
+        GLubyte* displayData_;
+        int currentStep_;
+        bool cw_;
+        glm::ivec2 roi_;
+        bool fullRotation_;
+        glm::vec2 range_;
+        glm::vec2 noise_;
+        Scalar gain_;
+        Scalar fovV_;
+        Scalar stepSize_;
+        ColorMap cMap_;
         SonarOutputFormat outputFormat_;
-        std::function<void(MSIS*)> newDataCallback;
+        std::function<void(MSIS*)> newDataCallback_;
     };
 }
 

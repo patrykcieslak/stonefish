@@ -33,7 +33,7 @@ namespace sf
 
 Motor::Motor(std::string uniqueName) : JointActuator(uniqueName)
 {
-    torque = Scalar(0);
+    torque_ = Scalar(0);
     setTorqueLimits(1, -1); // No limits
 }
 
@@ -44,36 +44,36 @@ ActuatorType Motor::getType() const
 
 void Motor::setTorqueLimits(Scalar lower, Scalar upper)
 {
-    limits.first = lower;
-    limits.second = upper;
+    limits_.first = lower;
+    limits_.second = upper;
 }
 
 void Motor::setCommand(Scalar tau)
 {
-    torque = tau;
-    if(limits.second > limits.first) // Limitted
-        torque = tau < limits.first ? limits.first : (tau > limits.second ? limits.second : tau);
+    torque_ = tau;
+    if(limits_.second > limits_.first) // Limitted
+        torque_ = tau < limits_.first ? limits_.first : (tau > limits_.second ? limits_.second : tau);
     else
-        torque = tau;
+        torque_ = tau;
     ResetWatchdog();
 }
 
 Scalar Motor::getTorque() const
 {
-    return torque;
+    return torque_;
 }
 
 Scalar Motor::getAngle() const
 {
-    if(j != nullptr && j->getType() == JointType::REVOLUTE)
+    if(j_ != nullptr && j_->getType() == JointType::REVOLUTE)
     {
-        return ((RevoluteJoint*)j)->getAngle();
+        return ((RevoluteJoint*)j_)->getAngle();
     }
-    else if(fe != nullptr)
+    else if(fe_ != nullptr)
     {
         Scalar angle;
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
-        fe->getJointPosition(jId, angle, jt);
+        fe_->getJointPosition(jId_, angle, jt);
         
         if(jt == btMultibodyLink::eRevolute)
             return angle;
@@ -86,15 +86,15 @@ Scalar Motor::getAngle() const
 
 Scalar Motor::getAngularVelocity() const
 {
-    if(j != nullptr && j->getType() == JointType::REVOLUTE)
+    if(j_ != nullptr && j_->getType() == JointType::REVOLUTE)
     {
-        return ((RevoluteJoint*)j)->getAngularVelocity();
+        return ((RevoluteJoint*)j_)->getAngularVelocity();
     }
-    else if(fe != nullptr)
+    else if(fe_ != nullptr)
     {
         Scalar angularV;
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
-        fe->getJointVelocity(jId, angularV, jt);
+        fe_->getJointVelocity(jId_, angularV, jt);
         
         if(jt == btMultibodyLink::eRevolute)
             return angularV;
@@ -109,10 +109,10 @@ void Motor::Update(Scalar dt)
 {
     Actuator::Update(dt);
 
-    if(j != nullptr && j->getType() == JointType::REVOLUTE)
-        ((RevoluteJoint*)j)->ApplyTorque(torque);
-    else if(fe != nullptr)
-        fe->DriveJoint(jId, torque);
+    if(j_ != nullptr && j_->getType() == JointType::REVOLUTE)
+        ((RevoluteJoint*)j_)->ApplyTorque(torque_);
+    else if(fe_ != nullptr)
+        fe_->DriveJoint(jId_, torque_);
 }
 
 void Motor::WatchdogTimeout()

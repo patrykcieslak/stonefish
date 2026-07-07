@@ -40,35 +40,35 @@ Polyhedron::Polyhedron(std::string uniqueName, PhysicsSettings phy,
                         : SolidEntity(uniqueName, phy, material, look, thickness)
 {
     //1.Load geometry from file
-    graMesh = OpenGLContent::LoadMesh(graphicsFilename, graphicsScale, false);
-    T_O2G = graphicsOrigin;
+    graMesh_ = OpenGLContent::LoadMesh(graphicsFilename, graphicsScale, false);
+    T_O2G_ = graphicsOrigin;
     
     if(physicsFilename != "")
     {
-        phyMesh = OpenGLContent::LoadMesh(physicsFilename, physicsScale, false);
-        T_O2C = physicsOrigin;
+        phyMesh_ = OpenGLContent::LoadMesh(physicsFilename, physicsScale, false);
+        T_O2C_ = physicsOrigin;
     }
     else
     {
-        phyMesh = graMesh;
-        T_O2C = T_O2G;
+        phyMesh_ = graMesh_;
+        T_O2C_ = T_O2G_;
     }
     
-    OpenGLContent::Refine(phyMesh, 3.f);
+    OpenGLContent::Refine(phyMesh_, 3.f);
     
     //2. Compute physical properties
     Vector3 CG;
     Matrix3 Irot;
-    ComputePhysicalProperties(phyMesh, thickness, mat.density, mass, CG, volume, surface, Ipri, Irot);
-    T_CG2C.setOrigin(-CG); //Set CG position
-    T_CG2C = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C; //Align CG frame to principal axes of inertia
-    T_CG2O = T_CG2C * T_O2C.inverse();
-    T_CG2G = T_CG2O * T_O2G;
+    ComputePhysicalProperties(phyMesh_, thickness, mat_.density, mass_, CG, volume_, surface_, Ipri_, Irot);
+    T_CG2C_.setOrigin(-CG); //Set CG position
+    T_CG2C_ = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C_; //Align CG frame to principal axes of inertia
+    T_CG2O_ = T_CG2C_ * T_O2C_.inverse();
+    T_CG2G_ = T_CG2O_ * T_O2G_;
 
     //3.Calculate equivalent ellipsoid for hydrodynamic force computation
     ComputeFluidDynamicsApprox(approx);
-    T_O2H = T_CG2O.inverse() * T_CG2H;
-    P_CB = Vector3(0,0,0);
+    T_O2H_ = T_CG2O_.inverse() * T_CG2H_;
+    P_CB_ = Vector3(0,0,0);
 }
     
 Polyhedron::Polyhedron(std::string uniqueName, PhysicsSettings phy, 
@@ -80,8 +80,8 @@ Polyhedron::Polyhedron(std::string uniqueName, PhysicsSettings phy,
 
 Polyhedron::~Polyhedron()
 {
-    if(graMesh != nullptr && graMesh != phyMesh)
-        delete graMesh;
+    if(graMesh_ != nullptr && graMesh_ != phyMesh_)
+        delete graMesh_;
 }
     
 SolidType Polyhedron::getSolidType()
@@ -92,9 +92,9 @@ SolidType Polyhedron::getSolidType()
 btCollisionShape* Polyhedron::BuildCollisionShape()
 {
     btConvexHullShape* convex = new btConvexHullShape();
-    for(size_t i=0; i<phyMesh->getNumOfVertices(); ++i)
+    for(size_t i=0; i<phyMesh_->getNumOfVertices(); ++i)
     {
-        glm::vec3 pos = phyMesh->getVertexPos(i);
+        glm::vec3 pos = phyMesh_->getVertexPos(i);
         Vector3 v(pos.x, pos.y, pos.z);
         convex->addPoint(v);
     }
@@ -105,11 +105,11 @@ btCollisionShape* Polyhedron::BuildCollisionShape()
 
 void Polyhedron::BuildGraphicalObject()
 {
-    if(graMesh == NULL || !SimulationApp::getApp()->hasGraphics())
+    if(graMesh_ == NULL || !SimulationApp::getApp()->hasGraphics())
         return;
     
-    graObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(graMesh);
-    phyObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh);
+    graObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(graMesh_);
+    phyObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh_);
 }
 
 }

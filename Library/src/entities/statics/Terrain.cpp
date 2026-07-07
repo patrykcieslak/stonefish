@@ -62,21 +62,21 @@ Terrain::Terrain(std::string uniqueName, std::string pathToHeightmap, Scalar sca
     }
     
     //Calculate max height
-    maxHeight = Scalar(0);
-    heightfield = new Scalar[w*h];
+    maxHeight_ = Scalar(0);
+    heightfield_ = new Scalar[w*h];
     for(int i=0; i<h; ++i)
         for(int j=0; j<w; ++j)
         {
-            heightfield[i*w+j] = Scalar(heightmap[i*w+j]);
-            maxHeight = heightfield[i*w+j] > maxHeight ? heightfield[i*w+j] : maxHeight;
+            heightfield_[i*w+j] = Scalar(heightmap[i*w+j]);
+            maxHeight_ = heightfield_[i*w+j] > maxHeight_ ? heightfield_[i*w+j] : maxHeight_;
         }
 
     //Generate graphical mesh
-    phyMesh = OpenGLContent::BuildTerrain(heightmap, w, h, scaleX, scaleY, (GLfloat)maxHeight, uvScale);
+    phyMesh_ = OpenGLContent::BuildTerrain(heightmap, w, h, scaleX, scaleY, (GLfloat)maxHeight_, uvScale);
     delete [] heightmap;
 
     //Generate collision mesh
-    btHeightfieldTerrainShape* shape = new btHeightfieldTerrainShape(w, h, heightfield, Scalar(1), Scalar(0), maxHeight, 2, PHY_FLOAT, false);
+    btHeightfieldTerrainShape* shape = new btHeightfieldTerrainShape(w, h, heightfield_, Scalar(1), Scalar(0), maxHeight_, 2, PHY_FLOAT, false);
     shape->setLocalScaling(Vector3(scaleX, scaleY, 1.0));
     shape->setUseDiamondSubdivision(true);
     shape->setMargin(0);
@@ -85,7 +85,7 @@ Terrain::Terrain(std::string uniqueName, std::string pathToHeightmap, Scalar sca
 
 Terrain::~Terrain()
 {
-    delete [] heightfield;
+    delete [] heightfield_;
 }
 
 StaticEntityType Terrain::getStaticType()
@@ -102,11 +102,11 @@ void Terrain::getAABB(Vector3 &min, Vector3 &max)
 
 void Terrain::AddToSimulation(SimulationManager* sm, const Transform& origin)
 {
-    if(rigidBody != NULL)
+    if(rigidBody_ != NULL)
     {
-        btDefaultMotionState* motionState = new btDefaultMotionState(origin*Transform(IQ(), Vector3(0,0,-maxHeight/Scalar(2))));
-        rigidBody->setMotionState(motionState);
-        sm->getDynamicsWorld()->addRigidBody(rigidBody, MASK_STATIC, MASK_DYNAMIC);
+        btDefaultMotionState* motionState = new btDefaultMotionState(origin*Transform(IQ(), Vector3(0,0,-maxHeight_/Scalar(2))));
+        rigidBody_->setMotionState(motionState);
+        sm->getDynamicsWorld()->addRigidBody(rigidBody_, MASK_STATIC, MASK_DYNAMIC);
     }
 }
 

@@ -229,20 +229,20 @@ namespace sf
         virtual void InitializeSimulation();
         float sqr(float x);
         
-        std::map<OpenGLView*, std::shared_ptr<OpenGLOceanParticles>> oceanParticles;
-        glm::vec3 absorption[64];
-        glm::vec3 scattering[64];
-        OceanCurrentsUBO oceanCurrentsUBOData;
-        GLfloat oceanSize;
-        OceanParams params;
-        glm::vec3 lightAbsorption;
-        glm::vec3 lightScattering;
-        GLfloat waterTemperature;
+        std::map<OpenGLView*, std::shared_ptr<OpenGLOceanParticles>> oceanParticles_;
+        glm::vec3 absorption_[64];
+        glm::vec3 scattering_[64];
+        OceanCurrentsUBO oceanCurrentsUBOData_;
+        GLfloat oceanSize_;
+        OceanParams params_;
+        glm::vec3 lightAbsorption_;
+        glm::vec3 lightScattering_;
+        GLfloat waterTemperature_;
 
-        std::map<std::string, GLSLShader*> oceanShaders;
-        GLuint oceanFBOs[3];
-        GLuint oceanTextures[6];
-        GLuint oceanCurrentsUBO;
+        std::map<std::string, GLSLShader*> oceanShaders_;
+        GLuint oceanFBOs_[3];
+        GLuint oceanTextures_[6];
+        GLuint oceanCurrentsUBO_;
         
     private:
         GLfloat* ComputeButterflyLookupTable(unsigned int size, unsigned int passes);
@@ -255,8 +255,8 @@ namespace sf
         float spectrum(float kx, float ky, bool omnispectrum = false);
         float omega(float k);
 
-        int oceanBoxObj;
-        bool particlesEnabled;
+        int oceanBoxObj_;
+        bool particlesEnabled_;
     };
 }
 

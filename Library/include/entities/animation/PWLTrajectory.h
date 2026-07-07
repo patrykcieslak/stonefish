@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/10/20.
-//  Copyright(c) 2020-2023 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_PWLTrajectory__
@@ -67,8 +67,8 @@ namespace sf
         std::vector<Renderable> Render();
 
     protected:
-        std::vector<KeyPoint> points;
-        std::vector<Renderable> vis;
+        std::vector<KeyPoint> points_;
+        std::vector<Renderable> vis_;
     };
 }
 

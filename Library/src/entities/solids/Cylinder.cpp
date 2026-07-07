@@ -33,41 +33,41 @@ namespace sf
 Cylinder::Cylinder(std::string uniqueName, PhysicsSettings phy, Scalar radius, Scalar height, const Transform& origin, std::string material, std::string look, Scalar thickness)
     : SolidEntity(uniqueName, phy, material, look, thickness)
 {
-    r = radius;
-    halfHeight = height/Scalar(2);
-    T_O2G = T_O2C = T_O2H = origin;
-    T_CG2O = origin.inverse();
-    T_CG2C = T_CG2G = I4();
-    P_CB = Vector3(0,0,0);
+    r_ = radius;
+    halfHeight_ = height/Scalar(2);
+    T_O2G_ = T_O2C_ = T_O2H_ = origin;
+    T_CG2O_ = origin.inverse();
+    T_CG2C_ = T_CG2G_ = I4();
+    P_CB_ = Vector3(0,0,0);
     
     //Calculate physical properties
-    if(thick > Scalar(0) && thick/Scalar(2) < r && thick/Scalar(2) < halfHeight)
+    if(thick_ > Scalar(0) && thick_/Scalar(2) < r_ && thick_/Scalar(2) < halfHeight_)
     {
-        Scalar r1 = r - thick/Scalar(2);
-        Scalar r2 = r + thick/Scalar(2);
-        Scalar h1 = halfHeight - thick/Scalar(2);
-        Scalar h2 = halfHeight + thick/Scalar(2);
-        volume = M_PI*(r2*r2*h2 - r1*r1*h1)*Scalar(2);
-        surface = (Scalar(2)*M_PI*r2*h2 + M_PI*r2*r2)*Scalar(2);
-        mass = volume * mat.density;
-        Scalar m1 = M_PI*(r1*r1*h1)*Scalar(2)*mat.density;
-        Scalar m2 = M_PI*(r2*r2*h2)*Scalar(2)*mat.density;
+        Scalar r1 = r_ - thick_/Scalar(2);
+        Scalar r2 = r_ + thick_/Scalar(2);
+        Scalar h1 = halfHeight_ - thick_/Scalar(2);
+        Scalar h2 = halfHeight_ + thick_/Scalar(2);
+        volume_ = M_PI*(r2*r2*h2 - r1*r1*h1)*Scalar(2);
+        surface_ = (Scalar(2)*M_PI*r2*h2 + M_PI*r2*r2)*Scalar(2);
+        mass_ = volume_ * mat_.density;
+        Scalar m1 = M_PI*(r1*r1*h1)*Scalar(2)*mat_.density;
+        Scalar m2 = M_PI*(r2*r2*h2)*Scalar(2)*mat_.density;
         Scalar Ia = m2*r2*r2/Scalar(2) - m1*r1*r1/Scalar(2); 
         Scalar Ip = m2*(Scalar(3)*r2*r2 + (h2*Scalar(2))*(h2*Scalar(2)))/Scalar(12) - m1*(Scalar(3)*r1*r1 + (h1*Scalar(2))*(h1*Scalar(2)))/Scalar(12);
-        Ipri = Vector3(Ip,Ip,Ia);
+        Ipri_ = Vector3(Ip,Ip,Ia);
     }
     else
     {
-        volume = M_PI*r*r*halfHeight*Scalar(2);
-        surface = (Scalar(2)*M_PI*r*halfHeight + M_PI*r*r)*Scalar(2);
-        mass = volume * mat.density;
-        Scalar Ia = mass*r*r/Scalar(2);
-        Scalar Ip = mass*(Scalar(3)*r*r + (halfHeight*Scalar(2))*(halfHeight*Scalar(2)))/Scalar(12);
-        Ipri = Vector3(Ip,Ip,Ia);
+        volume_ = M_PI*r_*r_*halfHeight_*Scalar(2);
+        surface_ = (Scalar(2)*M_PI*r_*halfHeight_ + M_PI*r_*r_)*Scalar(2);
+        mass_ = volume_ * mat_.density;
+        Scalar Ia = mass_*r_*r_/Scalar(2);
+        Scalar Ip = mass_*(Scalar(3)*r_*r_ + (halfHeight_*Scalar(2))*(halfHeight_*Scalar(2)))/Scalar(12);
+        Ipri_ = Vector3(Ip,Ip,Ia);
     }
     
     //Build geometry
-    phyMesh = OpenGLContent::BuildCylinder((GLfloat)r, (GLfloat)(halfHeight*2), (unsigned int)btMax(ceil(2.0*M_PI*r/0.1), 32.0)); //Max 0.1 m cylinder wall slice width
+    phyMesh_ = OpenGLContent::BuildCylinder((GLfloat)r_, (GLfloat)(halfHeight_*2), (unsigned int)btMax(ceil(2.0*M_PI*r_/0.1), 32.0)); //Max 0.1 m cylinder wall slice width
     
     //Compute hydrodynamic properties
     ComputeFluidDynamicsApprox( GeometryApproxType::CYLINDER);
@@ -81,7 +81,7 @@ SolidType Cylinder::getSolidType()
 
 btCollisionShape* Cylinder::BuildCollisionShape()
 {
-    btCollisionShape* cyl = new btCylinderShapeZ(Vector3(r, r, halfHeight));
+    btCollisionShape* cyl = new btCylinderShapeZ(Vector3(r_, r_, halfHeight_));
     cyl->setMargin(COLLISION_MARGIN);
     return cyl;
 }

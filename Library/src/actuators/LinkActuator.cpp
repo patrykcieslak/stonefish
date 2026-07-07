@@ -32,29 +32,29 @@ namespace sf
 
 LinkActuator::LinkActuator(std::string uniqueName) : Actuator(uniqueName)
 {
-    attach = nullptr;
-    o2a = I4();
+    attach_ = nullptr;
+    o2a_ = I4();
 }
 
 void LinkActuator::setRelativeActuatorFrame(const Transform& origin)
 {
-    o2a = origin;
+    o2a_ = origin;
 }
 
 Transform LinkActuator::getActuatorFrame() const
 {
-    if(attach != nullptr)
-        return attach->getOTransform() * o2a;
+    if(attach_ != nullptr)
+        return attach_->getOTransform() * o2a_;
     else
-        return o2a;
+        return o2a_;
 }
 
 void LinkActuator::AttachToSolid(SolidEntity* body, const Transform& origin)
 {
     if(body != nullptr)
     {
-        o2a = origin;
-        attach = body;
+        o2a_ = origin;
+        attach_ = body;
     }
 }
 

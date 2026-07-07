@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/09/17.
-//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Compound__
@@ -33,7 +33,7 @@ namespace sf
     //! A structure representing one part of the compound body.
     typedef struct
     {
-        SolidEntity* solid;
+        std::unique_ptr<SolidEntity> solid;
         Transform origin;
         bool isExternal;
         bool alwaysVisible;
@@ -50,10 +50,7 @@ namespace sf
          \param firstExternalPart a pointer to the first external rigid body
          \param origin a transformation from the compound body origin to the first part origin
          */
-        Compound(std::string uniqueName, PhysicsSettings phy, SolidEntity* firstExternalPart, const Transform& origin);
-        
-        //! A destructor.
-        ~Compound();
+        Compound(std::string uniqueName, PhysicsSettings phy, std::unique_ptr<SolidEntity> firstExternalPart, const Transform& origin);
         
         //! A method adding new internal rigid body to the compound body.
         /*!
@@ -61,14 +58,14 @@ namespace sf
          \param origin a tranformation from the compound body origin to the part origin
          \param alwaysVisible the part is always rendered although it is an internal part
          */
-        void AddInternalPart(SolidEntity* solid, const Transform& origin, bool alwaysVisible = false);
+        void AddInternalPart(std::unique_ptr<SolidEntity> solid, const Transform& origin, bool alwaysVisible = false);
         
         //! A method adding new external rigid body to the compound body.
         /*!
          \param solid a pointer to the rigid part
          \param origin a tranformation from the compound body origin to the part origin
          */
-        void AddExternalPart(SolidEntity* solid, const Transform& origin);
+        void AddExternalPart(std::unique_ptr<SolidEntity> solid, const Transform& origin);
         
         //! A method which computes hydrodynamic forces acting on the compound body.
         /*!
@@ -102,7 +99,7 @@ namespace sf
         size_t getPartId(size_t collisionShapeId) const;
 
         //! A method returning a pointer to one part of the compound body.
-        const CompoundPart getPart(size_t partId) const;
+        const CompoundPart& getPart(size_t partId) const;
 
         //! A method that returns the type of solid.
         SolidType getSolidType();
@@ -126,9 +123,9 @@ namespace sf
         std::vector<Renderable> Render(size_t partId);
         
     private:
-        std::vector<CompoundPart> parts; //Parts of the compound solid
-        std::vector<size_t> collisionPartId;
-        bool displayInternals;
+        std::vector<CompoundPart> parts_; //Parts of the compound solid
+        std::vector<size_t> collisionPartId_;
+        bool displayInternals_;
         
         void RecalculatePhysicalProperties();
     };

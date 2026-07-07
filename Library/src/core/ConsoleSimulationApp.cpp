@@ -37,7 +37,7 @@ namespace sf
 ConsoleSimulationApp::ConsoleSimulationApp(std::string title, std::string dataDirPath, SimulationManager* sim)
 : SimulationApp(title, dataDirPath, sim)
 {
-    simulationThread = nullptr;
+    simulationThread_ = nullptr;
 }
 
 ConsoleSimulationApp::~ConsoleSimulationApp()
@@ -72,7 +72,7 @@ void ConsoleSimulationApp::StartSimulation()
     if (autostep_)
     {
         ConsoleSimulationThreadData* data = new ConsoleSimulationThreadData{*this};
-        simulationThread = SDL_CreateThread(ConsoleSimulationApp::RunSimulation, "simulationThread", data);
+        simulationThread_ = SDL_CreateThread(ConsoleSimulationApp::RunSimulation, "simulationThread", data);
     }
 }
 
@@ -83,7 +83,7 @@ void ConsoleSimulationApp::ResumeSimulation()
     if (autostep_)
     {
         ConsoleSimulationThreadData* data = new ConsoleSimulationThreadData{*this};
-        simulationThread = SDL_CreateThread(ConsoleSimulationApp::RunSimulation, "simulationThread", data);
+        simulationThread_ = SDL_CreateThread(ConsoleSimulationApp::RunSimulation, "simulationThread", data);
     }
 }
 
@@ -91,11 +91,11 @@ void ConsoleSimulationApp::StopSimulation()
 {
     SimulationApp::StopSimulation();
     
-    if (autostep_ && simulationThread != nullptr)
+    if (autostep_ && simulationThread_ != nullptr)
     {
         int status;
-        SDL_WaitThread(simulationThread, &status);
-        simulationThread = nullptr;
+        SDL_WaitThread(simulationThread_, &status);
+        simulationThread_ = nullptr;
     }
 }
 

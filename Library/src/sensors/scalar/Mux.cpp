@@ -37,7 +37,7 @@ Mux::Mux()
 
 Mux::~Mux()
 {
-    components.clear();
+    components_.clear();
 }
 
 bool Mux::AddComponent(ScalarSensor* s, unsigned short channel)
@@ -51,29 +51,29 @@ bool Mux::AddComponent(ScalarSensor* s, unsigned short channel)
     MuxComponent cmp;
     cmp.sensor = s;
     cmp.channel = channel;
-    components.push_back(cmp);
+    components_.push_back(cmp);
     return true;
 }
 
 MuxComponent* Mux::getComponent(unsigned int index)
 {
-    if(index < components.size())
-        return &components[index];
+    if(index < components_.size())
+        return &components_[index];
     
     return NULL;
 }
 
 Scalar* Mux::getLastSample()
 {
-    Scalar* sample = new Scalar[components.size()];
-    for(unsigned int i = 0; i < components.size(); ++i)
-        sample[i] = components[i].sensor->getLastSample().getValue(components[i].channel);
+    Scalar* sample = new Scalar[components_.size()];
+    for(unsigned int i = 0; i < components_.size(); ++i)
+        sample[i] = components_[i].sensor->getLastSample().getValue(components_[i].channel);
     return sample;
 }
 
 unsigned int Mux::getNumOfComponents() const
 {
-    return (unsigned int)components.size();
+    return (unsigned int)components_.size();
 }
     
 }

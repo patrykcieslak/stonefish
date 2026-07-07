@@ -32,7 +32,7 @@ namespace sf
 
 Compass::Compass(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    channels.push_back(SensorChannel("Heading", QuantityType::ANGLE));
+    channels_.push_back(SensorChannel("Heading", QuantityType::ANGLE));
 }
 
 void Compass::InternalUpdate(Scalar dt)
@@ -48,7 +48,7 @@ void Compass::InternalUpdate(Scalar dt)
 
 void Compass::setNoise(Scalar headingStdDev)
 {
-    channels[0].setStdDev(btClamped(headingStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[0].setStdDev(btClamped(headingStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
 
 ScalarSensorType Compass::getScalarSensorType() const

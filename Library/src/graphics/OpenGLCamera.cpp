@@ -51,124 +51,124 @@ GLSLShader* OpenGLCamera::bloomBlur = nullptr;
 
 OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec2 range) : OpenGLView(x, y, width, height)
 {
-    fovx = 0.785f;
-    near = range.x;
-    far = range.y;
-    exposureComp = 0.f;
-	autoExposure = true;
-	toneMapping = true;
-    antiAliasing = false;
-    aoFactor = 0;
+    fovx_ = 0.785f;
+    near_ = range.x;
+    far_ = range.y;
+    exposureComp_ = 0.f;
+	autoExposure_ = true;
+	toneMapping_ = true;
+    antiAliasing_ = false;
+    aoFactor_ = 0;
     
     if(((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getRenderSettings().ao != RenderQuality::DISABLED)
-        aoFactor = 1;
+        aoFactor_ = 1;
     if(((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getRenderSettings().aa != RenderQuality::DISABLED)
-        antiAliasing = true;
+        antiAliasing_ = true;
     
     //----Geometry rendering----
-    renderColorTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+    renderColorTex_[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_, viewportHeight_, 0), 
                                                     GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
-    renderColorTex[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+    renderColorTex_[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_, viewportHeight_, 0), 
                                                      GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
-    renderViewNormalTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+    renderViewNormalTex_ = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_, viewportHeight_, 0), 
                                                          GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, NULL, FilteringMode::BILINEAR, false);                                                  
-    renderDepthStencilTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+    renderDepthStencilTex_ = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_, viewportHeight_, 0), 
                                                            GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL, FilteringMode::NEAREST, false);
     std::vector<FBOTexture> fboTextures;
-    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderColorTex[0]));
-    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, renderViewNormalTex));
-    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, renderColorTex[1]));
-    fboTextures.push_back(FBOTexture(GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, renderDepthStencilTex));
-    renderFBO = OpenGLContent::GenerateFramebuffer(fboTextures);
-    OpenGLState::BindFramebuffer(renderFBO);
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderColorTex_[0]));
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, renderViewNormalTex_));
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, renderColorTex_[1]));
+    fboTextures.push_back(FBOTexture(GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, renderDepthStencilTex_));
+    renderFBO_ = OpenGLContent::GenerateFramebuffer(fboTextures);
+    OpenGLState::BindFramebuffer(renderFBO_);
     SetRenderBuffers(0, true, false);
     OpenGLState::BindFramebuffer(0);
 
     //----Postprocessing----
-    postprocessTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+    postprocessTex_[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_, viewportHeight_, 0), 
                                                     GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
-    postprocessTex[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+    postprocessTex_[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_, viewportHeight_, 0), 
                                                        GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, NULL, FilteringMode::BILINEAR, false);
-    postprocessStencilTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+    postprocessStencilTex_ = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_, viewportHeight_, 0), 
                                                            GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL, FilteringMode::NEAREST, false);
     fboTextures.clear();
-    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postprocessTex[0]));
-    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, postprocessTex[1]));
-    fboTextures.push_back(FBOTexture(GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, postprocessStencilTex));
-    postprocessFBO = OpenGLContent::GenerateFramebuffer(fboTextures);
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postprocessTex_[0]));
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, postprocessTex_[1]));
+    fboTextures.push_back(FBOTexture(GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, postprocessStencilTex_));
+    postprocessFBO_ = OpenGLContent::GenerateFramebuffer(fboTextures);
 
-    quaterPostprocessTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth/2, viewportHeight/2, 0),
+    quaterPostprocessTex_[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_/2, viewportHeight_/2, 0),
                                                             GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
-    quaterPostprocessTex[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth/2, viewportHeight/2, 0),
+    quaterPostprocessTex_[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_/2, viewportHeight_/2, 0),
                                                             GL_RGBA32F, GL_RGBA, GL_FLOAT, NULL, FilteringMode::BILINEAR, false);
     fboTextures.clear();
-    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, quaterPostprocessTex[0]));
-    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, quaterPostprocessTex[1]));                                              
-    quaterPostprocessFBO = OpenGLContent::GenerateFramebuffer(fboTextures);
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, quaterPostprocessTex_[0]));
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, quaterPostprocessTex_[1]));                                              
+    quaterPostprocessFBO_ = OpenGLContent::GenerateFramebuffer(fboTextures);
 
     //Linear depth
-    linearDepthTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+    linearDepthTex_[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_, viewportHeight_, 0), 
                                                        GL_R32F, GL_RED, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
-    linearDepthTex[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+    linearDepthTex_[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_, viewportHeight_, 0), 
                                                        GL_R32F, GL_RED, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
     fboTextures.clear();
-    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, linearDepthTex[0]));
-    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, linearDepthTex[1]));
-    linearDepthFBO = OpenGLContent::GenerateFramebuffer(fboTextures);
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, linearDepthTex_[0]));
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, linearDepthTex_[1]));
+    linearDepthFBO_ = OpenGLContent::GenerateFramebuffer(fboTextures);
 
     //---- Tonemapping ----
-    histogramBins = 256;
-    histogramRange = glm::vec2(-1.f,11.f);
-    GLuint histogram[histogramBins];
-    memset(histogram, 0, histogramBins * sizeof(GLuint));
-    glGenBuffers(1, &histogramSSBO);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, histogramSSBO);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, histogramBins * sizeof(GLuint), histogram, GL_STATIC_DRAW);
+    histogramBins_ = 256;
+    histogramRange_ = glm::vec2(-1.f,11.f);
+    GLuint histogram[histogramBins_];
+    memset(histogram, 0, histogramBins_ * sizeof(GLuint));
+    glGenBuffers(1, &histogramSSBO_);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, histogramSSBO_);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, histogramBins_ * sizeof(GLuint), histogram, GL_STATIC_DRAW);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     
     GLfloat zero = 1.0f;
-    exposureTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(1,1,0), 
+    exposureTex_ = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(1,1,0), 
                                                  GL_R32F, GL_RED, GL_FLOAT, &zero, FilteringMode::NEAREST, false);
     
     //----HBAO----
-    if(aoFactor > 0)
+    if(aoFactor_ > 0)
     {
         //Deinterleaved results
         GLint swizzle[4] = {GL_RED,GL_GREEN,GL_ZERO,GL_ZERO};
         
-        glGenTextures(1, &aoResultTex);
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, aoResultTex);
-        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG16F, viewportWidth, viewportHeight);
+        glGenTextures(1, &aoResultTex_);
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, aoResultTex_);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG16F, viewportWidth_, viewportHeight_);
         glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     
-        glGenTextures(1, &aoBlurTex);
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, aoBlurTex);
-        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG16F, viewportWidth, viewportHeight);
+        glGenTextures(1, &aoBlurTex_);
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, aoBlurTex_);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RG16F, viewportWidth_, viewportHeight_);
         glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         
         fboTextures.clear();
-        fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, aoResultTex));
-        fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, aoBlurTex));
-        aoFinalFBO = OpenGLContent::GenerateFramebuffer(fboTextures);
+        fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, aoResultTex_));
+        fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, aoBlurTex_));
+        aoFinalFBO_ = OpenGLContent::GenerateFramebuffer(fboTextures);
         
         //Interleaved rendering
-        int quarterWidth  = ((viewportWidth+3)/4);
-        int quarterHeight = ((viewportHeight+3)/4);
+        int quarterWidth  = ((viewportWidth_+3)/4);
+        int quarterHeight = ((viewportHeight_+3)/4);
 
-        glGenTextures(1, &aoDepthArrayTex);
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D_ARRAY, aoDepthArrayTex);
+        glGenTextures(1, &aoDepthArrayTex_);
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D_ARRAY, aoDepthArrayTex_);
         glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_R32F, quarterWidth, quarterHeight, HBAO_RANDOM_ELEMENTS);
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         
-        glGenTextures(1, &aoResultArrayTex);
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D_ARRAY, aoResultArrayTex);
+        glGenTextures(1, &aoResultArrayTex_);
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D_ARRAY, aoResultArrayTex_);
         glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RG16F, quarterWidth, quarterHeight, HBAO_RANDOM_ELEMENTS);
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -181,17 +181,17 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
         for(int layer = 0; layer < NUM_MRT; ++layer)
             drawbuffers[layer] = GL_COLOR_ATTACHMENT0 + layer;
 
-        glGenFramebuffers(1, &aoDeinterleaveFBO);
-        OpenGLState::BindFramebuffer(aoDeinterleaveFBO);
+        glGenFramebuffers(1, &aoDeinterleaveFBO_);
+        OpenGLState::BindFramebuffer(aoDeinterleaveFBO_);
         glDrawBuffers(NUM_MRT, drawbuffers);
         
-        glGenFramebuffers(1, &aoCalcFBO);
-        OpenGLState::BindFramebuffer(aoCalcFBO);
-        glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, aoResultArrayTex, 0);
+        glGenFramebuffers(1, &aoCalcFBO_);
+        OpenGLState::BindFramebuffer(aoCalcFBO_);
+        glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, aoResultArrayTex_, 0);
         OpenGLState::BindFramebuffer(0);
         
-        glGenBuffers(1, &aoDataUBO);
-        glNamedBufferStorageEXT(aoDataUBO, sizeof(AOData), NULL, GL_DYNAMIC_STORAGE_BIT);
+        glGenBuffers(1, &aoDataUBO_);
+        glNamedBufferStorageEXT(aoDataUBO_, sizeof(AOData), NULL, GL_DYNAMIC_STORAGE_BIT);
         
         //Generate random data
         std::mt19937 rng((unsigned int)GetTimeInMicroseconds());
@@ -205,86 +205,86 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
 
             //Use random rotation angles in [0,2PI/NUM_DIRECTIONS)
             GLfloat angle = 2.f * M_PI * rand1 / numDir;
-            aoData.jitters[i].x = cosf(angle);
-            aoData.jitters[i].y = sinf(angle);
-            aoData.jitters[i].z = rand2;
-            aoData.jitters[i].w = 0;
+            aoData_.jitters[i].x = cosf(angle);
+            aoData_.jitters[i].y = sinf(angle);
+            aoData_.jitters[i].z = rand2;
+            aoData_.jitters[i].w = 0;
             
-            aoData.float2Offsets[i] = glm::vec4((GLfloat)(i%4) + 0.5f, (GLfloat)(i/4) + 0.5f, 0.0, 0.0);
+            aoData_.float2Offsets[i] = glm::vec4((GLfloat)(i%4) + 0.5f, (GLfloat)(i/4) + 0.5f, 0.0, 0.0);
         }
     }
 }
 
 OpenGLCamera::~OpenGLCamera()
 {
-    glDeleteTextures(2, renderColorTex);
-    glDeleteTextures(1, &renderViewNormalTex);
-    glDeleteTextures(1, &renderDepthStencilTex);
-    glDeleteTextures(1, &exposureTex);
-    glDeleteTextures(2, linearDepthTex);
-    glDeleteTextures(2, postprocessTex);
-    glDeleteTextures(1, &postprocessStencilTex);
-    glDeleteTextures(2, quaterPostprocessTex);
+    glDeleteTextures(2, renderColorTex_);
+    glDeleteTextures(1, &renderViewNormalTex_);
+    glDeleteTextures(1, &renderDepthStencilTex_);
+    glDeleteTextures(1, &exposureTex_);
+    glDeleteTextures(2, linearDepthTex_);
+    glDeleteTextures(2, postprocessTex_);
+    glDeleteTextures(1, &postprocessStencilTex_);
+    glDeleteTextures(2, quaterPostprocessTex_);
 
-    glDeleteFramebuffers(1, &renderFBO);
-    glDeleteFramebuffers(1, &postprocessFBO);
-    glDeleteFramebuffers(1, &quaterPostprocessFBO);
-    glDeleteFramebuffers(1, &linearDepthFBO);
+    glDeleteFramebuffers(1, &renderFBO_);
+    glDeleteFramebuffers(1, &postprocessFBO_);
+    glDeleteFramebuffers(1, &quaterPostprocessFBO_);
+    glDeleteFramebuffers(1, &linearDepthFBO_);
     
-    glDeleteBuffers(1, &histogramSSBO);
+    glDeleteBuffers(1, &histogramSSBO_);
 
-    if(aoFactor > 0)
+    if(aoFactor_ > 0)
     {
-        glDeleteTextures(1, &aoResultTex);
-        glDeleteTextures(1, &aoBlurTex);
-        glDeleteTextures(1, &aoDepthArrayTex);
-        glDeleteTextures(1, &aoResultArrayTex);
+        glDeleteTextures(1, &aoResultTex_);
+        glDeleteTextures(1, &aoBlurTex_);
+        glDeleteTextures(1, &aoDepthArrayTex_);
+        glDeleteTextures(1, &aoResultArrayTex_);
     
-        glDeleteFramebuffers(1, &aoFinalFBO);
-        glDeleteFramebuffers(1, &aoDeinterleaveFBO);
-        glDeleteFramebuffers(1, &aoCalcFBO);
+        glDeleteFramebuffers(1, &aoFinalFBO_);
+        glDeleteFramebuffers(1, &aoDeinterleaveFBO_);
+        glDeleteFramebuffers(1, &aoCalcFBO_);
         
-        glDeleteBuffers(1, &aoDataUBO);
+        glDeleteBuffers(1, &aoDataUBO_);
     }
 }
 
 glm::mat4 OpenGLCamera::GetProjectionMatrix() const
 {
-    return projection;
+    return projection_;
 }
 
 GLfloat OpenGLCamera::GetFOVX() const
 {
-    return fovx;
+    return fovx_;
 }
 
 GLfloat OpenGLCamera::GetFOVY() const
 {
-    GLfloat aspect = (GLfloat)viewportWidth/(GLfloat)viewportHeight;
-    return fovx/aspect;
+    GLfloat aspect = (GLfloat)viewportWidth_/(GLfloat)viewportHeight_;
+    return fovx_/aspect;
 }
 
 GLfloat OpenGLCamera::GetNearClip() const
 {
-    return near;
+    return near_;
 }
 
 GLfloat OpenGLCamera::GetFarClip() const
 {
-    return far;
+    return far_;
 }
 
 glm::vec3 OpenGLCamera::Ray(GLint x, GLint y)
 {
     //Translate point to view space
-    x -= originX;
-    y -= originY;
+    x -= originX_;
+    y -= originY_;
     
     //Check if point in view
-    if((x < 0) || (x >= viewportWidth) || (y < 0) || (y >= viewportHeight))
+    if((x < 0) || (x >= viewportWidth_) || (y < 0) || (y >= viewportHeight_))
         return glm::vec3(0);
         
-    glm::vec2 pixPos = glm::vec2((GLfloat)x/(GLfloat)viewportWidth, (GLfloat)(viewportHeight-y)/(GLfloat)viewportHeight);
+    glm::vec2 pixPos = glm::vec2((GLfloat)x/(GLfloat)viewportWidth_, (GLfloat)(viewportHeight_-y)/(GLfloat)viewportHeight_);
     pixPos = (pixPos - glm::vec2(0.5f)) * 2.f;
     glm::vec4 deviceRay = glm::vec4(pixPos, 0.f, 1.f);
     glm::vec3 eyeRay = glm::vec3(glm::normalize((glm::inverse(GetProjectionMatrix()) * deviceRay)));
@@ -320,43 +320,43 @@ glm::vec3 OpenGLCamera::Ray(GLint x, GLint y)
     
 void OpenGLCamera::setExposureCompensation(GLfloat ec)
 {
-    exposureComp = ec;
+    exposureComp_ = ec;
 }
 
 GLuint OpenGLCamera::getPostprocessFBO()
 {
-    return postprocessFBO;
+    return postprocessFBO_;
 }
     
 GLuint OpenGLCamera::getQuaterPostprocessFBO()
 {
-    return quaterPostprocessFBO;
+    return quaterPostprocessFBO_;
 }
 
 GLfloat OpenGLCamera::getExposureCompensation()
 {
-    return exposureComp;
+    return exposureComp_;
 }
 
 GLuint OpenGLCamera::getColorTexture(unsigned int index)
 {
-    return renderColorTex[index % 2];
+    return renderColorTex_[index % 2];
 }
 
 GLuint OpenGLCamera::getLinearDepthTexture(bool frontFace)
 {
-    return frontFace ? linearDepthTex[0] : linearDepthTex[1];
+    return frontFace ? linearDepthTex_[0] : linearDepthTex_[1];
 }
 
 GLuint OpenGLCamera::getAOTexture()
 {
-    return aoBlurTex;
+    return aoBlurTex_;
 }
 
 GLuint OpenGLCamera::getPostprocessTexture(unsigned int id)
 {
     if(id < 2)
-        return postprocessTex[id];
+        return postprocessTex_[id];
     else
         return 0;
 }
@@ -364,34 +364,34 @@ GLuint OpenGLCamera::getPostprocessTexture(unsigned int id)
 GLuint OpenGLCamera::getQuaterPostprocessTexture(unsigned int id)
 {
     if(id < 2)
-        return quaterPostprocessTex[id];
+        return quaterPostprocessTex_[id];
     else
         return 0;
 }
 
 GLuint OpenGLCamera::getLastActiveColorBuffer()
 {
-    return lastActiveRenderColorBuffer;
+    return lastActiveRenderColorBuffer_;
 }
 
 bool OpenGLCamera::hasAO()
 {
-    return aoFactor > 0;
+    return aoFactor_ > 0;
 }
 
 bool OpenGLCamera::usingToneMapping()
 {
-	return toneMapping;
+	return toneMapping_;
 }
 
 bool OpenGLCamera::usingAutoExposure()
 {
-	return autoExposure;
+	return autoExposure_;
 }
 
 void OpenGLCamera::SetProjection()
 {
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetProjectionMatrix(projection);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetProjectionMatrix(projection_);
 }
 
 void OpenGLCamera::SetViewTransform()
@@ -406,49 +406,49 @@ void OpenGLCamera::SetRenderBuffers(GLuint colorBufferIndex, bool normalBuffer, 
     renderBuffs[1] = GL_COLOR_ATTACHMENT1;
     glDrawBuffers(normalBuffer ? 2 : 1, renderBuffs);
     if(clearBuffers) glClear(GL_COLOR_BUFFER_BIT);
-    lastActiveRenderColorBuffer = colorBufferIndex % 2;
+    lastActiveRenderColorBuffer_ = colorBufferIndex % 2;
 }
 
 void OpenGLCamera::ShowSceneTexture(glm::vec4 rect)
 {
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, renderColorTex[0]);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, renderColorTex_[0]);
 }
 
 void OpenGLCamera::ShowLinearDepthTexture(glm::vec4 rect, bool frontFace)
 {
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, frontFace ? linearDepthTex[0] : linearDepthTex[1]);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, frontFace ? linearDepthTex_[0] : linearDepthTex_[1]);
 }
 
 void OpenGLCamera::ShowViewNormalTexture(glm::vec4 rect)
 {
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, renderViewNormalTex);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, renderViewNormalTex_);
 }
 
 void OpenGLCamera::ShowDepthStencilTexture(glm::vec4 rect)
 {
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, renderDepthStencilTex);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, renderDepthStencilTex_);
 }
 
 void OpenGLCamera::ShowDeinterleavedDepthTexture(glm::vec4 rect, GLuint index)
 {
     if(hasAO() && index < HBAO_RANDOM_ELEMENTS)
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, aoDepthArrayTex, index);
+        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, aoDepthArrayTex_, index);
 }
 
 void OpenGLCamera::ShowDeinterleavedAOTexture(glm::vec4 rect, GLuint index)
 {
     if(hasAO() && index < HBAO_RANDOM_ELEMENTS)
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, aoResultArrayTex, index);
+        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, aoResultArrayTex_, index);
 }
 
 void OpenGLCamera::GenerateLinearDepth(bool front)
 {
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, front ? renderDepthStencilTex : postprocessStencilTex);
-    OpenGLState::BindFramebuffer(linearDepthFBO);
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, front ? renderDepthStencilTex_ : postprocessStencilTex_);
+    OpenGLState::BindFramebuffer(linearDepthFBO_);
     GLenum renderBuffs[1];
     renderBuffs[0] = front ? GL_COLOR_ATTACHMENT0 : GL_COLOR_ATTACHMENT1;
     glDrawBuffers(1, renderBuffs);    
-    OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+    OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
     depthLinearizeShader->Use();
     depthLinearizeShader->SetUniform("texLogDepth", TEX_POSTPROCESS1);
     depthLinearizeShader->SetUniform("FC", GetLogDepthConstant());
@@ -463,8 +463,8 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
     if(hasAO())
     {
         //Prepare data and set parameters
-        int quarterWidth  = ((viewportWidth+3)/4);
-        int quarterHeight = ((viewportHeight+3)/4);
+        int quarterWidth  = ((viewportWidth_+3)/4);
+        int quarterHeight = ((viewportHeight_+3)/4);
         glm::mat4 proj = GetProjectionMatrix();
         glm::vec4 projInfo(
                             2.0f/proj[0].x,
@@ -473,20 +473,20 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
                             -(1.f+proj[1].z)/proj[1].y
                             );
                           
-        glm::vec2 invFullRes(1.f/(GLfloat)viewportWidth, 1.f/(GLfloat)viewportHeight);
+        glm::vec2 invFullRes(1.f/(GLfloat)viewportWidth_, 1.f/(GLfloat)viewportHeight_);
         glm::vec2 invQuarterRes(1.f/(GLfloat)quarterWidth, 1.f/(GLfloat)quarterHeight);
-        GLfloat projScale = (GLfloat)viewportHeight/(tanf(GetFOVY() * 0.5f) * 2.0f);
+        GLfloat projScale = (GLfloat)viewportHeight_/(tanf(GetFOVY() * 0.5f) * 2.0f);
         GLfloat R = 0.5f;
         
-        aoData.projInfo = projInfo;
-        aoData.R2 = R * R;
-        aoData.NegInvR2 = -1.f/aoData.R2;
-        aoData.RadiusToScreen = R * 0.5f * projScale;
-        aoData.PowExponent = intensity < 0.f ? 0.f : intensity; //intensity
-        aoData.NDotVBias = 0.01f;  //<0,1>
-        aoData.AOMultiplier = 1.f/(1.f-aoData.NDotVBias);
-        aoData.InvQuarterResolution = invQuarterRes;
-        aoData.InvFullResolution = invFullRes;
+        aoData_.projInfo = projInfo;
+        aoData_.R2 = R * R;
+        aoData_.NegInvR2 = -1.f/aoData_.R2;
+        aoData_.RadiusToScreen = R * 0.5f * projScale;
+        aoData_.PowExponent = intensity < 0.f ? 0.f : intensity; //intensity
+        aoData_.NDotVBias = 0.01f;  //<0,1>
+        aoData_.AOMultiplier = 1.f/(1.f-aoData_.NDotVBias);
+        aoData_.InvQuarterResolution = invQuarterRes;
+        aoData_.InvFullResolution = invFullRes;
         
         GLfloat blurSharpness = 40.0f;
        
@@ -494,19 +494,19 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BindBaseVertexArray(); //Previous function unbinds vertex array
         
         //Deinterleave
-        OpenGLState::BindFramebuffer(aoDeinterleaveFBO);
+        OpenGLState::BindFramebuffer(aoDeinterleaveFBO_);
         OpenGLState::Viewport(0, 0, quarterWidth, quarterHeight);
 
         aoDeinterleaveShader->Use();
         aoDeinterleaveShader->SetUniform("texLinearDepth", TEX_POSTPROCESS1);
         
-        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, linearDepthTex[0]);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, linearDepthTex_[0]);
         for(int i=0; i<HBAO_RANDOM_ELEMENTS; i+=NUM_MRT)
         {
             aoDeinterleaveShader->SetUniform("info", glm::vec4(float(i % 4) + 0.5f, float(i / 4) + 0.5f, invFullRes.x, invFullRes.y));
             
             for(int layer = 0; layer < NUM_MRT; ++layer)
-		    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + layer, aoDepthArrayTex, 0, i+layer);
+		    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + layer, aoDepthArrayTex_, 0, i+layer);
             
             glDrawArrays(GL_TRIANGLES, 0, 3);
         }
@@ -514,28 +514,28 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
         OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
             
         //Calculate HBAO
-        OpenGLState::BindFramebuffer(aoCalcFBO);
+        OpenGLState::BindFramebuffer(aoCalcFBO_);
         OpenGLState::Viewport(0, 0, quarterWidth, quarterHeight);
         aoCalcShader->Use();
         aoCalcShader->SetUniform("texLinearDepth", TEX_POSTPROCESS1);
         aoCalcShader->SetUniform("texViewNormal", TEX_POSTPROCESS2);
 
-        OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, renderViewNormalTex);
-        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, aoDepthArrayTex);
-        glBindBufferBase(GL_UNIFORM_BUFFER, 0, aoDataUBO);
-        glNamedBufferSubDataEXT(aoDataUBO, 0, sizeof(AOData), &aoData);
+        OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, renderViewNormalTex_);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, aoDepthArrayTex_);
+        glBindBufferBase(GL_UNIFORM_BUFFER, 0, aoDataUBO_);
+        glNamedBufferSubDataEXT(aoDataUBO_, 0, sizeof(AOData), &aoData_);
         glDrawArrays(GL_TRIANGLES, 0, 3 * HBAO_RANDOM_ELEMENTS);
         OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
         OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
                
         //Reinterleave
-        OpenGLState::BindFramebuffer(aoFinalFBO);
+        OpenGLState::BindFramebuffer(aoFinalFBO_);
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
-        OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+        OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
         aoReinterleaveShader->Use();
         aoReinterleaveShader->SetUniform("texResultArray", TEX_POSTPROCESS1);
     
-        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, aoResultArrayTex);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, aoResultArrayTex_);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
     
@@ -543,15 +543,15 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
         glDrawBuffer(GL_COLOR_ATTACHMENT1);
         aoBlurShader[0]->Use();
         aoBlurShader[0]->SetUniform("sharpness", blurSharpness);
-        aoBlurShader[0]->SetUniform("invResolutionDirection", glm::vec2(1.f/(GLfloat)viewportWidth, 0));
+        aoBlurShader[0]->SetUniform("invResolutionDirection", glm::vec2(1.f/(GLfloat)viewportWidth_, 0));
         aoBlurShader[0]->SetUniform("texSource", TEX_POSTPROCESS1);
     
-        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, aoResultTex);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, aoResultTex_);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
         
         //Final output to main fbo
-        OpenGLState::BindFramebuffer(renderFBO);
+        OpenGLState::BindFramebuffer(renderFBO_);
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
         glDepthMask(GL_FALSE);
         OpenGLState::DisableDepthTest();
@@ -560,10 +560,10 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
         glBlendFunc(GL_ZERO, GL_SRC_COLOR);
         aoBlurShader[1]->Use();
         aoBlurShader[1]->SetUniform("sharpness", blurSharpness);
-        aoBlurShader[1]->SetUniform("invResolutionDirection", glm::vec2(0, 1.f/(GLfloat)viewportHeight));
+        aoBlurShader[1]->SetUniform("invResolutionDirection", glm::vec2(0, 1.f/(GLfloat)viewportHeight_));
         aoBlurShader[1]->SetUniform("texSource", TEX_POSTPROCESS1);
     
-        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, aoBlurTex);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, aoBlurTex_);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
     
@@ -573,7 +573,7 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
         
         OpenGLState::BindVertexArray(0);
         OpenGLState::UseProgram(0);
-        OpenGLState::BindFramebuffer(renderFBO);
+        OpenGLState::BindFramebuffer(renderFBO_);
     }
 }
 
@@ -583,13 +583,13 @@ void OpenGLCamera::DrawSSR()
         return;
     
     //Compute SSR
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderColorTex[0]);
-    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, renderViewNormalTex);
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderColorTex_[0]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, renderViewNormalTex_);
     OpenGLState::BindTexture(TEX_POSTPROCESS3, GL_TEXTURE_2D, getLinearDepthTexture(true));
     OpenGLState::BindTexture(TEX_POSTPROCESS4, GL_TEXTURE_2D, getLinearDepthTexture(false));
 
-    GLfloat sx = viewportWidth/2.f;
-    GLfloat sy = viewportHeight/2.f;
+    GLfloat sx = viewportWidth_/2.f;
+    GLfloat sy = viewportHeight_/2.f;
     
     glm::mat4 proj = GetProjectionMatrix();
     
@@ -608,7 +608,7 @@ void OpenGLCamera::DrawSSR()
     OpenGLState::BindFramebuffer(getRenderFBO());
     OpenGLState::DisableDepthTest();          
     SetRenderBuffers(1, false, true);
-    OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+    OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
     ssrShader->Use();
     ssrShader->SetUniform("texColor", TEX_POSTPROCESS1);
     ssrShader->SetUniform("texViewNormal", TEX_POSTPROCESS2);
@@ -617,10 +617,10 @@ void OpenGLCamera::DrawSSR()
     ssrShader->SetUniform("P", projPix);
     ssrShader->SetUniform("invP", glm::inverse(proj));
     ssrShader->SetUniform("projInfo", projInfo);
-    ssrShader->SetUniform("viewportSize", glm::vec2(viewportWidth, viewportHeight));
-    ssrShader->SetUniform("invViewportSize", glm::vec2(1.f/(GLfloat)viewportWidth, 1.f/(GLfloat)viewportHeight));
-    ssrShader->SetUniform("near", near);
-    ssrShader->SetUniform("far", far);
+    ssrShader->SetUniform("viewportSize", glm::vec2(viewportWidth_, viewportHeight_));
+    ssrShader->SetUniform("invViewportSize", glm::vec2(1.f/(GLfloat)viewportWidth_, 1.f/(GLfloat)viewportHeight_));
+    ssrShader->SetUniform("near", near_);
+    ssrShader->SetUniform("far", far_);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS4);
@@ -628,13 +628,13 @@ void OpenGLCamera::DrawSSR()
     OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
 
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderColorTex[1]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderColorTex_[1]);
     SetRenderBuffers(0, false, false);
     OpenGLState::EnableBlend();
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     ssrBlur->Use();
     ssrBlur->SetUniform("tex", TEX_POSTPROCESS1);
-    ssrBlur->SetUniform("invTexSize", glm::vec2(1.f/(GLfloat)viewportWidth, 1.f/(GLfloat)viewportHeight));
+    ssrBlur->SetUniform("invTexSize", glm::vec2(1.f/(GLfloat)viewportWidth_, 1.f/(GLfloat)viewportHeight_));
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
@@ -648,12 +648,12 @@ void OpenGLCamera::GenerateBloom()
     //    return;
     
     //Initialise bloom
-    OpenGLState::BindFramebuffer(quaterPostprocessFBO);
-    OpenGLState::Viewport(0, 0, viewportWidth/2, viewportHeight/2);
+    OpenGLState::BindFramebuffer(quaterPostprocessFBO_);
+    OpenGLState::Viewport(0, 0, viewportWidth_/2, viewportHeight_/2);
     GLenum renderBuffs[1];
     renderBuffs[0] = GL_COLOR_ATTACHMENT0;
     glDrawBuffers(1, renderBuffs);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(renderColorTex[getLastActiveColorBuffer()]);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(renderColorTex_[getLastActiveColorBuffer()]);
 
     //Blur
     bloomBlur->Use();
@@ -664,15 +664,15 @@ void OpenGLCamera::GenerateBloom()
         //Horizontal blur
         renderBuffs[0] = GL_COLOR_ATTACHMENT1;
         glDrawBuffers(1, renderBuffs);
-        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, quaterPostprocessTex[0]);
-        bloomBlur->SetUniform("texelOffset", glm::vec2(2.f/(GLfloat)viewportWidth, 0.f));
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, quaterPostprocessTex_[0]);
+        bloomBlur->SetUniform("texelOffset", glm::vec2(2.f/(GLfloat)viewportWidth_, 0.f));
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
 
         //Vertical blur
         renderBuffs[0] = GL_COLOR_ATTACHMENT0;
         glDrawBuffers(1, renderBuffs);
-        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, quaterPostprocessTex[1]);
-        bloomBlur->SetUniform("texelOffset", glm::vec2(0.f, 2.f/(GLfloat)viewportHeight));
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, quaterPostprocessTex_[1]);
+        bloomBlur->SetUniform("texelOffset", glm::vec2(0.f, 2.f/(GLfloat)viewportHeight_));
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     }
     
@@ -680,8 +680,8 @@ void OpenGLCamera::GenerateBloom()
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
 
     //Restore
-    OpenGLState::BindFramebuffer(renderFBO);
-    OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+    OpenGLState::BindFramebuffer(renderFBO_);
+    OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
 }
 
 void OpenGLCamera::DrawBloom(GLfloat amount)
@@ -689,7 +689,7 @@ void OpenGLCamera::DrawBloom(GLfloat amount)
     OpenGLState::DisableDepthTest();
     OpenGLState::EnableBlend();
     glBlendFunc(GL_ONE, GL_ONE);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(quaterPostprocessTex[0], glm::vec4(glm::vec3(amount), 0.f));
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(quaterPostprocessTex_[0], glm::vec4(glm::vec3(amount), 0.f));
     OpenGLState::DisableBlend();
     OpenGLState::EnableDepthTest();
 }
@@ -710,54 +710,54 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
             OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
             
-            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_HISTOGRAM, histogramSSBO);
-            glBindImageTexture(TEX_POSTPROCESS1, renderColorTex[lastActiveRenderColorBuffer], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
-            glBindImageTexture(TEX_POSTPROCESS2, exposureTex, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+            glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_HISTOGRAM, histogramSSBO_);
+            glBindImageTexture(TEX_POSTPROCESS1, renderColorTex_[lastActiveRenderColorBuffer_], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+            glBindImageTexture(TEX_POSTPROCESS2, exposureTex_, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
 
             //Compute histogram of luminance
             tonemappingShaders[0]->Use();
-            tonemappingShaders[0]->SetUniform("params", glm::vec2(histogramRange.x, 1.f/(histogramRange.y-histogramRange.x)));
+            tonemappingShaders[0]->SetUniform("params", glm::vec2(histogramRange_.x, 1.f/(histogramRange_.y-histogramRange_.x)));
             tonemappingShaders[0]->SetUniform("texSource", TEX_POSTPROCESS1);
-            glDispatchCompute((GLuint)ceilf(viewportWidth/16.f), (GLuint)ceilf(viewportHeight/16.f), 1);
+            glDispatchCompute((GLuint)ceilf(viewportWidth_/16.f), (GLuint)ceilf(viewportHeight_/16.f), 1);
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
             
             //Compute exposure
             tonemappingShaders[1]->Use();
             tonemappingShaders[1]->SetUniform("texExposure", TEX_POSTPROCESS2);
-            tonemappingShaders[1]->SetUniform("params", glm::vec4(histogramRange.x, histogramRange.y-histogramRange.x, 
-                                                                        0.1f, (GLfloat)(viewportWidth * viewportHeight)));    
+            tonemappingShaders[1]->SetUniform("params", glm::vec4(histogramRange_.x, histogramRange_.y-histogramRange_.x, 
+                                                                        0.1f, (GLfloat)(viewportWidth_ * viewportHeight_)));    
             glDispatchCompute(1, 1, 1);
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 		}
 
         //Bind color and exposure textures
-        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderColorTex[lastActiveRenderColorBuffer]);
-		OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, exposureTex);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderColorTex_[lastActiveRenderColorBuffer_]);
+		OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, exposureTex_);
 
-        if(antiAliasing)
+        if(antiAliasing_)
         {
-            OpenGLState::BindFramebuffer(postprocessFBO);
+            OpenGLState::BindFramebuffer(postprocessFBO_);
             GLenum renderBuffs[1] = {GL_COLOR_ATTACHMENT1};
             glDrawBuffers(1, renderBuffs);    
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-            OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+            OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
             tonemappingShaders[2]->Use();
             tonemappingShaders[2]->SetUniform("texSource", TEX_POSTPROCESS1);
             tonemappingShaders[2]->SetUniform("texExposure", TEX_POSTPROCESS2);
-            tonemappingShaders[2]->SetUniform("exposureComp", (GLfloat)powf(2.f,exposureComp));
+            tonemappingShaders[2]->SetUniform("exposureComp", (GLfloat)powf(2.f,exposureComp_));
             ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
             OpenGLState::BindFramebuffer(0);
 
             OpenGLState::UnbindTexture(TEX_POSTPROCESS2);   
-            OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, postprocessTex[1]);
+            OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, postprocessTex_[1]);
 
             //Drawing to screen with anti-aliasing
             OpenGLState::BindFramebuffer(destinationFBO);
-            OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+            OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
             glDrawBuffer(GL_COLOR_ATTACHMENT0);
             fxaaShader->Use();
             fxaaShader->SetUniform("texSource", TEX_POSTPROCESS1);
-            fxaaShader->SetUniform("RCPFrame", glm::vec2(1.f/(GLfloat)viewportWidth, 1.f/(GLfloat)viewportHeight));
+            fxaaShader->SetUniform("RCPFrame", glm::vec2(1.f/(GLfloat)viewportWidth_, 1.f/(GLfloat)viewportHeight_));
             ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
             OpenGLState::BindFramebuffer(0);
             OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
@@ -765,12 +765,12 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
         else
         {
             OpenGLState::BindFramebuffer(destinationFBO);
-            OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+            OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
             glDrawBuffer(GL_COLOR_ATTACHMENT0);
             tonemappingShaders[2]->Use();
             tonemappingShaders[2]->SetUniform("texSource", TEX_POSTPROCESS1);
             tonemappingShaders[2]->SetUniform("texExposure", TEX_POSTPROCESS2);
-            tonemappingShaders[2]->SetUniform("exposureComp", (GLfloat)powf(2.f,exposureComp));
+            tonemappingShaders[2]->SetUniform("exposureComp", (GLfloat)powf(2.f,exposureComp_));
             ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
             OpenGLState::BindFramebuffer(0);
             OpenGLState::UnbindTexture(TEX_POSTPROCESS2);   
@@ -782,9 +782,9 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
 	else
 	{
 		OpenGLState::BindFramebuffer(destinationFBO);
-		OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+		OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
-		((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(renderColorTex[lastActiveRenderColorBuffer]);
+		((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(renderColorTex_[lastActiveRenderColorBuffer_]);
 		OpenGLState::BindFramebuffer(0);
 	}
 }

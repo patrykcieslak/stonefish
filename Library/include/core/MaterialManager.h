@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/7/13.
-//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_MaterialManager__
@@ -183,12 +183,12 @@ namespace sf
     private:
         int getMaterialIndex(const std::string& name);
         
-        std::vector<Material> materials;
-        std::unordered_map<MaterialPair, Friction, MaterialPairHash> interactions;
-        std::vector<Fluid> fluids;
+        std::vector<Material> materials_;
+        std::unordered_map<MaterialPair, Friction, MaterialPairHash> interactions_;
+        std::vector<Fluid> fluids_;
         
-        NameManager materialNameManager;
-        NameManager fluidNameManager;
+        NameManager materialNameManager_;
+        NameManager fluidNameManager_;
     };
 }
 

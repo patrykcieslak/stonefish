@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 09/06/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Current__
@@ -73,7 +73,7 @@ namespace sf
         ScalarSensorType getScalarSensorType() const override;
         
     private:
-        DCMotor* motor;
+        DCMotor* motor_;
     };
 }
 

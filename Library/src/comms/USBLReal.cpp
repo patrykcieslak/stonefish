@@ -32,19 +32,19 @@ USBLReal::USBLReal(std::string uniqueName, uint64_t deviceId, Scalar minVertical
              Scalar carrierFrequency, Scalar baseline) 
            : USBL(uniqueName, deviceId, minVerticalFOVDeg, maxVerticalFOVDeg, operatingRange)
 {
-    freq = carrierFrequency;
-    bl = baseline;
-    blError = Scalar(0);
+    freq_ = carrierFrequency;
+    bl_ = baseline;
+    blError_ = Scalar(0);
 }
     
 void USBLReal::setNoise(Scalar timeDev, Scalar soundVelocityDev, Scalar phaseDev, Scalar baselineError, Scalar depthDev)
 {
-    noiseTime = std::normal_distribution<Scalar>(Scalar(0), btFabs(timeDev));
-    noiseSV = std::normal_distribution<Scalar>(Scalar(0), btFabs(soundVelocityDev));
-    noisePhase = std::normal_distribution<Scalar>(Scalar(0), btFabs(phaseDev));
-    noiseDepth = std::normal_distribution<Scalar>(Scalar(0), btFabs(depthDev));
-    blError = baselineError;
-    noise = true;
+    noiseTime_ = std::normal_distribution<Scalar>(Scalar(0), btFabs(timeDev));
+    noiseSV_ = std::normal_distribution<Scalar>(Scalar(0), btFabs(soundVelocityDev));
+    noisePhase_ = std::normal_distribution<Scalar>(Scalar(0), btFabs(phaseDev));
+    noiseDepth_ = std::normal_distribution<Scalar>(Scalar(0), btFabs(depthDev));
+    blError_ = baselineError;
+    noise_ = true;
 }
 
 void USBLReal::ProcessMessages()
@@ -53,7 +53,7 @@ void USBLReal::ProcessMessages()
     std::string ack {"ACK"};
     std::vector<uint8_t> ackData(ack.begin(), ack.end());
     
-    for(auto it = rxBuffer.begin(); it != rxBuffer.end(); ++it)
+    for(auto it = rxBuffer_.begin(); it != rxBuffer_.end(); ++it)
     {
         msg = std::static_pointer_cast<AcousticDataFrame>(*it);
         if(msg->data == ackData)
@@ -73,10 +73,10 @@ void USBLReal::ProcessMessages()
             
             //Find depth coordinate
             Scalar zGlobal = cO.getZ();
-            if(noise)
+            if(noise_)
             {
-                zGlobal += noiseDepth(randomGenerator); //Transmitter
-                zGlobal -= noiseDepth(randomGenerator); //Receiver
+                zGlobal += noiseDepth_(randomGenerator); //Transmitter
+                zGlobal -= noiseDepth_(randomGenerator); //Receiver
             }
             
             //Update position in the transponder and in the USBL
@@ -97,9 +97,9 @@ void USBLReal::ProcessMessages()
             b.range = slantRange;
             b.localDepth = dO.getZ();
             b.localOri = dT.getRotation();
-            beacons[msg->source] = b;
+            beacons_[msg->source] = b;
             
-            newDataAvailable = true;
+            newDataAvailable_ = true;
         }
     }
 
@@ -110,10 +110,10 @@ void USBLReal::ProcessMessages()
 Scalar USBLReal::CalcModel(Scalar R, Scalar theta)
 {
     Scalar result = R * btCos(theta);
-    if(noise)
+    if(noise_)
     {
-        result += R * btCos(theta) * (noiseTime(randomGenerator) + noiseSV(randomGenerator) - blError/bl);
-        result += R * SOUND_VELOCITY_WATER/freq * noisePhase(randomGenerator)/(Scalar(2.0*M_PI) * bl);  
+        result += R * btCos(theta) * (noiseTime_(randomGenerator) + noiseSV_(randomGenerator) - blError_/bl_);
+        result += R * SOUND_VELOCITY_WATER/freq_ * noisePhase_(randomGenerator)/(Scalar(2.0*M_PI) * bl_);  
     }
     return result;
 }

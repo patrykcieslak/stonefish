@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 25/02/2020.
-//  Copyright (c) 2020-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_USBLSimple__
@@ -63,11 +63,11 @@ namespace sf
         void ProcessMessages() override;
     
     private:
-        Scalar rangeRes;
-        Scalar angleRes;
-        std::normal_distribution<Scalar> noiseRange;
-        std::normal_distribution<Scalar> noiseHAngle;
-        std::normal_distribution<Scalar> noiseVAngle;
+        Scalar rangeRes_;
+        Scalar angleRes_;
+        std::normal_distribution<Scalar> noiseRange_;
+        std::normal_distribution<Scalar> noiseHAngle_;
+        std::normal_distribution<Scalar> noiseVAngle_;
     };
 }
     

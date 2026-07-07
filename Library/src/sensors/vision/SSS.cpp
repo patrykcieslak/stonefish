@@ -37,59 +37,59 @@ SSS::SSS(std::string uniqueName, unsigned int numOfBins, unsigned int numOfLines
          Scalar horizontalBeamWidthDeg, Scalar verticalTiltDeg, Scalar minRange, Scalar maxRange, ColorMap cm, SonarOutputFormat outputFormat, Scalar frequency)
     : Camera(uniqueName, (numOfBins%2==0 ? numOfBins : numOfBins+1), numOfLines, verticalBeamWidthDeg, frequency)
 {
-    range.x = 0.f;
-    range.y = 0.f;
-    noise = glm::vec2(0.f);
+    range_.x = 0.f;
+    range_.y = 0.f;
+    noise_ = glm::vec2(0.f);
     setRangeMax(maxRange);
     setRangeMin(minRange);
-    gain = Scalar(1);
-    fovV = horizontalBeamWidthDeg <= Scalar(0) ? Scalar(1) : (horizontalBeamWidthDeg > Scalar(90) ? Scalar(90) : horizontalBeamWidthDeg);
-    tilt = verticalTiltDeg < Scalar(0) ? Scalar(0) : (verticalTiltDeg > Scalar(90) ? Scalar(90) : verticalTiltDeg);
-    cMap = cm;
+    gain_ = Scalar(1);
+    fovV_ = horizontalBeamWidthDeg <= Scalar(0) ? Scalar(1) : (horizontalBeamWidthDeg > Scalar(90) ? Scalar(90) : horizontalBeamWidthDeg);
+    tilt_ = verticalTiltDeg < Scalar(0) ? Scalar(0) : (verticalTiltDeg > Scalar(90) ? Scalar(90) : verticalTiltDeg);
+    cMap_ = cm;
     outputFormat_ = outputFormat;
-    sonarData = NULL;
-    displayData = NULL;
-    newDataCallback = NULL;
-    glSSS = nullptr;
+    sonarData_ = NULL;
+    displayData_ = NULL;
+    newDataCallback_ = NULL;
+    glSSS_ = nullptr;
 }
 
 SSS::~SSS()
 {
-    if(displayData != NULL) delete [] displayData;
-    glSSS = nullptr;
+    if(displayData_ != NULL) delete [] displayData_;
+    glSSS_ = nullptr;
 }
 
 void SSS::setRangeMin(Scalar r)
 {
-    range.x = r < Scalar(0.02) ? 0.02f : (r < Scalar(range.y) ? (GLfloat)r : range.x);
+    range_.x = r < Scalar(0.02) ? 0.02f : (r < Scalar(range_.y) ? (GLfloat)r : range_.x);
 }
 
 void SSS::setRangeMax(Scalar r)
 {
-    range.y = r > Scalar(range.x) ? (GLfloat)r : range.x;
-    Scalar pulseTime = (Scalar(2)*range.y/SOUND_VELOCITY_WATER) * Scalar(1.1);
-    if(freq <= 0.0 || freq > Scalar(1)/pulseTime) // Limit update frequency based on range (physical limit)
-        freq = Scalar(1)/pulseTime;
+    range_.y = r > Scalar(range_.x) ? (GLfloat)r : range_.x;
+    Scalar pulseTime = (Scalar(2)*range_.y/SOUND_VELOCITY_WATER) * Scalar(1.1);
+    if(freq_ <= 0.0 || freq_ > Scalar(1)/pulseTime) // Limit update frequency based on range (physical limit)
+        freq_ = Scalar(1)/pulseTime;
 }
 
 void SSS::setGain(Scalar g)
 {
-    gain = g > Scalar(0) ? g : Scalar(1);
+    gain_ = g > Scalar(0) ? g : Scalar(1);
 }
 
 void SSS::setNoise(float multiplicativeStdDev, float additiveStdDev)
 {
     if(multiplicativeStdDev >= 0.f)
-        noise.x = multiplicativeStdDev;
+        noise_.x = multiplicativeStdDev;
     if(additiveStdDev >= 0.f)
-        noise.y = additiveStdDev;
-    if(glSSS != nullptr)
-        glSSS->setNoise(noise);
+        noise_.y = additiveStdDev;
+    if(glSSS_ != nullptr)
+        glSSS_->setNoise(noise_);
 }
 
 void* SSS::getImageDataPointer(unsigned int index)
 {
-    return sonarData;
+    return sonarData_;
 }
 
 void SSS::getDisplayResolution(unsigned int& x, unsigned int& y) const
@@ -99,22 +99,22 @@ void SSS::getDisplayResolution(unsigned int& x, unsigned int& y) const
 
 GLubyte* SSS::getDisplayDataPointer()
 {
-    return displayData;
+    return displayData_;
 }
 
 Scalar SSS::getRangeMin() const
 {
-    return Scalar(range.x);
+    return Scalar(range_.x);
 }
 
 Scalar SSS::getRangeMax() const
 {
-    return Scalar(range.y);
+    return Scalar(range_.y);
 }
 
 Scalar SSS::getGain() const
 {
-    return gain;
+    return gain_;
 }
 
 SonarOutputFormat SSS::getOutputFormat() const
@@ -129,26 +129,26 @@ VisionSensorType SSS::getVisionSensorType() const
 
 OpenGLView* SSS::getOpenGLView() const
 {
-    return glSSS;
+    return glSSS_;
 }
 
 void SSS::InitGraphics(bool& seesParticles)
 {
     seesParticles = false;
 
-    glSSS = new OpenGLSSS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),
-                          (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, (GLfloat)tilt, range, outputFormat_);
-    glSSS->setNoise(noise);
-    glSSS->setSonar(this);
-    glSSS->setColorMap(cMap);
+    glSSS_ = new OpenGLSSS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),
+                          (GLfloat)fovH_, (GLfloat)fovV_, (GLint)resX_, (GLint)resY_, (GLfloat)tilt_, range_, outputFormat_);
+    glSSS_->setNoise(noise_);
+    glSSS_->setSonar(this);
+    glSSS_->setColorMap(cMap_);
     UpdateTransform();
-    glSSS->UpdateTransform();
+    glSSS_->UpdateTransform();
     InternalUpdate(0);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glSSS);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glSSS_);
 
     unsigned int w, h;
     getDisplayResolution(w, h);
-    displayData = new GLubyte[w*h*3];
+    displayData_ = new GLubyte[w*h*3];
 }
 
 void SSS::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
@@ -156,37 +156,37 @@ void SSS::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
     glm::vec3 eye_ = glm::vec3((GLfloat)eye.x(), (GLfloat)eye.y(), (GLfloat)eye.z());
     glm::vec3 dir_ = glm::vec3((GLfloat)dir.x(), (GLfloat)dir.y(), (GLfloat)dir.z());
     glm::vec3 up_ = glm::vec3((GLfloat)up.x(), (GLfloat)up.y(), (GLfloat)up.z());
-    glSSS->SetupSonar(eye_, dir_, up_);
+    glSSS_->SetupSonar(eye_, dir_, up_);
 }
 
 void SSS::InstallNewDataHandler(std::function<void(SSS*)> callback)
 {
-    newDataCallback = callback;
+    newDataCallback_ = callback;
 }
 
 void SSS::NewDataReady(void* data, unsigned int index)
 {
-    if(newDataCallback != NULL)
+    if(newDataCallback_ != NULL)
     {
         if(index == 0)
         {
             unsigned int w, h;
             getDisplayResolution(w, h);
-            memcpy(displayData, data, w*h*3);
+            memcpy(displayData_, data, w*h*3);
         }
         else
         {
-            sonarData = data;
-            newDataCallback(this);
-            sonarData = NULL;
+            sonarData_ = data;
+            newDataCallback_(this);
+            sonarData_ = NULL;
         }
     }
 }
 
 void SSS::InternalUpdate(Scalar dt)
 {
-    if(glSSS != nullptr)
-        glSSS->Update();
+    if(glSSS_ != nullptr)
+        glSSS_->Update();
 }
 
 std::vector<Renderable> SSS::Render()
@@ -201,10 +201,10 @@ std::vector<Renderable> SSS::Render()
         
         //Create single transducer dummy
         int div = 12;
-        GLfloat fovStep = glm::radians(fovH)/(GLfloat)div;
+        GLfloat fovStep = glm::radians(fovH_)/(GLfloat)div;
         //Arcs min
-        GLfloat cosVAngle = cosf(glm::radians(fovV)/2.f) * range.x;
-        GLfloat sinVAngle = sinf(glm::radians(fovV)/2.f) * range.x;        
+        GLfloat cosVAngle = cosf(glm::radians(fovV_)/2.f) * range_.x;
+        GLfloat sinVAngle = sinf(glm::radians(fovV_)/2.f) * range_.x;        
         GLfloat hAngle = -fovStep*(div/2);
         for(int i=0; i<=div; ++i)
         {
@@ -226,8 +226,8 @@ std::vector<Renderable> SSS::Render()
             hAngle += fovStep;
         }
         //Arcs max
-        cosVAngle = cosf(glm::radians(fovV)/2.f) * range.y;
-        sinVAngle = sinf(glm::radians(fovV)/2.f) * range.y;        
+        cosVAngle = cosf(glm::radians(fovV_)/2.f) * range_.y;
+        sinVAngle = sinf(glm::radians(fovV_)/2.f) * range_.y;        
         hAngle = -fovStep*(div/2);
         for(int i=0; i<=div; ++i)
         {
@@ -270,7 +270,7 @@ std::vector<Renderable> SSS::Render()
         points->push_back(glm::vec3(xe, -sinVAngle, ze));
 
         //Add two transducer dummies
-        GLfloat offsetAngle = M_PI_2 - glm::radians(tilt);
+        GLfloat offsetAngle = M_PI_2 - glm::radians(tilt_);
         glm::mat4 views[2];
         views[0] = glm::rotate(-offsetAngle, glm::vec3(0.f,1.f,0.f));
         views[1] = glm::rotate(offsetAngle, glm::vec3(0.f,1.f,0.f));

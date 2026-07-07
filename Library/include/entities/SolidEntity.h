@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 29/12/12.
-//  Copyright(c) 2012-2025 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -395,57 +395,57 @@ namespace sf
         void BuildMultibodyLinkCollider(btMultiBody* mb, unsigned int child, btSoftMultiBodyDynamicsWorld* world);
         
         //Body
-        btMultiBodyLinkCollider* multibodyCollider;
+        btMultiBodyLinkCollider* multibodyCollider_;
         
-        Mesh* phyMesh; //Mesh used for physics calculation
-        Scalar thick;
-        Scalar volume;
-        Scalar surface;
+        Mesh* phyMesh_; //Mesh used for physics calculation
+        Scalar thick_;
+        Scalar volume_;
+        Scalar surface_;
         
-        Scalar mass;  //Mass of solid
-        Vector3 Ipri; //Principal moments of inertia
-        Scalar contactK; //Contact stiffness
-        Scalar contactD; //Contact damping
+        Scalar mass_;  //Mass of solid
+        Vector3 Ipri_; //Principal moments of inertia
+        Scalar contactK_; //Contact stiffness
+        Scalar contactD_; //Contact damping
         
         //CG is the point important for the simulation
-        Transform T_CG2C; //Transform between CG and physics origin
-        Transform T_CG2G; //Transform between CG and graphics origin
-        Transform T_CG2O; //Transform between CG and body origin
-        Vector3 P_CB; //Center of Buoyancy (in body CG frame)
+        Transform T_CG2C_; //Transform between CG and physics origin
+        Transform T_CG2G_; //Transform between CG and graphics origin
+        Transform T_CG2O_; //Transform between CG and body origin
+        Vector3 P_CB_; //Center of Buoyancy (in body CG frame)
         
         //O is a point important for building models
-        Transform T_O2G; //Transform between body origin and graphics origin
-        Transform T_O2C; //Transform between body origin and physics origin
-        Transform T_O2H; //Transform between body origin and geometry approximation origin
+        Transform T_O2G_; //Transform between body origin and graphics origin
+        Transform T_O2C_; //Transform between body origin and physics origin
+        Transform T_O2H_; //Transform between body origin and geometry approximation origin
         
-        Vector3 aMass; //Hydrodynamic added mass
-		Vector3 aI; //Hydrodynamic added inertia
-        GeometryApproxType fdApproxType;
-        std::vector<Scalar> fdApproxParams;
-        Vector3 fdCd;
-        Vector3 fdCf;
-        Transform T_CG2H; //Transform between CG and hydrodynamic proxy frame
+        Vector3 aMass_; //Hydrodynamic added mass
+		Vector3 aI_; //Hydrodynamic added inertia
+        GeometryApproxType fdApproxType_;
+        std::vector<Scalar> fdApproxParams_;
+        Vector3 fdCd_;
+        Vector3 fdCf_;
+        Transform T_CG2H_; //Transform between CG and hydrodynamic proxy frame
         
-        PhysicsSettings phy;
-        Vector3 Fb;
-        Vector3 Tb;
-        Vector3 Fdq;
-        Vector3 Tdq;
-        Vector3 Fdf;
-        Vector3 Tdf;
-        Scalar Swet; //Wetted surface of the body
-        Scalar Vsub; //Submerged part of body
+        PhysicsSettings phy_;
+        Vector3 Fb_;
+        Vector3 Tb_;
+        Vector3 Fdq_;
+        Vector3 Tdq_;
+        Vector3 Fdf_;
+        Vector3 Tdf_;
+        Scalar Swet_; //Wetted surface of the body
+        Scalar Vsub_; //Submerged part of body
         
-        Vector3 Fda;
-        Vector3 Tda;
+        Vector3 Fda_;
+        Vector3 Tda_;
         
         //Motion
-        Vector3 lastV;
-        Vector3 lastOmega;
+        Vector3 lastV_;
+        Vector3 lastOmega_;
         
         //Display
-        int phyObjectId;
-        Renderable submerged;
+        int phyObjectId_;
+        Renderable submerged_;
         
     private:
         friend class FeatherstoneEntity;

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/04/18.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -87,9 +87,9 @@ namespace sf
         ForcefieldType getForcefieldType();
         
     private:
-        bool active;
-        std::vector<SolidEntity*> solids;
-        int objectId;
-        int lookId;
+        bool active_;
+        std::vector<SolidEntity*> solids_;
+        int objectId_;
+        int lookId_;
     };
 }

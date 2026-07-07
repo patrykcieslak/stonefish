@@ -34,39 +34,39 @@ namespace sf
 
 Actuator::Actuator(std::string uniqueName)
 {
-    name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
-    dm = DisplayMode::GRAPHICAL;
+    name_ = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
+    dm_ = DisplayMode::GRAPHICAL;
     setWatchdog(Scalar(-1));
 }
 
 Actuator::~Actuator()
 {
     if(SimulationApp::getApp() != nullptr)
-        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
+        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name_);
 }
 
 void Actuator::setDisplayMode(DisplayMode m)
 {
-    dm = m;
+    dm_ = m;
 }
 
 void Actuator::setWatchdog(Scalar timeout)
 {
-    watchdogTimeout = timeout;
-    watchdog = Scalar(0);
+    watchdogTimeout_ = timeout;
+    watchdog_ = Scalar(0);
 }
 
 std::string Actuator::getName() const
 {
-    return name;
+    return name_;
 }
 
 void Actuator::Update(Scalar dt)
 {
-    if(watchdogTimeout > Scalar(0))
+    if(watchdogTimeout_ > Scalar(0))
     {
-        watchdog += dt;
-        if(watchdog > watchdogTimeout)
+        watchdog_ += dt;
+        if(watchdog_ > watchdogTimeout_)
             WatchdogTimeout();
     }
 }
@@ -83,7 +83,7 @@ void Actuator::WatchdogTimeout()
 
 void Actuator::ResetWatchdog()
 {
-    watchdog = Scalar(0);
+    watchdog_ = Scalar(0);
 }
 
 }

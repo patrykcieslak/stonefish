@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 4/7/17.
-//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Camera__
@@ -104,13 +104,13 @@ namespace sf
         virtual void* getImageDataPointer(unsigned int index = 0) = 0;
         
     protected:
-        Scalar fovH;
-        unsigned int resX;
-        unsigned int resY;
-        unsigned int screenX;
-        unsigned int screenY;
-        float screenScale;
-        bool screen;
+        Scalar fovH_;
+        unsigned int resX_;
+        unsigned int resY_;
+        unsigned int screenX_;
+        unsigned int screenY_;
+        float screenScale_;
+        bool screen_;
     };
 }
 

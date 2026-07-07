@@ -43,43 +43,43 @@ GLSLShader* OpenGLOpticalFlowCamera::flipShader = nullptr;
 OpenGLOpticalFlowCamera::OpenGLOpticalFlowCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
                           GLint originX, GLint originY, GLint width, GLint height,
                           GLfloat horizontalFOVDeg, glm::vec2 range, bool continuousUpdate)
- : OpenGLView(originX, originY, width, height), randDist(0.f, 1.f)
+ : OpenGLView(originX, originY, width, height), randDist_(0.f, 1.f)
 {
-    _needsUpdate = false;
-    continuous = continuousUpdate;
-    newData = false;
-    camera = nullptr;
-    noiseVel = glm::vec2(0.f);
-    maxVel = width/2.f;
-    this->range = range;
+    needsUpdate_ = false;
+    continuous_ = continuousUpdate;
+    newData_ = false;
+    camera_ = nullptr;
+    noiseVel_ = glm::vec2(0.f);
+    maxVel_ = width/2.f;
+    this->range_ = range;
     
     SetupCamera(eyePosition, direction, cameraUp);
     UpdateTransform();
     
-    fov.x = horizontalFOVDeg/180.f*M_PI;
-    fov.y = 2.f * atanf( (GLfloat)viewportHeight/(GLfloat)viewportWidth * tanf(fov.x/2.f) );
-    projection = glm::perspectiveFov(fov.y, (GLfloat)viewportWidth, (GLfloat)viewportHeight, range.x, range.y);
-    focalLength = ((GLfloat)viewportWidth/2.f)/tanf(fov.x/2.f);
+    fov_.x = horizontalFOVDeg/180.f*M_PI;
+    fov_.y = 2.f * atanf( (GLfloat)viewportHeight_/(GLfloat)viewportWidth_ * tanf(fov_.x/2.f) );
+    projection_ = glm::perspectiveFov(fov_.y, (GLfloat)viewportWidth_, (GLfloat)viewportHeight_, range.x, range.y);
+    focalLength_ = ((GLfloat)viewportWidth_/2.f)/tanf(fov_.x/2.f);
     
     //Direct flow velocity output
-    renderFlowTex[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+    renderFlowTex_[0] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_, viewportHeight_, 0), 
                                             GL_RG32F, GL_RG, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
-    renderFlowTex[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+    renderFlowTex_[1] = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_, viewportHeight_, 0), 
                                             GL_RG32F, GL_RG, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
-    renderDepthTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), 
+    renderDepthTex_ = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_, viewportHeight_, 0), 
                                                            GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_FLOAT, NULL, FilteringMode::NEAREST, false);
     std::vector<FBOTexture> fboTextures;
-    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderFlowTex[0]));
-    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, renderFlowTex[1]));
-    fboTextures.push_back(FBOTexture(GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, renderDepthTex));
-    renderFBO = OpenGLContent::GenerateFramebuffer(fboTextures);
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderFlowTex_[0]));
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, renderFlowTex_[1]));
+    fboTextures.push_back(FBOTexture(GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, renderDepthTex_));
+    renderFBO_ = OpenGLContent::GenerateFramebuffer(fboTextures);
 
     //Flow visualization with color map
-    displayFlowTex = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth, viewportHeight, 0), GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE, NULL, FilteringMode::BILINEAR, false);
+    displayFlowTex_ = OpenGLContent::GenerateTexture(GL_TEXTURE_2D, glm::uvec3(viewportWidth_, viewportHeight_, 0), GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE, NULL, FilteringMode::BILINEAR, false);
 
     fboTextures.clear();
-    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, displayFlowTex));
-    displayFBO = OpenGLContent::GenerateFramebuffer(fboTextures);
+    fboTextures.push_back(FBOTexture(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, displayFlowTex_));
+    displayFBO_ = OpenGLContent::GenerateFramebuffer(fboTextures);
 
     //Display quad
     GLfloat quadData[4][4];
@@ -100,11 +100,11 @@ OpenGLOpticalFlowCamera::OpenGLOpticalFlowCamera(glm::vec3 eyePosition, glm::vec
     quadData[3][2] = 1.f;
     quadData[3][3] = 0.f;
     
-    glGenVertexArrays(1, &displayVAO);
-    OpenGLState::BindVertexArray(displayVAO);
+    glGenVertexArrays(1, &displayVAO_);
+    OpenGLState::BindVertexArray(displayVAO_);
     glEnableVertexAttribArray(0);
-    glGenBuffers(1, &displayVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, displayVBO);
+    glGenBuffers(1, &displayVBO_);
+    glBindBuffer(GL_ARRAY_BUFFER, displayVBO_);
     glBufferData(GL_ARRAY_BUFFER, sizeof(quadData), quadData, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -113,119 +113,119 @@ OpenGLOpticalFlowCamera::OpenGLOpticalFlowCamera(glm::vec3 eyePosition, glm::vec
 
 OpenGLOpticalFlowCamera::~OpenGLOpticalFlowCamera()
 {
-    glDeleteTextures(1, &renderDepthTex);
-    glDeleteTextures(2, renderFlowTex);
-    glDeleteTextures(1, &displayFlowTex);
-    glDeleteFramebuffers(1, &renderFBO);
-    glDeleteFramebuffers(1, &displayFBO);
-    glDeleteVertexArrays(1, &displayVAO);
-    glDeleteBuffers(1, &displayVBO);
+    glDeleteTextures(1, &renderDepthTex_);
+    glDeleteTextures(2, renderFlowTex_);
+    glDeleteTextures(1, &displayFlowTex_);
+    glDeleteFramebuffers(1, &renderFBO_);
+    glDeleteFramebuffers(1, &displayFBO_);
+    glDeleteVertexArrays(1, &displayVAO_);
+    glDeleteBuffers(1, &displayVBO_);
 
-    if(camera != nullptr)
+    if(camera_ != nullptr)
     {
-        glDeleteBuffers(1, &outputPBO);
-        glDeleteBuffers(1, &displayPBO);
+        glDeleteBuffers(1, &outputPBO_);
+        glDeleteBuffers(1, &displayPBO_);
     }
 }
 
 void OpenGLOpticalFlowCamera::SetupCamera(glm::vec3 _eye, glm::vec3 _dir, glm::vec3 _up)
 {
-    tempDir = _dir;
-    tempEye = _eye;
-    tempUp = _up;
+    tempDir_ = _dir;
+    tempEye_ = _eye;
+    tempUp_ = _up;
 }
 
 void OpenGLOpticalFlowCamera::UpdateTransform()
 {
-    eye = tempEye;
-    dir = tempDir;
-    up = tempUp;
+    eye_ = tempEye_;
+    dir_ = tempDir_;
+    up_ = tempUp_;
     SetupCamera();
 
     //Inform camera to run callback
-    if(newData)
+    if(newData_)
     {
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, displayPBO);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, displayPBO_);
         GLubyte* src = (GLubyte*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
         if(src)
         {
-            camera->NewDataReady(src, 0);
+            camera_->NewDataReady(src, 0);
             glUnmapBuffer(GL_PIXEL_PACK_BUFFER); //Release pointer to the mapped buffer
         }
         
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO_);
         GLfloat* src2 = (GLfloat*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
         if(src2)
         {
-            camera->NewDataReady(src2, 1);
+            camera_->NewDataReady(src2, 1);
             glUnmapBuffer(GL_PIXEL_PACK_BUFFER); //Release pointer to the mapped buffer
         }
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-        newData = false;
+        newData_ = false;
     }
 }
 
 void OpenGLOpticalFlowCamera::SetupCamera()
 {
-    cameraTransform = glm::lookAt(eye, eye+dir, up);
+    cameraTransform_ = glm::lookAt(eye_, eye_+dir_, up_);
 }
 
 glm::vec3 OpenGLOpticalFlowCamera::GetEyePosition() const
 {
-    return eye;
+    return eye_;
 }
 
 glm::vec3 OpenGLOpticalFlowCamera::GetLookingDirection() const
 {
-    return dir;
+    return dir_;
 }
 
 glm::vec3 OpenGLOpticalFlowCamera::GetUpDirection() const
 {
-    return up;
+    return up_;
 }
 
 glm::mat4 OpenGLOpticalFlowCamera::GetProjectionMatrix() const
 {
-    return projection;
+    return projection_;
 }
 
 glm::mat4 OpenGLOpticalFlowCamera::GetViewMatrix() const
 {
-    return cameraTransform;
+    return cameraTransform_;
 }
 
 GLfloat OpenGLOpticalFlowCamera::GetFOVX() const
 {
-    return fov.x;
+    return fov_.x;
 }
 
 GLfloat OpenGLOpticalFlowCamera::GetFOVY() const
 {
-    return fov.y;
+    return fov_.y;
 }
 
 GLfloat OpenGLOpticalFlowCamera::GetNearClip() const
 {
-    return range.x;
+    return range_.x;
 }
 
 GLfloat OpenGLOpticalFlowCamera::GetFarClip() const
 {
-    return range.y;
+    return range_.y;
 }
 
 void OpenGLOpticalFlowCamera::Update()
 {
-    _needsUpdate = true;
+    needsUpdate_ = true;
 }
 
 bool OpenGLOpticalFlowCamera::needsUpdate()
 {
-    if(_needsUpdate)
+    if(needsUpdate_)
     {
-        _needsUpdate = false;
-        return enabled;
+        needsUpdate_ = false;
+        return enabled_;
     }
     else
         return false;
@@ -233,27 +233,27 @@ bool OpenGLOpticalFlowCamera::needsUpdate()
 
 void OpenGLOpticalFlowCamera::setCamera(Camera* cam, unsigned int index)
 {
-    camera = cam;
+    camera_ = cam;
 
-    glGenBuffers(1, &outputPBO);
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO);
-    glBufferData(GL_PIXEL_PACK_BUFFER, viewportWidth * viewportHeight * 2 * sizeof(GLfloat), 0, GL_STREAM_READ);
+    glGenBuffers(1, &outputPBO_);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO_);
+    glBufferData(GL_PIXEL_PACK_BUFFER, viewportWidth_ * viewportHeight_ * 2 * sizeof(GLfloat), 0, GL_STREAM_READ);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
-    glGenBuffers(1, &displayPBO);
-    glBindBuffer(GL_PIXEL_PACK_BUFFER, displayPBO);
-    glBufferData(GL_PIXEL_PACK_BUFFER, viewportWidth * viewportHeight * 3 * sizeof(GLubyte), 0, GL_STREAM_READ);
+    glGenBuffers(1, &displayPBO_);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, displayPBO_);
+    glBufferData(GL_PIXEL_PACK_BUFFER, viewportWidth_ * viewportHeight_ * 3 * sizeof(GLubyte), 0, GL_STREAM_READ);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 }
 
 void OpenGLOpticalFlowCamera::setNoise(glm::vec2 velStdDev)
 {
-    noiseVel = velStdDev;
+    noiseVel_ = velStdDev;
 }
 
 void OpenGLOpticalFlowCamera::setMaxVelocity(GLfloat v)
 {
-    maxVel = v;
+    maxVel_ = v;
 }
 
 ViewType OpenGLOpticalFlowCamera::getType() const
@@ -268,8 +268,8 @@ void OpenGLOpticalFlowCamera::ComputeOutput(std::vector<Renderable>& objects)
     content->SetDrawingMode(DrawingMode::RAW);
     
     //Optical flow velocity output
-    OpenGLState::BindFramebuffer(renderFBO);
-    OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+    OpenGLState::BindFramebuffer(renderFBO_);
+    OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glm::mat4 VP = GetProjectionMatrix() * GetViewMatrix();
@@ -278,14 +278,14 @@ void OpenGLOpticalFlowCamera::ComputeOutput(std::vector<Renderable>& objects)
     opticalFlowCameraOutputShader->SetUniform("FC", GetLogDepthConstant());
     opticalFlowCameraOutputShader->SetUniform("VR", glm::mat3(GetViewMatrix()));
     opticalFlowCameraOutputShader->SetUniform("d", GetLookingDirection());
-    opticalFlowCameraOutputShader->SetUniform("c", glm::vec2(viewportWidth/2.f, viewportHeight/2.f));
-    opticalFlowCameraOutputShader->SetUniform("f", focalLength);
+    opticalFlowCameraOutputShader->SetUniform("c", glm::vec2(viewportWidth_/2.f, viewportHeight_/2.f));
+    opticalFlowCameraOutputShader->SetUniform("f", focalLength_);
     opticalFlowCameraOutputShader->SetUniform("P_c", GetEyePosition());
     
-    if(camera != nullptr)
+    if(camera_ != nullptr)
     {
         Vector3 linear, angular;
-        camera->getSensorVelocity(linear, angular);
+        camera_->getSensorVelocity(linear, angular);
         opticalFlowCameraOutputShader->SetUniform("v_c", glVectorFromVector(linear));
         opticalFlowCameraOutputShader->SetUniform("w_c", glVectorFromVector(angular));
     }
@@ -310,21 +310,21 @@ void OpenGLOpticalFlowCamera::ComputeOutput(std::vector<Renderable>& objects)
     //Flip image
     glDrawBuffer(GL_COLOR_ATTACHMENT1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderFlowTex[0]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderFlowTex_[0]);
     flipShader->Use();
     flipShader->SetUniform("texSource", TEX_POSTPROCESS1);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     
     //Color mapped velocity display
-    OpenGLState::BindFramebuffer(displayFBO);
-    OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+    OpenGLState::BindFramebuffer(displayFBO_);
+    OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
     glClear(GL_COLOR_BUFFER_BIT);
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderFlowTex[1]);
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderFlowTex_[1]);
     opticalFlowVisualizeShader->Use();
     opticalFlowVisualizeShader->SetUniform("texFlow", TEX_POSTPROCESS1);
-    opticalFlowVisualizeShader->SetUniform("maxVel", maxVel);
+    opticalFlowVisualizeShader->SetUniform("maxVel", maxVel_);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    OpenGLState::BindVertexArray(displayVAO);
+    OpenGLState::BindVertexArray(displayVAO_);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     OpenGLState::BindVertexArray(0);
     OpenGLState::BindFramebuffer(0);
@@ -338,8 +338,8 @@ void OpenGLOpticalFlowCamera::DrawLDR(GLuint destinationFBO, bool updated)
     bool display = true;
     unsigned int dispX, dispY;
     GLfloat dispScale;
-    if(camera != nullptr)
-        display = camera->getDisplayOnScreen(dispX, dispY, dispScale);
+    if(camera_ != nullptr)
+        display = camera_->getDisplayOnScreen(dispX, dispY, dispScale);
     
     //Draw on screen
     if(display)
@@ -350,24 +350,24 @@ void OpenGLOpticalFlowCamera::DrawLDR(GLuint destinationFBO, bool updated)
         OpenGLState::BindFramebuffer(destinationFBO);
         OpenGLState::Viewport(0, 0, windowWidth, windowHeight);
         OpenGLState::DisableCullFace();
-        content->DrawTexturedQuad(dispX, dispY+viewportHeight*dispScale, viewportWidth*dispScale, -viewportHeight*dispScale, displayFlowTex);
+        content->DrawTexturedQuad(dispX, dispY+viewportHeight_*dispScale, viewportWidth_*dispScale, -viewportHeight_*dispScale, displayFlowTex_);
         OpenGLState::EnableCullFace();
         OpenGLState::BindFramebuffer(0);
     }
 
     //Copy texture to camera buffer
-    if(camera != nullptr && updated)
+    if(camera_ != nullptr && updated)
     {
-        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderFlowTex[1]);
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderFlowTex_[1]);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, outputPBO_);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RG, GL_FLOAT, NULL);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, displayFlowTex);
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, displayPBO);
+        OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, displayFlowTex_);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, displayPBO_);
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
         OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
-        newData = true;
+        newData_ = true;
     }
 }
 

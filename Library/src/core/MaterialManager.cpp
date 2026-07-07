@@ -41,24 +41,24 @@ MaterialManager::~MaterialManager()
 
 void MaterialManager::ClearMaterialsAndFluids()
 {
-    materials.clear();
-    fluids.clear();
-    interactions.clear();
-    materialNameManager.ClearNames();
-    fluidNameManager.ClearNames();
+    materials_.clear();
+    fluids_.clear();
+    interactions_.clear();
+    materialNameManager_.ClearNames();
+    fluidNameManager_.ClearNames();
 }
 
 std::string MaterialManager::CreateMaterial(const std::string& uniqueName, Scalar density, Scalar restitution, Scalar magnetic)
 {
     //Create and add new material
     Material mat;
-    mat.name = materialNameManager.AddName(uniqueName);
+    mat.name = materialNameManager_.AddName(uniqueName);
     mat.density = density;
     mat.restitution = restitution;
     mat.magnetic = magnetic;
-    materials.push_back(mat);
+    materials_.push_back(mat);
     
-    cInfo("Material %s (%d) created.", mat.name.c_str(), materials.size()-1);
+    cInfo("Material %s (%d) created.", mat.name.c_str(), materials_.size()-1);
     
     //Set initial friction coefficients
     Friction f;
@@ -66,12 +66,12 @@ std::string MaterialManager::CreateMaterial(const std::string& uniqueName, Scala
     f.fDynamic = Scalar(1);
     
     MaterialPair p;
-    p.mat1Id = (int)materials.size()-1;
+    p.mat1Id = (int)materials_.size()-1;
     
-    for(unsigned int i=0; i < materials.size(); ++i)
+    for(unsigned int i=0; i < materials_.size(); ++i)
     {
         p.mat2Id = i;
-        interactions.insert({p,f});
+        interactions_.insert({p,f});
     }
     
     //Display interactions
@@ -84,11 +84,11 @@ std::string MaterialManager::CreateMaterial(const std::string& uniqueName, Scala
 std::string MaterialManager::CreateFluid(const std::string& uniqueName, Scalar density, Scalar viscosity, Scalar IOR)
 {
     Fluid flu;
-    flu.name = fluidNameManager.AddName(uniqueName);
+    flu.name = fluidNameManager_.AddName(uniqueName);
     flu.density = density;
     flu.viscosity = viscosity;
     flu.IOR = IOR > 0 ? IOR : 1.0;
-    fluids.push_back(flu);
+    fluids_.push_back(flu);
     
     return flu.name;
 }
@@ -105,7 +105,7 @@ bool MaterialManager::SetMaterialsInteraction(const std::string& firstMaterialNa
     
     try
     {
-        interactions.at(p) = f;
+        interactions_.at(p) = f;
         return true;
     }
     catch(const std::out_of_range& e)
@@ -123,7 +123,7 @@ Friction MaterialManager::GetMaterialsInteraction(int mat1Index, int mat2Index)
         
     try
     {
-        Friction f = interactions.at(p);
+        Friction f = interactions_.at(p);
         return f;
     }
     catch(const std::out_of_range& e)
@@ -145,8 +145,8 @@ Friction MaterialManager::GetMaterialsInteraction(const std::string& mat1Name, c
 
 int MaterialManager::getMaterialIndex(const std::string& name)
 {
-    for(unsigned int i=0; i<materials.size(); ++i)
-        if(materials[i].name == name)
+    for(unsigned int i=0; i<materials_.size(); ++i)
+        if(materials_[i].name == name)
             return i;
     
     cError("Wrong material name %s!", name.c_str());
@@ -155,34 +155,34 @@ int MaterialManager::getMaterialIndex(const std::string& name)
 
 Material MaterialManager::getMaterial(const std::string& name)
 {
-    for(unsigned int i=0; i<materials.size(); ++i)
-        if(materials[i].name == name)
-            return materials[i];
+    for(unsigned int i=0; i<materials_.size(); ++i)
+        if(materials_[i].name == name)
+            return materials_[i];
     
-    return materials[0];
+    return materials_[0];
 }
 
 Material MaterialManager::getMaterial(int index)
 {
-    if(index >= 0 && index < (int)materials.size())
-        return materials[index];
+    if(index >= 0 && index < (int)materials_.size())
+        return materials_[index];
     else
-        return materials[0];
+        return materials_[0];
 }
 
 Fluid MaterialManager::getFluid(const std::string& name)
 {
-    for(unsigned int i=0; i<fluids.size(); ++i)
-        if(fluids[i].name == name)
-            return fluids[i];
+    for(unsigned int i=0; i<fluids_.size(); ++i)
+        if(fluids_[i].name == name)
+            return fluids_[i];
     
     return Fluid();
 }
 
 Fluid MaterialManager::getFluid(int index)
 {
-    if(index >= 0 && index < (int)fluids.size())
-        return fluids[index];
+    if(index >= 0 && index < (int)fluids_.size())
+        return fluids_[index];
     else
         return Fluid();
 }
@@ -191,8 +191,8 @@ std::vector<std::string> MaterialManager::GetMaterialsList()
 {
     std::vector<std::string> list;
     
-    for(unsigned int i=0; i<materials.size(); i++)
-        list.push_back(materials[i].name);
+    for(unsigned int i=0; i<materials_.size(); i++)
+        list.push_back(materials_[i].name);
     
     return list;
 }

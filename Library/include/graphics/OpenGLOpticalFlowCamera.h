@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/02/2024.
-//  Copyright (c) 2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLOpticalFlowCamera__
@@ -148,32 +148,32 @@ namespace sf
         static void Destroy();
         
     protected:
-        Camera* camera;
-        glm::mat4 cameraTransform;
-        glm::vec3 eye;
-        glm::vec3 dir;
-        glm::vec3 up;
-        glm::vec3 tempEye;
-        glm::vec3 tempDir;
-        glm::vec3 tempUp;
-        glm::mat4 projection;
-        glm::vec2 fov;
-        GLfloat focalLength;
-        bool _needsUpdate;
-        bool newData;
-        glm::vec2 range;
-        glm::vec2 noiseVel;
-        GLfloat maxVel;
-        std::default_random_engine randGen;
-        std::uniform_real_distribution<float> randDist;
-        GLuint renderDepthTex;
-        GLuint renderFlowTex[2];
-        GLuint displayFlowTex;
-        GLuint outputPBO;
-        GLuint displayPBO;
-        GLuint displayFBO;
-        GLuint displayVAO;
-        GLuint displayVBO;
+        Camera* camera_;
+        glm::mat4 cameraTransform_;
+        glm::vec3 eye_;
+        glm::vec3 dir_;
+        glm::vec3 up_;
+        glm::vec3 tempEye_;
+        glm::vec3 tempDir_;
+        glm::vec3 tempUp_;
+        glm::mat4 projection_;
+        glm::vec2 fov_;
+        GLfloat focalLength_;
+        bool needsUpdate_;
+        bool newData_;
+        glm::vec2 range_;
+        glm::vec2 noiseVel_;
+        GLfloat maxVel_;
+        std::default_random_engine randGen_;
+        std::uniform_real_distribution<float> randDist_;
+        GLuint renderDepthTex_;
+        GLuint renderFlowTex_[2];
+        GLuint displayFlowTex_;
+        GLuint outputPBO_;
+        GLuint displayPBO_;
+        GLuint displayFBO_;
+        GLuint displayVAO_;
+        GLuint displayVBO_;
         static GLSLShader* opticalFlowCameraOutputShader;
         static GLSLShader* opticalFlowVisualizeShader;
         static GLSLShader* flipShader;

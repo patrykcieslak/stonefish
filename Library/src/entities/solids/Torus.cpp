@@ -34,39 +34,39 @@ namespace sf
 Torus::Torus(std::string uniqueName, PhysicsSettings phy, Scalar majorRadius, Scalar minorRadius, const Transform& origin, std::string material, std::string look, Scalar thickness)
     : SolidEntity(uniqueName, phy, material, look, thickness)
 {
-    MR = majorRadius;
-    mR = minorRadius;
-    T_O2G = T_O2C = T_O2H = origin;
-    T_CG2O = origin.inverse();
-    T_CG2C = T_CG2G = I4();
-    P_CB = Vector3(0,0,0);
+    majorRadius_ = majorRadius;
+    minorRadius_ = minorRadius;
+    T_O2G_ = T_O2C_ = T_O2H_ = origin;
+    T_CG2O_ = origin.inverse();
+    T_CG2C_ = T_CG2G_ = I4();
+    P_CB_ = Vector3(0,0,0);
     
     //Calculate physical properties
-    if(thick > Scalar(0) && thick/Scalar(2) < mR)
+    if(thick_ > Scalar(0) && thick_/Scalar(2) < minorRadius_)
     {
-        Scalar mr1 = mR - thick/Scalar(2);
-        Scalar mr2 = mR + thick/Scalar(2);
-        volume = M_PI*MR*M_PI*(mr2*mr2 - mr1*mr1)*Scalar(2);
-        surface = Scalar(2)*M_PI*mr2 * Scalar(2)*M_PI*MR;
-        mass = volume * mat.density;
-        Scalar m1 = M_PI*MR*M_PI*mr1*mr1;
-        Scalar m2 = M_PI*MR*M_PI*mr2*mr2;
-        Scalar Id = (Scalar(4)*MR*MR + Scalar(5)*mr2*mr2)*m2/Scalar(8) - (Scalar(4)*MR*MR + Scalar(5)*mr1*mr1)*m1/Scalar(8);
-        Scalar Ia = (MR*MR + Scalar(3)/Scalar(4)*mr2*mr2)*m2 - (MR*MR + Scalar(3)/Scalar(4)*mr1*mr1)*m1;
-        Ipri = Vector3(Id,Ia,Id);
+        Scalar mr1 = minorRadius_ - thick_/Scalar(2);
+        Scalar mr2 = minorRadius_ + thick_/Scalar(2);
+        volume_ = M_PI*majorRadius_*M_PI*(mr2*mr2 - mr1*mr1)*Scalar(2);
+        surface_ = Scalar(2)*M_PI*mr2 * Scalar(2)*M_PI*majorRadius_;
+        mass_ = volume_ * mat_.density;
+        Scalar m1 = M_PI*majorRadius_*M_PI*mr1*mr1;
+        Scalar m2 = M_PI*majorRadius_*M_PI*mr2*mr2;
+        Scalar Id = (Scalar(4)*majorRadius_*majorRadius_ + Scalar(5)*mr2*mr2)*m2/Scalar(8) - (Scalar(4)*majorRadius_*majorRadius_ + Scalar(5)*mr1*mr1)*m1/Scalar(8);
+        Scalar Ia = (majorRadius_*majorRadius_ + Scalar(3)/Scalar(4)*mr2*mr2)*m2 - (majorRadius_*majorRadius_ + Scalar(3)/Scalar(4)*mr1*mr1)*m1;
+        Ipri_ = Vector3(Id,Ia,Id);
     }
     else
     {
-        volume = M_PI*mR*mR*M_PI*MR*Scalar(2);
-        surface = Scalar(2)*M_PI*mR * Scalar(2)*M_PI*MR;
-        mass = volume * mat.density;
-        Scalar Id = (Scalar(4)*MR*MR + Scalar(5)*mR*mR)*mass/Scalar(8);
-        Scalar Ia = (MR*MR + Scalar(3)/Scalar(4)*mR*mR)*mass;
-        Ipri = Vector3(Id,Ia,Id);
+        volume_ = M_PI*minorRadius_*minorRadius_*M_PI*majorRadius_*Scalar(2);
+        surface_ = Scalar(2)*M_PI*minorRadius_ * Scalar(2)*M_PI*majorRadius_;
+        mass_ = volume_ * mat_.density;
+        Scalar Id = (Scalar(4)*majorRadius_*majorRadius_ + Scalar(5)*minorRadius_*minorRadius_)*mass_/Scalar(8);
+        Scalar Ia = (majorRadius_*majorRadius_ + Scalar(3)/Scalar(4)*minorRadius_*minorRadius_)*mass_;
+        Ipri_ = Vector3(Id,Ia,Id);
     }
     
     //Build geometry
-    phyMesh = OpenGLContent::BuildTorus(MR, mR);
+    phyMesh_ = OpenGLContent::BuildTorus(majorRadius_, minorRadius_);
     
     //Compute hydrodynamic properties
     ComputeFluidDynamicsApprox( GeometryApproxType::CYLINDER);
@@ -80,7 +80,7 @@ SolidType Torus::getSolidType()
 
 btCollisionShape* Torus::BuildCollisionShape()
 {   
-    btCollisionShape* torus = new TorusShape(MR, mR);
+    btCollisionShape* torus = new TorusShape(majorRadius_, minorRadius_);
     torus->setMargin(COLLISION_MARGIN);
     return torus;
 }

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 02/11/2017.
-//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_GPS__
@@ -62,8 +62,8 @@ namespace sf
         
     private:
         //Custom noise generation specific to GPS
-        Scalar nedStdDev;
-        std::normal_distribution<Scalar> noise;
+        Scalar nedStdDev_;
+        std::normal_distribution<Scalar> noise_;
     };
 }
 

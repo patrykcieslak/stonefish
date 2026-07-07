@@ -36,37 +36,37 @@ namespace sf
 DepthCamera::DepthCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar minDepth, Scalar maxDepth, Scalar frequency)
     : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
 {
-    depthRange.x = minDepth < Scalar(0.01) ? 0.01f : (GLfloat)minDepth;
-    depthRange.y = maxDepth > Scalar(0.01) ? (GLfloat)maxDepth : 1.f;
-    noiseStdDev = 0.f;
-    newDataCallback = nullptr;
-    imageData = nullptr;
-    glCamera = nullptr;
+    depthRange_.x = minDepth < Scalar(0.01) ? 0.01f : (GLfloat)minDepth;
+    depthRange_.y = maxDepth > Scalar(0.01) ? (GLfloat)maxDepth : 1.f;
+    noiseStdDev_ = 0.f;
+    newDataCallback_ = nullptr;
+    imageData_ = nullptr;
+    glCamera_ = nullptr;
 }
 
 DepthCamera::~DepthCamera()
 {
-    glCamera = nullptr;
+    glCamera_ = nullptr;
 }
 
 void DepthCamera::setNoise(float depthStdDev)
 {
-    if(depthStdDev >= 0.f && depthStdDev != noiseStdDev)
+    if(depthStdDev >= 0.f && depthStdDev != noiseStdDev_)
     {
-        noiseStdDev = depthStdDev;
-        if(glCamera != nullptr)
-            glCamera->setNoise(noiseStdDev);
+        noiseStdDev_ = depthStdDev;
+        if(glCamera_ != nullptr)
+            glCamera_->setNoise(noiseStdDev_);
     }
 }
 
 void* DepthCamera::getImageDataPointer(unsigned int index)
 {
-    return imageData;
+    return imageData_;
 }
 
 glm::vec2 DepthCamera::getDepthRange() const
 {
-    return depthRange;
+    return depthRange_;
 }
     
 VisionSensorType DepthCamera::getVisionSensorType() const
@@ -76,20 +76,20 @@ VisionSensorType DepthCamera::getVisionSensorType() const
 
 OpenGLView* DepthCamera::getOpenGLView() const
 {
-    return glCamera;
+    return glCamera_;
 }
 
 void DepthCamera::InitGraphics(bool& seesParticles)
 {
     seesParticles = false;
 
-    glCamera = new OpenGLDepthCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, depthRange.x, depthRange.y, freq < Scalar(0));
-    glCamera->setNoise(noiseStdDev);
-    glCamera->setCamera(this);
+    glCamera_ = new OpenGLDepthCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX_, resY_, (GLfloat)fovH_, depthRange_.x, depthRange_.y, freq_ < Scalar(0));
+    glCamera_->setNoise(noiseStdDev_);
+    glCamera_->setCamera(this);
     UpdateTransform();
-    glCamera->UpdateTransform();
+    glCamera_->UpdateTransform();
     InternalUpdate(0);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera_);
 }
 
 void DepthCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
@@ -97,27 +97,27 @@ void DepthCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vect
     glm::vec3 eye_ = glm::vec3((GLfloat)eye.x(), (GLfloat)eye.y(), (GLfloat)eye.z());
     glm::vec3 dir_ = glm::vec3((GLfloat)dir.x(), (GLfloat)dir.y(), (GLfloat)dir.z());
     glm::vec3 up_ = glm::vec3((GLfloat)up.x(), (GLfloat)up.y(), (GLfloat)up.z());
-    glCamera->SetupCamera(eye_, dir_, up_);
+    glCamera_->SetupCamera(eye_, dir_, up_);
 }
 
 void DepthCamera::InstallNewDataHandler(std::function<void(DepthCamera*)> callback)
 {
-    newDataCallback = callback;
+    newDataCallback_ = callback;
 }
 
 void DepthCamera::NewDataReady(void* data, unsigned int index)
 {
-    if(newDataCallback != nullptr)
+    if(newDataCallback_ != nullptr)
     {
-        imageData = (GLfloat*)data;
-        newDataCallback(this);
-        imageData = nullptr;
+        imageData_ = (GLfloat*)data;
+        newDataCallback_(this);
+        imageData_ = nullptr;
     }
 }
 
 void DepthCamera::InternalUpdate(Scalar dt)
 {
-    glCamera->Update();
+    glCamera_->Update();
 }
 
 }

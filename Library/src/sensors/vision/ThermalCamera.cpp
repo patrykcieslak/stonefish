@@ -36,59 +36,59 @@ namespace sf
 ThermalCamera::ThermalCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar minTemp, Scalar maxTemp,
     Scalar frequency, Scalar minDistance, Scalar maxDistance) : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
 {
-    depthRange = glm::vec2((GLfloat)minDistance, (GLfloat)maxDistance);
-    noiseStdDev = 0.f;
-    measurementRange = glm::vec2((GLfloat)minTemp, (GLfloat)maxTemp);
-    displayRange = measurementRange;
-    colorMap = ColorMap::JET;
-    newDataCallback = nullptr;
-    temperatureData = nullptr;
-    displayData = nullptr;
-    glCamera = nullptr;
+    depthRange_ = glm::vec2((GLfloat)minDistance, (GLfloat)maxDistance);
+    noiseStdDev_ = 0.f;
+    measurementRange_ = glm::vec2((GLfloat)minTemp, (GLfloat)maxTemp);
+    displayRange_ = measurementRange_;
+    colorMap_ = ColorMap::JET;
+    newDataCallback_ = nullptr;
+    temperatureData_ = nullptr;
+    displayData_ = nullptr;
+    glCamera_ = nullptr;
 }
 
 ThermalCamera::~ThermalCamera()
 {
-    glCamera = nullptr;
+    glCamera_ = nullptr;
 }
 
 void ThermalCamera::setNoise(GLfloat tempStdDev)
 {
-    if(tempStdDev >= 0.f && tempStdDev != noiseStdDev)
+    if(tempStdDev >= 0.f && tempStdDev != noiseStdDev_)
     {
-        noiseStdDev = tempStdDev;
-        if(glCamera != nullptr)
-            glCamera->setNoise(noiseStdDev);
+        noiseStdDev_ = tempStdDev;
+        if(glCamera_ != nullptr)
+            glCamera_->setNoise(noiseStdDev_);
     }
 }
 
 void ThermalCamera:: setDisplaySettings(ColorMap cm, Scalar minTemp, Scalar maxTemp)
 {
-    colorMap = cm;
+    colorMap_ = cm;
 
     if(minTemp > maxTemp)
-        displayRange = measurementRange;
+        displayRange_ = measurementRange_;
     else
     {
         glm::vec2 tempRange = glm::vec2((GLfloat)minTemp, (GLfloat)maxTemp);
-        displayRange = glm::clamp(tempRange, measurementRange.x, measurementRange.y);
+        displayRange_ = glm::clamp(tempRange, measurementRange_.x, measurementRange_.y);
     }
         
-    if(glCamera != nullptr)
+    if(glCamera_ != nullptr)
     {
-        glCamera->setColorMap(colorMap);
-        glCamera->setDisplayRange(displayRange);
+        glCamera_->setColorMap(colorMap_);
+        glCamera_->setDisplayRange(displayRange_);
     }
 }
 
 void* ThermalCamera::getImageDataPointer(unsigned int index)
 {
-    return temperatureData;
+    return temperatureData_;
 }
 
 GLubyte* ThermalCamera::getDisplayDataPointer()
 {
-    return displayData;
+    return displayData_;
 }
 
 VisionSensorType ThermalCamera::getVisionSensorType() const
@@ -98,26 +98,26 @@ VisionSensorType ThermalCamera::getVisionSensorType() const
 
 OpenGLView* ThermalCamera::getOpenGLView() const
 {
-    return glCamera;
+    return glCamera_;
 }
 
 void ThermalCamera::InitGraphics(bool& seesParticles)
 {
     seesParticles = false;
 
-    glCamera = new OpenGLThermalCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, measurementRange, depthRange, freq < Scalar(0));
-    glCamera->setNoise(noiseStdDev);
-    glCamera->setColorMap(colorMap);
-    glCamera->setDisplayRange(displayRange);
-    glCamera->setCamera(this);
+    glCamera_ = new OpenGLThermalCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX_, resY_, (GLfloat)fovH_, measurementRange_, depthRange_, freq_ < Scalar(0));
+    glCamera_->setNoise(noiseStdDev_);
+    glCamera_->setColorMap(colorMap_);
+    glCamera_->setDisplayRange(displayRange_);
+    glCamera_->setCamera(this);
     UpdateTransform();
-    glCamera->UpdateTransform();
+    glCamera_->UpdateTransform();
     InternalUpdate(0);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera_);
 
     unsigned int w, h;
     getResolution(w, h);
-    displayData = new GLubyte[w*h*3];
+    displayData_ = new GLubyte[w*h*3];
 }
 
 void ThermalCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
@@ -125,36 +125,36 @@ void ThermalCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Ve
     glm::vec3 eye_ = glm::vec3((GLfloat)eye.x(), (GLfloat)eye.y(), (GLfloat)eye.z());
     glm::vec3 dir_ = glm::vec3((GLfloat)dir.x(), (GLfloat)dir.y(), (GLfloat)dir.z());
     glm::vec3 up_ = glm::vec3((GLfloat)up.x(), (GLfloat)up.y(), (GLfloat)up.z());
-    glCamera->SetupCamera(eye_, dir_, up_);
+    glCamera_->SetupCamera(eye_, dir_, up_);
 }
 
 void ThermalCamera::InstallNewDataHandler(std::function<void(ThermalCamera*)> callback)
 {
-    newDataCallback = callback;
+    newDataCallback_ = callback;
 }
 
 void ThermalCamera::NewDataReady(void* data, unsigned int index)
 {
-    if(newDataCallback != nullptr)
+    if(newDataCallback_ != nullptr)
     {
         if(index == 0)
         {
             unsigned int w, h;
             getResolution(w, h);
-            memcpy(displayData, data, w*h*3);
+            memcpy(displayData_, data, w*h*3);
         }
         else
         {
-            temperatureData = (GLfloat*)data;
-            newDataCallback(this);
-            temperatureData = nullptr;
+            temperatureData_ = (GLfloat*)data;
+            newDataCallback_(this);
+            temperatureData_ = nullptr;
         }
     }
 }
 
 void ThermalCamera::InternalUpdate(Scalar dt)
 {
-    glCamera->Update();
+    glCamera_->Update();
 }
 
 }

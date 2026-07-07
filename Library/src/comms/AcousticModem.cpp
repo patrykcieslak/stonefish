@@ -118,12 +118,12 @@ AcousticModem::AcousticModem(std::string uniqueName, uint64_t deviceId, Scalar m
 {
     btClamp(maxVerticalFOVDeg, Scalar(0), Scalar(360));
     btClamp(minVerticalFOVDeg, Scalar(0), maxVerticalFOVDeg);
-    minFov2 = btRadians(minVerticalFOVDeg/Scalar(2));
-    maxFov2 = btRadians(maxVerticalFOVDeg/Scalar(2));
-    range = operatingRange <= Scalar(0) ? Scalar(1000) : operatingRange;
-    position = V0();
-    frame = std::string("");
-    occlusion = true;
+    minFov2_ = btRadians(minVerticalFOVDeg/Scalar(2));
+    maxFov2_ = btRadians(maxVerticalFOVDeg/Scalar(2));
+    range_ = operatingRange <= Scalar(0) ? Scalar(1000) : operatingRange;
+    position_ = V0();
+    frame_ = std::string("");
+    occlusion_ = true;
     addNode(this);
 }
 
@@ -135,7 +135,7 @@ AcousticModem::~AcousticModem()
 bool AcousticModem::isReceptionPossible(Vector3 worldDir, Scalar distance)
 {
     //Check if modems are close enough
-    if(distance > range) return false;
+    if(distance > range_) return false;
         
     //Check if direction is in the FOV of the device
     Vector3 dir = (getDeviceFrame().getBasis().inverse() * worldDir).normalized();
@@ -143,23 +143,23 @@ bool AcousticModem::isReceptionPossible(Vector3 worldDir, Scalar distance)
     Scalar vAngle = M_PI_2; // When dir.z == 0.0
     if(!btFuzzyZero(dir.getZ()))
         vAngle = atan2(d, -dir.getZ());
-    return btFabs(vAngle) >= minFov2 && btFabs(vAngle) <= maxFov2;
+    return btFabs(vAngle) >= minFov2_ && btFabs(vAngle) <= maxFov2_;
 }
 
 void AcousticModem::setOcclusionTest(bool enabled)
 {
-    occlusion = enabled;
+    occlusion_ = enabled;
 }
 
 bool AcousticModem::getOcclusionTest() const
 {
-    return occlusion;
+    return occlusion_;
 }
 
 void AcousticModem::getPosition(Vector3& pos, std::string& referenceFrame)
 {
-    pos = position;
-    referenceFrame = frame;
+    pos = position_;
+    referenceFrame = frame_;
 }
 
 CommType AcousticModem::getType() const
@@ -180,13 +180,13 @@ void AcousticModem::SendMessage(const std::vector<uint8_t>& data)
             {
                 auto msg = std::make_shared<AcousticDataFrame>();
                 msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true);
-                msg->seq = txSeq++;
+                msg->seq = txSeq_++;
                 msg->source = getDeviceId();
                 msg->destination = nodeIds[i];
                 msg->data = data;
                 msg->txPosition = getDeviceFrame().getOrigin();
                 msg->travelled = Scalar(0);
-                txBuffer.push_back(msg);
+                txBuffer_.push_back(msg);
             }
         }
     }
@@ -197,13 +197,13 @@ void AcousticModem::SendMessage(const std::vector<uint8_t>& data)
         
         auto msg = std::make_shared<AcousticDataFrame>();
         msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true);
-        msg->seq = txSeq++;
+        msg->seq = txSeq_++;
         msg->source = getDeviceId();
         msg->destination = getConnectedId();
         msg->data = data;
         msg->txPosition = getDeviceFrame().getOrigin();
         msg->travelled = Scalar(0);
-        txBuffer.push_back(msg);
+        txBuffer_.push_back(msg);
     }
 }
 
@@ -215,7 +215,7 @@ void AcousticModem::ProcessMessages()
     std::string ping {"PING"};
     std::vector<uint8_t> pingData {ping.begin(), ping.end()};
 
-    for(auto it = rxBuffer.begin(); it != rxBuffer.end(); ++it)
+    for(auto it = rxBuffer_.begin(); it != rxBuffer_.end(); ++it)
     {
         // Send "ACK" message back to sender
         msg = std::static_pointer_cast<AcousticDataFrame>(*it);
@@ -230,20 +230,20 @@ void AcousticModem::ProcessMessages()
             ackMsg->data = ackData;
             ackMsg->txPosition = getDeviceFrame().getOrigin();
             ackMsg->travelled = msg->travelled;
-            txBuffer.push_back(ackMsg);
+            txBuffer_.push_back(ackMsg);
         }
     }
     // Remove "ACK" and "PING" messages from the RX buffer
-    rxBuffer.erase(std::remove_if(rxBuffer.begin(), rxBuffer.end(),
+    rxBuffer_.erase(std::remove_if(rxBuffer_.begin(), rxBuffer_.end(),
         [&ackData, &pingData](const std::shared_ptr<CommDataFrame>& msg) {
             return (msg->data == ackData || msg->data == pingData);
-        }), rxBuffer.end());
+        }), rxBuffer_.end());
 }
 
 void AcousticModem::InternalUpdate(Scalar dt)
 {
     //Propagate messages already sent
-    for(auto mIt = propagating.begin(); mIt != propagating.end();)
+    for(auto mIt = propagating_.begin(); mIt != propagating_.end();)
     {
         AcousticModem* dest = getNode(mIt->first->destination);
         Vector3 dO = dest->getDeviceFrame().getOrigin();
@@ -255,7 +255,7 @@ void AcousticModem::InternalUpdate(Scalar dt)
         {
             mIt->first->travelled += d;
             dest->MessageReceived(mIt->first);
-            mIt = propagating.erase(mIt);
+            mIt = propagating_.erase(mIt);
         }
         else //Advance pulse
         {
@@ -268,27 +268,27 @@ void AcousticModem::InternalUpdate(Scalar dt)
     }
     
     //Send first message from the tx buffer
-    if(txBuffer.size() > 0)
+    if(txBuffer_.size() > 0)
     {
-        auto msg = std::static_pointer_cast<AcousticDataFrame>(txBuffer[0]);
-        txBuffer.pop_front();
+        auto msg = std::static_pointer_cast<AcousticDataFrame>(txBuffer_[0]);
+        txBuffer_.pop_front();
 
         // The message is sent or lost
         if(mutualContact(msg->source, msg->destination))
         {
-            propagating.insert(std::make_pair(msg, msg->txPosition));
+            propagating_.insert(std::make_pair(msg, msg->txPosition));
         }
     }
 }
 
 void AcousticModem::UpdatePosition(Vector3 pos, bool absolute, std::string referenceFrame)
 {
-    position = pos;
+    position_ = pos;
     if(absolute)
-        frame = std::string("");
+        frame_ = std::string("");
     else 
-        frame = referenceFrame;
-    newDataAvailable = true;
+        frame_ = referenceFrame;
+    newDataAvailable_ = true;
 }
 
 std::vector<Renderable> AcousticModem::Render()
@@ -305,10 +305,10 @@ std::vector<Renderable> AcousticModem::Render()
     GLfloat iconSize = 0.25f;
     int div = 24;
     //Upper circle
-    if(minFov2 > Scalar(0))
+    if(minFov2_ > Scalar(0))
     {
-        GLfloat r = iconSize * glm::sin((GLfloat)minFov2);
-        GLfloat h = iconSize * glm::cos((GLfloat)minFov2);
+        GLfloat r = iconSize * glm::sin((GLfloat)minFov2_);
+        GLfloat h = iconSize * glm::cos((GLfloat)minFov2_);
         for(int i=0; i<=div; ++i)
         {
             GLfloat angle = (GLfloat)i/(GLfloat)div * 2.f * M_PI;
@@ -318,10 +318,10 @@ std::vector<Renderable> AcousticModem::Render()
         }
     }
     //Lower circle
-    if(maxFov2 < Scalar(M_PI))
+    if(maxFov2_ < Scalar(M_PI))
     {
-        GLfloat r = iconSize * glm::sin((GLfloat)maxFov2);
-        GLfloat h = iconSize * glm::cos((GLfloat)maxFov2);
+        GLfloat r = iconSize * glm::sin((GLfloat)maxFov2_);
+        GLfloat h = iconSize * glm::cos((GLfloat)maxFov2_);
         for(int i=0; i<=div; ++i)
         {
             GLfloat angle = (GLfloat)i/(GLfloat)div * 2.f * M_PI;
@@ -332,7 +332,7 @@ std::vector<Renderable> AcousticModem::Render()
     }
     //4 bars
     div = 16;
-    if(maxFov2 - minFov2 > Scalar(0))
+    if(maxFov2_ - minFov2_ > Scalar(0))
     {
         for(int i=0; i<4; ++i)
         {
@@ -341,15 +341,15 @@ std::vector<Renderable> AcousticModem::Render()
             GLfloat y = iconSize * glm::sin(hangle);
             for(int h=0; h<=div; ++h)
             {
-                GLfloat angle = (GLfloat)h/(GLfloat)div * (maxFov2-minFov2) + minFov2;
+                GLfloat angle = (GLfloat)h/(GLfloat)div * (maxFov2_-minFov2_) + minFov2_;
                 points->push_back(glm::vec3(glm::sin(angle)*x, glm::sin(angle)*y, -glm::cos(angle)*iconSize));
-                if(h == 0 && minFov2 > Scalar(0))
+                if(h == 0 && minFov2_ > Scalar(0))
                 {
                     glm::vec3 v = points->back();
                     points->push_back(glm::vec3(0.f,0.f,0.f));
                     points->push_back(v);
                 }
-                else if(h == div && maxFov2 < Scalar(M_PI))
+                else if(h == div && maxFov2_ < Scalar(M_PI))
                 {
                     points->push_back(points->back());
                     points->push_back(glm::vec3(0.f,0.f,0.f));
@@ -403,7 +403,7 @@ std::vector<Renderable> AcousticModem::Render()
     item4.data = std::make_shared<std::vector<glm::vec3>>();
     points = item4.getDataAsPoints();
 
-    for( auto mIt = propagating.begin(); mIt != propagating.end(); ++mIt)
+    for( auto mIt = propagating_.begin(); mIt != propagating_.end(); ++mIt)
     {
         Vector3 mPos = mIt->second;
         points->push_back(glm::vec3((GLfloat)mPos.getX(), (GLfloat)mPos.getY(), (GLfloat)mPos.getZ()));

@@ -55,31 +55,31 @@ namespace sf
 OpenGLContent::OpenGLContent()
 {
     //Initialize members
-    baseVertexArray = 0;
-    cubeBuf = 0;
-    lightsUBO = 0;
-    csBuf[0] = 0;
-    csBuf[1] = 0;
-    cylinder.vao = 0;
-    ellipsoid.vao = 0;
-    lightSourceShader[0] = lightSourceShader[1] = NULL;
-    eyePos = glm::vec3();
-    viewDir = glm::vec3(1.f,0,0);
-    viewProjection = glm::mat4();
-    view = glm::mat4();
-    projection = glm::mat4();
-    FC = 0.f;
-    viewportSize = glm::vec2(800.f,600.f);
-    mode = DrawingMode::FULL;
-    currentLookName = "";
-    currentShaderMode = "plain";
+    baseVertexArray_ = 0;
+    cubeBuf_ = 0;
+    lightsUBO_ = 0;
+    csBuf_[0] = 0;
+    csBuf_[1] = 0;
+    cylinder_.vao = 0;
+    ellipsoid_.vao = 0;
+    lightSourceShader_[0] = lightSourceShader_[1] = NULL;
+    eyePos_ = glm::vec3();
+    viewDir_ = glm::vec3(1.f,0,0);
+    viewProjection_ = glm::mat4();
+    view_ = glm::mat4();
+    projection_ = glm::mat4();
+    FC_ = 0.f;
+    viewportSize_ = glm::vec2(800.f,600.f);
+    mode_ = DrawingMode::FULL;
+    currentLookName_ = "";
+    currentShaderMode_ = "plain";
 
     //Get OpenGL capabilities
-    maxAnisotropy = 0.0f;
-    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
+    maxAnisotropy_ = 0.0f;
+    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy_);
 
     //Initialize shaders and buffers
-    glGenVertexArrays(1, &baseVertexArray);
+    glGenVertexArrays(1, &baseVertexArray_);
      
     //Build cube croos VBO
     GLfloat cubeData[24][5] = {{-1.f,  0.333f, -1.f, 1.f, 1.f}, //LEFT
@@ -107,8 +107,8 @@ OpenGLContent::OpenGLContent()
         {    0,    1.f,  1.f, 1.f, 1.f},
         {    0, 0.333f,  1.f, 1.f,-1.f}};
     
-    glGenBuffers(1, &cubeBuf);
-    glBindBuffer(GL_ARRAY_BUFFER, cubeBuf);
+    glGenBuffers(1, &cubeBuf_);
+    glBindBuffer(GL_ARRAY_BUFFER, cubeBuf_);
     glBufferData(GL_ARRAY_BUFFER, sizeof(cubeData), cubeData, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
@@ -127,31 +127,31 @@ OpenGLContent::OpenGLContent()
         {0.f, 0.f, 1.f, 1.f},
         {0.f, 0.f, 1.f, 1.f}};
     
-    glGenBuffers(2, csBuf);
-    glBindBuffer(GL_ARRAY_BUFFER, csBuf[0]);
+    glGenBuffers(2, csBuf_);
+    glBindBuffer(GL_ARRAY_BUFFER, csBuf_[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(csVertex), csVertex, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, csBuf[1]);
+    glBindBuffer(GL_ARRAY_BUFFER, csBuf_[1]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(csColor), csColor, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     //Cylinder helper
     Mesh* m = BuildCylinder(1.f, 1.f, 12);
 
-    glGenVertexArrays(1, &cylinder.vao);
-    glGenBuffers(1, &cylinder.vboVertex);
-    glGenBuffers(1, &cylinder.vboIndex);
-    cylinder.faceCount = (GLsizei)m->faces.size();
-    cylinder.texturable = false;
+    glGenVertexArrays(1, &cylinder_.vao);
+    glGenBuffers(1, &cylinder_.vboVertex);
+    glGenBuffers(1, &cylinder_.vboIndex);
+    cylinder_.faceCount = (GLsizei)m->faces.size();
+    cylinder_.texturable = false;
 
-    OpenGLState::BindVertexArray(cylinder.vao);
+    OpenGLState::BindVertexArray(cylinder_.vao);
     glEnableVertexAttribArray(0);
     
-    glBindBuffer(GL_ARRAY_BUFFER, cylinder.vboVertex);
+    glBindBuffer(GL_ARRAY_BUFFER, cylinder_.vboVertex);
     glBufferData(GL_ARRAY_BUFFER, m->getVertexSize() * m->getNumOfVertices(), m->getVertexDataPointer(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, m->getVertexSize(), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cylinder.vboIndex);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cylinder_.vboIndex);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face) * m->faces.size(), m->getFaceDataPointer(), GL_STATIC_DRAW);
     OpenGLState::BindVertexArray(0);
     
@@ -160,79 +160,79 @@ OpenGLContent::OpenGLContent()
     //Ellipsoid helper
     m = BuildSphere(1.f, 3);
     
-    glGenVertexArrays(1, &ellipsoid.vao);
-    glGenBuffers(1, &ellipsoid.vboVertex);
-    glGenBuffers(1, &ellipsoid.vboIndex);
-    ellipsoid.faceCount = (GLsizei)m->faces.size();
-    ellipsoid.texturable = false;
+    glGenVertexArrays(1, &ellipsoid_.vao);
+    glGenBuffers(1, &ellipsoid_.vboVertex);
+    glGenBuffers(1, &ellipsoid_.vboIndex);
+    ellipsoid_.faceCount = (GLsizei)m->faces.size();
+    ellipsoid_.texturable = false;
 
-    OpenGLState::BindVertexArray(ellipsoid.vao);
+    OpenGLState::BindVertexArray(ellipsoid_.vao);
     glEnableVertexAttribArray(0);
     
-    glBindBuffer(GL_ARRAY_BUFFER, ellipsoid.vboVertex);
+    glBindBuffer(GL_ARRAY_BUFFER, ellipsoid_.vboVertex);
     glBufferData(GL_ARRAY_BUFFER, m->getVertexSize() * m->getNumOfVertices(), m->getVertexDataPointer(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, m->getVertexSize(), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ellipsoid.vboIndex);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ellipsoid_.vboIndex);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face) * m->faces.size(), m->getFaceDataPointer(), GL_STATIC_DRAW);
     OpenGLState::BindVertexArray(0);
 
     delete m;
 
     //Generate UBOs
-    glGenBuffers(1, &lightsUBO);
-    glBindBuffer(GL_UNIFORM_BUFFER, lightsUBO);
+    glGenBuffers(1, &lightsUBO_);
+    glBindBuffer(GL_UNIFORM_BUFFER, lightsUBO_);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(LightsUBO), NULL, GL_STATIC_DRAW);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    glBindBufferRange(GL_UNIFORM_BUFFER, UBO_LIGHTS, lightsUBO, 0, sizeof(LightsUBO));
-    memset(&lightsUBOData, 0, sizeof(LightsUBO));
+    glBindBufferRange(GL_UNIFORM_BUFFER, UBO_LIGHTS, lightsUBO_, 0, sizeof(LightsUBO));
+    memset(&lightsUBOData_, 0, sizeof(LightsUBO));
 
     ViewUBO viewZero;
     viewZero.eye = glm::vec4(0.f);
 	viewZero.VP = glm::perspectiveFov(1.57f, 800.f, 600.f, 0.1f, 10000.f);
     OpenGLView::ExtractFrustumFromVP(viewZero.frustum, viewZero.VP);
-    glGenBuffers(1, &viewUBO);
-    glBindBuffer(GL_UNIFORM_BUFFER, viewUBO);
+    glGenBuffers(1, &viewUBO_);
+    glBindBuffer(GL_UNIFORM_BUFFER, viewUBO_);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(ViewUBO), NULL, GL_STATIC_DRAW);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    glBindBufferRange(GL_UNIFORM_BUFFER, UBO_VIEW, viewUBO, 0, sizeof(ViewUBO));
+    glBindBufferRange(GL_UNIFORM_BUFFER, UBO_VIEW, viewUBO_, 0, sizeof(ViewUBO));
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(ViewUBO), &viewZero);
     
     //Load shaders
     //-----BASIC-----
-    basicShaders["helper"] = new GLSLShader("helpers.frag","helpers.vert");
-    basicShaders["helper"]->AddUniform("MVP", ParameterType::MAT4);
-    basicShaders["helper"]->AddUniform("scale", ParameterType::VEC3);
+    basicShaders_["helper"] = new GLSLShader("helpers.frag","helpers.vert");
+    basicShaders_["helper"]->AddUniform("MVP", ParameterType::MAT4);
+    basicShaders_["helper"]->AddUniform("scale", ParameterType::VEC3);
     
-    basicShaders["tex_saq"] = new GLSLShader("texQuad.frag");
-    basicShaders["tex_saq"]->AddUniform("tex", ParameterType::INT);
-    basicShaders["tex_saq"]->AddUniform("color", ParameterType::VEC4);
+    basicShaders_["tex_saq"] = new GLSLShader("texQuad.frag");
+    basicShaders_["tex_saq"]->AddUniform("tex", ParameterType::INT);
+    basicShaders_["tex_saq"]->AddUniform("color", ParameterType::VEC4);
     
-    basicShaders["tex_quad"] = new GLSLShader("texQuad.frag","texQuad.vert");
-    basicShaders["tex_quad"]->AddUniform("rect", ParameterType::VEC4);
-    basicShaders["tex_quad"]->AddUniform("tex", ParameterType::INT);
-    basicShaders["tex_quad"]->AddUniform("color", ParameterType::VEC4);
+    basicShaders_["tex_quad"] = new GLSLShader("texQuad.frag","texQuad.vert");
+    basicShaders_["tex_quad"]->AddUniform("rect", ParameterType::VEC4);
+    basicShaders_["tex_quad"]->AddUniform("tex", ParameterType::INT);
+    basicShaders_["tex_quad"]->AddUniform("color", ParameterType::VEC4);
     
-    basicShaders["tex_layer_quad"] = new GLSLShader("texLayerQuad.frag", "texQuad.vert");
-    basicShaders["tex_layer_quad"]->AddUniform("rect", ParameterType::VEC4);
-    basicShaders["tex_layer_quad"]->AddUniform("tex", ParameterType::INT);
-    basicShaders["tex_layer_quad"]->AddUniform("layer", ParameterType::INT);
+    basicShaders_["tex_layer_quad"] = new GLSLShader("texLayerQuad.frag", "texQuad.vert");
+    basicShaders_["tex_layer_quad"]->AddUniform("rect", ParameterType::VEC4);
+    basicShaders_["tex_layer_quad"]->AddUniform("tex", ParameterType::INT);
+    basicShaders_["tex_layer_quad"]->AddUniform("layer", ParameterType::INT);
     
-    basicShaders["tex_level_quad"] = new GLSLShader("texLevelQuad.frag", "texQuad.vert");
-    basicShaders["tex_level_quad"]->AddUniform("rect", ParameterType::VEC4);
-    basicShaders["tex_level_quad"]->AddUniform("tex", ParameterType::INT);
-    basicShaders["tex_level_quad"]->AddUniform("level", ParameterType::INT);
+    basicShaders_["tex_level_quad"] = new GLSLShader("texLevelQuad.frag", "texQuad.vert");
+    basicShaders_["tex_level_quad"]->AddUniform("rect", ParameterType::VEC4);
+    basicShaders_["tex_level_quad"]->AddUniform("tex", ParameterType::INT);
+    basicShaders_["tex_level_quad"]->AddUniform("level", ParameterType::INT);
     
-    basicShaders["tex_cube"] = new GLSLShader("texCube.frag", "texCube.vert");
-    basicShaders["tex_cube"]->AddUniform("tex", ParameterType::INT);
+    basicShaders_["tex_cube"] = new GLSLShader("texCube.frag", "texCube.vert");
+    basicShaders_["tex_cube"]->AddUniform("tex", ParameterType::INT);
     
-    basicShaders["flat"] = new GLSLShader("flat.frag", "flat.vert");
-    basicShaders["flat"]->AddUniform("MVP", ParameterType::MAT4);
-    basicShaders["flat"]->AddUniform("FC", ParameterType::FLOAT);
+    basicShaders_["flat"] = new GLSLShader("flat.frag", "flat.vert");
+    basicShaders_["flat"]->AddUniform("MVP", ParameterType::MAT4);
+    basicShaders_["flat"]->AddUniform("FC", ParameterType::FLOAT);
 
-    basicShaders["shadow"] = new GLSLShader("shadow.frag", "shadow.vert");
-    basicShaders["shadow"]->AddUniform("MVP", ParameterType::MAT4);
+    basicShaders_["shadow"] = new GLSLShader("shadow.frag", "shadow.vert");
+    basicShaders_["shadow"]->AddUniform("MVP", ParameterType::MAT4);
     
     //-----MATERIALS-----
     std::vector<std::string> shadingAlgorithms;
@@ -437,20 +437,20 @@ OpenGLContent::OpenGLContent()
         ms.shaders["textured_temperature"]->SetUniform("texTemperature", TEX_MAT_TEMPERATURE);
         glUseProgram(0);
 
-        materialShaders.push_back(ms);
+        materialShaders_.push_back(ms);
 
         glDeleteShader(shadingFragment);
     }
 
     //Add material-specific uniforms
-    for (auto& [key, shader] : materialShaders[0].shaders)
+    for (auto& [key, shader] : materialShaders_[0].shaders)
     {
         shader->AddUniform("shininess", ParameterType::FLOAT);
         shader->AddUniform("specularStrength", ParameterType::FLOAT);
         shader->AddUniform("reflectivity", ParameterType::FLOAT);
     }
 
-    for (auto& [key, shader] : materialShaders[1].shaders)
+    for (auto& [key, shader] : materialShaders_[1].shaders)
     {
         shader->AddUniform("roughness", ParameterType::FLOAT);
         shader->AddUniform("metallic", ParameterType::FLOAT);
@@ -480,7 +480,7 @@ OpenGLContent::OpenGLContent()
     std::vector<GLSLSource> sources;
     sources.push_back(GLSLSource(GL_VERTEX_SHADER, "material.vert"));
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "light.frag"));
-    lightSourceShader[0] = new GLSLShader(sources, commonLightShaders);
+    lightSourceShader_[0] = new GLSLShader(sources, commonLightShaders);
 
     //Under surface
     commonLightShaders.pop_back();
@@ -490,44 +490,44 @@ OpenGLContent::OpenGLContent()
     lightSourceFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lightSourceU.frag", "", &compiled);
 	commonLightShaders.push_back(lightSourceFragment);
 	
-    lightSourceShader[1] = new GLSLShader(sources, commonLightShaders);
-    lightSourceShader[1]->AddUniform("cWater", ParameterType::VEC3);
-    lightSourceShader[1]->AddUniform("bWater", ParameterType::VEC3);
+    lightSourceShader_[1] = new GLSLShader(sources, commonLightShaders);
+    lightSourceShader_[1]->AddUniform("cWater", ParameterType::VEC3);
+    lightSourceShader_[1]->AddUniform("bWater", ParameterType::VEC3);
     
     //Add common uniforms
     for(size_t i=0; i<2; ++i)
     {
-        lightSourceShader[i]->AddUniform("MVP", ParameterType::MAT4);
-        lightSourceShader[i]->AddUniform("M", ParameterType::MAT4);
-        lightSourceShader[i]->AddUniform("N", ParameterType::MAT3);
-        lightSourceShader[i]->AddUniform("MV", ParameterType::MAT3);
-        lightSourceShader[i]->AddUniform("FC", ParameterType::FLOAT);
-        lightSourceShader[i]->AddUniform("eyePos", ParameterType::VEC3);
-        lightSourceShader[i]->AddUniform("viewDir", ParameterType::VEC3);
-        lightSourceShader[i]->AddUniform("color", ParameterType::VEC3);
-        lightSourceShader[i]->AddUniform("lightId", ParameterType::IVEC2);
-        lightSourceShader[i]->AddUniform("spotLightsDepthMap", ParameterType::INT);
-        lightSourceShader[i]->AddUniform("spotLightsShadowMap", ParameterType::INT);
-        lightSourceShader[i]->AddUniform("sunShadowMap", ParameterType::INT);
-        lightSourceShader[i]->AddUniform("sunDepthMap", ParameterType::INT);
-        lightSourceShader[i]->AddUniform("transmittance_texture", ParameterType::INT);
-        lightSourceShader[i]->AddUniform("scattering_texture", ParameterType::INT);
-        lightSourceShader[i]->AddUniform("irradiance_texture", ParameterType::INT);
-        lightSourceShader[i]->BindUniformBlock("SunSky", UBO_SUNSKY);
-        lightSourceShader[i]->BindUniformBlock("Lights", UBO_LIGHTS);
+        lightSourceShader_[i]->AddUniform("MVP", ParameterType::MAT4);
+        lightSourceShader_[i]->AddUniform("M", ParameterType::MAT4);
+        lightSourceShader_[i]->AddUniform("N", ParameterType::MAT3);
+        lightSourceShader_[i]->AddUniform("MV", ParameterType::MAT3);
+        lightSourceShader_[i]->AddUniform("FC", ParameterType::FLOAT);
+        lightSourceShader_[i]->AddUniform("eyePos", ParameterType::VEC3);
+        lightSourceShader_[i]->AddUniform("viewDir", ParameterType::VEC3);
+        lightSourceShader_[i]->AddUniform("color", ParameterType::VEC3);
+        lightSourceShader_[i]->AddUniform("lightId", ParameterType::IVEC2);
+        lightSourceShader_[i]->AddUniform("spotLightsDepthMap", ParameterType::INT);
+        lightSourceShader_[i]->AddUniform("spotLightsShadowMap", ParameterType::INT);
+        lightSourceShader_[i]->AddUniform("sunShadowMap", ParameterType::INT);
+        lightSourceShader_[i]->AddUniform("sunDepthMap", ParameterType::INT);
+        lightSourceShader_[i]->AddUniform("transmittance_texture", ParameterType::INT);
+        lightSourceShader_[i]->AddUniform("scattering_texture", ParameterType::INT);
+        lightSourceShader_[i]->AddUniform("irradiance_texture", ParameterType::INT);
+        lightSourceShader_[i]->BindUniformBlock("SunSky", UBO_SUNSKY);
+        lightSourceShader_[i]->BindUniformBlock("Lights", UBO_LIGHTS);
     }
 
     //Set permanent texture units
     for(size_t i=0; i<2; ++i)
     {
-        lightSourceShader[i]->Use();
-        lightSourceShader[i]->SetUniform("spotLightsShadowMap", TEX_SPOT_SHADOW);
-        lightSourceShader[i]->SetUniform("spotLightsDepthMap", TEX_SPOT_DEPTH);
-        lightSourceShader[i]->SetUniform("sunDepthMap", TEX_SUN_DEPTH);
-        lightSourceShader[i]->SetUniform("sunShadowMap", TEX_SUN_SHADOW);
-        lightSourceShader[i]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
-        lightSourceShader[i]->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
-        lightSourceShader[i]->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
+        lightSourceShader_[i]->Use();
+        lightSourceShader_[i]->SetUniform("spotLightsShadowMap", TEX_SPOT_SHADOW);
+        lightSourceShader_[i]->SetUniform("spotLightsDepthMap", TEX_SPOT_DEPTH);
+        lightSourceShader_[i]->SetUniform("sunDepthMap", TEX_SUN_DEPTH);
+        lightSourceShader_[i]->SetUniform("sunShadowMap", TEX_SUN_SHADOW);
+        lightSourceShader_[i]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
+        lightSourceShader_[i]->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
+        lightSourceShader_[i]->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
     }
 
     OpenGLState::UseProgram(0);
@@ -540,107 +540,107 @@ OpenGLContent::OpenGLContent()
 OpenGLContent::~OpenGLContent()
 {
     //Base shaders
-    if(baseVertexArray != 0) glDeleteVertexArrays(1, &baseVertexArray);
-    if(cubeBuf != 0) glDeleteBuffers(1, &cubeBuf);
-    if(csBuf[0] != 0) glDeleteBuffers(2, csBuf);
-    if(lightsUBO != 0) glDeleteBuffers(1, &lightsUBO);
-    if(viewUBO != 0) glDeleteBuffers(1, &viewUBO);
-    delete basicShaders["helper"];
-    delete basicShaders["tex_saq"];
-    delete basicShaders["tex_quad"];
-    delete basicShaders["tex_layer_quad"];
-    delete basicShaders["tex_level_quad"];
-    delete basicShaders["tex_cube"];
-    delete basicShaders["flat"];
-    delete basicShaders["shadow"];
-    if(lightSourceShader[0] != NULL) delete lightSourceShader[0];
-    if(lightSourceShader[1] != NULL) delete lightSourceShader[1];
+    if(baseVertexArray_ != 0) glDeleteVertexArrays(1, &baseVertexArray_);
+    if(cubeBuf_ != 0) glDeleteBuffers(1, &cubeBuf_);
+    if(csBuf_[0] != 0) glDeleteBuffers(2, csBuf_);
+    if(lightsUBO_ != 0) glDeleteBuffers(1, &lightsUBO_);
+    if(viewUBO_ != 0) glDeleteBuffers(1, &viewUBO_);
+    delete basicShaders_["helper"];
+    delete basicShaders_["tex_saq"];
+    delete basicShaders_["tex_quad"];
+    delete basicShaders_["tex_layer_quad"];
+    delete basicShaders_["tex_level_quad"];
+    delete basicShaders_["tex_cube"];
+    delete basicShaders_["flat"];
+    delete basicShaders_["shadow"];
+    if(lightSourceShader_[0] != NULL) delete lightSourceShader_[0];
+    if(lightSourceShader_[1] != NULL) delete lightSourceShader_[1];
     
     //Material shaders
-    for(size_t i=0; i<materialShaders.size(); ++i)
+    for(size_t i=0; i<materialShaders_.size(); ++i)
     {
-        for(auto& [key, shader] : materialShaders[i].shaders)
+        for(auto& [key, shader] : materialShaders_[i].shaders)
             delete shader;
     }
     
     //Views
-    if(views.size() == 1) //Trackball left after destroying content
-        delete views[0];
-    views.clear();
+    if(views_.size() == 1) //Trackball left after destroying content
+        delete views_[0];
+    views_.clear();
 }
 
 void OpenGLContent::Finalize()
 {
     cInfo("Finalizing OpenGL rendering pipeline...");
-    OpenGLLight::Init(lights);
+    OpenGLLight::Init(lights_);
     CreatePhysicalLook("__Default__", glm::vec3(0.5f), 0.5f);
 }
 
 void OpenGLContent::DestroyContent()
 {
-    for(size_t i=0; i<looks.size(); ++i)
+    for(size_t i=0; i<looks_.size(); ++i)
     {
-        if(looks[i].albedoTexture != 0)
-            glDeleteTextures(1, &looks[i].albedoTexture);
-        if(looks[i].normalMap != 0)
-            glDeleteTextures(1, &looks[i].normalMap);
-        if(looks[i].temperatureMap != 0)
-            glDeleteTextures(1, &looks[i].temperatureMap);
+        if(looks_[i].albedoTexture != 0)
+            glDeleteTextures(1, &looks_[i].albedoTexture);
+        if(looks_[i].normalMap != 0)
+            glDeleteTextures(1, &looks_[i].normalMap);
+        if(looks_[i].temperatureMap != 0)
+            glDeleteTextures(1, &looks_[i].temperatureMap);
     }
-    looks.clear();
-    lookNameManager.ClearNames();
-    currentLookName = "";
+    looks_.clear();
+    lookNameManager_.ClearNames();
+    currentLookName_ = "";
             
-    for(size_t i=0; i<objects.size(); ++i)
+    for(size_t i=0; i<objects_.size(); ++i)
     {
-        glDeleteBuffers(1, &objects[i].vboVertex);
-        glDeleteBuffers(1, &objects[i].vboIndex);
-        glDeleteVertexArrays(1, &objects[i].vao);
+        glDeleteBuffers(1, &objects_[i].vboVertex);
+        glDeleteBuffers(1, &objects_[i].vboIndex);
+        glDeleteVertexArrays(1, &objects_[i].vao);
     }	
-    objects.clear();
+    objects_.clear();
 
-    for(size_t i=0; i<views.size(); ++i)
-		delete views[i];
-	views.clear();
+    for(size_t i=0; i<views_.size(); ++i)
+		delete views_[i];
+	views_.clear();
     
-    for(size_t i=0; i<lights.size(); ++i)
-        delete lights[i];
-    lights.clear();
+    for(size_t i=0; i<lights_.size(); ++i)
+        delete lights_[i];
+    lights_.clear();
     OpenGLLight::Destroy();
 }
 
 void OpenGLContent::SetViewportSize(unsigned int width, unsigned int height)
 {
-    viewportSize = glm::vec2(width, height);
+    viewportSize_ = glm::vec2(width, height);
 }
 
 void OpenGLContent::SetProjectionMatrix(glm::mat4 P)
 {
-    projection = P;
-    viewProjection = projection * view;
+    projection_ = P;
+    viewProjection_ = projection_ * view_;
 }
 
 void OpenGLContent::SetViewMatrix(glm::mat4 V)
 {
-    view = V;
-    viewProjection = projection * view;
+    view_ = V;
+    viewProjection_ = projection_ * view_;
 }
 
 glm::mat4 OpenGLContent::GetViewMatrix()
 {
-    return view;
+    return view_;
 }
 
 void OpenGLContent::SetCurrentView(OpenGLView* v)
 {
-	eyePos = v->GetEyePosition();
-    viewDir = v->GetLookingDirection();
-    view = v->GetViewMatrix();
-    projection = v->GetProjectionMatrix();
-    viewProjection = projection * view;
-    FC = v->GetLogDepthConstant();
+	eyePos_ = v->GetEyePosition();
+    viewDir_ = v->GetLookingDirection();
+    view_ = v->GetViewMatrix();
+    projection_ = v->GetProjectionMatrix();
+    viewProjection_ = projection_ * view_;
+    FC_ = v->GetLogDepthConstant();
 
-    glBindBuffer(GL_UNIFORM_BUFFER, viewUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, viewUBO_);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(ViewUBO), v->getViewUBOData());
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     glMemoryBarrier(GL_UNIFORM_BARRIER_BIT);
@@ -648,17 +648,17 @@ void OpenGLContent::SetCurrentView(OpenGLView* v)
 
 void OpenGLContent::SetDrawingMode(DrawingMode m)
 {
-    mode = m;
+    mode_ = m;
 }
 
 void OpenGLContent::BindBaseVertexArray()
 {
-    OpenGLState::BindVertexArray(baseVertexArray);
+    OpenGLState::BindVertexArray(baseVertexArray_);
 }
 
 void OpenGLContent::DrawSAQ()
 {
-    OpenGLState::BindVertexArray(baseVertexArray);
+    OpenGLState::BindVertexArray(baseVertexArray_);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     OpenGLState::BindVertexArray(0);
 }
@@ -666,11 +666,11 @@ void OpenGLContent::DrawSAQ()
 void OpenGLContent::DrawTexturedSAQ(GLuint texture, glm::vec4 color)
 {
     OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, texture);
-    basicShaders["tex_saq"]->Use();
-    basicShaders["tex_saq"]->SetUniform("tex", TEX_BASE);
-    basicShaders["tex_saq"]->SetUniform("color", color);
+    basicShaders_["tex_saq"]->Use();
+    basicShaders_["tex_saq"]->SetUniform("tex", TEX_BASE);
+    basicShaders_["tex_saq"]->SetUniform("color", color);
     
-    OpenGLState::BindVertexArray(baseVertexArray);
+    OpenGLState::BindVertexArray(baseVertexArray_);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     OpenGLState::BindVertexArray(0);
     
@@ -680,15 +680,15 @@ void OpenGLContent::DrawTexturedSAQ(GLuint texture, glm::vec4 color)
 
 void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, glm::vec4 color)
 {
-    y = viewportSize.y-y-height;
+    y = viewportSize_.y-y-height;
     
-    basicShaders["tex_quad"]->Use();
-    basicShaders["tex_quad"]->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
-    basicShaders["tex_quad"]->SetUniform("tex", TEX_BASE);
-    basicShaders["tex_quad"]->SetUniform("color", color);
+    basicShaders_["tex_quad"]->Use();
+    basicShaders_["tex_quad"]->SetUniform("rect", glm::vec4(x/viewportSize_.x, y/viewportSize_.y, width/viewportSize_.x, height/viewportSize_.y));
+    basicShaders_["tex_quad"]->SetUniform("tex", TEX_BASE);
+    basicShaders_["tex_quad"]->SetUniform("color", color);
     
     OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, texture);
-    OpenGLState::BindVertexArray(baseVertexArray);
+    OpenGLState::BindVertexArray(baseVertexArray_);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     OpenGLState::BindVertexArray(0);
     OpenGLState::UnbindTexture(TEX_BASE);
@@ -697,25 +697,25 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
 
 void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloat height, GLuint texture, GLint z, bool array)
 {
-    y = viewportSize.y-y-height;
+    y = viewportSize_.y-y-height;
     
     if(array)
     {
-        basicShaders["tex_layer_quad"]->Use();
-        basicShaders["tex_layer_quad"]->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
-        basicShaders["tex_layer_quad"]->SetUniform("tex", TEX_BASE);
-        basicShaders["tex_layer_quad"]->SetUniform("layer", z);
+        basicShaders_["tex_layer_quad"]->Use();
+        basicShaders_["tex_layer_quad"]->SetUniform("rect", glm::vec4(x/viewportSize_.x, y/viewportSize_.y, width/viewportSize_.x, height/viewportSize_.y));
+        basicShaders_["tex_layer_quad"]->SetUniform("tex", TEX_BASE);
+        basicShaders_["tex_layer_quad"]->SetUniform("layer", z);
     }
     else
     {
-        basicShaders["tex_level_quad"]->Use();
-        basicShaders["tex_level_quad"]->SetUniform("rect", glm::vec4(x/viewportSize.x, y/viewportSize.y, width/viewportSize.x, height/viewportSize.y));
-        basicShaders["tex_level_quad"]->SetUniform("tex", TEX_BASE);
-        basicShaders["tex_level_quad"]->SetUniform("level", z);
+        basicShaders_["tex_level_quad"]->Use();
+        basicShaders_["tex_level_quad"]->SetUniform("rect", glm::vec4(x/viewportSize_.x, y/viewportSize_.y, width/viewportSize_.x, height/viewportSize_.y));
+        basicShaders_["tex_level_quad"]->SetUniform("tex", TEX_BASE);
+        basicShaders_["tex_level_quad"]->SetUniform("level", z);
     }
     
     OpenGLState::BindTexture(TEX_BASE, array ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_3D, texture);
-    OpenGLState::BindVertexArray(baseVertexArray);
+    OpenGLState::BindVertexArray(baseVertexArray_);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     OpenGLState::BindVertexArray(0);
     OpenGLState::UnbindTexture(TEX_BASE);
@@ -724,15 +724,15 @@ void OpenGLContent::DrawTexturedQuad(GLfloat x, GLfloat y, GLfloat width, GLfloa
 
 void OpenGLContent::DrawCubemapCross(GLuint texture)
 {
-    basicShaders["tex_cube"]->Use();
-    basicShaders["tex_cube"]->SetUniform("tex", TEX_BASE);
+    basicShaders_["tex_cube"]->Use();
+    basicShaders_["tex_cube"]->SetUniform("tex", TEX_BASE);
     
     OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_CUBE_MAP, texture);
-    OpenGLState::BindVertexArray(baseVertexArray);
+    OpenGLState::BindVertexArray(baseVertexArray_);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     
-    glBindBuffer(GL_ARRAY_BUFFER, cubeBuf); 
+    glBindBuffer(GL_ARRAY_BUFFER, cubeBuf_); 
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(2*sizeof(GLfloat)));
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -750,17 +750,17 @@ void OpenGLContent::DrawCubemapCross(GLuint texture)
 
 void OpenGLContent::DrawCoordSystem(glm::mat4 M, GLfloat size)
 {
-    basicShaders["helper"]->Use();
-    basicShaders["helper"]->SetUniform("MVP", viewProjection*M);
-    basicShaders["helper"]->SetUniform("scale", glm::vec3(size));
+    basicShaders_["helper"]->Use();
+    basicShaders_["helper"]->SetUniform("MVP", viewProjection_*M);
+    basicShaders_["helper"]->SetUniform("scale", glm::vec3(size));
     
-    OpenGLState::BindVertexArray(baseVertexArray);
+    OpenGLState::BindVertexArray(baseVertexArray_);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     
-    glBindBuffer(GL_ARRAY_BUFFER, csBuf[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, csBuf_[0]);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(GLfloat), (void*)0);
-    glBindBuffer(GL_ARRAY_BUFFER, csBuf[1]);
+    glBindBuffer(GL_ARRAY_BUFFER, csBuf_[1]);
     glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 4*sizeof(GLfloat), (void*)0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
@@ -774,26 +774,26 @@ void OpenGLContent::DrawCoordSystem(glm::mat4 M, GLfloat size)
 
 void OpenGLContent::DrawCylinder(glm::mat4 M, glm::vec3 dims, glm::vec4 color)
 {
-    basicShaders["helper"]->Use();
-    basicShaders["helper"]->SetUniform("MVP", viewProjection*M);
-    basicShaders["helper"]->SetUniform("scale", dims);
+    basicShaders_["helper"]->Use();
+    basicShaders_["helper"]->SetUniform("MVP", viewProjection_*M);
+    basicShaders_["helper"]->SetUniform("scale", dims);
     
-    OpenGLState::BindVertexArray(cylinder.vao);
+    OpenGLState::BindVertexArray(cylinder_.vao);
     glVertexAttrib4fv(1, &color.r);
-    glDrawElements(GL_TRIANGLES, 3 * cylinder.faceCount, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, 3 * cylinder_.faceCount, GL_UNSIGNED_INT, 0);
     OpenGLState::BindVertexArray(0);
     OpenGLState::UseProgram(0);
 }
 
 void OpenGLContent::DrawEllipsoid(glm::mat4 M, glm::vec3 radii, glm::vec4 color)
 {
-    basicShaders["helper"]->Use();
-    basicShaders["helper"]->SetUniform("MVP", viewProjection*M);
-    basicShaders["helper"]->SetUniform("scale", radii);
+    basicShaders_["helper"]->Use();
+    basicShaders_["helper"]->SetUniform("MVP", viewProjection_*M);
+    basicShaders_["helper"]->SetUniform("scale", radii);
     
-    OpenGLState::BindVertexArray(ellipsoid.vao);
+    OpenGLState::BindVertexArray(ellipsoid_.vao);
     glVertexAttrib4fv(1, &color.r);
-    glDrawElements(GL_TRIANGLES, 3 * ellipsoid.faceCount, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, 3 * ellipsoid_.faceCount, GL_UNSIGNED_INT, 0);
     OpenGLState::BindVertexArray(0);
     OpenGLState::UseProgram(0);
 }
@@ -806,11 +806,11 @@ void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>* v
     GLuint vbo;
     glGenBuffers(1, &vbo);
     
-    basicShaders["helper"]->Use();
-    basicShaders["helper"]->SetUniform("MVP", viewProjection*M);
-    basicShaders["helper"]->SetUniform("scale", glm::vec3(1.f));
+    basicShaders_["helper"]->Use();
+    basicShaders_["helper"]->SetUniform("MVP", viewProjection_*M);
+    basicShaders_["helper"]->SetUniform("scale", glm::vec3(1.f));
     
-    OpenGLState::BindVertexArray(baseVertexArray);
+    OpenGLState::BindVertexArray(baseVertexArray_);
     glEnableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
     
@@ -849,23 +849,23 @@ void OpenGLContent::DrawPrimitives(PrimitiveType type, std::vector<glm::vec3>* v
 
 void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
 {
-    if(objectId < 0 || objectId >= (int)objects.size())
+    if(objectId < 0 || objectId >= (int)objects_.size())
         return;
     
-    switch(mode)
+    switch(mode_)
     {
         case DrawingMode::SHADOW:
         {
-            basicShaders["shadow"]->Use();
-            basicShaders["shadow"]->SetUniform("MVP", viewProjection*M);
+            basicShaders_["shadow"]->Use();
+            basicShaders_["shadow"]->SetUniform("MVP", viewProjection_*M);
         }
         break;
         
         case DrawingMode::FLAT:
         {
-            basicShaders["flat"]->Use();
-            basicShaders["flat"]->SetUniform("MVP", viewProjection*M);
-            basicShaders["flat"]->SetUniform("FC", FC);
+            basicShaders_["flat"]->Use();
+            basicShaders_["flat"]->SetUniform("MVP", viewProjection_*M);
+            basicShaders_["flat"]->SetUniform("FC", FC_);
         }
         break;
 
@@ -874,9 +874,9 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
         case DrawingMode::TEMPERATURE:
         {
             if(lookId < 0)
-                UseLook(getLook(looks.size()-1), false, M); // Use default look
+                UseLook(getLook(looks_.size()-1), false, M); // Use default look
             else
-                UseLook(getLook(lookId), objects[objectId].texturable, M); // Use user defined look
+                UseLook(getLook(lookId), objects_[objectId].texturable, M); // Use user defined look
         }
         break;
 
@@ -884,80 +884,80 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
             break;
     }
 
-    OpenGLState::BindVertexArray(objects[objectId].vao);
-    glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
+    OpenGLState::BindVertexArray(objects_[objectId].vao);
+    glDrawElements(GL_TRIANGLES, sizeof(Face) * objects_[objectId].faceCount, GL_UNSIGNED_INT, 0);
     OpenGLState::BindVertexArray(0);
 }
 
 void OpenGLContent::DrawLightSource(unsigned int lightId)
 {
-    if(lightId >= lights.size())
+    if(lightId >= lights_.size())
         return;
 
-    int objectId = lights[lightId]->getSourceObject();
-    if(objectId < 0 || objectId >= (int)objects.size())
+    int objectId = lights_[lightId]->getSourceObject();
+    if(objectId < 0 || objectId >= (int)objects_.size())
         return;
 
-    if(lights[lightId]->isActive())
+    if(lights_[lightId]->isActive())
     {
         //Render light source (on)
-        glm::vec4 colorLi = lights[lightId]->getColorLi();
-        glm::mat4 M = lights[lightId]->getTransform();
-        GLint type = lights[lightId]->getType() == LightType::POINT ? 0 : 1; 
-        GLint id = lights[lightId]->getType() == LightType::POINT ? lightId : lightId - lightsUBOData.numPointLights;
+        glm::vec4 colorLi = lights_[lightId]->getColorLi();
+        glm::mat4 M = lights_[lightId]->getTransform();
+        GLint type = lights_[lightId]->getType() == LightType::POINT ? 0 : 1; 
+        GLint id = lights_[lightId]->getType() == LightType::POINT ? lightId : lightId - lightsUBOData_.numPointLights;
 
-        GLSLShader* shader = mode == DrawingMode::FULL ? lightSourceShader[0] : lightSourceShader[1];
+        GLSLShader* shader = mode_ == DrawingMode::FULL ? lightSourceShader_[0] : lightSourceShader_[1];
         shader->Use();
-        shader->SetUniform("MVP", viewProjection * M);
+        shader->SetUniform("MVP", viewProjection_ * M);
         shader->SetUniform("M", M);
         shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
-        shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
-        shader->SetUniform("FC", FC);
-        shader->SetUniform("eyePos", eyePos);
-        shader->SetUniform("viewDir", viewDir);
+        shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view_*M))));
+        shader->SetUniform("FC", FC_);
+        shader->SetUniform("eyePos", eyePos_);
+        shader->SetUniform("viewDir", viewDir_);
         shader->SetUniform("color", glm::vec3(colorLi) * colorLi.a);
         shader->SetUniform("lightId", glm::ivec2(type, id));
         
-        if(mode == DrawingMode::UNDERWATER)
+        if(mode_ == DrawingMode::UNDERWATER)
         {
             Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
             shader->SetUniform("cWater", ocean->getOpenGLOcean()->getLightAttenuation());
             shader->SetUniform("bWater", ocean->getOpenGLOcean()->getLightScattering());
         }
 
-        OpenGLState::BindVertexArray(objects[objectId].vao);
-        glDrawElements(GL_TRIANGLES, sizeof(Face) * objects[objectId].faceCount, GL_UNSIGNED_INT, 0);
+        OpenGLState::BindVertexArray(objects_[objectId].vao);
+        glDrawElements(GL_TRIANGLES, sizeof(Face) * objects_[objectId].faceCount, GL_UNSIGNED_INT, 0);
         OpenGLState::BindVertexArray(0);
     }
     else
     {
         //Render light mesh (off)
-        glm::mat4 M = lights[lightId]->getTransform();
+        glm::mat4 M = lights_[lightId]->getTransform();
         DrawObject(objectId, -1, M);
     }
 }
 
 void OpenGLContent::DrawCable(size_t cableId, GLfloat radius, const std::vector<CableNode>& nodeData, int lookId)
 {
-    if (cableId >= cables.size())
+    if (cableId >= cables_.size())
         return;
 
-    if (nodeData.size() == 0 || nodeData.size() != cables[cableId].nodeCount)
+    if (nodeData.size() == 0 || nodeData.size() != cables_[cableId].nodeCount)
         return;
         
     //Update cable VBO
-    glBindBuffer(GL_ARRAY_BUFFER, cables[cableId].vboVertex);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(CableNode) * cables[cableId].nodeCount, nodeData.data(), GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, cables_[cableId].vboVertex);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(CableNode) * cables_[cableId].nodeCount, nodeData.data(), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
-    switch (mode)
+    switch (mode_)
     {
         case DrawingMode::FULL:
         case DrawingMode::UNDERWATER:
         case DrawingMode::TEMPERATURE:
         {
             if (lookId < 0)
-                UseCableLook(getLook(looks.size() - 1), radius); // Use default look
+                UseCableLook(getLook(looks_.size() - 1), radius); // Use default look
             else
                 UseCableLook(getLook(lookId), radius); // Use user defined look
         }
@@ -968,8 +968,8 @@ void OpenGLContent::DrawCable(size_t cableId, GLfloat radius, const std::vector<
     }
 
     //Draw cable
-    OpenGLState::BindVertexArray(cables[cableId].vao);
-    glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)cables[cableId].nodeCount);
+    OpenGLState::BindVertexArray(cables_[cableId].vao);
+    glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)cables_[cableId].nodeCount);
     OpenGLState::BindVertexArray(0);   
 }
 
@@ -978,28 +978,28 @@ void OpenGLContent::SetupLights()
     int pointId = 0;
     int spotId = 0;
     
-    for(size_t i=0; i<lights.size(); ++i)
+    for(size_t i=0; i<lights_.size(); ++i)
     {
-        if(!lights[i]->isActive())
+        if(!lights_[i]->isActive())
             continue;
             
-        if(lights[i]->getType() == LightType::POINT)
+        if(lights_[i]->getType() == LightType::POINT)
         {
-            lights[i]->SetupShader(&lightsUBOData.pointLights[pointId]);
+            lights_[i]->SetupShader(&lightsUBOData_.pointLights[pointId]);
             ++pointId;
         }
         else
         {
-            lights[i]->SetupShader(&lightsUBOData.spotLights[spotId]);
+            lights_[i]->SetupShader(&lightsUBOData_.spotLights[spotId]);
             ++spotId;
         }
     }
     
-    lightsUBOData.numPointLights = pointId;
-    lightsUBOData.numSpotLights = spotId;
+    lightsUBOData_.numPointLights = pointId;
+    lightsUBOData_.numSpotLights = spotId;
 
-    glBindBuffer(GL_UNIFORM_BUFFER, lightsUBO);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(LightsUBO), &lightsUBOData);
+    glBindBuffer(GL_UNIFORM_BUFFER, lightsUBO_);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(LightsUBO), &lightsUBOData_);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
@@ -1012,7 +1012,7 @@ void OpenGLContent::UseLook(const Look& look, bool texturable, const glm::mat4& 
     texturable = texturable && (look.albedoTexture > 0 || look.normalMap > 0 || look.temperatureMap > 0);
     
     std::string shaderMode;
-    switch (mode)
+    switch (mode_)
     {
         case DrawingMode::FULL:
             if (texturable)
@@ -1050,20 +1050,20 @@ void OpenGLContent::UseLook(const Look& look, bool texturable, const glm::mat4& 
             break;
     }
     
-    bool updateMaterial = (look.name != currentLookName) || (currentShaderMode != shaderMode);
-    currentLookName = look.name;
-    currentShaderMode = shaderMode;
+    bool updateMaterial = (look.name != currentLookName_) || (currentShaderMode_ != shaderMode);
+    currentLookName_ = look.name;
+    currentShaderMode_ = shaderMode;
     
-    GLSLShader* shader = materialShaders[look.type == LookType::SIMPLE ? 0 : 1].shaders[currentShaderMode];
+    GLSLShader* shader = materialShaders_[look.type == LookType::SIMPLE ? 0 : 1].shaders[currentShaderMode_];
 
     shader->Use();
-    shader->SetUniform("MVP", viewProjection*M);
+    shader->SetUniform("MVP", viewProjection_*M);
     shader->SetUniform("M", M);
     shader->SetUniform("N", glm::mat3(glm::transpose(glm::inverse(M))));
-    shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view*M))));
-    shader->SetUniform("FC", FC);
-    shader->SetUniform("eyePos", eyePos);
-    shader->SetUniform("viewDir", viewDir);
+    shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view_*M))));
+    shader->SetUniform("FC", FC_);
+    shader->SetUniform("eyePos", eyePos_);
+    shader->SetUniform("viewDir", viewDir_);
 
     if(updateMaterial)
     {
@@ -1113,7 +1113,7 @@ void OpenGLContent::UseLook(const Look& look, bool texturable, const glm::mat4& 
                 OpenGLState::UnbindTexture(TEX_MAT_NORMAL);
             }
 
-            if(currentShaderMode == "textured_temperature")
+            if(currentShaderMode_ == "textured_temperature")
             {
                 if(look.temperatureMap > 0)
                 {
@@ -1131,12 +1131,12 @@ void OpenGLContent::UseLook(const Look& look, bool texturable, const glm::mat4& 
         }
         else
         {
-            if(currentShaderMode == "plain_temperature")
+            if(currentShaderMode_ == "plain_temperature")
                 shader->SetUniform("temperature", look.temperatureRange.x);
         }
     }
 
-    if(mode == DrawingMode::UNDERWATER)
+    if(mode_ == DrawingMode::UNDERWATER)
     {
         shader->SetUniform("cWater", ocean->getOpenGLOcean()->getLightAttenuation());
         shader->SetUniform("bWater", ocean->getOpenGLOcean()->getLightScattering());
@@ -1156,7 +1156,7 @@ void OpenGLContent::UseCableLook(const Look& look, GLfloat radius)
     if(ocean != NULL && ocean->hasWaves()) waves = true;
     
     std::string shaderMode;
-    switch (mode)
+    switch (mode_)
     {
         case DrawingMode::FULL:
             shaderMode = "cable_textured";
@@ -1178,21 +1178,21 @@ void OpenGLContent::UseCableLook(const Look& look, GLfloat radius)
             break;
     }
     
-    bool updateMaterial = (look.name != currentLookName) || (currentShaderMode != shaderMode);
-    currentLookName = look.name;
-    currentShaderMode = shaderMode;
+    bool updateMaterial = (look.name != currentLookName_) || (currentShaderMode_ != shaderMode);
+    currentLookName_ = look.name;
+    currentShaderMode_ = shaderMode;
     
-    GLSLShader* shader = materialShaders[look.type == LookType::SIMPLE ? 0 : 1].shaders[currentShaderMode];
+    GLSLShader* shader = materialShaders_[look.type == LookType::SIMPLE ? 0 : 1].shaders[currentShaderMode_];
 
     shader->Use();
-    shader->SetUniform("MVP", viewProjection);
+    shader->SetUniform("MVP", viewProjection_);
     shader->SetUniform("M", glm::mat4(1.f));
     shader->SetUniform("N", glm::mat3(1.f));
-    shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view))));
-    shader->SetUniform("FC", FC);
+    shader->SetUniform("MV", glm::mat3(glm::transpose(glm::inverse(view_))));
+    shader->SetUniform("FC", FC_);
     shader->SetUniform("cableRadius", radius);
-    shader->SetUniform("eyePos", eyePos);
-    shader->SetUniform("viewDir", viewDir);
+    shader->SetUniform("eyePos", eyePos_);
+    shader->SetUniform("viewDir", viewDir_);
 
     if(updateMaterial)
     {
@@ -1262,7 +1262,7 @@ void OpenGLContent::UseCableLook(const Look& look, GLfloat radius)
         //         shader->SetUniform("temperature", look.temperatureRange.x);
     }
 
-    if(mode == DrawingMode::UNDERWATER)
+    if(mode_ == DrawingMode::UNDERWATER)
     {
         shader->SetUniform("cWater", ocean->getOpenGLOcean()->getLightAttenuation());
         shader->SetUniform("bWater", ocean->getOpenGLOcean()->getLightScattering());
@@ -1310,8 +1310,8 @@ unsigned int OpenGLContent::BuildObject(Mesh* mesh)
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face) * mesh->faces.size(), &mesh->faces[0].vertexID[0], GL_STATIC_DRAW);
     OpenGLState::BindVertexArray(0);
     
-    objects.push_back(obj);
-    return (unsigned int)objects.size()-1;
+    objects_.push_back(obj);
+    return (unsigned int)objects_.size()-1;
 }
 
 size_t OpenGLContent::BuildCable(size_t numNodes)
@@ -1333,22 +1333,22 @@ size_t OpenGLContent::BuildCable(size_t numNodes)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     OpenGLState::BindVertexArray(0);
     
-    cables.push_back(cable);
-    return cables.size()-1;
+    cables_.push_back(cable);
+    return cables_.size()-1;
 }
 
 std::string OpenGLContent::CreateSimpleLook(const std::string& name, glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, 
                                             GLfloat reflectivity, const std::string& albedoTexturePath)
 {
     Look look;
-    look.name = lookNameManager.AddName(name);
+    look.name = lookNameManager_.AddName(name);
     look.type = LookType::SIMPLE;
     look.color.rgb = rgbColor;
     look.reflectivity = reflectivity;
     look.params.push_back(specular);
     look.params.push_back(shininess);
     if(albedoTexturePath != "") look.albedoTexture = LoadTexture(albedoTexturePath);
-    looks.push_back(look);
+    looks_.push_back(look);
     return look.name;
 }
 
@@ -1357,55 +1357,55 @@ std::string OpenGLContent::CreatePhysicalLook(const std::string& name, glm::vec3
                                               const std::string& temperatureMapPath, glm::vec2 temperatureRange)
 {
     Look look;
-    look.name = lookNameManager.AddName(name);
+    look.name = lookNameManager_.AddName(name);
     look.type = LookType::PHYSICAL;
     look.color.rgb = rgbColor;
     look.reflectivity = reflectivity;
     look.params.push_back(roughness);
     look.params.push_back(metalness);
-    if(albedoTexturePath != "") look.albedoTexture = LoadTexture(albedoTexturePath, true, false, maxAnisotropy);
+    if(albedoTexturePath != "") look.albedoTexture = LoadTexture(albedoTexturePath, true, false, maxAnisotropy_);
     if(normalMapPath != "") look.normalMap = LoadTexture(normalMapPath, false);
     if(temperatureMapPath != "") look.temperatureMap = LoadTexture(temperatureMapPath, false);
     look.temperatureRange = temperatureRange;
-    looks.push_back(look);
+    looks_.push_back(look);
     return look.name;
 }
 
 void OpenGLContent::AddView(OpenGLView *view)
 {
-    views.push_back(view);
+    views_.push_back(view);
 }
 
 OpenGLView* OpenGLContent::getView(size_t id)
 {
-    if(id < views.size())
-        return views[id];
+    if(id < views_.size())
+        return views_[id];
     else
         return nullptr;
 }
 
 size_t OpenGLContent::getViewsCount()
 {
-    return views.size();
+    return views_.size();
 }
 
 void OpenGLContent::AddLight(OpenGLLight* light)
 {
-    lights.push_back(light);
-    std::sort(lights.begin(), lights.end());
+    lights_.push_back(light);
+    std::sort(lights_.begin(), lights_.end());
 }
 
 OpenGLLight* OpenGLContent::getLight(size_t id)
 {
-    if(id < lights.size())
-        return lights[id];
+    if(id < lights_.size())
+        return lights_[id];
     else
         return nullptr;
 }
 
 size_t OpenGLContent::getLightsCount()
 {
-    return lights.size();
+    return lights_.size();
 }
 
 int OpenGLContent::getLookId(const std::string& name)
@@ -1413,26 +1413,26 @@ int OpenGLContent::getLookId(const std::string& name)
     if (name.empty()) return -1; // No name specified --> default look
 
     // Find look by name
-    auto it = std::find_if(looks.begin(), looks.end(), [&](const Look& l) {
+    auto it = std::find_if(looks_.begin(), looks_.end(), [&](const Look& l) {
         return l.name == name;
     });
-    if (it != looks.end())
-        return static_cast<int>(std::distance(looks.begin(), it));
+    if (it != looks_.end())
+        return static_cast<int>(std::distance(looks_.begin(), it));
     else
         return -1; // Default look
 }
 
 const Object& OpenGLContent::getObject(size_t id)
 {
-    return objects[id];
+    return objects_[id];
 }
 
 const Look& OpenGLContent::getLook(size_t id)
 {
-    if(id >= looks.size())
-        return looks[0];
+    if(id >= looks_.size())
+        return looks_[0];
         
-    return looks[id];
+    return looks_[id];
 }
     
 //Static methods

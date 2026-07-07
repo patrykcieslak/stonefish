@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/03/2014.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_NameManager__
@@ -57,7 +57,7 @@ namespace sf
         void ClearNames();
         
     private:
-        std::vector<std::string> names;
+        std::vector<std::string> names_;
     };
 }
     

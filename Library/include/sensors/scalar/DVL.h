@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/10/2017.
-//  Copyright (c) 2017-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_DVL__
@@ -94,12 +94,12 @@ namespace sf
         ScalarSensorType getScalarSensorType() const override;
         
     private:
-        Scalar beamAngle;
-        bool beamPosZ;
-        Scalar range[4];
-        Vector3 waterLayer;
-        Scalar addNoiseStdDev[2]; //Additive noise
-        Scalar mulNoiseFactor[2]; //Noise dependent on distance
+        Scalar beamAngle_;
+        bool beamPosZ_;
+        Scalar range_[4];
+        Vector3 waterLayer_;
+        Scalar addNoiseStdDev_[2]; //Additive noise
+        Scalar mulNoiseFactor_[2]; //Noise dependent on distance
     };
 }
 

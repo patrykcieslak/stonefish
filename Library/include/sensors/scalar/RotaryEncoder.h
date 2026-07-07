@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 05/07/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_RotaryEncoder__
@@ -73,10 +73,10 @@ namespace sf
         Scalar GetRawAngle();
         Scalar GetRawAngularVelocity();
         
-        Motor* motor;
-        Thruster* thrust;
-        Scalar angle;
-        Scalar lastAngle;
+        Motor* motor_;
+        Thruster* thrust_;
+        Scalar angle_;
+        Scalar lastAngle_;
     };
 }
 

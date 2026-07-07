@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 21/12/2020.
-//  Copyright (c) 2020-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_USBLReal__
@@ -63,13 +63,13 @@ namespace sf
     private:
         Scalar CalcModel(Scalar R, Scalar theta);
 
-        Scalar freq;
-        Scalar bl;
-        Scalar blError;
-        std::normal_distribution<Scalar> noiseTime;
-        std::normal_distribution<Scalar> noiseSV;
-        std::normal_distribution<Scalar> noisePhase;
-        std::normal_distribution<Scalar> noiseDepth;
+        Scalar freq_;
+        Scalar bl_;
+        Scalar blError_;
+        std::normal_distribution<Scalar> noiseTime_;
+        std::normal_distribution<Scalar> noiseSV_;
+        std::normal_distribution<Scalar> noisePhase_;
+        std::normal_distribution<Scalar> noiseDepth_;
     };
 }
     

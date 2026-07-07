@@ -69,8 +69,8 @@ OpenGLMSIS::OpenGLMSIS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 son
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, nBeamSamples_.x, nBeamSamples_.y);  
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-    glGenFramebuffers(1, &renderFBO);
-    OpenGLState::BindFramebuffer(renderFBO);
+    glGenFramebuffers(1, &renderFBO_);
+    OpenGLState::BindFramebuffer(renderFBO_);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, inputDepthRBO_);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, inputRangeIntensityTex_, 0);
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -113,7 +113,7 @@ OpenGLMSIS::OpenGLMSIS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 son
     glGenTextures(1, &displayTex_);
     OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, displayTex_);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, viewportWidth, viewportHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL); //RGB image
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, viewportWidth_, viewportHeight_, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL); //RGB image
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -333,7 +333,7 @@ void OpenGLMSIS::setSonar(MSIS* s)
 
     glGenBuffers(1, &displayPBO_);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, displayPBO_);
-    glBufferData(GL_PIXEL_PACK_BUFFER, viewportWidth * viewportHeight * 3, 0, GL_STREAM_READ);
+    glBufferData(GL_PIXEL_PACK_BUFFER, viewportWidth_ * viewportHeight_ * 3, 0, GL_STREAM_READ);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 }
 
@@ -343,7 +343,7 @@ void OpenGLMSIS::ComputeOutput(std::vector<Renderable>& objects)
     content->SetDrawingMode(DrawingMode::RAW);
     
     //Generate sonar input
-    OpenGLState::BindFramebuffer(renderFBO);
+    OpenGLState::BindFramebuffer(renderFBO_);
     OpenGLState::Viewport(0, 0, nBeamSamples_.x, nBeamSamples_.y);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDisable(GL_DEPTH_CLAMP);
@@ -424,7 +424,7 @@ void OpenGLMSIS::ComputeOutput(std::vector<Renderable>& objects)
     glDispatchCompute((GLuint)ceilf(nBins_/64.f), 1, 1);
     
     OpenGLState::BindFramebuffer(displayFBO_);
-    OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+    OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
     glClear(GL_COLOR_BUFFER_BIT);
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, outputTex_[1]);
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -459,7 +459,7 @@ void OpenGLMSIS::DrawLDR(GLuint destinationFBO, bool updated)
         content->SetViewportSize(windowWidth, windowHeight);
         OpenGLState::Viewport(0, 0, windowWidth, windowHeight);
         OpenGLState::DisableCullFace();
-        content->DrawTexturedQuad(dispX, dispY+viewportHeight*dispScale, viewportWidth*dispScale, -viewportHeight*dispScale, displayTex_);
+        content->DrawTexturedQuad(dispX, dispY+viewportHeight_*dispScale, viewportWidth_*dispScale, -viewportHeight_*dispScale, displayTex_);
         OpenGLState::EnableCullFace();
         OpenGLState::BindFramebuffer(0);   
     }

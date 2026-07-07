@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 09/11/2017.
-//  Copyright (c) 2014-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Odometry__
@@ -62,8 +62,8 @@ namespace sf
 
     private:
         //Custom noise generation
-        Scalar ornStdDev;
-        std::normal_distribution<Scalar> ornNoise;
+        Scalar ornStdDev_;
+        std::normal_distribution<Scalar> ornNoise_;
     };
 }
     

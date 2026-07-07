@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/01/13.
-//  Copyright (c) 2013-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Torus__
@@ -55,8 +55,8 @@ namespace sf
         btCollisionShape* BuildCollisionShape();
         
     private:
-        Scalar mR;
-        Scalar MR;
+        Scalar minorRadius_;
+        Scalar majorRadius_;
     };
 }
 

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/27/12.
-//  Copyright (c) 2012-2022 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_IMGUI__
@@ -50,11 +50,11 @@ namespace sf
     class Uid
     {
     public:
-        int owner;
-        int item;
+        int owner_;
+        int item_;
         
     private:
-        int index = 0;
+        int index_ = 0;
         friend class IMGUI;
     };
     
@@ -284,26 +284,26 @@ namespace sf
         void DrawRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec4 color = glm::vec4(1));
         void DrawArrow(GLfloat x, GLfloat y, GLfloat h, bool up, glm::vec4 color = glm::vec4(1));
         
-        GLint windowW,windowH;
-        bool shaders;
-        int mouseX, mouseY;
-        bool mouseLeftDown, mouseRightDown;
-        Uid hot;
-        Uid active;
+        GLint windowW_, windowH_;
+        bool shaders_;
+        int mouseX_, mouseY_;
+        bool mouseLeftDown_, mouseRightDown_;
+        Uid hot_;
+        Uid active_;
         
-        OpenGLPrinter* plainPrinter;
-        GLuint logoTexture;
-        GLuint guiTexture;
-        glm::vec4 theme[11];
-        GLfloat backgroundMargin;
+        OpenGLPrinter* plainPrinter_;
+        GLuint logoTexture_;
+        GLuint guiTexture_;
+        glm::vec4 theme_[11];
+        GLfloat backgroundMargin_;
         
         //Translucent background
-        GLuint guiVAO;
-        GLuint translucentFBO;
-        GLuint translucentTexture[2];
-        GLSLShader* downsampleShader;
-        GLSLShader* gaussianShader;
-        GLSLShader* guiShader[2];
+        GLuint guiVAO_;
+        GLuint translucentFBO_;
+        GLuint translucentTexture_[2];
+        GLSLShader* downsampleShader_;
+        GLSLShader* gaussianShader_;
+        GLSLShader* guiShader_[2];
     };
 }
 

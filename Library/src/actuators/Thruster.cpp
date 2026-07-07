@@ -20,8 +20,8 @@
 //  Stonefish
 //
 //  Created by Roger Pi on 03/06/2024
-//  Modified by Patryk Cieslak on 30/06/2024
-//  Copyright (c) 2024-2025 Roger Pi and Patryk Cieslak. All rights reserved.
+//  Modified by Patryk Cieslak on 06/07/2026
+//  Copyright (c) 2024-2026 Roger Pi and Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Thruster.h"
@@ -35,18 +35,17 @@
 namespace sf
 {
 
-Thruster::Thruster(std::string uniqueName, std::shared_ptr<SolidEntity> propeller,
-                                            std::shared_ptr<RotorDynamics> rotorDynamics,
-                                            std::shared_ptr<ThrustModel> thrustConversion,
+Thruster::Thruster(std::string uniqueName, std::unique_ptr<SolidEntity> propeller,
+                                            std::unique_ptr<RotorDynamics> rotorDynamics,
+                                            std::unique_ptr<ThrustModel> thrustConversion,
                                             Scalar diameter, bool rightHand, Scalar maxSetpoint,
                                             bool invertedSetpoint, bool normalizedSetpoint)
-    : LinkActuator(uniqueName), RH(rightHand), D(diameter),
-      theta(Scalar(0)), omega(Scalar(0)), thrust(Scalar(0)), torque(Scalar(0)),
-      setpoint(Scalar(0)), setpointLimit(maxSetpoint), inv(invertedSetpoint), normalized(normalizedSetpoint),
-      rotorModel(rotorDynamics), thrustModel(thrustConversion)
+    : LinkActuator(uniqueName), propeller_(std::move(propeller)), RH_(rightHand), D_(diameter),
+      theta_(Scalar(0)), omega_(Scalar(0)), thrust_(Scalar(0)), torque_(Scalar(0)),
+      setpoint_(Scalar(0)), setpointLimit_(maxSetpoint), inv_(invertedSetpoint), normalized_(normalizedSetpoint),
+      rotorModel_(std::move(rotorDynamics)), thrustModel_(std::move(thrustConversion))
 {
     setSetpointLimit(maxSetpoint);
-    propeller_ = propeller;
     propeller_->BuildGraphicalObject();
 }
 
@@ -57,120 +56,120 @@ ActuatorType Thruster::getType() const
 
 void Thruster::setSetpoint(Scalar s)
 {
-    if (normalized)
-        setpoint = btClamped(s, Scalar(-1), Scalar(1)) * setpointLimit;
+    if (normalized_)
+        setpoint_ = btClamped(s, Scalar(-1), Scalar(1)) * setpointLimit_;
     else
-        setpoint = btClamped(s, -setpointLimit, setpointLimit);
-    if (inv) setpoint *= Scalar(-1);
+        setpoint_ = btClamped(s, -setpointLimit_, setpointLimit_);
+    if (inv_) setpoint_ *= Scalar(-1);
     ResetWatchdog();
 }
 
 void Thruster::setSetpointLimit(Scalar limit)
 {
-    setpointLimit = btFabs(limit);
-    rotorModel->setOutputLimit(setpointLimit*2); // Protect against uncontrolled behavior
+    setpointLimit_ = btFabs(limit);
+    rotorModel_->setOutputLimit(setpointLimit_*2); // Protect against uncontrolled behavior
 }
 
 Scalar Thruster::getSetpointLimit()
 {
-    return setpointLimit;
+    return setpointLimit_;
 }
 
 Scalar Thruster::getSetpoint() const
 {
-    return inv ? -setpoint : setpoint;
+    return inv_ ? -setpoint_ : setpoint_;
 }
 
 Scalar Thruster::getAngle() const
 {
-    return theta;
+    return theta_;
 }
 
 Scalar Thruster::getOmega() const
 {
-    return omega;
+    return omega_;
 }
 
 Scalar Thruster::getThrust() const
 {
-    return thrust;
+    return thrust_;
 }
 
 Scalar Thruster::getTorque() const
 {
-    return torque;
+    return torque_;
 }
 
 bool Thruster::isPropellerRight() const
 {
-    return RH;
+    return RH_;
 }
 
 Scalar Thruster::getPropellerDiameter() const
 {
-    return D;
+    return D_;
 }
 
 void Thruster::Update(Scalar dt)
 {
     Actuator::Update(dt);
 
-    if (attach == nullptr)
+    if (attach_ == nullptr)
         return; // No attachment, no action
 
     // Update rotation & angular velocity
-    if (rotorModel->getType() == RotorDynamicsType::MECHANICAL_PI)
-        std::static_pointer_cast<MechanicalPI>(rotorModel)->setDampingTorque(btFabs(torque));
-    omega = rotorModel->Update(dt, setpoint);
-    theta += omega * dt; // Just for animation
+    if (rotorModel_->getType() == RotorDynamicsType::MECHANICAL_PI)
+        static_cast<MechanicalPI*>(rotorModel_.get())->setDampingTorque(btFabs(torque_));
+    omega_ = rotorModel_->Update(dt, setpoint_);
+    theta_ += omega_ * dt; // Just for animation
 
     // Check if thruster is sumberged and compute thrust model
-    Transform solidTrans = attach->getCGTransform();
-    Transform thrustTrans = attach->getOTransform() * o2a;
+    Transform solidTrans = attach_->getCGTransform();
+    Transform thrustTrans = attach_->getOTransform() * o2a_;
     Ocean *ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();
 
     if (ocn != nullptr && ocn->IsInsideFluid(thrustTrans.getOrigin()))
     {
         // Update Thrust
-        if (thrustModel->getType() == ThrustModelType::FD)
+        if (thrustModel_->getType() == ThrustModelType::FD)
         {
             Vector3 relPos = thrustTrans.getOrigin() - solidTrans.getOrigin();
-            Vector3 velocity = attach->getLinearVelocityInLocalPoint(relPos);
+            Vector3 velocity = attach_->getLinearVelocityInLocalPoint(relPos);
             Scalar u = -thrustTrans.getBasis().getColumn(0).dot(ocn->GetFluidVelocity(thrustTrans.getOrigin()) - velocity);
-            std::static_pointer_cast<FDThrust>(thrustModel)->setIncomingFluidVelocity(u);
+            static_cast<FDThrust*>(thrustModel_.get())->setIncomingFluidVelocity(u);
         }
-        std::pair<Scalar, Scalar> out = thrustModel->Update(omega);
-        thrust = out.first;
-        torque = out.second;
+        std::pair<Scalar, Scalar> out = thrustModel_->Update(omega_);
+        thrust_ = out.first;
+        torque_ = out.second;
 
         // Account for handedness of the propeller
-        if (!RH && thrustModel->getType() != ThrustModelType::FD)
-            thrust = -thrust;
+        if (!RH_ && thrustModel_->getType() != ThrustModelType::FD)
+            thrust_ = -thrust_;
     
         // Apply forces and torques
-        Vector3 thrustV(thrust, 0, 0);
-        Vector3 torqueV(torque, 0, 0);
-        attach->ApplyCentralForce(thrustTrans.getBasis() * thrustV);
-        attach->ApplyTorque((thrustTrans.getOrigin() - solidTrans.getOrigin()).cross(thrustTrans.getBasis() * thrustV));
-        attach->ApplyTorque(thrustTrans.getBasis() * torqueV);
+        Vector3 thrustV(thrust_, 0, 0);
+        Vector3 torqueV(torque_, 0, 0);
+        attach_->ApplyCentralForce(thrustTrans.getBasis() * thrustV);
+        attach_->ApplyTorque((thrustTrans.getOrigin() - solidTrans.getOrigin()).cross(thrustTrans.getBasis() * thrustV));
+        attach_->ApplyTorque(thrustTrans.getBasis() * torqueV);
     }
     else
     {
-        thrust = Scalar(0);
-        torque = Scalar(0);
+        thrust_ = Scalar(0);
+        torque_ = Scalar(0);
     }
 }
 
 std::vector<Renderable> Thruster::Render()
 {
     Transform thrustTrans = Transform::getIdentity();
-    if (attach != nullptr)
-        thrustTrans = attach->getOTransform() * o2a;
+    if (attach_ != nullptr)
+        thrustTrans = attach_->getOTransform() * o2a_;
     else
         LinkActuator::Render();
 
     // Rotate propeller
-    thrustTrans *= Transform(Quaternion(0, 0, theta), Vector3(0, 0, 0));
+    thrustTrans *= Transform(Quaternion(0, 0, theta_), Vector3(0, 0, 0));
 
     // Add renderable
     std::vector<Renderable> items(0);
@@ -178,7 +177,7 @@ std::vector<Renderable> Thruster::Render()
     item.type = RenderableType::SOLID;
     item.materialName = propeller_->getMaterial().name;
     item.objectId = propeller_->getGraphicalObject();
-    item.lookId = dm == DisplayMode::GRAPHICAL ? propeller_->getLook() : -1;
+    item.lookId = dm_ == DisplayMode::GRAPHICAL ? propeller_->getLook() : -1;
     item.model = glMatrixFromTransform(thrustTrans);
     items.push_back(item);
 
@@ -186,7 +185,7 @@ std::vector<Renderable> Thruster::Render()
     item.data = std::make_shared<std::vector<glm::vec3>>();
     auto points = item.getDataAsPoints();
     points->push_back(glm::vec3(0, 0, 0));
-    points->push_back(glm::vec3(0.1f * thrust, 0, 0));
+    points->push_back(glm::vec3(0.1f * thrust_, 0, 0));
     items.push_back(item);
 
     return items;

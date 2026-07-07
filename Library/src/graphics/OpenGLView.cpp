@@ -32,15 +32,15 @@ namespace sf
 
 OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height)
 {
-    originX = x;
-    originY = y;
-    viewportWidth = width + width % 2;
-    viewportHeight = height + height % 2;
-    enabled = true;
-	continuous = false;
-    viewUBOData.VP = glm::mat4(1.f);
-    viewUBOData.eye = glm::vec3(0.f);
-    ExtractFrustumFromVP(viewUBOData.frustum, viewUBOData.VP);
+    originX_ = x;
+    originY_ = y;
+    viewportWidth_ = width + width % 2;
+    viewportHeight_ = height + height % 2;
+    enabled_ = true;
+	continuous_ = false;
+    viewUBOData_.VP = glm::mat4(1.f);
+    viewUBOData_.eye = glm::vec3(0.f);
+    ExtractFrustumFromVP(viewUBOData_.frustum, viewUBOData_.VP);
 }
 
 OpenGLView::~OpenGLView()
@@ -49,41 +49,41 @@ OpenGLView::~OpenGLView()
 
 GLuint OpenGLView::getRenderFBO() const
 {
-    return renderFBO;
+    return renderFBO_;
 }
 
 const ViewUBO* OpenGLView::getViewUBOData() const
 {
-	return &viewUBOData;
+	return &viewUBOData_;
 }
 
 void OpenGLView::setEnabled(bool en)
 {
-    enabled = en;
+    enabled_ = en;
 }
 
 bool OpenGLView::isEnabled()
 {
-    return enabled;
+    return enabled_;
 }
 
 bool OpenGLView::isContinuous()
 {
-	return continuous;
+	return continuous_;
 }
 
 void OpenGLView::SetViewport()
 {
-    OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+    OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
 }
 
 GLint* OpenGLView::GetViewport() const
 {
     GLint* view = new GLint[4];
-    view[0] = originX;
-    view[1] = originY;
-    view[2] = viewportWidth;
-    view[3] = viewportHeight;
+    view[0] = originX_;
+    view[1] = originY_;
+    view[2] = viewportWidth_;
+    view[3] = viewportHeight_;
     return view;
 }
 

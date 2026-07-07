@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/10/20.
-//  Copyright(c) 2020-2023 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Trajectory__
@@ -80,15 +80,15 @@ namespace sf
         static void calculateVelocityShortestPath(const Transform &transform0, const Transform &transform1, Scalar timeStep, Vector3 &linVel, Vector3 &angVel);
     
     protected:
-        PlaybackMode playMode;
-        Scalar playTime;
-        Scalar endTime;
-        unsigned int iteration;
-        bool forward;
-        Transform interpTrans;
-        Vector3 interpVel;
-        Vector3 interpAngVel;
-        Vector3 interpAcc;
+        PlaybackMode playMode_;
+        Scalar playTime_;
+        Scalar endTime_;
+        unsigned int iteration_;
+        bool forward_;
+        Transform interpTrans_;
+        Vector3 interpVel_;
+        Vector3 interpAngVel_;
+        Vector3 interpAcc_;
     };
 }
 

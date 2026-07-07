@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_GraphicalSimulationApp__
@@ -37,6 +37,7 @@ namespace sf
     class OpenGLPipeline;
     class Entity;
     class MovingEntity;
+    class OpenGLTrackball;
     
     //! A class that implements an interface of a graphical application.
     class GraphicalSimulationApp : public SimulationApp
@@ -138,12 +139,21 @@ namespace sf
          \param event a pointer to the event info structure
          */
         virtual void JoystickUp(SDL_Event* event);
+
+        //! A method that creates trackball view for the simulation.
+        /*!
+         \param center a pointer to the entity that will be the center of the trackball view
+            */
+        void CreateTrackball();
         
         //! A method returning a pointer to the OpenGL pipeline.
         OpenGLPipeline* getGLPipeline();
         
         //! A method returning a pointer to the GUI.
         IMGUI* getGUI();
+
+        //! A method returning a pointer to the trackball.
+        OpenGLTrackball* getTrackball();
 
         //! A method returning a pointer to the selected entity.
         std::pair<Entity*, int> getSelectedEntity();
@@ -190,38 +200,38 @@ namespace sf
         void InitializeSDL();
         void RenderLoop();
         
-        SDL_GLContext glMainContext;
-        SDL_GLContext glLoadingContext;
-        SDL_Thread* loadingThread;
-        SDL_Thread* simulationThread;
-        SDL_Window* window;
-        SDL_Joystick* joystick;
-        bool* joystickButtons;
-        int16_t* joystickAxes;
-        uint8_t* joystickHats;
-        SDL_Event mouseWasDown;
+        SDL_GLContext glMainContext_;
+        SDL_GLContext glLoadingContext_;
+        SDL_Thread* loadingThread_;
+        SDL_Thread* simulationThread_;
+        SDL_Window* window_;
+        SDL_Joystick* joystick_;
+        bool* joystickButtons_;
+        int16_t* joystickAxes_;
+        uint8_t* joystickHats_;
+        SDL_Event mouseWasDown_;
         
-        IMGUI* gui;
-        OpenGLPipeline* glPipeline;
-        
-        MovingEntity* trackballCenter;
-        std::pair<Entity*, int> selectedEntity;
-        bool displayHUD;
-        bool displayKeymap;
-        bool displayConsole;
-        bool displayPerformance;
-        std::string shaderPath;
-        bool loading;
-        double drawingTime;
-        double maxDrawingTime;
+        IMGUI* gui_;
+        OpenGLPipeline* glPipeline_;
+        OpenGLTrackball* trackball_;
+        MovingEntity* trackballCenter_;
+        std::pair<Entity*, int> selectedEntity_;
+        bool displayHUD_;
+        bool displayKeymap_;
+        bool displayConsole_;
+        bool displayPerformance_;
+        std::string shaderPath_;
+        bool loading_;
+        double drawingTime_;
+        double maxDrawingTime_;
         double fps_;
-        int maxCounter;
-        int windowW;
-        int windowH;
-        RenderSettings rSettings;
-        HelperSettings hSettings;
-        GLuint timeQuery[2];
-        GLint timeQueryPingpong;
+        int maxCounter_;
+        int windowW_;
+        int windowH_;
+        RenderSettings rSettings_;
+        HelperSettings hSettings_;
+        GLuint timeQuery_[2];
+        GLint timeQueryPingpong_;
         
         static int RenderLoadingScreen(void* data);
         static int RunSimulation(void* data);

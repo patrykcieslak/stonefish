@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/04/2018.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_ScrewConstraint__
@@ -38,10 +38,10 @@ namespace sf
     {
     public:
         ScrewConstraint(btRigidBody &_rbA, btRigidBody &_rbB, const Transform &_frameInA, const Transform &_frameInB, bool _useLinearReferenceFrameA)
-        : btSliderConstraint(_rbA, _rbB, _frameInA, _frameInB, _useLinearReferenceFrameA), threadPitch(1.0) {}
+        : btSliderConstraint(_rbA, _rbB, _frameInA, _frameInB, _useLinearReferenceFrameA), threadPitch_(1.0) {}
         
         ScrewConstraint(btRigidBody &_rbB, const Transform &_frameInB, bool _useLinearReferenceFrameA)
-        : btSliderConstraint(_rbB, _frameInB, _useLinearReferenceFrameA), threadPitch(1.0) {}
+        : btSliderConstraint(_rbB, _frameInB, _useLinearReferenceFrameA), threadPitch_(1.0) {}
         
         virtual void getInfo1(btConstraintInfo1 *_info)
         {
@@ -71,16 +71,16 @@ namespace sf
         
         virtual void setThreadPitch(double _threadPitch)
         {
-            this->threadPitch = -_threadPitch;
+            this->threadPitch_ = -_threadPitch;
         }
         
         virtual double getThreadPitch() const
         {
-            return -this->threadPitch;
+            return -this->threadPitch_;
         }
         
     private:
-        double threadPitch;
+        double threadPitch_;
     };
 }
     

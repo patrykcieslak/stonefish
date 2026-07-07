@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/30/13.
-//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Box__
@@ -55,7 +55,7 @@ namespace sf
         btCollisionShape* BuildCollisionShape();
         
     private:
-        Vector3 halfExtents;
+        Vector3 halfExtents_;
     };
 }
 

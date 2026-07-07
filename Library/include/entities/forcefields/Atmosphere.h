@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 02/12/2018.
-//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -137,9 +137,9 @@ namespace sf
         static int JulianDay(std::tm& tm);
         
     private:
-        Fluid gas;
-        std::vector<VelocityField*> wind;
-        OpenGLAtmosphere* glAtmosphere;
+        Fluid gas_;
+        std::vector<VelocityField*> wind_;
+        OpenGLAtmosphere* glAtmosphere_;
     };
 }
 

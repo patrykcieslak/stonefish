@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 14/05/2025.
-//  Copyright (c) 2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2025-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpticalModem__
@@ -71,11 +71,11 @@ namespace sf
         static std::vector<uint8_t> introduceErrors(const std::vector<uint8_t>& data, Scalar linkQuality);
         
     private:
-        Scalar maxRange;
-        Scalar fov;
-        Scalar ambientLightSens;
-        Scalar receptionQuality;
-        Scalar trueRange;
+        Scalar maxRange_;
+        Scalar fov_;
+        Scalar ambientLightSens_;
+        Scalar receptionQuality_;
+        Scalar trueRange_;
         
         static void addNode(OpticalModem* node);
         static void removeNode(uint64_t deviceId);

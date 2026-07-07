@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 23/11/2018.
-//  Copyright (c) 2018-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_LinkActuator__
@@ -62,8 +62,8 @@ namespace sf
         virtual Transform getActuatorFrame() const;
        
     protected:
-        SolidEntity* attach;
-        Transform o2a;
+        SolidEntity* attach_;
+        Transform o2a_;
     };
 }
 

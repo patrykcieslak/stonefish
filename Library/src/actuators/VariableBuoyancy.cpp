@@ -37,34 +37,34 @@ VariableBuoyancy::VariableBuoyancy(std::string uniqueName, const std::vector<std
     if(volumeMeshPaths.size() < 2)
         cCritical("VBS volume definition requires loading at least two meshes - for the full/empty states!");
     
-    density = Scalar(1000.0);
+    density_ = Scalar(1000.0);
     Ocean* ocn;
     if((ocn = SimulationApp::getApp()->getSimulationManager()->getOcean()) != nullptr)
-        density = ocn->getLiquid().density;
-    gravity = SimulationApp::getApp()->getSimulationManager()->getGravity();
+        density_ = ocn->getLiquid().density;
+    gravity_ = SimulationApp::getApp()->getSimulationManager()->getGravity();
     
     for(size_t i=0; i<volumeMeshPaths.size(); ++i)
     {
         Mesh* mesh = LoadGeometryFromFile(volumeMeshPaths[i], 1.f);
         if(mesh == NULL)
             abort();
-        Vprops.push_back(ComputePhysicalProperties(mesh, Scalar(0), density));
+        Vprops_.push_back(ComputePhysicalProperties(mesh, Scalar(0), density_));
         delete mesh;
     }
     auto volumeCompare = [](MeshProperties& mp1, MeshProperties& mp2) { return mp1.volume < mp2.volume; };
-    std::sort(Vprops.begin(), Vprops.end(), volumeCompare);
+    std::sort(Vprops_.begin(), Vprops_.end(), volumeCompare);
     
-    flowRate = Scalar(0);
-    force = V0();
-    Vmin = Vprops.front().volume;
-    Vmax = Vprops.back().volume;
+    flowRate_ = Scalar(0);
+    force_ = V0();
+    Vmin_ = Vprops_.front().volume;
+    Vmax_ = Vprops_.back().volume;
     
-    cInfo("VBS created with Vmin: %1.3lf Vmax: %1.3lf", Vmin, Vmax);
+    cInfo("VBS created with Vmin: %1.3lf Vmax: %1.3lf", Vmin_, Vmax_);
     
-    V = initialVolume > Vmax ? Vmax : (initialVolume < Vmin ? Vmin : initialVolume);
+    V_ = initialVolume > Vmax_ ? Vmax_ : (initialVolume < Vmin_ ? Vmin_ : initialVolume);
     
     Scalar mass;
-    InterpolateVProps(V, mass, CG);
+    InterpolateVProps(V_, mass, CG_);
 }    
 
 ActuatorType VariableBuoyancy::getType() const
@@ -74,79 +74,79 @@ ActuatorType VariableBuoyancy::getType() const
         
 void VariableBuoyancy::setFlowRate(Scalar rate)
 {
-    flowRate = rate;
+    flowRate_ = rate;
 }
     
 Scalar VariableBuoyancy::getFlowRate() const
 {
-    return flowRate;
+    return flowRate_;
 }
     
 Scalar VariableBuoyancy::getLiquidVolume() const
 {
-    return V;
+    return V_;
 }
 
 Scalar VariableBuoyancy::getForce() const
 {
-    return force.safeNorm();
+    return force_.safeNorm();
 }
 
 void VariableBuoyancy::InterpolateVProps(Scalar volume, Scalar& m, Vector3& cg)
 {
-    if(volume <= Vmin)
+    if(volume <= Vmin_)
     {
-        m = Vprops.front().mass;
-        cg = Vprops.front().CG;
+        m = Vprops_.front().mass;
+        cg = Vprops_.front().CG;
     }
-    else if(volume >= Vmax)
+    else if(volume >= Vmax_)
     {
-        m = Vprops.back().mass;
-        cg = Vprops.back().CG;
+        m = Vprops_.back().mass;
+        cg = Vprops_.back().CG;
     }
     else 
     {
-        m = volume*density; 
+        m = volume*density_; 
         
         //Find interpolation pair
         size_t i;
-        for(i=0; i<Vprops.size(); ++i)
-            if(Vprops[i].volume > volume) 
+        for(i=0; i<Vprops_.size(); ++i)
+            if(Vprops_[i].volume > volume) 
                 break;
 
         //Linear interpolation
-        cg = Vprops[i-1].CG + (Vprops[i].CG - Vprops[i-1].CG)/(Vprops[i].volume - Vprops[i-1].volume) * (volume - Vprops[i-1].volume); 
+        cg = Vprops_[i-1].CG + (Vprops_[i].CG - Vprops_[i-1].CG)/(Vprops_[i].volume - Vprops_[i-1].volume) * (volume - Vprops_[i-1].volume); 
     }
 }
     
 void VariableBuoyancy::Update(Scalar dt)
 {
     Ocean* ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();
-    if(ocn != nullptr && attach != NULL)
+    if(ocn != nullptr && attach_ != NULL)
     {
         //Update volume
-        V += flowRate*dt;
-        V = V < Vmin ? Vmin : (V > Vmax ? Vmax : V);
+        V_ += flowRate_*dt;
+        V_ = V_ < Vmin_ ? Vmin_ : (V_ > Vmax_ ? Vmax_ : V_);
         Vector3 cg;
         Scalar m;
-        InterpolateVProps(V, m, CG);
+        InterpolateVProps(V_, m, CG_);
         
         //Compute forces
-        force = m*gravity;
+        force_ = m*gravity_;
 
         //Apply forces and torques
-        Vector3 solidCG = attach->getCGTransform().getOrigin();
-        Vector3 vbsCG = attach->getOTransform() * o2a * CG;
-        attach->ApplyCentralForce(force);
-        attach->ApplyTorque((vbsCG - solidCG).cross(force));
+        Vector3 solidCG = attach_->getCGTransform().getOrigin();
+        Vector3 vbsCG = attach_->getOTransform() * o2a_ * CG_;
+        attach_->ApplyCentralForce(force_);
+        attach_->ApplyTorque((vbsCG - solidCG).cross(force_));
     }
 }
 
 std::vector<Renderable> VariableBuoyancy::Render()
 {
     Transform vbsTrans = Transform::getIdentity();
-    if(attach != NULL)
-        vbsTrans.setOrigin(attach->getOTransform() * o2a * CG);
+    if(attach_ != NULL)
+        vbsTrans.setOrigin(attach_->getOTransform() * o2a_ * CG_);
     else
         LinkActuator::Render();
     
@@ -158,7 +158,7 @@ std::vector<Renderable> VariableBuoyancy::Render()
     item.data = std::make_shared<std::vector<glm::vec3>>();
     auto points = item.getDataAsPoints();
     points->push_back(glm::vec3(0,0,0));
-    points->push_back(0.1f * glm::vec3((GLfloat)force.x(), (GLfloat)force.y(), (GLfloat)force.z()));
+    points->push_back(0.1f * glm::vec3((GLfloat)force_.x(), (GLfloat)force_.y(), (GLfloat)force_.z()));
     items.push_back(item);
     
     return items;

@@ -39,67 +39,67 @@ std::mt19937 Sensor::randomGenerator(randomDevice());
 
 Sensor::Sensor(std::string uniqueName, Scalar frequency)
 {
-    name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
+    name_ = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     setUpdateFrequency(frequency);
-    eleapsedTime = Scalar(0);
-    enabled = true;
-    renderable = true;
-    newDataAvailable = false;
-    updateMutex = SDL_CreateMutex();
-    lookId = -1;
-    graObjectId = -1;
+    eleapsedTime_ = Scalar(0);
+    enabled_ = true;
+    renderable_ = true;
+    newDataAvailable_ = false;
+    updateMutex_ = SDL_CreateMutex();
+    lookId_ = -1;
+    graObjectId_ = -1;
 }
 
 Sensor::~Sensor()
 {
     if(SimulationApp::getApp() != NULL)
-        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
-    SDL_DestroyMutex(updateMutex);
+        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name_);
+    SDL_DestroyMutex(updateMutex_);
 }
 
 std::string Sensor::getName() const
 {
-    return name;
+    return name_;
 }
 
 Scalar Sensor::getUpdateFrequency() const
 {
-    return freq;
+    return freq_;
 }
 
 bool Sensor::isNewDataAvailable() const
 {
-    return newDataAvailable;
+    return newDataAvailable_;
 }
 
 bool Sensor::isRenderable() const
 {
-    return renderable;
+    return renderable_;
 }
 
 bool Sensor::isEnabled() const
 {
-    return enabled;
+    return enabled_;
 }
 
 void Sensor::MarkDataOld()
 {
-    newDataAvailable = false;
+    newDataAvailable_ = false;
 }
 
 void Sensor::setUpdateFrequency(Scalar f)
 {
-    freq = f;
+    freq_ = f;
 }
 
 void Sensor::setEnabled(bool en)
 {
-    enabled = en;
+    enabled_ = en;
 }
 
 void Sensor::setRenderable(bool render)
 {
-    renderable = render;
+    renderable_ = render;
 }
 
 void Sensor::setVisual(const std::string& meshFilename, Scalar scale, const std::string& look)
@@ -111,55 +111,55 @@ void Sensor::setVisual(const std::string& meshFilename, Scalar scale, const std:
     if(mesh == nullptr)
         return;
 
-    graObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh);
-    lookId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+    graObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh);
+    lookId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
     delete mesh;
 }
 
 void Sensor::Reset()
 {
-    eleapsedTime = Scalar(0.);
+    eleapsedTime_ = Scalar(0.);
     InternalUpdate(1.); //time delta should not affect initial measurement!!!
 }
 
 void Sensor::Update(Scalar dt)
 {
-    if(!enabled)
+    if(!enabled_)
         return;
         
-    SDL_LockMutex(updateMutex);
+    SDL_LockMutex(updateMutex_);
     
-    if(freq <= Scalar(0)) // Every simulation tick
+    if(freq_ <= Scalar(0)) // Every simulation tick
     {
         InternalUpdate(dt);
-        newDataAvailable = true;
+        newDataAvailable_ = true;
     }
     else //Fixed rate
     {
-        eleapsedTime += dt;
-        Scalar invFreq = Scalar(1)/freq;
+        eleapsedTime_ += dt;
+        Scalar invFreq = Scalar(1)/freq_;
         
-        if(eleapsedTime >= invFreq)
+        if(eleapsedTime_ >= invFreq)
         {
             InternalUpdate(invFreq);
-            eleapsedTime -= invFreq;
-            newDataAvailable = true;
+            eleapsedTime_ -= invFreq;
+            newDataAvailable_ = true;
         }
     }
     
-    SDL_UnlockMutex(updateMutex);
+    SDL_UnlockMutex(updateMutex_);
 }
 
 std::vector<Renderable> Sensor::Render()
 {
     std::vector<Renderable> items(0);
-    if(renderable && graObjectId > 0)
+    if(renderable_ && graObjectId_ > 0)
     {
         Renderable item;
         item.type = RenderableType::SOLID;
         item.materialName = "";
-        item.objectId = graObjectId;
-        item.lookId = lookId;
+        item.objectId = graObjectId_;
+        item.lookId = lookId_;
         item.model = glMatrixFromTransform(getSensorFrame());
         items.push_back(item);
     }

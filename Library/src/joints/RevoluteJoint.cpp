@@ -36,46 +36,46 @@ namespace sf
 RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, const Vector3& axis, bool collideLinked) : Joint(uniqueName, collideLinked)
 {
     Vector3 hingeAxis = axis.normalized();
-    btRigidBody* bodyA = solidA->rigidBody;
-    btRigidBody* bodyB = solidB->rigidBody;
-    axisInA = bodyA->getCenterOfMassTransform().getBasis().inverse() * hingeAxis;
+    btRigidBody* bodyA = solidA->rigidBody_;
+    btRigidBody* bodyB = solidB->rigidBody_;
+    axisInA_ = bodyA->getCenterOfMassTransform().getBasis().inverse() * hingeAxis;
     Vector3 axisInB = bodyB->getCenterOfMassTransform().getBasis().inverse() * hingeAxis;
-    pivotInA = bodyA->getCenterOfMassTransform().inverse()(pivot);
+    pivotInA_ = bodyA->getCenterOfMassTransform().inverse()(pivot);
     Vector3 pivotInB = bodyB->getCenterOfMassTransform().inverse()(pivot);
     
-    btHingeConstraint* hinge = new btHingeConstraint(*bodyA, *bodyB, pivotInA, pivotInB, axisInA, axisInB, true);
+    btHingeConstraint* hinge = new btHingeConstraint(*bodyA, *bodyB, pivotInA_, pivotInB, axisInA_, axisInB, true);
     hinge->setLimit(Scalar(1), Scalar(-1)); //no limit (min > max)
     setConstraint(hinge);
 
-    sigDamping = Scalar(0);
-    velDamping = Scalar(0);
-    angleOffset = hinge->getHingeAngle();
-    cInfo("Created revolute joint '%s'. Offset: %lf rad.", uniqueName.c_str(), angleOffset);
+    sigDamping_ = Scalar(0);
+    velDamping_ = Scalar(0);
+    angleOffset_ = hinge->getHingeAngle();
+    cInfo("Created revolute joint '%s'. Offset: %lf rad.", uniqueName.c_str(), angleOffset_);
     setIC(Scalar(0));
 }
 
 RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solid, const Vector3& pivot, const Vector3& axis) : Joint(uniqueName, false)
 {
-    btRigidBody* body = solid->rigidBody;
+    btRigidBody* body = solid->rigidBody_;
     Vector3 hingeAxis = axis.normalized();
-    axisInA = body->getCenterOfMassTransform().getBasis().inverse() * hingeAxis;
-    pivotInA = body->getCenterOfMassTransform().inverse()(pivot);
+    axisInA_ = body->getCenterOfMassTransform().getBasis().inverse() * hingeAxis;
+    pivotInA_ = body->getCenterOfMassTransform().inverse()(pivot);
     
-    btHingeConstraint* hinge = new btHingeConstraint(*body, pivotInA, axisInA, true);
+    btHingeConstraint* hinge = new btHingeConstraint(*body, pivotInA_, axisInA_, true);
     hinge->setLimit(Scalar(1), Scalar(-1)); //no limit (min > max)
     setConstraint(hinge);
     
-    sigDamping = Scalar(0);
-    velDamping = Scalar(0);
-    angleOffset = hinge->getHingeAngle();
-    cInfo("Created revolute joint '%s'. Offset: %lf rad.", uniqueName.c_str(), angleOffset);
+    sigDamping_ = Scalar(0);
+    velDamping_ = Scalar(0);
+    angleOffset_ = hinge->getHingeAngle();
+    cInfo("Created revolute joint '%s'. Offset: %lf rad.", uniqueName.c_str(), angleOffset_);
     setIC(Scalar(0));
 }
 
 void RevoluteJoint::setDamping(Scalar constantFactor, Scalar viscousFactor)
 {
-    sigDamping = constantFactor > Scalar(0) ? constantFactor : Scalar(0);
-    velDamping = viscousFactor > Scalar(0) ? viscousFactor : Scalar(0);
+    sigDamping_ = constantFactor > Scalar(0) ? constantFactor : Scalar(0);
+    velDamping_ = viscousFactor > Scalar(0) ? viscousFactor : Scalar(0);
 }
 
 void RevoluteJoint::setLimits(Scalar min, Scalar max)
@@ -88,16 +88,16 @@ void RevoluteJoint::setLimits(Scalar min, Scalar max)
     }
 
     btHingeConstraint* hinge = (btHingeConstraint*)getConstraint();
-    min = btFmod(min + angleOffset, SIMD_2_PI); 
-    max = btFmod(max + angleOffset, SIMD_2_PI);
+    min = btFmod(min + angleOffset_, SIMD_2_PI); 
+    max = btFmod(max + angleOffset_, SIMD_2_PI);
     hinge->setLimit(min, max);
     cInfo("Setting limits of revolute joint '%s': %lf, %lf.", getName().c_str(), min, max);
 }
 
 void RevoluteJoint::setIC(Scalar angle)
 {
-    angleIC = angle;
-    angleICError = angleIC - getAngle();
+    angleIC_ = angle;
+    angleICError_ = angleIC_ - getAngle();
 }
 
 JointType RevoluteJoint::getType() const
@@ -107,7 +107,7 @@ JointType RevoluteJoint::getType() const
 
 Scalar RevoluteJoint::getAngle()
 {
-    return btNormalizeAngle(((btHingeConstraint*)getConstraint())->getHingeAngle() - angleOffset);
+    return btNormalizeAngle(((btHingeConstraint*)getConstraint())->getHingeAngle() - angleOffset_);
 }
 
 Scalar RevoluteJoint::getAngularVelocity()
@@ -115,7 +115,7 @@ Scalar RevoluteJoint::getAngularVelocity()
     btRigidBody& bodyA = getConstraint()->getRigidBodyA();
     btRigidBody& bodyB = getConstraint()->getRigidBodyB();
     Vector3 relativeAV = bodyA.getAngularVelocity() - bodyB.getAngularVelocity();
-    Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
+    Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA_).normalized();
     return relativeAV.dot(axis);
 }
 
@@ -135,7 +135,7 @@ void RevoluteJoint::ApplyTorque(Scalar T)
 {
     btRigidBody& bodyA = getConstraint()->getRigidBodyA();
     btRigidBody& bodyB = getConstraint()->getRigidBodyB();
-    Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
+    Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA_).normalized();
     
     Vector3 torque = axis * T;
     bodyA.applyTorque(torque);
@@ -144,17 +144,17 @@ void RevoluteJoint::ApplyTorque(Scalar T)
 
 void RevoluteJoint::ApplyDamping()
 {
-    if(sigDamping > Scalar(0.) || velDamping > Scalar(0.))
+    if(sigDamping_ > Scalar(0.) || velDamping_ > Scalar(0.))
     {
         btRigidBody& bodyA = getConstraint()->getRigidBodyA();
         btRigidBody& bodyB = getConstraint()->getRigidBodyB();
-        Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
+        Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA_).normalized();
         Vector3 relativeAV = bodyA.getAngularVelocity() - bodyB.getAngularVelocity();
         Scalar av = relativeAV.dot(axis);
        
         if(av != Scalar(0.))
         {
-            Scalar T = sigDamping * av/fabs(av) + velDamping * av;
+            Scalar T = sigDamping_ * av/fabs(av) + velDamping_ * av;
             Vector3 torque = axis * -T;
         
             bodyA.applyTorque(torque);
@@ -165,15 +165,15 @@ void RevoluteJoint::ApplyDamping()
 
 bool RevoluteJoint::SolvePositionIC(Scalar linearTolerance, Scalar angularTolerance)
 {
-    Scalar lastAngleICError = angleICError;
-    angleICError = angleIC - getAngle();
+    Scalar lastAngleICError = angleICError_;
+    angleICError_ = angleIC_ - getAngle();
     
     //Check if IC reached
-    if(btFabs(angleICError) < angularTolerance)
+    if(btFabs(angleICError_) < angularTolerance)
         return true;
     
     //Move joint
-    Scalar torque = angleICError * Scalar(50) + (angleICError - lastAngleICError) * Scalar(300);
+    Scalar torque = angleICError_ * Scalar(50) + (angleICError_ - lastAngleICError) * Scalar(300);
     ApplyTorque(torque);
     
     return false;
@@ -191,8 +191,8 @@ std::vector<Renderable> RevoluteJoint::Render()
     btTypedConstraint* revo = getConstraint();
     Vector3 A = revo->getRigidBodyA().getCenterOfMassPosition();
     Vector3 B = revo->getRigidBodyB().getCenterOfMassPosition();
-    Vector3 pivot =  revo->getRigidBodyA().getCenterOfMassTransform()(pivotInA);
-    Vector3 axis = (revo->getRigidBodyA().getCenterOfMassTransform().getBasis() * axisInA).normalized();
+    Vector3 pivot =  revo->getRigidBodyA().getCenterOfMassTransform()(pivotInA_);
+    Vector3 axis = (revo->getRigidBodyA().getCenterOfMassTransform().getBasis() * axisInA_).normalized();
     
     //Calculate axis ends
     Vector3 C1 = pivot;

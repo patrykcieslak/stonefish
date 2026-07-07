@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/05/2019.
-//  Copyright (c) 2019-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Propeller.h"
@@ -34,26 +34,26 @@
 namespace sf
 {
 
-Propeller::Propeller(std::string uniqueName, std::shared_ptr<SolidEntity> propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand, bool inverted) : LinkActuator(uniqueName)
+Propeller::Propeller(std::string uniqueName, std::unique_ptr<SolidEntity> propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand, bool inverted) : LinkActuator(uniqueName)
 {
-    D = diameter;
-    kT0 = thrustCoeff;
-    kQ0 = torqueCoeff;
-    kp = Scalar(8.0);
-    ki = Scalar(3.0);
-    iLim = Scalar(2.0);
-    RH = rightHand;
-    inv = inverted;
-    omegaLim = maxRPM/Scalar(60) * Scalar(2) * M_PI; //In rad/s
+    D_ = diameter;
+    kT0_ = thrustCoeff;
+    kQ0_ = torqueCoeff;
+    kp_ = Scalar(8.0);
+    ki_ = Scalar(3.0);
+    iLim_ = Scalar(2.0);
+    RH_ = rightHand;
+    inv_ = inverted;
+    omegaLim_ = maxRPM/Scalar(60) * Scalar(2) * M_PI; //In rad/s
 
-    theta = Scalar(0);
-    omega = Scalar(0);
-    thrust = Scalar(0);
-    torque = Scalar(0);
-    setpoint = Scalar(0);
-    iError = Scalar(0);
+    theta_ = Scalar(0);
+    omega_ = Scalar(0);
+    thrust_ = Scalar(0);
+    torque_ = Scalar(0);
+    setpoint_ = Scalar(0);
+    iError_ = Scalar(0);
     
-    propeller_ = propeller;
+    propeller_ = std::move(propeller);
     propeller_->BuildGraphicalObject();
 }
 
@@ -64,34 +64,34 @@ ActuatorType Propeller::getType() const
 
 void Propeller::setSetpoint(Scalar s)
 {
-    if(inv) s *= Scalar(-1);
-    setpoint = s < Scalar(-1) ? Scalar(-1) : (s > Scalar(1) ? Scalar(1) : s);
+    if(inv_) s *= Scalar(-1);
+    setpoint_ = s < Scalar(-1) ? Scalar(-1) : (s > Scalar(1) ? Scalar(1) : s);
     ResetWatchdog();
 }
 
 Scalar Propeller::getSetpoint() const
 {
-    return inv ? -setpoint : setpoint;
+    return inv_ ? -setpoint_ : setpoint_;
 }
 
 Scalar Propeller::getAngle() const
 {
-    return theta;
+    return theta_;
 }
 
 Scalar Propeller::getOmega() const
 {
-    return omega;
+    return omega_;
 }
 
 Scalar Propeller::getThrust() const
 {
-    return thrust;
+    return thrust_;
 }
 
 Scalar Propeller::getTorque() const
 {
-    return torque;
+    return torque_;
 }
 
 void Propeller::Update(Scalar dt)
@@ -99,22 +99,22 @@ void Propeller::Update(Scalar dt)
     Actuator::Update(dt);
 
     //Update thruster velocity
-    Scalar error = setpoint * omegaLim - omega;
-    Scalar motorTorque = kp * error + ki * iError;
-    omega += (motorTorque - torque)*dt;
-    theta += omega * dt; //Just for animation
+    Scalar error = setpoint_ * omegaLim_ - omega_;
+    Scalar motorTorque = kp_ * error + ki_ * iError_;
+    omega_ += (motorTorque - torque_)*dt;
+    theta_ += omega_ * dt; //Just for animation
     
     //Integrate error
-    iError += error * dt;
-    iError = iError > iLim ? iLim : (iError < -iLim ? -iLim : iError);
+    iError_ += error * dt;
+    iError_ = iError_ > iLim_ ? iLim_ : (iError_ < -iLim_ ? -iLim_ : iError_);
     
-    if(attach != NULL)
+    if(attach_ != NULL)
     {
         //Get transforms
-        Transform solidTrans = attach->getCGTransform();
-        Transform propTrans = attach->getOTransform() * o2a;
+        Transform solidTrans = attach_->getCGTransform();
+        Transform propTrans = attach_->getOTransform() * o2a_;
         Vector3 relPos = propTrans.getOrigin() - solidTrans.getOrigin();
-        Vector3 velocity = attach->getLinearVelocityInLocalPoint(relPos);
+        Vector3 velocity = attach_->getLinearVelocityInLocalPoint(relPos);
         
         Atmosphere* atm = SimulationApp::getApp()->getSimulationManager()->getAtmosphere();
         
@@ -123,19 +123,19 @@ void Propeller::Update(Scalar dt)
             //Calculate thrust
             //Thrust coefficient depends on advance ratio J = u/(n*D), kT0 -> J=0
             //The lower the p/D the more linear the dependence of Kt on J
-            Scalar n = omega/(Scalar(2) * M_PI);
+            Scalar n = omega_/(Scalar(2) * M_PI);
             Scalar u = -propTrans.getBasis().getColumn(0).dot(atm->GetFluidVelocity(propTrans.getOrigin()) - velocity); //Incoming air velocity
             Scalar alpha(-0.095/0.8);
             //kT(J) = kT0 + alpha * J --> approximated with linear function
-            thrust = (RH ? Scalar(1) : Scalar(-1)) * atm->getGas().density * D*D*D * btFabs(n) * (D*kT0*n + alpha*u);
-            torque = -kQ0 * atm->getGas().density * btFabs(n)*n * D*D*D*D*D; //Torque is the loading of propeller due to drag
+            thrust_ = (RH_ ? Scalar(1) : Scalar(-1)) * atm->getGas().density * D_*D_*D_ * btFabs(n) * (D_*kT0_*n + alpha*u);
+            torque_ = -kQ0_ * atm->getGas().density * btFabs(n)*n * D_*D_*D_*D_*D_; //Torque is the loading of propeller due to drag
             
             //Apply forces and torques
-            Vector3 thrustV(thrust, 0, 0);
-            Vector3 torqueV(torque, 0, 0); 
-            attach->ApplyCentralForce(propTrans.getBasis() * thrustV);
-            attach->ApplyTorque((propTrans.getOrigin() - solidTrans.getOrigin()).cross(propTrans.getBasis() * thrustV));
-            attach->ApplyTorque(propTrans.getBasis() * torqueV);
+            Vector3 thrustV(thrust_, 0, 0);
+            Vector3 torqueV(torque_, 0, 0); 
+            attach_->ApplyCentralForce(propTrans.getBasis() * thrustV);
+            attach_->ApplyTorque((propTrans.getOrigin() - solidTrans.getOrigin()).cross(propTrans.getBasis() * thrustV));
+            attach_->ApplyTorque(propTrans.getBasis() * torqueV);
         }
     }
 }
@@ -143,13 +143,13 @@ void Propeller::Update(Scalar dt)
 std::vector<Renderable> Propeller::Render()
 {
     Transform propTrans = Transform::getIdentity();
-    if(attach != nullptr)
-        propTrans = attach->getOTransform() * o2a;
+    if(attach_ != nullptr)
+        propTrans = attach_->getOTransform() * o2a_;
     else
         LinkActuator::Render();
     
     //Rotate propeller
-    propTrans *= Transform(Quaternion(0, 0, theta), Vector3(0,0,0));
+    propTrans *= Transform(Quaternion(0, 0, theta_), Vector3(0,0,0));
     
     //Add renderable
     std::vector<Renderable> items(0);
@@ -157,7 +157,7 @@ std::vector<Renderable> Propeller::Render()
     item.type = RenderableType::SOLID;
     item.materialName = propeller_->getMaterial().name;
     item.objectId = propeller_->getGraphicalObject();
-    item.lookId = dm == DisplayMode::GRAPHICAL ? propeller_->getLook() : -1;
+    item.lookId = dm_ == DisplayMode::GRAPHICAL ? propeller_->getLook() : -1;
 	item.model = glMatrixFromTransform(propTrans);
     items.push_back(item);
     
@@ -165,7 +165,7 @@ std::vector<Renderable> Propeller::Render()
     item.data = std::make_shared<std::vector<glm::vec3>>();
     auto points = item.getDataAsPoints();
     points->push_back(glm::vec3(0,0,0));
-    points->push_back(glm::vec3(0.1f*thrust,0,0));
+    points->push_back(glm::vec3(0.1f*thrust_,0,0));
     items.push_back(item);
     
     return items;

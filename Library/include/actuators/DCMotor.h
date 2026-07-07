@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/11/13.
-//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_DCMotor__
@@ -96,17 +96,17 @@ namespace sf
         Scalar getGearRatio() const;
         
     private:
-        Scalar V;
-        Scalar I;
-        Scalar R;
-        Scalar L;
-        Scalar Ke;
-        Scalar Kt;
-        Scalar B;
-        bool gearEnabled;
-        Scalar gearRatio;
-        Scalar gearEff;
-        Scalar lastVoverL;
+        Scalar V_;
+        Scalar I_;
+        Scalar R_;
+        Scalar L_;
+        Scalar Ke_;
+        Scalar Kt_;
+        Scalar B_;
+        bool gearEnabled_;
+        Scalar gearRatio_;
+        Scalar gearEff_;
+        Scalar lastVoverL_;
     };
 }
 

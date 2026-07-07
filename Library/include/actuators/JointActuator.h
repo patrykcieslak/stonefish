@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 23/11/2018.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_JointActuator__
@@ -60,9 +60,9 @@ namespace sf
         std::string getJointName() const;
         
     protected:
-        FeatherstoneEntity* fe;
-        unsigned int jId;
-        Joint* j;
+        FeatherstoneEntity* fe_;
+        unsigned int jId_;
+        Joint* j_;
     };
 }
 

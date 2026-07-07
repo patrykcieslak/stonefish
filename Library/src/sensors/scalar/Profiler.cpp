@@ -37,26 +37,26 @@ namespace sf
 
 Profiler::Profiler(std::string uniqueName, Scalar angleRangeDeg, unsigned int angleSteps, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    angRange = UnitSystem::Angle(true, angleRangeDeg);
-    angSteps = angleSteps;
-    channels.push_back(SensorChannel("Angle", QuantityType::ANGLE));
-    channels.push_back(SensorChannel("Distance", QuantityType::LENGTH));
-    channels[1].rangeMin = Scalar(0);
-    channels[1].rangeMax = BT_LARGE_FLOAT;
-    currentAngStep = 0;
-    distance = 0;
-    clockwise = true;
+    angRange_ = UnitSystem::Angle(true, angleRangeDeg);
+    angSteps_ = angleSteps;
+    channels_.push_back(SensorChannel("Angle", QuantityType::ANGLE));
+    channels_.push_back(SensorChannel("Distance", QuantityType::LENGTH));
+    channels_[1].rangeMin = Scalar(0);
+    channels_[1].rangeMax = BT_LARGE_FLOAT;
+    currentAngStep_ = 0;
+    distance_ = 0;
+    clockwise_ = true;
 }
     
 void Profiler::InternalUpdate(Scalar dt)
 {
     Transform profTrans = getSensorFrame();
-    Scalar currentAngle = currentAngStep/(Scalar)angSteps * angRange - Scalar(0.5) * angRange;
+    Scalar currentAngle = currentAngStep_/(Scalar)angSteps_ * angRange_ - Scalar(0.5) * angRange_;
     
     //Simulate 1 beam rotating profiler
     Vector3 dir = profTrans.getBasis().getColumn(0) * btCos(currentAngle) + profTrans.getBasis().getColumn(1) * btSin(currentAngle);
-    Vector3 from = profTrans.getOrigin() + dir * channels[1].rangeMin;
-    Vector3 to = profTrans.getOrigin() + dir * channels[1].rangeMax;
+    Vector3 from = profTrans.getOrigin() + dir * channels_[1].rangeMin;
+    Vector3 to = profTrans.getOrigin() + dir * channels_[1].rangeMax;
     
     btCollisionWorld::ClosestRayResultCallback closest(from, to);
     closest.m_collisionFilterGroup = MASK_DYNAMIC;
@@ -66,35 +66,35 @@ void Profiler::InternalUpdate(Scalar dt)
     if(closest.hasHit())
     {
         Vector3 p = from.lerp(to, closest.m_closestHitFraction);
-        distance = (p - profTrans.getOrigin()).length();
+        distance_ = (p - profTrans.getOrigin()).length();
     }
     else
-        distance = channels[1].rangeMax;
+        distance_ = channels_[1].rangeMax;
    
     //Record sample
-    Sample s{std::vector<Scalar>({currentAngle, distance})};
+    Sample s{std::vector<Scalar>({currentAngle, distance_})};
     AddSampleToHistory(s);
     
     //Rotate beam
-    if(clockwise)
+    if(clockwise_)
     {
-        if(currentAngStep == angSteps)
+        if(currentAngStep_ == angSteps_)
         {
-            --currentAngStep;
-            clockwise = false;
+            --currentAngStep_;
+            clockwise_ = false;
         }
         else
-            ++currentAngStep;
+            ++currentAngStep_;
     }
     else
     {
-        if(currentAngStep == 0)
+        if(currentAngStep_ == 0)
         {
-            ++currentAngStep;
-            clockwise = true;
+            ++currentAngStep_;
+            clockwise_ = true;
         }
         else
-            --currentAngStep;
+            --currentAngStep_;
     }
 }
 
@@ -103,7 +103,7 @@ std::vector<Renderable> Profiler::Render()
     std::vector<Renderable> items = Sensor::Render();
     if(isRenderable())
     {
-        Scalar currentAngle = currentAngStep/(Scalar)angSteps * angRange - Scalar(0.5) * angRange;
+        Scalar currentAngle = currentAngStep_/(Scalar)angSteps_ * angRange_ - Scalar(0.5) * angRange_;
         Vector3 dir = Vector3(1, 0, 0) * btCos(currentAngle) + Vector3(0, 1, 0) * btSin(currentAngle);
         
         Renderable item;
@@ -112,7 +112,7 @@ std::vector<Renderable> Profiler::Render()
         item.data = std::make_shared<std::vector<glm::vec3>>();
         auto points = item.getDataAsPoints();
         points->push_back(glm::vec3(0,0,0));
-        points->push_back(glm::vec3(dir.x()*distance, dir.y()*distance, dir.z()*distance));
+        points->push_back(glm::vec3(dir.x()*distance_, dir.y()*distance_, dir.z()*distance_));
         items.push_back(item);
     }
     return items;
@@ -120,13 +120,13 @@ std::vector<Renderable> Profiler::Render()
 
 void Profiler::setRange(Scalar rangeMin, Scalar rangeMax)
 {
-    channels[1].rangeMin = btClamped(rangeMin, Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[1].rangeMax = btClamped(rangeMax, Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[1].rangeMin = btClamped(rangeMin, Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[1].rangeMax = btClamped(rangeMax, Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
 
 void Profiler::setNoise(Scalar rangeStdDev)
 {
-    channels[1].setStdDev(btClamped(rangeStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[1].setStdDev(btClamped(rangeStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
 
 ScalarSensorType Profiler::getScalarSensorType() const

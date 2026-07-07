@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/13/13.
-//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_RevoluteJoint__
@@ -120,13 +120,13 @@ namespace sf
         JointType getType() const;
         
     private:
-        Vector3 axisInA;
-        Vector3 pivotInA;
-        Scalar sigDamping;
-        Scalar velDamping;
-        Scalar angleIC;
-        Scalar angleICError;
-        Scalar angleOffset;
+        Vector3 axisInA_;
+        Vector3 pivotInA_;
+        Scalar sigDamping_;
+        Scalar velDamping_;
+        Scalar angleIC_;
+        Scalar angleICError_;
+        Scalar angleOffset_;
     };
 }
 

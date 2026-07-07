@@ -42,9 +42,6 @@ namespace sf
          \param fixedBase is the robot fixed to the world?
          */
         GeneralRobot(std::string uniqueName, bool fixedBase = false);
-        
-        //! A destructor.
-        virtual ~GeneralRobot();
 
         //! A method used to define a list of rigid bodies constituting the mechanical part of the robot (dynamic tree).
         /*!
@@ -52,7 +49,7 @@ namespace sf
          \param otherLinks a vector of subsequent links
          \param selfCollision a flag determining if self collision between multibody links should be enabled (subsequent links never collide)
          */
-        void DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLinks = std::vector<SolidEntity*>(0), bool selfCollision = false);
+        void DefineLinks(std::unique_ptr<SolidEntity> baseLink, std::vector<std::unique_ptr<SolidEntity>> otherLinks = std::vector<std::unique_ptr<SolidEntity>>(0), bool selfCollision = false);
         
         //! A method which uses links and joints definitions to build the kinematic structure of the robot.
         void BuildKinematicStructure();

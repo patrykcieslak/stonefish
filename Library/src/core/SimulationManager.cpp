@@ -121,56 +121,77 @@ SimulationManager::~SimulationManager()
     SDL_DestroyMutex(simHydroMutex_);
 }
 
-void SimulationManager::AddRobot(std::unique_ptr<Robot> robot, const Transform& worldTransform)
+Robot* SimulationManager::AddRobot(std::unique_ptr<Robot> robot, const Transform& worldTransform)
 {
     if(robot != nullptr)
     {
         robots_.push_back(std::move(robot));
         robots_.back()->AddToSimulation(this, worldTransform);
+        return robots_.back().get();
     }
+    else
+        return nullptr;
 }
 
-void SimulationManager::AddEntity(std::unique_ptr<Entity> ent)
+Entity* SimulationManager::AddEntity(std::unique_ptr<Entity> ent)
 {
     if(ent != nullptr)
     {
         entities_.push_back(std::move(ent));
         entities_.back()->AddToSimulation(this);
+        return entities_.back().get();
     }
+    else
+        return nullptr;
 }
 
-void SimulationManager::AddStaticEntity(std::unique_ptr<StaticEntity> ent, const Transform& origin)
+StaticEntity* SimulationManager::AddStaticEntity(std::unique_ptr<StaticEntity> ent, const Transform& origin)
 {
     if(ent != nullptr)
     {
         entities_.push_back(std::move(ent));
-        static_cast<StaticEntity*>(entities_.back().get())->AddToSimulation(this, origin);
+
+        StaticEntity* staticEnt = static_cast<StaticEntity*>(entities_.back().get());
+        staticEnt->AddToSimulation(this, origin);
+        return staticEnt;
     }
+    else
+        return nullptr;
 }
 
-void SimulationManager::AddAnimatedEntity(std::unique_ptr<AnimatedEntity> ent)
+AnimatedEntity* SimulationManager::AddAnimatedEntity(std::unique_ptr<AnimatedEntity> ent)
 {
     if(ent != nullptr)
     {
         entities_.push_back(std::move(ent));
-        entities_.back()->AddToSimulation(this);
+        
+        AnimatedEntity* animated = static_cast<AnimatedEntity*>(entities_.back().get());
+        animated->AddToSimulation(this);
+        return animated;
     }
+    else
+        return nullptr;
 }
 
-void SimulationManager::AddSolidEntity(std::unique_ptr<SolidEntity> ent, const Transform& origin)
+SolidEntity* SimulationManager::AddSolidEntity(std::unique_ptr<SolidEntity> ent, const Transform& origin)
 {
     if(ent != nullptr)
     {
         entities_.push_back(std::move(ent));
-        static_cast<SolidEntity*>(entities_.back().get())->AddToSimulation(this, origin);
+
+        SolidEntity* soild = static_cast<SolidEntity*>(entities_.back().get());
+        soild->AddToSimulation(this, origin);
+        return soild;
     }
+    else
+        return nullptr;
 }
 
 void SimulationManager::RemoveSolidEntity(SolidEntity* ent)
 {
     if(ent != nullptr)
     {
-        auto it = std::find(entities_.begin(), entities_.end(), ent);
+        auto it = std::find_if(entities_.begin(), entities_.end(), [ent](const std::unique_ptr<Entity>& e) { return e.get() == ent; });
         if(it != entities_.end() && (*it)->getType() == EntityType::SOLID)
         {
             static_cast<SolidEntity*>(it->get())->RemoveFromSimulation(this);
@@ -192,7 +213,7 @@ void SimulationManager::RemoveFeatherstoneEntity(FeatherstoneEntity* ent)
 {
     if(ent != nullptr)
     {
-        auto it = std::find(entities_.begin(), entities_.end(), ent);
+        auto it = std::find_if(entities_.begin(), entities_.end(), [ent](const std::unique_ptr<Entity>& e) { return e.get() == ent; });
         if(it != entities_.end() && (*it)->getType() == EntityType::FEATHERSTONE)
         {
             static_cast<FeatherstoneEntity*>(it->get())->RemoveFromSimulation(this);
@@ -267,7 +288,7 @@ void SimulationManager::RemoveJoint(Joint* jnt)
 {
     if(jnt != nullptr)
     {
-        auto it = std::find(joints_.begin(), joints_.end(), jnt);
+        auto it = std::find_if(joints_.begin(), joints_.end(), [jnt](const std::unique_ptr<Joint>& j) { return j.get() == jnt; });
         if(it != joints_.end())
         {
             (*it)->RemoveFromSimulation(this);
@@ -549,11 +570,6 @@ NameManager* SimulationManager::getNameManager()
 PerformanceMonitor& SimulationManager::getPerformanceMonitor()
 {
     return perfMon_;
-}
-
-OpenGLTrackball* SimulationManager::getTrackball()
-{
-    return trackball_.get();
 }
 
 void SimulationManager::setStepsPerSecond(Scalar steps)
@@ -842,17 +858,9 @@ void SimulationManager::InitializeScenario()
     if(SimulationApp::getApp()->hasGraphics())
     {
 		OpenGLState::Init();
-		
-        OpenGLView* view = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getView(0);
-        if(view == nullptr)
-        {
-            GraphicalSimulationApp* gApp = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp());
-            trackball_ = std::make_unique<OpenGLTrackball>(glm::vec3(0.f,0.f,-1.f), 5.0, glm::vec3(0.f,0.f,-1.f), 0, 0, gApp->getWindowWidth(), gApp->getWindowHeight(), 90.f, glm::vec2(STD_NEAR_PLANE_DISTANCE, STD_FAR_PLANE_DISTANCE));
-            trackball_->Rotate(glm::quat(glm::eulerAngleYXZ(0.0, 0.0, 0.25)));
-            gApp->getGLPipeline()->getContent()->AddView(trackball_.get());
-        }
+        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->CreateTrackball();
+        
     }
-	
 	EnableAtmosphere();
 }
 
@@ -922,10 +930,7 @@ void SimulationManager::DestroyScenario()
     materialManager_->ClearMaterialsAndFluids();
 
     if(SimulationApp::getApp() != nullptr && SimulationApp::getApp()->hasGraphics())
-	{
         static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DestroyContent();
-		trackball_.reset();
-	}
 }
 
 bool SimulationManager::StartSimulation()
@@ -1137,8 +1142,7 @@ void SimulationManager::UpdateDrawingQueue()
         glPipeline->AddToDrawingQueue(comms_[i]->Render());
     
     //Trackball
-    if(trackball_ != nullptr)
-        trackball_->UpdateCenterPos();
+    static_cast<OpenGLTrackball*>(glPipeline->getContent()->getView(0))->UpdateCenterPos();
     
     //Contacts
     for(size_t i=0; i<contacts_.size(); ++i)

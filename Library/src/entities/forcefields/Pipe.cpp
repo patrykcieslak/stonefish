@@ -30,13 +30,13 @@ namespace sf
 
 Pipe::Pipe(const Vector3& point1, const Vector3& point2, Scalar radius1, Scalar radius2, Scalar inletVelocity, Scalar exponent)
 {
-    p1 = point1;
-    l = (point2-point1).length();
-    n = (point2-point1)/l;
-    r1 = radius1;
-    r2 = radius2;
-    vin = inletVelocity;
-    gamma = exponent;
+    p1_ = point1;
+    l_ = (point2-point1).length();
+    n_ = (point2-point1)/l_;
+    r1_ = radius1;
+    r2_ = radius2;
+    vin_ = inletVelocity;
+    gamma_ = exponent;
 }
 
 VelocityFieldType Pipe::getType() const
@@ -46,33 +46,33 @@ VelocityFieldType Pipe::getType() const
 
 void Pipe::setInletVelocity(Scalar v)
 {
-    vin = v;
+    vin_ = v;
 }
 
 Scalar Pipe::getInletVelocity() const
 {
-    return vin;
+    return vin_;
 }
 
 Vector3 Pipe::GetVelocityAtPoint(const Vector3& p) const
 {
     //Calculate distance to line
-    Vector3 p1p = p-p1;
-    Scalar d = p1p.cross(n).norm();
+    Vector3 p1p = p-p1_;
+    Scalar d = p1p.cross(n_).norm();
     
     //Calculate closest point on line section between P1 and P2
-    Scalar t = p1p.dot(n);
-    if(t < 0.0 || t > l) return Vector3(0,0,0);
+    Scalar t = p1p.dot(n_);
+    if(t < 0.0 || t > l_) return Vector3(0,0,0);
     
     //Calculate radius at point
-    Scalar r = r1 + (r2-r1) * t/l;
+    Scalar r = r1_ + (r2_-r1_) * t/l_;
     if(d >= r) return Vector3(0,0,0);
     
     //Calculate central velocity
-    Vector3 v = r1/r * vin * n;
+    Vector3 v = r1_/r * vin_ * n_;
     
     //Calculate fraction of central velocity
-    Scalar f = btPow(Scalar(1)-d/r, gamma);
+    Scalar f = btPow(Scalar(1)-d/r, gamma_);
     
     return f*v;
 }
@@ -80,16 +80,16 @@ Vector3 Pipe::GetVelocityAtPoint(const Vector3& p) const
 std::vector<Renderable> Pipe::Render(VelocityFieldUBO& ubo)
 {
     std::vector<Renderable> items(0);
-    ubo.posR = glm::vec4((GLfloat)p1.getX(), (GLfloat)p1.getY(), (GLfloat)p1.getZ(), (GLfloat)r1);
-    ubo.dirV = glm::vec4((GLfloat)n.getX(), (GLfloat)n.getY(), (GLfloat)n.getZ(), (GLfloat)vin);
-    ubo.params = glm::vec3((GLfloat)l, (GLfloat)r2, (GLfloat)gamma);
+    ubo.posR = glm::vec4((GLfloat)p1_.getX(), (GLfloat)p1_.getY(), (GLfloat)p1_.getZ(), (GLfloat)r1_);
+    ubo.dirV = glm::vec4((GLfloat)n_.getX(), (GLfloat)n_.getY(), (GLfloat)n_.getZ(), (GLfloat)vin_);
+    ubo.params = glm::vec3((GLfloat)l_, (GLfloat)r2_, (GLfloat)gamma_);
     ubo.type = 2;
 
     //Model matrix
-    glm::vec3 z_(n.x(), n.y(), n.z());
-    glm::vec3 x_(n.y(), n.x(), n.z());
+    glm::vec3 z_(n_.x(), n_.y(), n_.z());
+    glm::vec3 x_(n_.y(), n_.x(), n_.z());
     glm::vec3 y_ = glm::cross(z_,x_);
-    glm::mat4 model(glm::vec4(x_, 0.f), glm::vec4(y_, 0.f), glm::vec4(z_, 0.f), glm::vec4(p1.x(), p1.y(), p1.z(), 1));    
+    glm::mat4 model(glm::vec4(x_, 0.f), glm::vec4(y_, 0.f), glm::vec4(z_, 0.f), glm::vec4(p1_.x(), p1_.y(), p1_.z(), 1));    
     
     //Inlet and outlet
     Renderable inlet;
@@ -112,13 +112,13 @@ std::vector<Renderable> Pipe::Render(VelocityFieldUBO& ubo)
     auto pipePoints = pipe.getDataAsPoints();
     
     pipePoints->push_back(glm::vec3(0, 0, 0));
-    pipePoints->push_back(glm::vec3(0, 0, l));
+    pipePoints->push_back(glm::vec3(0, 0, l_));
     
     for(unsigned int i=0; i<12; ++i)
     {
         Scalar alpha = Scalar(i)/Scalar(12) * M_PI * Scalar(2);
-        Vector3 v1(btCos(alpha)*r1, btSin(alpha)*r1, 0);
-        Vector3 v2(v1.x()*r2/r1, v1.y()*r2/r1, l);
+        Vector3 v1(btCos(alpha)*r1_, btSin(alpha)*r1_, 0);
+        Vector3 v2(v1.x()*r2_/r1_, v1.y()*r2_/r1_, l_);
         pipePoints->push_back(glm::vec3(v1.x(), v1.y(), v1.z()));
         inletPoints->push_back(pipePoints->back());
         pipePoints->push_back(glm::vec3(v2.x(), v2.y(), v2.z()));

@@ -29,7 +29,7 @@ namespace sf
 {
 
 Trajectory::Trajectory(PlaybackMode playback) 
-    : playMode(playback), playTime(0), endTime(0), iteration(0), forward(true)
+    : playMode_(playback), playTime_(0), endTime_(0), iteration_(0), forward_(true)
 {
 }
 
@@ -39,72 +39,72 @@ Trajectory::~Trajectory()
 
 Scalar Trajectory::getPlaybackTime() const
 {
-    return playTime;
+    return playTime_;
 }
 
 unsigned int Trajectory::getPlaybackIteration() const
 {
-    return iteration;
+    return iteration_;
 }
 
 Transform Trajectory::getInterpolatedTransform() const
 {
-    return interpTrans;
+    return interpTrans_;
 }
 
 Vector3 Trajectory::getInterpolatedLinearVelocity() const
 {
-    return interpVel;
+    return interpVel_;
 }
 
 Vector3 Trajectory::getInterpolatedAngularVelocity() const
 {
-    return interpAngVel;
+    return interpAngVel_;
 }
 
 Vector3 Trajectory::getInterpolatedLinearAcceleration() const
 {
-    return interpAcc;
+    return interpAcc_;
 }
 
 void Trajectory::Play(Scalar dt)
 {
     //Update time
-    switch(playMode)
+    switch(playMode_)
     {
         case PlaybackMode::ONETIME:
         {
-            playTime += dt;
-            if(playTime > endTime)
-                playTime = endTime;
+            playTime_ += dt;
+            if(playTime_ > endTime_)
+                playTime_ = endTime_;
         }
             break;
 
         case PlaybackMode::REPEAT:
         {
-            playTime += dt;
-            if(playTime > endTime)
+            playTime_ += dt;
+            if(playTime_ > endTime_)
             {
-                playTime -= endTime;
-                ++iteration;
+                playTime_ -= endTime_;
+                ++iteration_;
             }
         }
             break;
 
         case PlaybackMode::BOOMERANG:
         {
-            playTime += forward ? dt : -dt;
-            if(playTime > endTime)
+            playTime_ += forward_ ? dt : -dt;
+            if(playTime_ > endTime_)
             {
-                playTime = endTime - (playTime - endTime);
-                forward = false;
-                ++iteration;
+                playTime_ = endTime_ - (playTime_ - endTime_);
+                forward_ = false;
+                ++iteration_;
             }
-            else if(playTime < Scalar(0))
+            else if(playTime_ < Scalar(0))
             {
-                playTime = -playTime;
-                forward = true;
-                ++iteration;
+                playTime_ = -playTime_;
+                forward_ = true;
+                ++iteration_;
             }
         }
             break;
@@ -114,11 +114,11 @@ void Trajectory::Play(Scalar dt)
     Interpolate();
 
     //Clear velocities when stopped
-    if(playTime == endTime && playMode == PlaybackMode::ONETIME)
+    if(playTime_ == endTime_ && playMode_ == PlaybackMode::ONETIME)
     {
-        interpVel.setZero();
-        interpAngVel.setZero();
-        interpAcc.setZero();
+        interpVel_.setZero();
+        interpAngVel_.setZero();
+        interpAcc_.setZero();
     }
 }
 

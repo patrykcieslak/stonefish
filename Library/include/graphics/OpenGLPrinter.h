@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/06/2017.
-//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_OpenGLPrinter__
@@ -95,13 +95,13 @@ namespace sf
         static void SetWindowSize(GLuint width, GLuint height);
         
     private:
-        bool initialized;
-        GLuint fontVBO;
-        GLuint nativeFontSize;
-        GLuint fontTexture;
-        GLfloat texWidth;
-        GLfloat texHeight;
-        Character chars[128-32];
+        bool initialized_;
+        GLuint fontVBO_;
+        GLuint nativeFontSize_;
+        GLuint fontTexture_;
+        GLfloat texWidth_;
+        GLfloat texHeight_;
+        Character chars_[128-32];
         
         static GLSLShader* printShader;
         static GLuint windowW, windowH;

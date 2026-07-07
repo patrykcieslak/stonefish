@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/11/2018.
-//  Copyright(c) 2018-2025 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -66,7 +66,7 @@ namespace sf
          \param otherLinks a vector of subsequent links
          \param selfCollision a flag determining if self collision between multibody links should be enabled (subsequent links never collide)
          */
-        virtual void DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLinks = std::vector<SolidEntity*>(0), bool selfCollision = false) = 0;
+        virtual void DefineLinks(std::unique_ptr<SolidEntity> baseLink, std::vector<std::unique_ptr<SolidEntity>> otherLinks = std::vector<std::unique_ptr<SolidEntity>>(0), bool selfCollision = false) = 0;
         
         //! A method used to define a revolute joint between two mechanical parts of the robot.
         /*!
@@ -239,6 +239,7 @@ namespace sf
         virtual RobotType getType() const = 0;
         
     protected:
+        // For construction (temp)
         struct JointData
         {
             JointType jtype;
@@ -250,9 +251,10 @@ namespace sf
             std::pair<Scalar, Scalar> posLim;
             Scalar damping;
         };
-        std::vector<JointData> jointsData_; // For construction
-
-        std::vector<SolidEntity*> detachedLinks_;
+        std::vector<JointData> jointsData_;
+        std::vector<std::unique_ptr<SolidEntity>> detachedLinks_;
+        
+        // Pointers to robot parts in the simulation world
         std::vector<SolidEntity*> links_;
         std::vector<Sensor*> sensors_;
         std::vector<Actuator*> actuators_;

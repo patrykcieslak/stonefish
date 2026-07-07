@@ -20,8 +20,8 @@
 //  Stonefish
 //
 //  Created by Roger Pi on 03/06/2024
-//  Modified by Patryk Cieslak on 30/06/2024
-//  Copyright (c) 2024-2025 Roger Pi and Patryk Cieslak. All rights reserved.
+//  Modified by Patryk Cieslak on 06/07/2026
+//  Copyright (c) 2024-2026 Roger Pi and Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -47,9 +47,9 @@ public:
    \param invertedSetpoint a flag to indicate if the setpoint is inverted (positive value results in backward force)
    \param normalizedSetpoint a flag to indicate if the setpoint given by the user is normalized [-1,1] 
   */
-  Thruster(std::string uniqueName, std::shared_ptr<SolidEntity> propeller,     
-                       std::shared_ptr<RotorDynamics> rotorDynamics,   
-                       std::shared_ptr<ThrustModel> thrustConversion,  
+  Thruster(std::string uniqueName, std::unique_ptr<SolidEntity> propeller,     
+                       std::unique_ptr<RotorDynamics> rotorDynamics,   
+                       std::unique_ptr<ThrustModel> thrustConversion,  
                        Scalar diameter, bool rightHand, Scalar maxSetpoint, 
                        bool invertedSetpoint = false,
                        bool normalizedSetpoint = true);
@@ -106,23 +106,23 @@ private:
   void WatchdogTimeout() override;
 
   // Params
-  std::shared_ptr<SolidEntity> propeller_;
-  bool RH;
-  Scalar D;
+  std::unique_ptr<SolidEntity> propeller_;
+  bool RH_;
+  Scalar D_;
 
   // States
-  Scalar theta;   // Angle of the propeller [rad]
-  Scalar omega;   // Angular velocity of the propeller [rad/s]
-  Scalar thrust;  // Generated thrust [N]
-  Scalar torque;  // Induced torque [Nm]
+  Scalar theta_;   // Angle of the propeller [rad]
+  Scalar omega_;   // Angular velocity of the propeller [rad/s]
+  Scalar thrust_;  // Generated thrust [N]
+  Scalar torque_;  // Induced torque [Nm]
 
-  Scalar setpoint;  // Desired setpoint
-  Scalar setpointLimit; // Limit of the desired setpoint
-  bool inv; // Is setpoint value inverted?
-  bool normalized; // Is setpoint normalized?
+  Scalar setpoint_;  // Desired setpoint
+  Scalar setpointLimit_; // Limit of the desired setpoint
+  bool inv_; // Is setpoint value inverted?
+  bool normalized_; // Is setpoint normalized?
   
   // Dynamics
-  std::shared_ptr<RotorDynamics> rotorModel;
-  std::shared_ptr<ThrustModel> thrustModel;
+  std::unique_ptr<RotorDynamics> rotorModel_;
+  std::unique_ptr<ThrustModel> thrustModel_;
 };
 }  // namespace sf

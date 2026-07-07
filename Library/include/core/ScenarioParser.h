@@ -178,13 +178,11 @@ namespace sf
         //! A method used to parse a dynamic object description.
         /*!
          \param element a pointer to the XML node
-         \param solid a reference to the loaded solid entity
          \param ns an optional namespace
          \param compoundPart is this solid a part of a compound body?
-         \return success
+         \return pointer to the new solid entity object
          */
-        virtual bool ParseSolid(XMLElement* element, SolidEntity*& solid, 
-                                        std::string ns = "", bool compoundPart = false);
+        virtual std::unique_ptr<SolidEntity> ParseSolid(XMLElement* element, std::string ns = "", bool compoundPart = false);
 
         //! A method used to parse a robot description.
         /*!
@@ -197,10 +195,9 @@ namespace sf
         /*!
          \param element a pointer to the XML node
          \param robot a pointer to the robot object
-         \param link a reference to the loaded robot link
-         \return success
+         \return pointer to the new solid entity object
          */
-        virtual bool ParseLink(XMLElement* element, Robot* robot, SolidEntity*& link);
+        virtual std::unique_ptr<SolidEntity> ParseLink(XMLElement* element, Robot* robot);
         
         //! A method used to parse a single robot joint description.
         /*!
@@ -297,9 +294,9 @@ namespace sf
         bool ParseColor(XMLElement* element, Color& c);
         bool ParseColorMap(XMLElement* element, ColorMap& cm);
     
-        XMLDocument doc;
-        SimulationManager* sm;
-        bool graphical;
+        XMLDocument doc_;
+        SimulationManager* sm_;
+        bool graphical_;
     };
 }
 

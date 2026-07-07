@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 4/7/17.
-//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Light__
@@ -112,14 +112,13 @@ namespace sf
     private:
         void InitGraphics();
         
-        //attach -> SolidEntity
-		StaticEntity* attach2;
-        AnimatedEntity* attach3;
-        Color c;
-		Scalar R;
-        Scalar Fi;
-        Scalar coneAngle;
-        OpenGLLight* glLight;
+		StaticEntity* attach2_;
+        AnimatedEntity* attach3_;
+        Color c_;
+		Scalar R_;
+        Scalar Fi_;
+        Scalar coneAngle_;
+        OpenGLLight* glLight_;
     };
 }
 

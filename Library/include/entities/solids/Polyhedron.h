@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 29/12/12.
-//  Copyright (c) 2012-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_Polyhedron__
@@ -82,7 +82,7 @@ namespace sf
         void BuildGraphicalObject();
         
     private:
-        Mesh *graMesh; //Mesh used for rendering
+        Mesh *graMesh_; //Mesh used for rendering
     };
 }
 

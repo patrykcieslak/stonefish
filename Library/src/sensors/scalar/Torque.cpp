@@ -34,7 +34,7 @@ namespace sf
 
 Torque::Torque(std::string uniqueName, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
 {
-    channels.push_back(SensorChannel("Torque", QuantityType::TORQUE));
+    channels_.push_back(SensorChannel("Torque", QuantityType::TORQUE));
 }
 
 void Torque::InternalUpdate(Scalar dt)
@@ -43,9 +43,9 @@ void Torque::InternalUpdate(Scalar dt)
     //fe->getJointFeedback(jId, force, torque);
     //Vector3 axis = fe->getJointAxis(jId);
     //Scalar tau = torque.dot(axis);
-    if(fe != NULL)
+    if(fe_ != NULL)
     {
-        Scalar tau = fe->getMotorForceTorque(jId);
+        Scalar tau = fe_->getMotorForceTorque(jId_);
         Sample s{std::vector<Scalar>({tau})};
         AddSampleToHistory(s);
     }
@@ -53,13 +53,13 @@ void Torque::InternalUpdate(Scalar dt)
 
 void Torque::setRange(Scalar torqueMax)
 {
-    channels[0].rangeMin = -btClamped(torqueMax, Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[0].rangeMax = btClamped(torqueMax, Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[0].rangeMin = -btClamped(torqueMax, Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[0].rangeMax = btClamped(torqueMax, Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
 
 void Torque::setNoise(Scalar torqueStdDev)
 {
-    channels[0].setStdDev(btClamped(torqueStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[0].setStdDev(btClamped(torqueStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
 
 ScalarSensorType Torque::getScalarSensorType() const

@@ -33,43 +33,43 @@ namespace sf
 Box::Box(std::string uniqueName, PhysicsSettings phy, const Vector3& dimensions, const Transform& origin, std::string material, std::string look, Scalar thickness, unsigned int uvMode)
          : SolidEntity(uniqueName, phy, material, look, thickness)
 {
-    halfExtents = dimensions * Scalar(0.5);
-    T_O2G = T_O2C = T_O2H = origin;
-    T_CG2O = origin.inverse();
-    T_CG2C = T_CG2G = I4();
-    P_CB = Vector3(0,0,0);
+    halfExtents_ = dimensions * Scalar(0.5);
+    T_O2G_ = T_O2C_ = T_O2H_ = origin;
+    T_CG2O_ = origin.inverse();
+    T_CG2C_ = T_CG2G_ = I4();
+    P_CB_ = Vector3(0,0,0);
     
     //Calculate physical properties
-    if(thick > Scalar(0) && thick/Scalar(2) < halfExtents.x() && thick/Scalar(2) < halfExtents.y() && thick/Scalar(2) < halfExtents.z())
+    if(thick_ > Scalar(0) && thick_/Scalar(2) < halfExtents_.x() && thick_/Scalar(2) < halfExtents_.y() && thick_/Scalar(2) < halfExtents_.z())
     {
-        Vector3 halfExtents1 = halfExtents - Vector3(thick, thick, thick)/Scalar(2);
-        Vector3 halfExtents2 = halfExtents + Vector3(thick, thick, thick)/Scalar(2);
-        volume = (halfExtents2.x()*halfExtents2.y()*halfExtents2.z() - halfExtents1.x()*halfExtents1.y()*halfExtents1.z())*Scalar(8);
-        surface = (halfExtents2.x()*halfExtents2.y()+halfExtents2.x()*halfExtents2.z()+halfExtents2.y()*halfExtents2.z())*Scalar(8);
-        mass = volume * mat.density;
-        Scalar m1 = halfExtents1.x()*halfExtents1.y()*halfExtents1.z()*Scalar(8)*mat.density;
-        Scalar m2 = halfExtents2.x()*halfExtents2.y()*halfExtents2.z()*Scalar(8)*mat.density; 
+        Vector3 halfExtents1 = halfExtents_ - Vector3(thick_, thick_, thick_)/Scalar(2);
+        Vector3 halfExtents2 = halfExtents_ + Vector3(thick_, thick_, thick_)/Scalar(2);
+        volume_ = (halfExtents2.x()*halfExtents2.y()*halfExtents2.z() - halfExtents1.x()*halfExtents1.y()*halfExtents1.z())*Scalar(8);
+        surface_ = (halfExtents2.x()*halfExtents2.y()+halfExtents2.x()*halfExtents2.z()+halfExtents2.y()*halfExtents2.z())*Scalar(8);
+        mass_ = volume_ * mat_.density;
+        Scalar m1 = halfExtents1.x()*halfExtents1.y()*halfExtents1.z()*Scalar(8)*mat_.density;
+        Scalar m2 = halfExtents2.x()*halfExtents2.y()*halfExtents2.z()*Scalar(8)*mat_.density; 
         Scalar Ix = Scalar(1)/Scalar(12)*m2*((halfExtents2.y()*Scalar(2))*(halfExtents2.y()*Scalar(2))+(halfExtents2.z()*Scalar(2))*(halfExtents2.z()*Scalar(2))) 
                       - Scalar(1)/Scalar(12)*m1*((halfExtents1.y()*Scalar(2))*(halfExtents1.y()*Scalar(2))+(halfExtents1.z()*Scalar(2))*(halfExtents1.z()*Scalar(2))); 
         Scalar Iy = Scalar(1)/Scalar(12)*m2*((halfExtents2.x()*Scalar(2))*(halfExtents2.x()*Scalar(2))+(halfExtents2.z()*Scalar(2))*(halfExtents2.z()*Scalar(2))) 
                       - Scalar(1)/Scalar(12)*m1*((halfExtents1.x()*Scalar(2))*(halfExtents1.x()*Scalar(2))+(halfExtents1.z()*Scalar(2))*(halfExtents1.z()*Scalar(2))); 
         Scalar Iz = Scalar(1)/Scalar(12)*m2*((halfExtents2.x()*Scalar(2))*(halfExtents2.x()*Scalar(2))+(halfExtents2.y()*Scalar(2))*(halfExtents2.y()*Scalar(2))) 
                       - Scalar(1)/Scalar(12)*m1*((halfExtents1.x()*Scalar(2))*(halfExtents1.x()*Scalar(2))+(halfExtents1.y()*Scalar(2))*(halfExtents1.y()*Scalar(2))); 
-        Ipri = Vector3(Ix,Iy,Iz);
+        Ipri_ = Vector3(Ix,Iy,Iz);
     }
     else
     {
-        volume = halfExtents.x()*halfExtents.y()*halfExtents.z()*Scalar(8);
-        surface = (halfExtents.x()*halfExtents.y()+halfExtents.x()*halfExtents.z()+halfExtents.y()*halfExtents.z())*Scalar(8);
-        mass = volume * mat.density;
-        Ipri = Vector3(Scalar(1)/Scalar(12)*mass*((halfExtents.y()*Scalar(2))*(halfExtents.y()*Scalar(2))+(halfExtents.z()*Scalar(2))*(halfExtents.z()*Scalar(2))),
-                        Scalar(1)/Scalar(12)*mass*((halfExtents.x()*Scalar(2))*(halfExtents.x()*Scalar(2))+(halfExtents.z()*Scalar(2))*(halfExtents.z()*Scalar(2))),
-                        Scalar(1)/Scalar(12)*mass*((halfExtents.x()*Scalar(2))*(halfExtents.x()*Scalar(2))+(halfExtents.y()*Scalar(2))*(halfExtents.y()*Scalar(2))));
+        volume_ = halfExtents_.x()*halfExtents_.y()*halfExtents_.z()*Scalar(8);
+        surface_ = (halfExtents_.x()*halfExtents_.y()+halfExtents_.x()*halfExtents_.z()+halfExtents_.y()*halfExtents_.z())*Scalar(8);
+        mass_ = volume_ * mat_.density;
+        Ipri_ = Vector3(Scalar(1)/Scalar(12)*mass_*((halfExtents_.y()*Scalar(2))*(halfExtents_.y()*Scalar(2))+(halfExtents_.z()*Scalar(2))*(halfExtents_.z()*Scalar(2))),
+                        Scalar(1)/Scalar(12)*mass_*((halfExtents_.x()*Scalar(2))*(halfExtents_.x()*Scalar(2))+(halfExtents_.z()*Scalar(2))*(halfExtents_.z()*Scalar(2))),
+                        Scalar(1)/Scalar(12)*mass_*((halfExtents_.x()*Scalar(2))*(halfExtents_.x()*Scalar(2))+(halfExtents_.y()*Scalar(2))*(halfExtents_.y()*Scalar(2))));
     }
     
     //Build geometry
-	glm::vec3 glHalfExtents(halfExtents.x(), halfExtents.y(), halfExtents.z());
-	phyMesh = OpenGLContent::BuildBox(glHalfExtents, 3, uvMode);
+	glm::vec3 glHalfExtents(halfExtents_.x(), halfExtents_.y(), halfExtents_.z());
+	phyMesh_ = OpenGLContent::BuildBox(glHalfExtents, 3, uvMode);
     
     //Compute hydrodynamic properties
     ComputeFluidDynamicsApprox( GeometryApproxType::ELLIPSOID);
@@ -83,7 +83,7 @@ SolidType Box::getSolidType()
 
 btCollisionShape* Box::BuildCollisionShape()
 {
-    btCollisionShape* box = new btBoxShape(halfExtents);
+    btCollisionShape* box = new btBoxShape(halfExtents_);
     box->setMargin(COLLISION_MARGIN);
     return box;
 }

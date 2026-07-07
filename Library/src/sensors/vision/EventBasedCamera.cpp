@@ -37,37 +37,37 @@ EventBasedCamera::EventBasedCamera(std::string uniqueName, unsigned int resoluti
     float Cp, float Cm, uint32_t Tref, Scalar frequency, Scalar minDistance, Scalar maxDistance) 
     : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
 {
-    depthRange = glm::vec2((GLfloat)minDistance, (GLfloat)maxDistance);
-    C.x = glm::abs(Cp);
-    C.y = glm::abs(Cm);
-    Tr = Tref;
-    lastEventCount = 0;
-    newDataCallback = nullptr;
-    imageData = nullptr;
-    glCamera = nullptr;
+    depthRange_ = glm::vec2((GLfloat)minDistance, (GLfloat)maxDistance);
+    C_.x = glm::abs(Cp);
+    C_.y = glm::abs(Cm);
+    Tr_ = Tref;
+    lastEventCount_ = 0;
+    newDataCallback_ = nullptr;
+    imageData_ = nullptr;
+    glCamera_ = nullptr;
 }
 
 EventBasedCamera::~EventBasedCamera()
 {
-    glCamera = nullptr;
+    glCamera_ = nullptr;
 }
 
 void EventBasedCamera::setNoise(float sigmaCp, float sigmaCm)
 {
-    sigmaC.x = glm::abs(sigmaCp);
-    sigmaC.y = glm::abs(sigmaCm);
-    if(glCamera != nullptr)
-        glCamera->setNoise(sigmaC);
+    sigmaC_.x = glm::abs(sigmaCp);
+    sigmaC_.y = glm::abs(sigmaCm);
+    if(glCamera_ != nullptr)
+        glCamera_->setNoise(sigmaC_);
 }
 
 void* EventBasedCamera::getImageDataPointer(unsigned int index)
 {
-    return imageData;
+    return imageData_;
 }
 
 unsigned int EventBasedCamera::getLastEventCount() const
 {
-    return lastEventCount;
+    return lastEventCount_;
 }
 
 VisionSensorType EventBasedCamera::getVisionSensorType() const
@@ -77,21 +77,21 @@ VisionSensorType EventBasedCamera::getVisionSensorType() const
 
 OpenGLView* EventBasedCamera::getOpenGLView() const
 {
-    return glCamera;
+    return glCamera_;
 }
     
 void EventBasedCamera::InitGraphics(bool& seesParticles)
 {
     seesParticles = true;
 
-    glCamera = new OpenGLEventBasedCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, 
-                                    depthRange, C, Tr, freq < Scalar(0));
-    glCamera->setNoise(sigmaC);
-    glCamera->setCamera(this);
+    glCamera_ = new OpenGLEventBasedCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX_, resY_, (GLfloat)fovH_, 
+                                    depthRange_, C_, Tr_, freq_ < Scalar(0));
+    glCamera_->setNoise(sigmaC_);
+    glCamera_->setCamera(this);
     UpdateTransform();
-    glCamera->UpdateTransform();
+    glCamera_->UpdateTransform();
     InternalUpdate(0);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera);
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera_);
 }
 
 void EventBasedCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
@@ -99,17 +99,17 @@ void EventBasedCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const
     glm::vec3 eye_ = glm::vec3((GLfloat)eye.x(), (GLfloat)eye.y(), (GLfloat)eye.z());
     glm::vec3 dir_ = glm::vec3((GLfloat)dir.x(), (GLfloat)dir.y(), (GLfloat)dir.z());
     glm::vec3 up_ = glm::vec3((GLfloat)up.x(), (GLfloat)up.y(), (GLfloat)up.z());
-    glCamera->SetupCamera(eye_, dir_, up_);
+    glCamera_->SetupCamera(eye_, dir_, up_);
 }
 
 void EventBasedCamera::InstallNewDataHandler(std::function<void(EventBasedCamera*)> callback)
 {
-    newDataCallback = callback;
+    newDataCallback_ = callback;
 }
 
 void EventBasedCamera::NewDataReady(void* data, unsigned int index)
 {
-    lastEventCount = index;
+    lastEventCount_ = index;
 
 #ifdef DEBUG
     if(lastEventCount > 0)
@@ -128,17 +128,17 @@ void EventBasedCamera::NewDataReady(void* data, unsigned int index)
     }
 #endif
 
-    if(newDataCallback != nullptr)
+    if(newDataCallback_ != nullptr)
     {
-        imageData = (GLint*)data;
-        newDataCallback(this);
-        imageData = nullptr;
+        imageData_ = (GLint*)data;
+        newDataCallback_(this);
+        imageData_ = nullptr;
     }
 }
 
 void EventBasedCamera::InternalUpdate(Scalar dt)
 {
-    glCamera->Update();
+    glCamera_->Update();
 }
 
 }

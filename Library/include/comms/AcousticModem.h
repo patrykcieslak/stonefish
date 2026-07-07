@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 26/02/2020.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_AcousticModem__
@@ -105,12 +105,13 @@ namespace sf
     private:
         bool isReceptionPossible(Vector3 dir, Scalar distance);
         
-        std::map<std::shared_ptr<AcousticDataFrame>, Vector3> propagating;
-        Scalar range;
-        Scalar minFov2, maxFov2;
-        Vector3 position;
-        std::string frame;
-        bool occlusion;
+        std::map<std::shared_ptr<AcousticDataFrame>, Vector3> propagating_;
+        Scalar range_;
+        Scalar minFov2_;
+        Scalar maxFov2_;
+        Vector3 position_;
+        std::string frame_;
+        bool occlusion_;
         
         static void addNode(AcousticModem* node);
         static void removeNode(uint64_t deviceId);

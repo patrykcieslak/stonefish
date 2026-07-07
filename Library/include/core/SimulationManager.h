@@ -131,35 +131,40 @@ namespace sf
         //! A method that adds any type of entity to the simulation world.
         /*!
          \param ent a pointer to the entity
+         \return pointer to the added entity
          */
-        void AddEntity(std::unique_ptr<Entity> ent);
+        Entity* AddEntity(std::unique_ptr<Entity> ent);
         
         //! A method that adds a robotic system to the simulation world.
         /*!
          \param robot a pointer to the robot object
          \param origin a pose of the robot in the world frame
+         \return pointer to the added robot
          */
-        void AddRobot(std::unique_ptr<Robot> robot, const Transform& origin);
+        Robot* AddRobot(std::unique_ptr<Robot> robot, const Transform& origin);
         
         //! A method that adds a static body to the simulation world.
         /*!
          \param ent a pointer to the static body object
          \param origin a pose of the body in the world frame
+         \return pointer to the added static entity
          */
-        void AddStaticEntity(std::unique_ptr<StaticEntity> ent, const Transform& origin);
+        StaticEntity* AddStaticEntity(std::unique_ptr<StaticEntity> ent, const Transform& origin);
         
         //! A method that adds an animated rigid body to the simulation world.
         /*!
          \param ent a pointer to the animated object
+         \return pointer to the added animated entity
          */
-        void AddAnimatedEntity(std::unique_ptr<AnimatedEntity> ent);
+        AnimatedEntity* AddAnimatedEntity(std::unique_ptr<AnimatedEntity> ent);
         
         //! A method that adds a dynamic rigid body to the simulation world.
         /*!
          \param ent a pointer to the dynamic body object
          \param origin a pose of the body in the world frame
+         \return pointer to the added body (useful for adding joints)
          */
-        void AddSolidEntity(std::unique_ptr<SolidEntity> ent, const Transform& origin);
+        SolidEntity* AddSolidEntity(std::unique_ptr<SolidEntity> ent, const Transform& origin);
 
         //! A method that removes a dynamic rigid body from the simulation world.
         /*!
@@ -478,9 +483,6 @@ namespace sf
         
         //! A method returning a reference to the performance monitor.
         PerformanceMonitor& getPerformanceMonitor();
-
-        //! A method returning a pointer to the trackball view.
-        OpenGLTrackball* getTrackball();
         
         //! A method informing if the simulation is freshly started.
         bool isSimulationFresh() const;
@@ -617,8 +619,7 @@ namespace sf
         Scalar g_;
         DisplayMode sdm_;
         
-        // Graphics
-        std::unique_ptr<OpenGLTrackball> trackball_;
+        // Debugging
         std::unique_ptr<OpenGLDebugDrawer> debugDrawer_;
     };
 }

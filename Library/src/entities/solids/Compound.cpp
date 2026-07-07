@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/09/17.
-//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/solids/Compound.h"
@@ -32,73 +32,64 @@
 namespace sf
 {
 
-Compound::Compound(std::string uniqueName, PhysicsSettings phy, SolidEntity* firstExternalPart, const Transform& origin)
+Compound::Compound(std::string uniqueName, PhysicsSettings phy, std::unique_ptr<SolidEntity> firstExternalPart, const Transform& origin)
     : SolidEntity(uniqueName, phy, "", "", Scalar(-1))
 {
     //All transformations are zero -> transforming the origin of a compound body doesn't make sense...
-    phyMesh = NULL; // There is no single mesh
-    volume = 0;
-    mass = 0;
-    Ipri = Vector3(0,0,0);
-    displayInternals = false;
+    phyMesh_ = NULL; // There is no single mesh
+    volume_ = 0;
+    mass_ = 0;
+    Ipri_ = Vector3(0,0,0);
+    displayInternals_ = false;
     
-    AddExternalPart(firstExternalPart, origin);
-}
-
-Compound::~Compound()
-{
-    for(unsigned int i=0; i<parts.size(); ++i)
-        delete parts[i].solid;
-    parts.clear();
+    AddExternalPart(std::move(firstExternalPart), origin);
 }
 
 void Compound::setDisplayInternalParts(bool enabled)
 {
-    displayInternals = enabled;
+    displayInternals_ = enabled;
 }
 
 bool Compound::isDisplayingInternalParts()
 {
-    return displayInternals;
+    return displayInternals_;
 }
 
 Scalar Compound::getAugmentedMass() const
 {
-    return mass + aMass.x();
+    return mass_ + aMass_.x();
 }
         
 Vector3 Compound::getAugmentedInertia() const
 {
-    return Ipri;
+    return Ipri_;
 }
     
 Material Compound::getMaterial(size_t partId) const
 {
-    if(partId < parts.size())
-        return parts[partId].solid->getMaterial();
+    if(partId < parts_.size())
+        return parts_[partId].solid->getMaterial();
     else
         return Material();
 }
 
 size_t Compound::getPartId(size_t collisionShapeId) const
 {
-    if(collisionShapeId < collisionPartId.size())
-        return collisionPartId[collisionShapeId];
+    if(collisionShapeId < collisionPartId_.size())
+        return collisionPartId_[collisionShapeId];
     else
         return 0;
 }
 
-const CompoundPart Compound::getPart(size_t partId) const
+const CompoundPart& Compound::getPart(size_t partId) const
 {
     try
     {
-        return parts.at(partId);
+        return parts_.at(partId);
     }
-    catch(const std::exception& e)
+    catch(const std::out_of_range& e)
     {
-        CompoundPart nopart;
-        nopart.solid = nullptr;
-        return nopart;
+        cCritical("Part of compound body with id %d does not exist!", partId);
     }
 }
     
@@ -111,12 +102,12 @@ std::vector<Vector3>* Compound::getMeshVertices() const
 {
     std::vector<Vector3>* pVert = new std::vector<Vector3>(0);
         
-    for(size_t i=0; i<parts.size(); ++i)
+    for(size_t i=0; i<parts_.size(); ++i)
     {
-        if(parts[i].isExternal)
+        if(parts_[i].isExternal)
         {
-            std::vector<Vector3>* pPartVert = parts[i].solid->getMeshVertices();
-            Transform phyMeshTrans = parts[i].origin * parts[i].solid->getO2GTransform();
+            std::vector<Vector3>* pPartVert = parts_[i].solid->getMeshVertices();
+            Transform phyMeshTrans = parts_[i].origin * parts_[i].solid->getO2GTransform();
             for(size_t h=0; h < pPartVert->size(); ++h)
             {
                 Vector3 v = phyMeshTrans * pPartVert->at(h);
@@ -129,30 +120,20 @@ std::vector<Vector3>* Compound::getMeshVertices() const
     return pVert;
 }
     
-void Compound::AddInternalPart(SolidEntity* solid, const Transform& origin, bool alwaysVisible)
+void Compound::AddInternalPart(std::unique_ptr<SolidEntity> solid, const Transform& origin, bool alwaysVisible)
 {
-    if(solid != NULL)
+    if(solid != nullptr)
     {
-        CompoundPart part;
-        part.solid = solid;
-        part.origin = origin;
-        part.isExternal = false;
-        part.alwaysVisible = alwaysVisible;
-        parts.push_back(part);
+        parts_.push_back({std::move(solid), origin, false, alwaysVisible});   
         RecalculatePhysicalProperties();
     }
 }
 
-void Compound::AddExternalPart(SolidEntity* solid, const Transform& origin)
+void Compound::AddExternalPart(std::unique_ptr<SolidEntity> solid, const Transform& origin)
 {
-    if(solid != NULL)
+    if(solid != nullptr)
     {
-        CompoundPart part;
-        part.solid = solid;
-        part.origin = origin;
-        part.isExternal = true;
-        part.alwaysVisible = false;
-        parts.push_back(part);
+        parts_.push_back({std::move(solid), origin, true, false});
         RecalculatePhysicalProperties();
     }
 }
@@ -177,47 +158,47 @@ void Compound::RecalculatePhysicalProperties()
     Scalar compoundVolume(0);
     Scalar compoundSurface(0);
     
-    T_CG2O = T_CG2C = T_CG2G = Transform::getIdentity();
-    P_CB = Vector3(0,0,0);
+    T_CG2O_ = T_CG2C_ = T_CG2G_ = Transform::getIdentity();
+    P_CB_ = Vector3(0,0,0);
         
-    for(size_t i=0; i<parts.size(); ++i)
+    for(size_t i=0; i<parts_.size(); ++i)
     {
         //Mechanical parameters
-        compoundMass += parts[i].solid->getMass();
-        compoundAugmentedMass += parts[i].isExternal ? parts[i].solid->getAugmentedMass() : parts[i].solid->getMass();
-        compoundCG += (parts[i].origin * parts[i].solid->getCG2OTransform().inverse()).getOrigin() * parts[i].solid->getMass();
+        compoundMass += parts_[i].solid->getMass();
+        compoundAugmentedMass += parts_[i].isExternal ? parts_[i].solid->getAugmentedMass() : parts_[i].solid->getMass();
+        compoundCG += (parts_[i].origin * parts_[i].solid->getCG2OTransform().inverse()).getOrigin() * parts_[i].solid->getMass();
         
-        if(parts[i].solid->isBuoyant())
+        if(parts_[i].solid->isBuoyant())
         {
-            compoundVolume += parts[i].solid->getVolume();
-            compoundCB += parts[i].origin * parts[i].solid->getCG2OTransform().inverse() * parts[i].solid->getCB() * parts[i].solid->getVolume();
+            compoundVolume += parts_[i].solid->getVolume();
+            compoundCB += parts_[i].origin * parts_[i].solid->getCG2OTransform().inverse() * parts_[i].solid->getCB() * parts_[i].solid->getVolume();
         }
 
-        if(parts[i].isExternal)
-            compoundSurface += parts[i].solid->getSurface();
+        if(parts_[i].isExternal)
+            compoundSurface += parts_[i].solid->getSurface();
     }
     
     //Set transform origin
     compoundCG /= compoundMass;
     if(compoundVolume > Scalar(0)) compoundCB /= compoundVolume;
-    T_CG2O.setOrigin(-compoundCG);
+    T_CG2O_.setOrigin(-compoundCG);
     
     //2. Calculate compound inertia matrix
     Matrix3 I = Matrix3(0,0,0,0,0,0,0,0,0);
         
-    for(unsigned int i=0; i<parts.size(); ++i)
+    for(unsigned int i=0; i<parts_.size(); ++i)
     {
         //Calculate inertia matrix 3x3 of solid in the compound body origin frame and transform to CB
-        Vector3 solidPriInertia = parts[i].isExternal ? parts[i].solid->getAugmentedInertia() : parts[i].solid->getInertia();
+        Vector3 solidPriInertia = parts_[i].isExternal ? parts_[i].solid->getAugmentedInertia() : parts_[i].solid->getInertia();
         Matrix3 solidInertia = Matrix3(solidPriInertia.x(), 0, 0, 0, solidPriInertia.y(), 0, 0, 0, solidPriInertia.z());
             
         //Rotate inertia tensor from part CG to compound CG
-        Transform compToPart = T_CG2O * parts[i].origin * parts[i].solid->getCG2OTransform().inverse();
+        Transform compToPart = T_CG2O_ * parts_[i].origin * parts_[i].solid->getCG2OTransform().inverse();
         solidInertia = compToPart.getBasis() * solidInertia * compToPart.getBasis().transpose();
             
         //Translate inertia tensor from part CG to compound CG
         Vector3 t = compToPart.getOrigin();
-        Scalar m = parts[i].isExternal ? parts[i].solid->getAugmentedMass() : parts[i].solid->getMass();
+        Scalar m = parts_[i].isExternal ? parts_[i].solid->getAugmentedMass() : parts_[i].solid->getMass();
         solidInertia += Matrix3(t.y()*t.y()+t.z()*t.z(),            -t.x()*t.y(),            -t.x()*t.z(),
                                            -t.y()*t.x(), t.x()*t.x()+t.z()*t.z(),            -t.y()*t.z(),
                                            -t.z()*t.x(),            -t.z()*t.y(), t.x()*t.x()+t.y()*t.y()).scaled(Vector3(m, m, m));
@@ -254,35 +235,35 @@ void Compound::RecalculatePhysicalProperties()
     
         //3.3. Rotate body so that principal axes are parallel to (x,y,z) system
         Matrix3 rotMat(axis1[0],axis2[0],axis3[0], axis1[1],axis2[1],axis3[1], axis1[2],axis2[2],axis3[2]);
-        T_CG2O = Transform(rotMat, Vector3(0,0,0)).inverse() * T_CG2O;
+        T_CG2O_ = Transform(rotMat, Vector3(0,0,0)).inverse() * T_CG2O_;
     }
     
-    T_CG2C = T_CG2G = T_CG2O;
+    T_CG2C_ = T_CG2G_ = T_CG2O_;
     
     //Move CB to compound CG frame
-    P_CB = T_CG2O * compoundCB;
+    P_CB_ = T_CG2O_ * compoundCB;
     
-    mass = compoundMass;
-    aMass.setX(compoundAugmentedMass - compoundMass);
-    aMass.setY(compoundAugmentedMass - compoundMass);
-    aMass.setZ(compoundAugmentedMass - compoundMass);
-    volume = compoundVolume;
-    surface = compoundSurface;
-    Ipri = compoundPriInertia;
+    mass_ = compoundMass;
+    aMass_.setX(compoundAugmentedMass - compoundMass);
+    aMass_.setY(compoundAugmentedMass - compoundMass);
+    aMass_.setZ(compoundAugmentedMass - compoundMass);
+    volume_ = compoundVolume;
+    surface_ = compoundSurface;
+    Ipri_ = compoundPriInertia;
 }
 
 btCollisionShape* Compound::BuildCollisionShape()
 {
     //Build collision shape from external parts
     btCompoundShape* colShape = new btCompoundShape();
-    for(size_t i = 0; i<parts.size(); ++i)
+    for(size_t i = 0; i<parts_.size(); ++i)
     {
-        if(parts[i].isExternal)
+        if(parts_[i].isExternal)
         {
-            Transform childTrans = parts[i].origin * parts[i].solid->getCG2OTransform().inverse() * parts[i].solid->getCG2CTransform();
-            btCollisionShape* partColShape = parts[i].solid->BuildCollisionShape();
+            Transform childTrans = parts_[i].origin * parts_[i].solid->getCG2OTransform().inverse() * parts_[i].solid->getCG2CTransform();
+            btCollisionShape* partColShape = parts_[i].solid->BuildCollisionShape();
             colShape->addChildShape(childTrans, partColShape);
-            collisionPartId.push_back(i);
+            collisionPartId_.push_back(i);
         }
     }
     return colShape;
@@ -290,9 +271,9 @@ btCollisionShape* Compound::BuildCollisionShape()
 
 void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* ocn)
 {
-    if(phy.mode != PhysicsMode::FLOATING && phy.mode != PhysicsMode::SUBMERGED) return;
+    if(phy_.mode != PhysicsMode::FLOATING && phy_.mode != PhysicsMode::SUBMERGED) return;
     
-    auto points = submerged.getDataAsPoints();
+    auto points = submerged_.getDataAsPoints();
     if (points != nullptr)
         points->clear();
 
@@ -301,14 +282,14 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
     //If completely outside fluid just set all torques and forces to 0
     if(bf == BodyFluidPosition::OUTSIDE)
     {
-        Fb.setZero();
-        Tb.setZero();
-        Fdq.setZero();
-        Tdq.setZero();
-        Fdf.setZero();
-        Tdf.setZero();
-        Swet = Scalar(0);
-        Vsub = Scalar(0);
+        Fb_.setZero();
+        Tb_.setZero();
+        Fdq_.setZero();
+        Tdq_.setZero();
+        Fdf_.setZero();
+        Tdf_.setZero();
+        Swet_ = Scalar(0);
+        Vsub_ = Scalar(0);
         return;
     }
     
@@ -317,17 +298,17 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
         //Compute buoyancy based on CB position
         if(isBuoyant())
         {
-            Fb = -volume*ocn->getLiquid().density * SimulationApp::getApp()->getSimulationManager()->getGravity();
-            Tb = (getCGTransform() * P_CB - getCGTransform().getOrigin()).cross(Fb);
+            Fb_ = -volume_*ocn->getLiquid().density * SimulationApp::getApp()->getSimulationManager()->getGravity();
+            Tb_ = (getCGTransform() * P_CB_ - getCGTransform().getOrigin()).cross(Fb_);
         }
         
         if(settings.dampingForces)
         {
             //Set zero
-            Fdq.setZero();
-            Tdq.setZero();
-            Fdf.setZero();
-            Tdf.setZero();
+            Fdq_.setZero();
+            Tdq_.setZero();
+            Fdf_.setZero();
+            Tdf_.setZero();
             
             //Get velocity data
             Vector3 v = getLinearVelocity();
@@ -339,27 +320,27 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
             Vector3 Fdfp(0,0,0);
             Vector3 Tdfp(0,0,0);
             
-            for(size_t i=0; i<parts.size(); ++i) //Go through all parts
-                if(parts[i].isExternal 
-                    && (parts[i].solid->getPhysicsMode() == PhysicsMode::SUBMERGED
-                    || parts[i].solid->getPhysicsMode() == PhysicsMode::FLOATING)) //Compute drag only for external parts
+            for(size_t i=0; i<parts_.size(); ++i) //Go through all parts
+                if(parts_[i].isExternal 
+                    && (parts_[i].solid->getPhysicsMode() == PhysicsMode::SUBMERGED
+                    || parts_[i].solid->getPhysicsMode() == PhysicsMode::FLOATING)) //Compute drag only for external parts
                 {
-                    Transform T_C_part = getOTransform() * parts[i].origin * parts[i].solid->getO2CTransform();
-                    Transform T_O_part = getOTransform() * parts[i].origin;
+                    Transform T_C_part = getOTransform() * parts_[i].origin * parts_[i].solid->getO2CTransform();
+                    Transform T_O_part = getOTransform() * parts_[i].origin;
 
-                    ComputeHydrodynamicForcesSubmerged(parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fdqp, Tdqp, Fdfp, Tdfp);
+                    ComputeHydrodynamicForcesSubmerged(parts_[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fdqp, Tdqp, Fdfp, Tdfp);
                     Vector3 Cd, Cf;
-                    parts[i].solid->getHydrodynamicCoefficients(Cd, Cf);
+                    parts_[i].solid->getHydrodynamicCoefficients(Cd, Cf);
                     CorrectHydrodynamicForces(ocn, Fdqp, Tdqp, Fdfp, Tdfp, Cd, Cf, T_O_part);
-                    Fdq += Fdqp;
-                    Tdq += Tdqp;
-                    Fdf += Fdfp;
-                    Tdf += Tdfp;
+                    Fdq_ += Fdqp;
+                    Tdq_ += Tdqp;
+                    Fdf_ += Fdfp;
+                    Tdf_ += Tdfp;
                 }
         }
 
-        Swet = surface;
-        Vsub = volume;
+        Swet_ = surface_;
+        Vsub_ = volume_;
     }
     else //CROSSING FLUID SURFACE (compound body but not necessarily all parts!)
     {
@@ -368,20 +349,20 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
             //Clear forces that will be recomputed
             if(settings.reallisticBuoyancy)
             {
-                Fb.setZero();
-                Tb.setZero();
+                Fb_.setZero();
+                Tb_.setZero();
             }
         
             if(settings.dampingForces)
             {
-                Fdq.setZero();
-                Tdq.setZero();
-                Fdf.setZero();
-                Tdf.setZero();
+                Fdq_.setZero();
+                Tdq_.setZero();
+                Fdf_.setZero();
+                Tdf_.setZero();
             }
 
-            Swet = Scalar(0);
-            Vsub = Scalar(0);
+            Swet_ = Scalar(0);
+            Vsub_ = Scalar(0);
         
             //Get velocity data
             Vector3 v = getLinearVelocity();
@@ -397,39 +378,39 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
             Scalar Swetp(0);
             Scalar Vsubp(0);
 
-            for(size_t i=0; i<parts.size(); ++i) //Loop through all parts
+            for(size_t i=0; i<parts_.size(); ++i) //Loop through all parts
             {
-                if(parts[i].solid->getPhysicsMode() != PhysicsMode::SUBMERGED
-                    && parts[i].solid->getPhysicsMode() != PhysicsMode::FLOATING)
+                if(parts_[i].solid->getPhysicsMode() != PhysicsMode::SUBMERGED
+                    && parts_[i].solid->getPhysicsMode() != PhysicsMode::FLOATING)
                     continue;
 
-                Transform T_C_part = getOTransform() * parts[i].origin * parts[i].solid->getO2CTransform();
-                Transform T_O_part = getOTransform() * parts[i].origin;
+                Transform T_C_part = getOTransform() * parts_[i].origin * parts_[i].solid->getO2CTransform();
+                Transform T_O_part = getOTransform() * parts_[i].origin;
                 HydrodynamicsSettings pSettings = settings;
-                pSettings.reallisticBuoyancy &= parts[i].solid->isBuoyant();
+                pSettings.reallisticBuoyancy &= parts_[i].solid->isBuoyant();
 
-                if(parts[i].isExternal) //Compute buoyancy and drag
+                if(parts_[i].isExternal) //Compute buoyancy and drag
                 {
-                    ComputeHydrodynamicForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdqp, Tdqp, Fdfp, Tdfp, Swetp, Vsubp, submerged);
+                    ComputeHydrodynamicForcesSurface(pSettings, parts_[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdqp, Tdqp, Fdfp, Tdfp, Swetp, Vsubp, submerged_);
                     Vector3 Cd, Cf;
-                    parts[i].solid->getHydrodynamicCoefficients(Cd, Cf);
+                    parts_[i].solid->getHydrodynamicCoefficients(Cd, Cf);
                     CorrectHydrodynamicForces(ocn, Fdqp, Tdqp, Fdfp, Tdfp, Cd, Cf, T_O_part);
-                    Fb += Fbp;
-                    Tb += Tbp;
-                    Fdq += Fdqp;
-                    Tdq += Tdqp;
-                    Fdf += Fdfp;
-                    Tdf += Tdfp;
-                    Swet += Swetp;
-                    Vsub += Vsubp;
+                    Fb_ += Fbp;
+                    Tb_ += Tbp;
+                    Fdq_ += Fdqp;
+                    Tdq_ += Tdqp;
+                    Fdf_ += Fdfp;
+                    Tdf_ += Tdfp;
+                    Swet_ += Swetp;
+                    Vsub_ += Vsubp;
                 }
                 else if(pSettings.reallisticBuoyancy) //Compute only buoyancy
                 {
                     pSettings.dampingForces = false;
-                    ComputeHydrodynamicForcesSurface(pSettings, parts[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdqp, Tdqp, Fdfp, Tdfp, Swetp, Vsubp, submerged);
-                    Fb += Fbp;
-                    Tb += Tbp;
-                    Vsub += Vsubp;
+                    ComputeHydrodynamicForcesSurface(pSettings, parts_[i].solid->getPhysicsMesh(), ocn, getCGTransform(), T_C_part, v, omega, Fbp, Tbp, Fdqp, Tdqp, Fdfp, Tdfp, Swetp, Vsubp, submerged_);
+                    Fb_ += Fbp;
+                    Tb_ += Tbp;
+                    Vsub_ += Vsubp;
                 }
             }
         }
@@ -438,11 +419,11 @@ void Compound::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocean* 
 
 void Compound::ComputeAerodynamicForces(Atmosphere* atm)
 {
-    if(phy.mode != PhysicsMode::AERODYNAMIC) return;
+    if(phy_.mode != PhysicsMode::AERODYNAMIC) return;
     
     //Set zero
-    Fda.setZero();
-    Tda.setZero();
+    Fda_.setZero();
+    Tda_.setZero();
             
     //Get velocity data
     Vector3 v = getLinearVelocity();
@@ -452,21 +433,21 @@ void Compound::ComputeAerodynamicForces(Atmosphere* atm)
     Vector3 Fdap(0,0,0);
     Vector3 Tdap(0,0,0);
             
-    for(size_t i=0; i<parts.size(); ++i) //Go through all parts
-        if(parts[i].isExternal) //Compute drag only for external parts
+    for(size_t i=0; i<parts_.size(); ++i) //Go through all parts
+        if(parts_[i].isExternal) //Compute drag only for external parts
         {
-            Transform T_C_part = getOTransform() * parts[i].origin * parts[i].solid->getO2CTransform();
-            SolidEntity::ComputeAerodynamicForces(parts[i].solid->getPhysicsMesh(), atm, getCGTransform(), T_C_part, v, omega, Fdap, Tdap);
-            parts[i].solid->CorrectAerodynamicForces(atm, Fdap, Tdap);
-            Fda += Fdap;
-            Tda += Tdap;
+            Transform T_C_part = getOTransform() * parts_[i].origin * parts_[i].solid->getO2CTransform();
+            SolidEntity::ComputeAerodynamicForces(parts_[i].solid->getPhysicsMesh(), atm, getCGTransform(), T_C_part, v, omega, Fdap, Tdap);
+            parts_[i].solid->CorrectAerodynamicForces(atm, Fdap, Tdap);
+            Fda_ += Fdap;
+            Tda_ += Tdap;
         }
 }
 
 void Compound::BuildGraphicalObject()
 {
-    for(unsigned int i=0; i<parts.size(); ++i)
-        parts[i].solid->BuildGraphicalObject();
+    for(unsigned int i=0; i<parts_.size(); ++i)
+        parts_[i].solid->BuildGraphicalObject();
 }
 
 std::vector<Renderable> Compound::Render(size_t partId)
@@ -478,28 +459,28 @@ std::vector<Renderable> Compound::Render(size_t partId)
     {
         Renderable item1;
 
-        if((parts.at(partId).isExternal && !displayInternals)  
-            || (!parts.at(partId).isExternal && displayInternals)
-            || (parts.at(partId).alwaysVisible))
+        if((parts_.at(partId).isExternal && !displayInternals_)  
+            || (!parts_.at(partId).isExternal && displayInternals_)
+            || (parts_.at(partId).alwaysVisible))
         {
             item1.type = RenderableType::SOLID;
-            item1.materialName = parts.at(partId).solid->getMaterial().name;
+            item1.materialName = parts_.at(partId).solid->getMaterial().name;
                 
-            if(dm == DisplayMode::GRAPHICAL)
+            if(dm_ == DisplayMode::GRAPHICAL)
             {
-                Transform oTrans = oCompoundTrans * parts.at(partId).origin * parts.at(partId).solid->getO2GTransform();
-                item1.objectId = parts.at(partId).solid->getGraphicalObject();
-                item1.lookId = parts.at(partId).solid->getLook();
+                Transform oTrans = oCompoundTrans * parts_.at(partId).origin * parts_.at(partId).solid->getO2GTransform();
+                item1.objectId = parts_.at(partId).solid->getGraphicalObject();
+                item1.lookId = parts_.at(partId).solid->getLook();
                 item1.model = glMatrixFromTransform(oTrans);
                 item1.cor = glVectorFromVector(getCGTransform().getOrigin());
                 item1.vel = glVectorFromVector(getLinearVelocity());
                 item1.avel = glVectorFromVector(getAngularVelocity());
                 items.push_back(item1);
             }
-            else if(dm == DisplayMode::PHYSICAL)
+            else if(dm_ == DisplayMode::PHYSICAL)
             {
-                Transform oTrans = oCompoundTrans * parts.at(partId).origin * parts.at(partId).solid->getO2CTransform();
-                item1.objectId = parts.at(partId).solid->getPhysicalObject();
+                Transform oTrans = oCompoundTrans * parts_.at(partId).origin * parts_.at(partId).solid->getO2CTransform();
+                item1.objectId = parts_.at(partId).solid->getPhysicalObject();
                 item1.lookId = -1;
                 item1.model = glMatrixFromTransform(oTrans);
                 item1.cor = glVectorFromVector(getCGTransform().getOrigin());
@@ -512,10 +493,10 @@ std::vector<Renderable> Compound::Render(size_t partId)
 #ifndef DEBUG_HYDRO
         GeometryApproxType atype;
         std::vector<Scalar> aparams;
-        parts.at(partId).solid->getGeometryApprox(atype, aparams);
+        parts_.at(partId).solid->getGeometryApprox(atype, aparams);
 
         Renderable item2;
-        item2.model = glMatrixFromTransform(oCompoundTrans * parts.at(partId).origin * parts.at(partId).solid->getO2HTransform());
+        item2.model = glMatrixFromTransform(oCompoundTrans * parts_.at(partId).origin * parts_.at(partId).solid->getO2HTransform());
         item2.data = std::make_shared<std::vector<glm::vec3>>();
 
         switch(atype)
@@ -562,16 +543,16 @@ std::vector<Renderable> Compound::Render()
         item1.model = glMatrixFromTransform(getCGTransform());
         items.push_back(item1);
         
-        Vector3 cbWorld = getCGTransform() * P_CB;
+        Vector3 cbWorld = getCGTransform() * P_CB_;
         Renderable item2;
         item2.type = RenderableType::HYDRO_CS;
         item2.model = glMatrixFromTransform(Transform(Quaternion::getIdentity(), cbWorld));
         item2.data = std::make_shared<std::vector<glm::vec3>>();
-        item2.getDataAsPoints()->push_back(glm::vec3(volume, volume, volume));
+        item2.getDataAsPoints()->push_back(glm::vec3(volume_, volume_, volume_));
         items.push_back(item2);
         
         //Parts
-        for(size_t i=0; i<parts.size(); ++i)
+        for(size_t i=0; i<parts_.size(); ++i)
         {
             std::vector<Renderable> partItems = Render(i);
             items.insert(items.end(), partItems.begin(), partItems.end());
@@ -587,7 +568,7 @@ std::vector<Renderable> Compound::Render()
         item3.model = glm::mat4(1.f);
         item3.data = std::make_shared<std::vector<glm::vec3>>();
         item3.getDataAsPoints()->push_back(cgv);
-        item3.getDataAsPoints()->push_back(cgv + glm::vec3((GLfloat)Fb.x(), (GLfloat)Fb.y(), (GLfloat)Fb.z())/1000.f);
+        item3.getDataAsPoints()->push_back(cgv + glm::vec3((GLfloat)Fb_.x(), (GLfloat)Fb_.y(), (GLfloat)Fb_.z())/1000.f);
         items.push_back(item3);
         
         //--- Linear drag
@@ -596,7 +577,7 @@ std::vector<Renderable> Compound::Render()
         item4.model = glm::mat4(1.f);
         item4.data = std::make_shared<std::vector<glm::vec3>>();
         item4.getDataAsPoints()->push_back(cgv);
-        item4.getDataAsPoints()->push_back(cgv + glm::vec3((GLfloat)Fdf.x(), (GLfloat)Fdf.y(), (GLfloat)Fdf.z()));
+        item4.getDataAsPoints()->push_back(cgv + glm::vec3((GLfloat)Fdf_.x(), (GLfloat)Fdf_.y(), (GLfloat)Fdf_.z()));
         items.push_back(item4);
         
         //--- Quadratic drag
@@ -605,7 +586,7 @@ std::vector<Renderable> Compound::Render()
         item5.model = glm::mat4(1.f);
         item5.data = std::make_shared<std::vector<glm::vec3>>();
         item5.getDataAsPoints()->push_back(cgv);
-        item5.getDataAsPoints()->push_back(cgv + glm::vec3((GLfloat)Fdq.x(), (GLfloat)Fdq.y(), (GLfloat)Fdq.z()));
+        item5.getDataAsPoints()->push_back(cgv + glm::vec3((GLfloat)Fdq_.x(), (GLfloat)Fdq_.y(), (GLfloat)Fdq_.z()));
         items.push_back(item5);
 
 #ifdef DEBUG_HYDRO

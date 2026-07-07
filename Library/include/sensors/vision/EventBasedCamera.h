@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/03/24.
-//  Copyright (c) 2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
 #ifndef __Stonefish_EventBasedCamera__
@@ -110,14 +110,14 @@ namespace sf
     private:
         void InitGraphics(bool& seesParticles);
         
-        OpenGLEventBasedCamera* glCamera;
-        glm::vec2 depthRange;
-        glm::vec2 C;
-        glm::vec2 sigmaC;
-        uint32_t Tr;
-        uint32_t lastEventCount;
-        GLint* imageData;
-        std::function<void(EventBasedCamera*)> newDataCallback;
+        OpenGLEventBasedCamera* glCamera_;
+        glm::vec2 depthRange_;
+        glm::vec2 C_;
+        glm::vec2 sigmaC_;
+        uint32_t Tr_;
+        uint32_t lastEventCount_;
+        GLint* imageData_;
+        std::function<void(EventBasedCamera*)> newDataCallback_;
     };
 }
 
