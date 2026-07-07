@@ -529,7 +529,7 @@ namespace sf
          \param normalTexturePath a path to a texture specifying surface normal (bump mapping)
          \param temperatureTexturePath a path to a texture specifying temperature distribution
          \param temperatureRange a range of temperatures represented by the texture values
-         \param reflectivityMapStr a path to a texture specifying reflectivity
+         \param reflectivityTexturePath a path to a texture specifying reflectivity
          \return the actual name of the created look
          */
         std::string CreateLook(const std::string& name, Color color, float roughness, float metalness = 0.f, float reflectivity = 0.f, 
