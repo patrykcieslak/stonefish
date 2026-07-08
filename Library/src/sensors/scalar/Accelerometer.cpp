@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 18/11/2017.
-//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Accelerometer.h"
@@ -33,7 +33,7 @@
 namespace sf
 {
 
-Accelerometer::Accelerometer(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Accelerometer::Accelerometer(const std::string& uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels_.push_back(SensorChannel("Linear Acceleration X", QuantityType::ACCELERATION));
     channels_.push_back(SensorChannel("Linear Acceleration Y", QuantityType::ACCELERATION));
@@ -55,8 +55,7 @@ void Accelerometer::InternalUpdate(Scalar dt)
                                                 );
     
     // Record sample
-    Sample s{std::vector<Scalar>({la.x(), la.y(), la.z()})};
-    AddSampleToHistory(s);
+    AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({la.x(), la.y(), la.z()})));
 }
 
 void Accelerometer::setRange(Vector3 linearAccelerationMax)

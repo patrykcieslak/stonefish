@@ -48,9 +48,6 @@ Contact::~Contact()
 {
     if(SimulationApp::getApp() != NULL)
         SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name_);
-    A_ = NULL;
-    B_ = NULL;
-    points_.clear();
 }
 
 std::string Contact::getName() const

@@ -23,8 +23,7 @@
 //  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Contact__
-#define __Stonefish_Contact__
+#pragma once
 
 #include <deque>
 #include "StonefishCommon.h"
@@ -137,5 +136,3 @@ namespace sf
         bool newDataAvailable_;
     };
 }
-
-#endif

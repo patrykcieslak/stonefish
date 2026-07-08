@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 31/07/2018.
-//  Copyright (c) 2018-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Profiler.h"
@@ -35,7 +35,7 @@
 namespace sf
 {
 
-Profiler::Profiler(std::string uniqueName, Scalar angleRangeDeg, unsigned int angleSteps, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Profiler::Profiler(const std::string& uniqueName, Scalar angleRangeDeg, unsigned int angleSteps, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     angRange_ = UnitSystem::Angle(true, angleRangeDeg);
     angSteps_ = angleSteps;
@@ -72,8 +72,9 @@ void Profiler::InternalUpdate(Scalar dt)
         distance_ = channels_[1].rangeMax;
    
     //Record sample
-    Sample s{std::vector<Scalar>({currentAngle, distance_})};
-    AddSampleToHistory(s);
+    AddSampleToHistory(std::make_unique<Sample>(
+        std::vector<Scalar>({currentAngle, distance_})
+    ));
     
     //Rotate beam
     if(clockwise_)

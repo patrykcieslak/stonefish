@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 02/11/2017.
-//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Compass.h"
@@ -30,20 +30,19 @@
 namespace sf
 {
 
-Compass::Compass(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Compass::Compass(const std::string& uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels_.push_back(SensorChannel("Heading", QuantityType::ANGLE));
 }
 
 void Compass::InternalUpdate(Scalar dt)
 {
-    //get angles
+    // Get angles
     Scalar yaw, pitch, roll;
     getSensorFrame().getBasis().getEulerYPR(yaw, pitch, roll);
     
-    //record sample
-    Sample s{std::vector<Scalar>({yaw})};
-    AddSampleToHistory(s);
+    // Record sample
+    AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({yaw})));
 }
 
 void Compass::setNoise(Scalar headingStdDev)

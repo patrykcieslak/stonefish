@@ -23,8 +23,7 @@
 //  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_SSS__
-#define __Stonefish_SSS__
+#pragma once
 
 #include <functional>
 #include "sensors/vision/Camera.h"
@@ -52,7 +51,7 @@ namespace sf
          \param outputFormat the format of the sonar output data
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated based on maximum range)
          */
-        SSS(std::string uniqueName, unsigned int numOfBins, unsigned int numOfLines, Scalar verticalBeamWidthDeg,
+        SSS(const std::string& uniqueName, unsigned int numOfBins, unsigned int numOfLines, Scalar verticalBeamWidthDeg,
             Scalar horizontalBeamWidthDeg, Scalar verticalTiltDeg, Scalar minRange, Scalar maxRange, ColorMap cm, 
             SonarOutputFormat outputFormat = SonarOutputFormat::U8, Scalar frequency = Scalar(-1));
        
@@ -153,7 +152,7 @@ namespace sf
         
         OpenGLSSS* glSSS_;
         void* sonarData_;
-        GLubyte* displayData_;
+        std::vector<GLubyte> displayData_;
         glm::vec2 range_;
         glm::vec2 noise_;
         Scalar gain_;
@@ -164,5 +163,3 @@ namespace sf
         std::function<void(SSS*)> newDataCallback_;
     };
 }
-
-#endif

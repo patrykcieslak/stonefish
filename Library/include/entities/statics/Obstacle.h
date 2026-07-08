@@ -23,8 +23,7 @@
 //  Copyright(c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Obstacle__
-#define __Stonefish_Obstacle__
+#pragma once
 
 #include "entities/StaticEntity.h"
 
@@ -47,10 +46,10 @@ namespace sf
          \param material the name of the material the body is made of
          \param look the name of the graphical material used for rendering
          */
-        Obstacle(std::string uniqueName,
-                 std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
-                 std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin, bool convexHull,
-                 std::string material, std::string look = "");
+        Obstacle(const std::string& uniqueName,
+                 const std::string& graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
+                 const std::string& physicsFilename, Scalar physicsScale, const Transform& physicsOrigin, bool convexHull,
+                 const std::string& material, const std::string& look = "");
         
         //! A constructor building an obstacle based on a mesh file.
         /*!
@@ -62,7 +61,7 @@ namespace sf
          \param material the name of the material the body is made of
          \param look the name of the graphical material used for rendering
          */
-        Obstacle(std::string uniqueName, std::string modelFilename, Scalar scale, const Transform& origin, bool convexHull, std::string material, std::string look = "");
+        Obstacle(const std::string& uniqueName, const std::string& modelFilename, Scalar scale, const Transform& origin, bool convexHull, const std::string& material, const std::string& look = "");
         
         //! A constructor building a spherical obstacle.
         /*!
@@ -72,7 +71,7 @@ namespace sf
          \param material the name of the material the body is made of
          \param look the name of the graphical material used for rendering
          */
-        Obstacle(std::string uniqueName, Scalar sphereRadius, const Transform& origin, std::string material, std::string look = "");
+        Obstacle(const std::string& uniqueName, Scalar sphereRadius, const Transform& origin, const std::string& material, const std::string& look = "");
     
         //! A constructor building a box obstacle.
         /*!
@@ -83,7 +82,7 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param uvMode texture coordinates generation mode (0 - texture cross, 1 - same texture on all faces)
          */
-        Obstacle(std::string uniqueName, Vector3 boxDimensions, const Transform& origin, std::string material, std::string look = "", unsigned int uvMode = 0);
+        Obstacle(const std::string& uniqueName, Vector3 boxDimensions, const Transform& origin, const std::string& material, const std::string& look = "", unsigned int uvMode = 0);
         
         //! A constructor building a cylindrical obstacle.
         /*!
@@ -94,10 +93,7 @@ namespace sf
          \param material the name of the material the body is made of
          \param look the name of the graphical material used for rendering
          */
-        Obstacle(std::string uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& origin, std::string material, std::string look = "");
-        
-        //! A destructor.
-        ~Obstacle();
+        Obstacle(const std::string& uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& origin, const std::string& material, const std::string& look = "");
         
         //! A method implementing the rendering of the entity.
         std::vector<Renderable> Render();
@@ -107,9 +103,8 @@ namespace sf
         
     private:
         void BuildGraphicalObject();
-        Mesh* graMesh_;
+
+        std::shared_ptr<Mesh> graMesh_;
         int graObjectId_;
     };
 }
-
-#endif

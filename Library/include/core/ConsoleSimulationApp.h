@@ -23,8 +23,7 @@
 //  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_ConsoleSimulationApp__
-#define __Stonefish_ConsoleSimulationApp__
+#pragma once
 
 #include <SDL2/SDL_thread.h>
 #include "core/SimulationApp.h"
@@ -43,10 +42,10 @@ namespace sf
          \param dataDirPath a path to the directory containing the simulation data
          \param sim a pointer to the simulation manager
          */
-        ConsoleSimulationApp(std::string title, std::string dataDirPath, SimulationManager* sim);
+        ConsoleSimulationApp(std::string title, std::string dataDirPath, std::unique_ptr<SimulationManager> sim);
         
         //! A destructor.
-        virtual ~ConsoleSimulationApp();
+        virtual ~ConsoleSimulationApp() = default;
 
         //! A method that starts the simulation on demand.
         void StartSimulation() override;
@@ -76,4 +75,3 @@ namespace sf
     };
 }
 
-#endif

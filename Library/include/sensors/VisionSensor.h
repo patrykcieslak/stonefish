@@ -23,8 +23,7 @@
 //  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_VisionSensor__
-#define __Stonefish_VisionSensor__
+#pragma once
 
 #include "sensors/Sensor.h"
 
@@ -48,10 +47,10 @@ namespace sf
          \param uniqueName a name for the sensor
          \param frequency the sampling frequency of the sensor [Hz] (0 if updated every simulation step)
          */
-        VisionSensor(std::string uniqueName, Scalar frequency);
+        VisionSensor(const std::string& uniqueName, Scalar frequency);
         
         //! A destructor.
-        virtual ~VisionSensor();
+        virtual ~VisionSensor() = default;
         
         //! A method performing internal sensor state update.
         /*!
@@ -115,5 +114,3 @@ namespace sf
         Transform o2s_;
     };
 }
-
-#endif

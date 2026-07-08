@@ -23,8 +23,7 @@
 //  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_RealRotaryEncoder__
-#define __Stonefish_RealRotaryEncoder__
+#pragma once
 
 #include "sensors/scalar/RotaryEncoder.h"
 
@@ -40,7 +39,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        RealRotaryEncoder(std::string uniqueName, unsigned int cpr_resolution, bool absolute = false, Scalar frequency = Scalar(-1), int historyLength = -1);
+        RealRotaryEncoder(const std::string& uniqueName, unsigned int cpr_resolution, bool absolute = false, Scalar frequency = Scalar(-1), int historyLength = -1);
         
         //! A method performing internal sensor state update.
         /*!
@@ -59,5 +58,3 @@ namespace sf
         unsigned int abs_;
     };
 }
-
-#endif

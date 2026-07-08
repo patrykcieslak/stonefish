@@ -23,8 +23,7 @@
 //  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Wing__
-#define __Stonefish_Wing__
+#pragma once
 
 #include "entities/SolidEntity.h"
 
@@ -49,9 +48,9 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the wing walls, if positive the wing is treated as shell [m]
          */
-        Wing(std::string uniqueName, PhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength,
+        Wing(const std::string& uniqueName, PhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength,
              Scalar maxCamber, Scalar maxCamberPos, Scalar profileThickness, Scalar wingLength, const Transform& origin, 
-             std::string material, std::string look, Scalar thickness = Scalar(-1));
+             const std::string& material, const std::string& look, Scalar thickness = Scalar(-1));
         
         //! A constructor.
         /*!
@@ -66,8 +65,8 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the wing walls, if positive the wing is treated as shell
          */
-        Wing(std::string uniqueName, PhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength, std::string NACA, Scalar wingLength, const Transform& origin, 
-             std::string material, std::string look, Scalar thickness = Scalar(-1));
+        Wing(const std::string& uniqueName, PhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength, const std::string& NACA, Scalar wingLength, const Transform& origin, 
+             const std::string& material, const std::string& look, Scalar thickness = Scalar(-1));
         
         //! A method that returns the type of body.
         SolidType getSolidType();
@@ -76,5 +75,3 @@ namespace sf
         btCollisionShape* BuildCollisionShape();
     };
 }
-
-#endif

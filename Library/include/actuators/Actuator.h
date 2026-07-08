@@ -23,8 +23,7 @@
 //  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Actuator__
-#define __Stonefish_Actuator__
+#pragma once
 
 #include "StonefishCommon.h"
 #include "entities/Entity.h"
@@ -44,7 +43,7 @@ namespace sf
         /*!
          \param uniqueName a name of the actuator
          */
-        Actuator(std::string uniqueName);
+        Actuator(const std::string& uniqueName);
         
         //! A destructor.
         virtual ~Actuator();
@@ -74,7 +73,7 @@ namespace sf
         virtual ActuatorType getType() const = 0;
 
         //! A method returning the name of the actuator.
-        std::string getName() const;
+        const std::string& getName() const;
     
     protected:
         virtual void WatchdogTimeout();
@@ -88,5 +87,3 @@ namespace sf
         Scalar watchdogTimeout_;
     };
 }
-
-#endif 

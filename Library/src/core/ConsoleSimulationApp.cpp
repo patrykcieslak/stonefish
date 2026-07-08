@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2018-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/ConsoleSimulationApp.h"
@@ -34,15 +34,10 @@
 namespace sf
 {
 
-ConsoleSimulationApp::ConsoleSimulationApp(std::string title, std::string dataDirPath, SimulationManager* sim)
-: SimulationApp(title, dataDirPath, sim)
+ConsoleSimulationApp::ConsoleSimulationApp(std::string title, std::string dataDirPath, std::unique_ptr<SimulationManager> sim)
+: SimulationApp(title, dataDirPath, std::move(sim))
 {
     simulationThread_ = nullptr;
-}
-
-ConsoleSimulationApp::~ConsoleSimulationApp()
-{
-    delete console_;
 }
 
 bool ConsoleSimulationApp::hasGraphics()

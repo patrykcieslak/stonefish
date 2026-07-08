@@ -23,8 +23,7 @@
 //  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_PrismaticJoint__
-#define __Stonefish_PrismaticJoint__
+#pragma once
 
 #include "joints/Joint.h"
 
@@ -44,7 +43,7 @@ namespace sf
          \param axis a vector parallel to the joint axis
          \param collideLinked a flag that sets if the bodies connected by the joint should collide
          */
-        PrismaticJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB,
+        PrismaticJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB,
                        const Vector3& axis, bool collideLinked = true);
         
         //! A method used to apply force to the joint.
@@ -90,4 +89,3 @@ namespace sf
     };
 }
 
-#endif

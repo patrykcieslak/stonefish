@@ -23,8 +23,7 @@
 //  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLLight__
-#define __Stonefish_OpenGLLight__
+#pragma once
 
 #include "graphics/OpenGLDataStructs.h"
 
@@ -129,7 +128,7 @@ namespace sf
         /*!
          \param lights a list of OpenGL lights in the scene
          */
-        static void Init(std::vector<OpenGLLight*>& lights);
+        static void Init(const std::vector<std::unique_ptr<OpenGLLight>>& lights);
         
         //! A static method to destroy the common data.
         static void Destroy();
@@ -156,5 +155,3 @@ namespace sf
 		GLfloat R_;
     };
 }
-
-#endif

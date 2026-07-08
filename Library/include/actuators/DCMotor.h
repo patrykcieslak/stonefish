@@ -23,8 +23,7 @@
 //  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_DCMotor__
-#define __Stonefish_DCMotor__
+#pragma once
 
 #include "actuators/Motor.h"
 
@@ -43,7 +42,7 @@ namespace sf
          \param motorKt the torque constant of the motor [Nm/A]
          \param friction the friction coefficient
          */
-        DCMotor(std::string uniqueName, Scalar motorR, Scalar motorL, Scalar motorKe, Scalar motorKt, Scalar friction);
+        DCMotor(const std::string& uniqueName, Scalar motorR, Scalar motorL, Scalar motorKe, Scalar motorKt, Scalar friction);
         
         //! A method used to update the internal state of the motor.
         /*!
@@ -110,4 +109,3 @@ namespace sf
     };
 }
 
-#endif

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 21/01/2019.
-//  Copyright (c) 2019-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/vision/Multibeam2.h"
@@ -33,27 +33,16 @@
 namespace sf
 {
 
-Multibeam2::Multibeam2(std::string uniqueName, unsigned int horizontalRes, unsigned int verticalRes, Scalar horizontalFOVDeg, Scalar verticalFOVDeg,
+Multibeam2::Multibeam2(const std::string& uniqueName, unsigned int horizontalRes, unsigned int verticalRes, Scalar horizontalFOVDeg, Scalar verticalFOVDeg,
                        Scalar minRange, Scalar maxRange, Scalar frequency) : Camera(uniqueName, horizontalRes, verticalRes, horizontalFOVDeg, frequency)
 {
     fovV_ = verticalFOVDeg > Scalar(0) ? verticalFOVDeg : Scalar(90);
     range_.x = minRange < Scalar(0.01) ? 0.01f : (GLfloat)minRange;
     range_.y = maxRange > Scalar(0.01) ? (GLfloat)maxRange : 1.f;
-    newDataCallback_ = NULL;
+    newDataCallback_ = nullptr;
     dataCounter_ = 0;
-    imageData_ = new GLfloat[resX_*resY_]; // Buffer for storing image data
-    memset(imageData_, 0, resX_*resY_*sizeof(GLfloat));
-    rangeData_ = new GLfloat[resX_*resY_]; // Buffer for storing final data
-    memset(rangeData_, 0, resX_*resY_*sizeof(GLfloat));
-}
-
-Multibeam2::~Multibeam2()
-{
-    if(imageData_ != NULL)
-        delete [] imageData_;
-    if(rangeData_ != NULL)
-        delete [] rangeData_;
-    cameras_.clear();
+    imageData_.resize(resX_*resY_); // Buffer for storing image data
+    rangeData_.resize(resX_*resY_); // Buffer for storing final data
 }
     
 void* Multibeam2::getImageDataPointer(unsigned int index)
@@ -61,12 +50,12 @@ void* Multibeam2::getImageDataPointer(unsigned int index)
     if(cameras_.size() > index)
         return &imageData_[cameras_[index].dataOffset];
     else
-        return NULL;
+        return nullptr;
 }
     
 float* Multibeam2::getRangeDataPointer()
 {
-    return rangeData_;
+    return rangeData_.data();
 }
     
 glm::vec2 Multibeam2::getRangeLimits() const
@@ -99,7 +88,7 @@ void Multibeam2::InitGraphics(bool& seesParticles)
     if(fovH_ <= Scalar(MULTIBEAM_MAX_SINGLE_FOV))
     {
         CamData cd;
-        cd.cam = NULL;
+        cd.cam = nullptr;
         cd.fovH = (GLfloat)fovH_;
         cd.width = resX_;
         cd.dataOffset = 0;
@@ -118,7 +107,7 @@ void Multibeam2::InitGraphics(bool& seesParticles)
             for(int i=0; i<nCam; ++i)
             {
                 CamData cd;
-                cd.cam = NULL;
+                cd.cam = nullptr;
                 cd.fovH = (GLfloat)fovH1;
                 cd.width = resX_/nCam;
                 cd.dataOffset = 0;
@@ -134,7 +123,7 @@ void Multibeam2::InitGraphics(bool& seesParticles)
             fovH1 = fovHc * Scalar(resX1)/Scalar(resXc);
             
             CamData cd;
-            cd.cam = NULL;
+            cd.cam = nullptr;
             cd.dataOffset = 0;
             
             cd.fovH = (GLfloat)fovHc;
@@ -151,8 +140,14 @@ void Multibeam2::InitGraphics(bool& seesParticles)
     GLint accResX = 0;
     for(size_t i=0; i<cameras_.size(); ++i)
     {
-        cameras_[i].cam = new OpenGLDepthCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),
-                                                            accResX, 0, cameras_[i].width, resY_, cameras_[i].fovH, range_.x, range_.y, true, (GLfloat)fovV_);
+        std::unique_ptr<OpenGLDepthCamera> camera = std::make_unique<OpenGLDepthCamera>(
+            glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),
+            accResX, 0, cameras_[i].width, resY_, cameras_[i].fovH, range_.x, range_.y, true, (GLfloat)fovV_
+        );
+
+        cameras_[i].cam = camera.get();
+        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(camera));
+
         cameras_[i].cam->setCamera(this, (unsigned int)i);
         cameras_[i].dataOffset = accResX*resY_;
         accResX += cameras_[i].width;
@@ -165,7 +160,6 @@ void Multibeam2::InitGraphics(bool& seesParticles)
     {
         cameras_[i].cam->UpdateTransform();
         cameras_[i].cam->Update();
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(cameras_[i].cam);
     }
 }
 
@@ -241,7 +235,7 @@ void Multibeam2::NewDataReady(void* data, unsigned int index)
         }
         
         //Call callback
-        if(newDataCallback_ != NULL)
+        if(newDataCallback_ != nullptr)
             newDataCallback_(this);
     }
 }

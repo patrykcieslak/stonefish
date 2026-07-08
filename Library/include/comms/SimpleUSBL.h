@@ -16,22 +16,21 @@
 */
 
 //
-//  USBLSimple.h
+//  SimpleUSBL.h
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 25/02/2020.
 //  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_USBLSimple__
-#define __Stonefish_USBLSimple__
+#pragma once
 
 #include "comms/USBL.h"
 
 namespace sf
 {
     //! A class representing a simplified USBL model.
-    class USBLSimple : public USBL
+    class SimpleUSBL : public USBL
     {
     public:
         //! A constructor.
@@ -42,7 +41,7 @@ namespace sf
          \param maxVerticalFOVDeg the maximum vertical angle of radiation pattern [deg]
          \param operatingRange the operating range [m]
          */
-        USBLSimple(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange);
+        SimpleUSBL(const std::string& uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange);
         
         //! A method used to set the resolution of the measurements.
         /*!
@@ -70,5 +69,3 @@ namespace sf
         std::normal_distribution<Scalar> noiseVAngle_;
     };
 }
-    
-#endif

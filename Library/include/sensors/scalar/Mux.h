@@ -23,8 +23,7 @@
 //  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Mux__
-#define __Stonefish_Mux__
+#pragma once
 
 #include "StonefishCommon.h"
 
@@ -75,4 +74,3 @@ namespace sf
     };
 }
 
-#endif

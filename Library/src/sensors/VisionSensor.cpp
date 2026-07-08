@@ -33,17 +33,13 @@
 namespace sf
 {
 
-VisionSensor::VisionSensor(std::string uniqueName, Scalar frequency) : Sensor(uniqueName, frequency)
+VisionSensor::VisionSensor(const std::string& uniqueName, Scalar frequency) : Sensor(uniqueName, frequency)
 {
     if(!SimulationApp::getApp()->hasGraphics())
         cCritical("Not possible to use vision sensors in console simulation! Use graphical simulation if possible.");
     
     attach_ = nullptr;
     o2s_ = Transform::getIdentity();
-}
-
-VisionSensor::~VisionSensor()
-{
 }
 
 void VisionSensor::setRelativeSensorFrame(const Transform& origin)

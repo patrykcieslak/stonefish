@@ -23,8 +23,7 @@
 //  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_ColorCamera__
-#define __Stonefish_ColorCamera__
+#pragma once
 
 #include <functional>
 #include "sensors/vision/Camera.h"
@@ -48,12 +47,9 @@ namespace sf
          \param minDistance the minimum drawing distance [m]
          \param maxDistance the maximum drawing distance [m]
          */
-        ColorCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency = Scalar(-1),
+        ColorCamera(const std::string& uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency = Scalar(-1),
            Scalar minDistance = Scalar(STD_NEAR_PLANE_DISTANCE), Scalar maxDistance = Scalar(STD_FAR_PLANE_DISTANCE)); //Rendering options
-        
-        //! A destructor.
-        ~ColorCamera();
-        
+                
         //! A method performing internal sensor state update.
         /*!
          \param dt the step time of the simulation [s]
@@ -111,5 +107,3 @@ namespace sf
         std::function<void(ColorCamera*)> newDataCallback_;
     };
 }
-
-#endif

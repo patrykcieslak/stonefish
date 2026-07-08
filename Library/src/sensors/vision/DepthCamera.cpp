@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 07/05/18.
-//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/vision/DepthCamera.h"
@@ -33,7 +33,7 @@
 namespace sf
 {
 
-DepthCamera::DepthCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar minDepth, Scalar maxDepth, Scalar frequency)
+DepthCamera::DepthCamera(const std::string& uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar minDepth, Scalar maxDepth, Scalar frequency)
     : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
 {
     depthRange_.x = minDepth < Scalar(0.01) ? 0.01f : (GLfloat)minDepth;
@@ -41,11 +41,6 @@ DepthCamera::DepthCamera(std::string uniqueName, unsigned int resolutionX, unsig
     noiseStdDev_ = 0.f;
     newDataCallback_ = nullptr;
     imageData_ = nullptr;
-    glCamera_ = nullptr;
-}
-
-DepthCamera::~DepthCamera()
-{
     glCamera_ = nullptr;
 }
 
@@ -83,13 +78,22 @@ void DepthCamera::InitGraphics(bool& seesParticles)
 {
     seesParticles = false;
 
-    glCamera_ = new OpenGLDepthCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX_, resY_, (GLfloat)fovH_, depthRange_.x, depthRange_.y, freq_ < Scalar(0));
+    // Create camera
+    std::unique_ptr<OpenGLDepthCamera> glCamera =
+        std::make_unique<OpenGLDepthCamera>(
+            glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX_, resY_, (GLfloat)fovH_,
+            depthRange_.x, depthRange_.y, freq_ < Scalar(0)
+        );
+
+    // Set up camera
+    glCamera_ = glCamera.get();
     glCamera_->setNoise(noiseStdDev_);
     glCamera_->setCamera(this);
     UpdateTransform();
     glCamera_->UpdateTransform();
     InternalUpdate(0);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera_);
+
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glCamera));
 }
 
 void DepthCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)

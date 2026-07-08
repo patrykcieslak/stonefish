@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/07/18.
-//  Copyright(c) 2018-2021 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/forcefields/VelocityField.h"
@@ -29,10 +29,6 @@ namespace sf
 {
 
 VelocityField::VelocityField() : enabled_(true)
-{
-}
-
-VelocityField::~VelocityField()
 {
 }
 

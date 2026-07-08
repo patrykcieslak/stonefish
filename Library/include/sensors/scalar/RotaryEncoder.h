@@ -23,8 +23,7 @@
 //  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_RotaryEncoder__
-#define __Stonefish_RotaryEncoder__
+#pragma once
 
 #include "sensors/scalar/JointSensor.h"
 
@@ -43,7 +42,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        RotaryEncoder(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
+        RotaryEncoder(const std::string& uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
         
         //! A method used to attach the encoder to a motor.
         /*!
@@ -79,5 +78,3 @@ namespace sf
         Scalar lastAngle_;
     };
 }
-
-#endif

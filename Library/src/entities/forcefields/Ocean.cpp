@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/10/17.
-//  Copyright(c) 2017-2025 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/forcefields/Ocean.h"
@@ -39,7 +39,7 @@
 namespace sf
 {
 
-Ocean::Ocean(std::string uniqueName, Scalar waves, Fluid l) : ForcefieldEntity(uniqueName)
+Ocean::Ocean(const std::string& uniqueName, Scalar waves, Fluid l) : ForcefieldEntity(uniqueName)
 {
     ghost_->setCollisionFlags(ghost_->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
     oceanState_ = waves > Scalar(2.0) ? Scalar(2.0) : waves;
@@ -50,28 +50,12 @@ Ocean::Ocean(std::string uniqueName, Scalar waves, Fluid l) : ForcefieldEntity(u
     ghost_->setWorldTransform(Transform(Quaternion::getIdentity(), Vector3(0, 0, size/Scalar(2) - oceanState_*Scalar(3)))); //Move ocean influence zone a bit up to account for waves
     ghost_->setCollisionShape(new btBoxShape(halfExtents));
     
-    currents_ = std::vector<VelocityField*>(0);
     currentsEnabled_ = false;
-    
     liquid_ = l;
     wavesDebug_.type = RenderableType::HYDRO_POINTS;
     wavesDebug_.model = glm::mat4(1.f);
     wavesDebug_.data = std::make_shared<std::vector<glm::vec3>>();
     waterType_ = Scalar(0.0);
-    glOcean_ = nullptr;
-}
-
-Ocean::~Ocean()
-{
-    if(currents_.size() > 0)
-    {
-        for(unsigned int i=0; i<currents_.size(); ++i)
-            delete currents_[i];
-        currents_.clear();
-    }
-    
-    if(glOcean_ != nullptr)
-        delete glOcean_;
 }
 
 bool Ocean::hasWaves() const
@@ -94,7 +78,7 @@ Scalar Ocean::getWaterType() const
         
 OpenGLOcean* Ocean::getOpenGLOcean()
 {
-    return glOcean_;
+    return glOcean_.get();
 }
 
 ForcefieldType Ocean::getForcefieldType()
@@ -110,7 +94,7 @@ Fluid Ocean::getLiquid() const
 VelocityField* Ocean::getVelocityField(size_t index)
 {
     if(index < currents_.size())
-        return currents_[index];
+        return currents_[index].get();
     else
         return nullptr;
 }
@@ -136,9 +120,9 @@ void Ocean::SetConditions(Scalar waterTemp)
         glOcean_->setWaterTemperature((float)waterTemp);
 }
 
-void Ocean::AddVelocityField(VelocityField* field)
+void Ocean::AddVelocityField(std::unique_ptr<VelocityField> field)
 {
-    currents_.push_back(field);
+    currents_.push_back(std::move(field));
 }
 
 bool Ocean::IsInsideFluid(const Vector3& point)
@@ -270,9 +254,9 @@ void Ocean::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co, bool
 void Ocean::InitGraphics(SDL_mutex* hydrodynamics)
 {
     if(oceanState_ > 0.0)
-        glOcean_ = new OpenGLRealOcean(depth_, oceanState_, hydrodynamics);
+        glOcean_ = std::make_unique<OpenGLRealOcean>(depth_, oceanState_, hydrodynamics);
     else
-        glOcean_ = new OpenGLFlatOcean(depth_);
+        glOcean_ = std::make_unique<OpenGLFlatOcean>(depth_);
     setWaterType(0.2);
 }
 

@@ -23,8 +23,7 @@
 //  Copyright (c) 2015-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Motor__
-#define __Stonefish_Motor__
+#pragma once
 
 #include "actuators/JointActuator.h"
 
@@ -38,8 +37,11 @@ namespace sf
         /*!
          \param uniqueName a name for the motor
          */
-        Motor(std::string uniqueName);
+        Motor(const std::string& uniqueName);
         
+        //! A destructor.
+        virtual ~Motor() = default;
+
         //! A method used to update the internal state of the actuator.
         /*!
          \param dt the time step of the simulation [s]
@@ -79,5 +81,3 @@ namespace sf
         void WatchdogTimeout() override;
     };
 }
-
-#endif

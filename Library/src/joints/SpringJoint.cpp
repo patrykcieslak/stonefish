@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 15/02/13.
-//  Copyright (c) 2023-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2023-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/SpringJoint.h"
@@ -32,7 +32,7 @@
 namespace sf
 {
 
-SpringJoint::SpringJoint(std::string uniqueName, SolidEntity* solid, const Transform& attachment,
+SpringJoint::SpringJoint(const std::string& uniqueName, SolidEntity* solid, const Transform& attachment,
                         const Vector3& linearStiffness, const Vector3& angularStiffness,
                         const Vector3& linearDamping, const Vector3& angularDamping) : Joint(uniqueName, false)
 {
@@ -61,7 +61,7 @@ SpringJoint::SpringJoint(std::string uniqueName, SolidEntity* solid, const Trans
     setConstraint(spring);
 }
 
-SpringJoint::SpringJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Transform& attachment,
+SpringJoint::SpringJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Transform& attachment,
                         const Vector3& linearStiffness, const Vector3& angularStiffness,
                         const Vector3& linearDamping, const Vector3& angularDamping) : Joint(uniqueName, false)
 {

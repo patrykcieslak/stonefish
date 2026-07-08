@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 13/02/2023.
-//  Copyright (c) 2023-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2023-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/SuctionCup.h"
@@ -33,16 +33,12 @@
 namespace sf
 {
 
-SuctionCup::SuctionCup(std::string uniqueName) : LinkActuator(uniqueName)
+SuctionCup::SuctionCup(const std::string& uniqueName) : LinkActuator(uniqueName)
 {
     pump_ = false;
     joint_ = nullptr;
     attachFE_ = nullptr;
     attachLinkId_ = 0;
-}
-
-SuctionCup::~SuctionCup()
-{
 }
 
 ActuatorType SuctionCup::getType() const

@@ -56,10 +56,10 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param thickness if positive the body is considered a shell instead of a solid
          */
-        SolidEntity(std::string uniqueName, PhysicsSettings phy, std::string material, std::string look, Scalar thickness);
+        SolidEntity(const std::string& uniqueName, PhysicsSettings phy, const std::string& material, const std::string& look, Scalar thickness);
         
         //! A destructor.
-        virtual ~SolidEntity();
+        virtual ~SolidEntity() = default;
         
         //! A method adding the body to the simulation manager.
         /*!
@@ -397,7 +397,7 @@ namespace sf
         //Body
         btMultiBodyLinkCollider* multibodyCollider_;
         
-        Mesh* phyMesh_; //Mesh used for physics calculation
+        std::shared_ptr<Mesh> phyMesh_; //Mesh used for physics calculation
         Scalar thick_;
         Scalar volume_;
         Scalar surface_;

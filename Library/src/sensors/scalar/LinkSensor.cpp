@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 21/11/2018.
-//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/LinkSensor.h"
@@ -31,14 +31,10 @@
 namespace sf
 {
 
-LinkSensor::LinkSensor(std::string uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
+LinkSensor::LinkSensor(const std::string& uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
 {
     attach_ = nullptr;
     o2s_ = Transform::getIdentity();
-}
-
-LinkSensor::~LinkSensor()
-{
 }
 
 void LinkSensor::setRelativeSensorFrame(const Transform& origin)

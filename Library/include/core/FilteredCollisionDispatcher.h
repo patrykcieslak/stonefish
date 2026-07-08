@@ -23,8 +23,7 @@
 //  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_FilteredCollisionDispatcher__
-#define __Stonefish_FilteredCollisionDispatcher__
+#pragma once
 
 #include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
 
@@ -61,5 +60,3 @@ namespace sf
         bool inclusive_;
     };
 }
-
-#endif

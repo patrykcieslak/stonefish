@@ -23,8 +23,7 @@
 //  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpticalFlowCamera__
-#define __Stonefish_OpticalFlowCamera__
+#pragma once
 
 #include <functional>
 #include "sensors/vision/Camera.h"
@@ -48,11 +47,8 @@ namespace sf
          \param minDistance the minimum drawing distance [m]
          \param maxDistance the maximum drawing distance [m]
          */
-        OpticalFlowCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency = Scalar(-1), 
+        OpticalFlowCamera(const std::string& uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency = Scalar(-1), 
             Scalar minDistance = Scalar(STD_NEAR_PLANE_DISTANCE), Scalar maxDistance = Scalar(STD_FAR_PLANE_DISTANCE)); //Rendering options
-        
-        //! A destructor.
-        ~OpticalFlowCamera();
         
         //! A method performing internal sensor state update.
         /*!
@@ -114,12 +110,10 @@ namespace sf
         
         OpenGLOpticalFlowCamera* glCamera_;
         GLfloat* flowData_;
-        GLubyte* displayData_;
+        std::vector<GLubyte> displayData_;
         glm::vec2 depthRange_;
         glm::vec2 noiseStdDev_;
         GLfloat displayMaxVelocity_;
         std::function<void(OpticalFlowCamera*)> newDataCallback_;
     };
 }
-
-#endif

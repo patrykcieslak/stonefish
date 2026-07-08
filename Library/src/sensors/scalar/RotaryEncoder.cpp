@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 05/07/2014.
-//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/RotaryEncoder.h"
@@ -35,7 +35,7 @@
 namespace sf
 {
 
-RotaryEncoder::RotaryEncoder(std::string uniqueName, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
+RotaryEncoder::RotaryEncoder(const std::string& uniqueName, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
 {
     angle_ = lastAngle_ = Scalar(0);
     motor_ = nullptr;
@@ -140,8 +140,9 @@ void RotaryEncoder::InternalUpdate(Scalar dt)
     Scalar angularVelocity = (angle_ - angle0)/dt; // Less noisy than reading raw velocity
     
     //record sample
-    Sample s{std::vector<Scalar>({angle_, angularVelocity})};
-    AddSampleToHistory(s);
+    AddSampleToHistory(std::make_unique<Sample>(
+        std::vector<Scalar>({angle_, angularVelocity})
+    ));
 }
 
 void RotaryEncoder::Reset()

@@ -20,7 +20,7 @@
 //
 //
 //  Created by Patryk Cieslak on 1/3/13.
-//  Copyright (c) 2017-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/ForcefieldEntity.h"
@@ -31,14 +31,10 @@
 namespace sf
 {
 
-ForcefieldEntity::ForcefieldEntity(std::string uniqueName) : Entity(uniqueName)
+ForcefieldEntity::ForcefieldEntity(const std::string& uniqueName) : Entity(uniqueName)
 {
     ghost_ = new btPairCachingGhostObject();
     ghost_->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
-}
-
-ForcefieldEntity::~ForcefieldEntity()
-{
 }
 
 EntityType ForcefieldEntity::getType() const

@@ -23,8 +23,7 @@
 //  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_EventBasedCamera__
-#define __Stonefish_EventBasedCamera__
+#pragma once
 
 #include <functional>
 #include "sensors/vision/Camera.h"
@@ -51,12 +50,9 @@ namespace sf
          \param minDistance the minimum drawing distance [m]
          \param maxDistance the maximum drawing distance [m]
          */
-        EventBasedCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, 
+        EventBasedCamera(const std::string& uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, 
            float Cp, float Cm, uint32_t Tref, Scalar frequency = Scalar(-1), Scalar minDistance = Scalar(STD_NEAR_PLANE_DISTANCE), 
            Scalar maxDistance = Scalar(STD_FAR_PLANE_DISTANCE)); //Rendering options
-        
-        //! A destructor.
-        ~EventBasedCamera();
         
         //! A method performing internal sensor state update.
         /*!
@@ -120,5 +116,3 @@ namespace sf
         std::function<void(EventBasedCamera*)> newDataCallback_;
     };
 }
-
-#endif

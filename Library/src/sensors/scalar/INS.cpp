@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/10/2021.
-//  Copyright (c) 2021-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2021-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/INS.h"
@@ -34,7 +34,7 @@
 namespace sf
 {
 
-INS::INS(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+INS::INS(const std::string& uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels_.push_back(SensorChannel("North", QuantityType::LENGTH));
     channels_.push_back(SensorChannel("East", QuantityType::LENGTH));
@@ -172,12 +172,13 @@ void INS::InternalUpdate(Scalar dt)
     (imuTrans * out_).getBasis().getEulerYPR(yaw, pitch, roll);
 
     //record sample
-    Sample s{std::vector<Scalar>(
-        {nedo.x(), nedo.y(), nedo.z(), altitude_, latitude_, longitude_,
-         velo.x(), velo.y(), velo.z(), roll, pitch, yaw, 
-         avo.x(), avo.y(), avo.z(), acco.x(), acco.y(), acco.z()}
-        )};
-    AddSampleToHistory(s); //Adds noise.....:(
+    AddSampleToHistory(std::make_unique<Sample>(
+        std::vector<Scalar>({
+            nedo.x(), nedo.y(), nedo.z(), altitude_, latitude_, longitude_,
+            velo.x(), velo.y(), velo.z(), roll, pitch, yaw, 
+            avo.x(), avo.y(), avo.z(), acco.x(), acco.y(), acco.z()
+        })
+    )); //Adds noise.....:(
 }
 
 void INS::ConnectGPS(const std::string& name)

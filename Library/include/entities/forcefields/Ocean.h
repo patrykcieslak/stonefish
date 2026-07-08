@@ -52,10 +52,7 @@ namespace sf
          \param waves the state of the ocean (waves enabled when >0)
          \param l a pointer to the liquid that is filling the ocean (normally water)
          */
-        Ocean(std::string uniqueName, Scalar waves, Fluid l);
-        
-        //! A destructor.
-        ~Ocean();
+        Ocean(const std::string& uniqueName, Scalar waves, Fluid l);
 
         //! A method to set the environmental conditions.
         /*!
@@ -67,7 +64,7 @@ namespace sf
         /*!
          \param field a pointer to a velocity field object
          */
-        void AddVelocityField(VelocityField* field);
+        void AddVelocityField(std::unique_ptr<VelocityField> field);
         
         //! A method running the hydrodynamics computation.
         /*!
@@ -164,8 +161,8 @@ namespace sf
         
     private:
         Fluid liquid_;
-        std::vector<VelocityField*> currents_;
-        OpenGLOcean* glOcean_;
+        std::vector<std::unique_ptr<VelocityField>> currents_;
+        std::unique_ptr<OpenGLOcean> glOcean_;
         OceanCurrentsUBO glOceanCurrentsUBOData_;
         Scalar depth_;
         Scalar waterType_;

@@ -23,8 +23,7 @@
 //  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_SimulationApp__
-#define __Stonefish_SimulationApp__
+#pragma once
 
 #include "StonefishCommon.h"
 #include "core/Console.h"
@@ -57,7 +56,7 @@ namespace sf
          \param dataDirPath a path to the directory containing simulation data
          \param sim a pointer to the simulation manager
          */
-        SimulationApp(std::string title, std::string dataDirPath, SimulationManager* sim);
+        SimulationApp(std::string title, std::string dataDirPath, std::unique_ptr<SimulationManager> sim);
         
         //! A destructor.
         virtual ~SimulationApp();
@@ -116,14 +115,14 @@ namespace sf
         
         virtual void InitializeSimulation();
         
-        Console* console_;
+        std::unique_ptr<Console> console_;
         uint64_t startTime_;
         bool autostep_;
         Scalar timeStep_;
         SimulationState state_;
 
     private:
-        SimulationManager* simManager_;
+        std::unique_ptr<SimulationManager> simManager_;
         std::string title_;
         std::string dataPath_;
         double physicsTime_;
@@ -131,5 +130,3 @@ namespace sf
         static SimulationApp* handle;
     };
 }
-
-#endif

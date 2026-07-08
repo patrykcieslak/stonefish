@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 08/02/24.
-//  Copyright (c) 2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/vision/OpticalFlowCamera.h"
@@ -33,7 +33,7 @@
 namespace sf
 {
 
-OpticalFlowCamera::OpticalFlowCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency, 
+OpticalFlowCamera::OpticalFlowCamera(const std::string& uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency, 
     Scalar minDistance, Scalar maxDistance) : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
 {
     depthRange_ = glm::vec2((GLfloat)minDistance, (GLfloat)maxDistance);
@@ -41,12 +41,6 @@ OpticalFlowCamera::OpticalFlowCamera(std::string uniqueName, unsigned int resolu
     displayMaxVelocity_ = resolutionX/2.f;
     newDataCallback_ = nullptr;
     flowData_ = nullptr;
-    displayData_ = nullptr;
-    glCamera_ = nullptr;
-}
-
-OpticalFlowCamera::~OpticalFlowCamera()
-{
     glCamera_ = nullptr;
 }
 
@@ -72,7 +66,7 @@ void* OpticalFlowCamera::getImageDataPointer(unsigned int index)
 
 GLubyte* OpticalFlowCamera::getDisplayDataPointer()
 {
-    return displayData_;
+    return displayData_.data();
 }
 
 VisionSensorType OpticalFlowCamera::getVisionSensorType() const
@@ -89,18 +83,25 @@ void OpticalFlowCamera::InitGraphics(bool& seesParticles)
 {
     seesParticles = false;
 
-    glCamera_ = new OpenGLOpticalFlowCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX_, resY_, (GLfloat)fovH_, depthRange_, freq_ < Scalar(0));
+    // Create camera
+    std::unique_ptr<OpenGLOpticalFlowCamera> glCamera = std::make_unique<OpenGLOpticalFlowCamera>(
+        glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX_, resY_, (GLfloat)fovH_, depthRange_, freq_ < Scalar(0)
+    );
+
+    // Set up camera
+    glCamera_ = glCamera.get();
     glCamera_->setNoise(noiseStdDev_);
     glCamera_->setMaxVelocity(displayMaxVelocity_);
     glCamera_->setCamera(this);
     UpdateTransform();
     glCamera_->UpdateTransform();
     InternalUpdate(0);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera_);
+
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glCamera));
 
     unsigned int w, h;
     getResolution(w, h);
-    displayData_ = new GLubyte[w*h*3];
+    displayData_.resize(w*h*3);
 }
 
 void OpticalFlowCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
@@ -124,7 +125,7 @@ void OpticalFlowCamera::NewDataReady(void* data, unsigned int index)
         {
             unsigned int w, h;
             getResolution(w, h);
-            memcpy(displayData_, data, w*h*3);
+            memcpy(displayData_.data(), data, w*h*3);
         }
         else
         {

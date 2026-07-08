@@ -16,22 +16,21 @@
 */
 
 //
-//  USBLReal.h
+//  RealUSBL.h
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 21/12/2020.
 //  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_USBLReal__
-#define __Stonefish_USBLReal__
+#pragma once
 
 #include "comms/USBL.h"
 
 namespace sf
 {
     //! A class representing a realistic USBL model.
-    class USBLReal : public USBL
+    class RealUSBL : public USBL
     {
     public:
         //! A constructor.
@@ -44,7 +43,7 @@ namespace sf
          \param carrierFrequency the base frequency of the signal [Hz]
          \param baseline the distance between transducers forming one pair [m]
          */
-        USBLReal(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange,
+        RealUSBL(const std::string& uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange,
                  Scalar carrierFrequency, Scalar baseline);
            
         //! A method used to set the noise characteristics of the device.
@@ -72,5 +71,4 @@ namespace sf
         std::normal_distribution<Scalar> noiseDepth_;
     };
 }
-    
-#endif
+

@@ -23,8 +23,7 @@
 //  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_VariableBuoyancy__
-#define __Stonefish_VariableBuoyancy__
+#pragma once
 
 #include "actuators/LinkActuator.h"
 #include "utils/GeometryFileUtil.h"
@@ -41,7 +40,7 @@ namespace sf
          \param volumeMeshPath a list of paths to the meshes representing different states of the buoyancy volume
          \param initialVolume an initial state of the VBS
          */
-        VariableBuoyancy(std::string uniqueName, const std::vector<std::string>& volumeMeshPaths, Scalar initialVolume);
+        VariableBuoyancy(const std::string& uniqueName, const std::vector<std::string>& volumeMeshPaths, Scalar initialVolume);
         
         //! A method used to update the internal state of the actuator.
         /*!
@@ -84,5 +83,3 @@ namespace sf
         std::vector<MeshProperties> Vprops_;
     };
 }
-
-#endif

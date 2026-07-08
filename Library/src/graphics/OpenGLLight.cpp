@@ -122,7 +122,7 @@ void OpenGLLight::ShowShadowMap(glm::vec4 rect)
 }
 
 //////////////////static//////////////////////////////
-void OpenGLLight::Init(std::vector<OpenGLLight*>& lights)
+void OpenGLLight::Init(const std::vector<std::unique_ptr<OpenGLLight>>& lights)
 {
     if(lights.size() == 0)
         return;

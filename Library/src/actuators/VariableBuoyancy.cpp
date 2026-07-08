@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 07/11/2019.
-//  Copyright (c) 2019-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/VariableBuoyancy.h"
@@ -32,7 +32,7 @@
 namespace sf 
 {
     
-VariableBuoyancy::VariableBuoyancy(std::string uniqueName, const std::vector<std::string>& volumeMeshPaths, Scalar initialVolume) : LinkActuator(uniqueName)
+VariableBuoyancy::VariableBuoyancy(const std::string& uniqueName, const std::vector<std::string>& volumeMeshPaths, Scalar initialVolume) : LinkActuator(uniqueName)
 {
     if(volumeMeshPaths.size() < 2)
         cCritical("VBS volume definition requires loading at least two meshes - for the full/empty states!");
@@ -45,11 +45,10 @@ VariableBuoyancy::VariableBuoyancy(std::string uniqueName, const std::vector<std
     
     for(size_t i=0; i<volumeMeshPaths.size(); ++i)
     {
-        Mesh* mesh = LoadGeometryFromFile(volumeMeshPaths[i], 1.f);
-        if(mesh == NULL)
-            abort();
-        Vprops_.push_back(ComputePhysicalProperties(mesh, Scalar(0), density_));
-        delete mesh;
+        std::unique_ptr<Mesh> mesh = LoadGeometryFromFile(volumeMeshPaths[i], 1.f);
+        if(mesh == nullptr)
+            cCritical("Cannot load volume mesh from file: %s", volumeMeshPaths[i].c_str());
+        Vprops_.push_back(ComputePhysicalProperties(mesh.get(), Scalar(0), density_));
     }
     auto volumeCompare = [](MeshProperties& mp1, MeshProperties& mp2) { return mp1.volume < mp2.volume; };
     std::sort(Vprops_.begin(), Vprops_.end(), volumeCompare);

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 23/11/2018.
-//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/LinkActuator.h"
@@ -30,7 +30,7 @@
 namespace sf
 {
 
-LinkActuator::LinkActuator(std::string uniqueName) : Actuator(uniqueName)
+LinkActuator::LinkActuator(const std::string& uniqueName) : Actuator(uniqueName)
 {
     attach_ = nullptr;
     o2a_ = I4();

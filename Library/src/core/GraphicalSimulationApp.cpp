@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/GraphicalSimulationApp.h"
@@ -47,8 +47,9 @@
 namespace sf
 {
 
-GraphicalSimulationApp::GraphicalSimulationApp(std::string title, std::string dataDirPath, RenderSettings r, HelperSettings h, SimulationManager* sim)
-: SimulationApp(title, dataDirPath, sim)
+GraphicalSimulationApp::GraphicalSimulationApp(std::string title, std::string dataDirPath, 
+    RenderSettings r, HelperSettings h, std::unique_ptr<SimulationManager> sim)
+: SimulationApp(title, dataDirPath, std::move(sim))
 {
 #ifdef SHADER_DIR_PATH
     shaderPath_ = SHADER_DIR_PATH;
@@ -65,9 +66,6 @@ GraphicalSimulationApp::GraphicalSimulationApp(std::string title, std::string da
     displayConsole_ = false;
     displayPerformance_ = false;
     joystick_ = nullptr;
-    joystickAxes_ = nullptr;
-    joystickButtons_ = nullptr;
-    joystickHats_ = nullptr;
     mouseWasDown_.type = SDL_LASTEVENT;
     simulationThread_ = nullptr;
     loadingThread_ = nullptr;
@@ -86,20 +84,6 @@ GraphicalSimulationApp::GraphicalSimulationApp(std::string title, std::string da
     rSettings_.windowH += rSettings_.windowH % 2;
     windowW_ = rSettings_.windowW;
     windowH_ = rSettings_.windowH;
-}
-
-GraphicalSimulationApp::~GraphicalSimulationApp()
-{
-    if(console_ != nullptr) delete console_;
-    if(glPipeline_ != nullptr) delete glPipeline_;
-    if(gui_ != nullptr) delete gui_;
-    
-    if(joystick_ != nullptr)
-    {
-        delete [] joystickButtons_;
-        delete [] joystickAxes_;
-        delete [] joystickHats_;
-    }
 }
 
 void GraphicalSimulationApp::ShowHUD()
@@ -124,12 +108,12 @@ void GraphicalSimulationApp::HideConsole()
 
 OpenGLPipeline* GraphicalSimulationApp::getGLPipeline()
 {
-    return glPipeline_;
+    return glPipeline_.get();
 }
 
 IMGUI* GraphicalSimulationApp::getGUI()
 {
-    return gui_;
+    return gui_.get();
 }
 
 OpenGLTrackball* GraphicalSimulationApp::getTrackball()
@@ -196,9 +180,9 @@ void GraphicalSimulationApp::Init()
     //Continue initialization with console visible
     cInfo("Initializing rendering pipeline:");
     cInfo("Loading GUI...");
-    gui_ = new IMGUI(windowW_, windowH_);
+    gui_ = std::make_unique<IMGUI>(windowW_, windowH_);
     InitializeGUI(); //Initialize non-standard graphical elements
-    glPipeline_ = new OpenGLPipeline(rSettings_, hSettings_);
+    glPipeline_ = std::make_unique<OpenGLPipeline>(rSettings_, hSettings_);
     ShowHUD();
     
     cInfo("Initializing simulation:");
@@ -295,11 +279,11 @@ void GraphicalSimulationApp::InitializeSDL()
     
     //Initialize console output
     std::vector<ConsoleMessage> textLines = console_->getLines();
-    delete console_;
-    console_ = new OpenGLConsole();
+    console_.reset();
+    console_ = std::make_unique<OpenGLConsole>();
     for(size_t i=0; i<textLines.size(); ++i)
         console_->AppendMessage(textLines[i]);
-    ((OpenGLConsole*)console_)->Init(windowW_, windowH_);
+    static_cast<OpenGLConsole*>(console_.get())->Init(windowW_, windowH_);
     
     //Create loading thread
     GraphicalSimulationThreadData* data = new GraphicalSimulationThreadData{*this};
@@ -311,12 +295,9 @@ void GraphicalSimulationApp::InitializeSDL()
     if(jcount > 0)
     {
         joystick_ = SDL_JoystickOpen(0);
-        joystickButtons_ = new bool[SDL_JoystickNumButtons(joystick_)];
-        memset(joystickButtons_, 0, SDL_JoystickNumButtons(joystick_));
-        joystickAxes_ = new int16_t[SDL_JoystickNumAxes(joystick_)];
-        memset(joystickAxes_, 0, SDL_JoystickNumAxes(joystick_) * sizeof(int16_t));
-        joystickHats_ = new uint8_t[SDL_JoystickNumHats(joystick_)];
-        memset(joystickHats_, 0, SDL_JoystickNumHats(joystick_));
+        joystickButtons_.resize(SDL_JoystickNumButtons(joystick_), false);
+        joystickAxes_.resize(SDL_JoystickNumAxes(joystick_), 0);
+        joystickHats_.resize(SDL_JoystickNumHats(joystick_), 0);
         cInfo("Joystick %s connected (%d axes, %d hats, %d buttons)", SDL_JoystickName(joystick_),
                                                                       SDL_JoystickNumAxes(joystick_),
                                                                       SDL_JoystickNumHats(joystick_),
@@ -378,7 +359,7 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
 
         case SDLK_c:
             displayConsole_ = !displayConsole_;
-            ((OpenGLConsole*)console_)->ResetScroll();
+            static_cast<OpenGLConsole*>(console_.get())->ResetScroll();
             break;
             
         case SDLK_w: //Forward
@@ -540,7 +521,7 @@ void GraphicalSimulationApp::LoopInternal()
             case SDL_MOUSEWHEEL:
             {
                 if(displayConsole_) //GUI
-                    ((OpenGLConsole*)console_)->Scroll((GLfloat)-event.wheel.y);
+                    static_cast<OpenGLConsole*>(console_.get())->Scroll((GLfloat)-event.wheel.y);
                 else
                 {
                     //Trackball
@@ -635,7 +616,7 @@ void GraphicalSimulationApp::RenderLoop()
     if(displayConsole_)
     {
         gui_->GenerateBackground();
-        ((OpenGLConsole*)console_)->Render(true);
+        static_cast<OpenGLConsole*>(console_.get())->Render(true);
     }
     else
     {
@@ -1078,7 +1059,7 @@ int GraphicalSimulationApp::RenderLoadingScreen(void* data)
         
         //Lock to prevent adding lines to the console while rendering
         SDL_LockMutex(app.console_->getLinesMutex());
-        static_cast<OpenGLConsole*>(app.console_)->Render(false);
+        static_cast<OpenGLConsole*>(app.console_.get())->Render(false);
         SDL_UnlockMutex(app.console_->getLinesMutex());
         
         SDL_GL_SwapWindow(app.window_);

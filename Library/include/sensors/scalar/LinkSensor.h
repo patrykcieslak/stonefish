@@ -23,8 +23,7 @@
 //  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_LinkSensor__
-#define __Stonefish_LinkSensor__
+#pragma once
 
 #include "sensors/ScalarSensor.h"
 
@@ -43,10 +42,10 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (0 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        LinkSensor(std::string uniqueName, Scalar frequency, int historyLength);
+        LinkSensor(const std::string& uniqueName, Scalar frequency, int historyLength);
         
         //! A destructor.
-        virtual ~LinkSensor();
+        virtual ~LinkSensor() = default;
           
         //! A method implementing the rendering of the sensor.
         virtual std::vector<Renderable> Render();
@@ -86,4 +85,3 @@ namespace sf
     };
 }
 
-#endif

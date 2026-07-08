@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/6/17.
-//  Copyright (c) 2017-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/Sensor.h"
@@ -37,7 +37,7 @@ namespace sf
 std::random_device Sensor::randomDevice;
 std::mt19937 Sensor::randomGenerator(randomDevice());
 
-Sensor::Sensor(std::string uniqueName, Scalar frequency)
+Sensor::Sensor(const std::string& uniqueName, Scalar frequency)
 {
     name_ = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     setUpdateFrequency(frequency);
@@ -57,7 +57,7 @@ Sensor::~Sensor()
     SDL_DestroyMutex(updateMutex_);
 }
 
-std::string Sensor::getName() const
+const std::string& Sensor::getName() const
 {
     return name_;
 }
@@ -107,13 +107,12 @@ void Sensor::setVisual(const std::string& meshFilename, Scalar scale, const std:
     if(!SimulationApp::getApp()->hasGraphics())
         return;
 
-    Mesh* mesh = OpenGLContent::LoadMesh(meshFilename, scale, false);
+    std::unique_ptr<Mesh> mesh = OpenGLContent::LoadMesh(meshFilename, scale, false);
     if(mesh == nullptr)
         return;
 
-    graObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh);
+    graObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh.get());
     lookId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
-    delete mesh;
 }
 
 void Sensor::Reset()

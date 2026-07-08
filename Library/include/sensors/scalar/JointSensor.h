@@ -23,8 +23,7 @@
 //  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_JointSensor__
-#define __Stonefish_JointSensor__
+#pragma once
 
 #include "sensors/ScalarSensor.h"
 
@@ -43,7 +42,10 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (0 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        JointSensor(std::string uniqueName, Scalar frequency, int historyLength);
+        JointSensor(const std::string& uniqueName, Scalar frequency, int historyLength);
+
+        //! A destructor.
+        virtual ~JointSensor() = default;
                 
         //! A method used to attach the sensor to a multibody joint.
         /*!
@@ -81,4 +83,3 @@ namespace sf
     };
 }
 
-#endif

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/08/2018.
-//  Copyright (c) 2018-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Multibeam.h"
@@ -35,7 +35,7 @@
 namespace sf
 {
 
-Multibeam::Multibeam(std::string uniqueName, Scalar angleRangeDeg, unsigned int angleSteps, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Multibeam::Multibeam(const std::string& uniqueName, Scalar angleRangeDeg, unsigned int angleSteps, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     angRange_ = UnitSystem::Angle(true, angleRangeDeg);
     angSteps_ = angleSteps;
@@ -79,8 +79,7 @@ void Multibeam::InternalUpdate(Scalar dt)
     }
     
     //record sample
-    Sample s(distances_);
-    AddSampleToHistory(s);
+    AddSampleToHistory(std::make_unique<Sample>(distances_));
 }
 
 std::vector<Renderable> Multibeam::Render()

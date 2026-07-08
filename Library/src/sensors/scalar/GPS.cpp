@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 02/11/2017.
-//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/GPS.h"
@@ -34,7 +34,7 @@
 namespace sf
 {
 
-GPS::GPS(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+GPS::GPS(const std::string& uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels_.push_back(SensorChannel("Latitude", QuantityType::ANGLE));
     channels_.push_back(SensorChannel("Longitude", QuantityType::ANGLE));
@@ -52,8 +52,7 @@ void GPS::InternalUpdate(Scalar dt)
     Ocean* liq = SimulationApp::getApp()->getSimulationManager()->getOcean();
     if(liq != nullptr && liq->IsInsideFluid(gpsTrans.getOrigin()))
     {
-        Sample s{std::vector<Scalar>({BT_LARGE_FLOAT, BT_LARGE_FLOAT, Scalar(0), Scalar(0)})};
-        AddSampleToHistory(s);
+        AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({BT_LARGE_FLOAT, BT_LARGE_FLOAT, Scalar(0), Scalar(0)})));
     }
     else
     {
@@ -73,8 +72,7 @@ void GPS::InternalUpdate(Scalar dt)
         SimulationApp::getApp()->getSimulationManager()->getNED()->Ned2Geodetic(gpsPos.x(), gpsPos.y(), 0.0, latitude, longitude, height);
         
         //record sample
-        Sample s{std::vector<Scalar>({latitude, longitude, gpsPos.x(), gpsPos.y()})};
-        AddSampleToHistory(s);
+        AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({latitude, longitude, gpsPos.x(), gpsPos.y()})));
     }
 }
 

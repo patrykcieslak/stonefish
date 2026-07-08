@@ -39,7 +39,7 @@
 namespace sf
 {
 
-Robot::Robot(std::string uniqueName, bool fixedBase)
+Robot::Robot(const std::string& uniqueName, bool fixedBase)
 {
     name_ = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     fixed_ = fixedBase;
@@ -51,7 +51,7 @@ Robot::~Robot()
         SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name_);
 }
 
-std::string Robot::getName()
+const std::string& Robot::getName() const
 {
     return name_;
 }

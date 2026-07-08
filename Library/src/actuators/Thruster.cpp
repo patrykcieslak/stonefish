@@ -35,7 +35,7 @@
 namespace sf
 {
 
-Thruster::Thruster(std::string uniqueName, std::unique_ptr<SolidEntity> propeller,
+Thruster::Thruster(const std::string& uniqueName, std::unique_ptr<SolidEntity> propeller,
                                             std::unique_ptr<RotorDynamics> rotorDynamics,
                                             std::unique_ptr<ThrustModel> thrustConversion,
                                             Scalar diameter, bool rightHand, Scalar maxSetpoint,

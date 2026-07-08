@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 17/01/2019.
-//  Copyright (c) 2019-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/solids/Wing.h"
@@ -31,9 +31,9 @@
 namespace sf
 {
 
-Wing::Wing(std::string uniqueName, PhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength,
+Wing::Wing(const std::string& uniqueName, PhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength,
            Scalar maxCamber, Scalar maxCamberPos, Scalar profileThickness, Scalar wingLength, const Transform& origin, 
-           std::string material, std::string look, Scalar thickness)
+           const std::string& material, const std::string& look, Scalar thickness)
            : SolidEntity(uniqueName, phy, material, look, thickness)
 {
     T_O2G_ = T_O2C_ = origin;
@@ -51,7 +51,7 @@ Wing::Wing(std::string uniqueName, PhysicsSettings phy, Scalar baseChordLength, 
     //2. Compute physical properties
     Vector3 CG;
     Matrix3 Irot;
-    ComputePhysicalProperties(phyMesh_, thickness, mat_.density, mass_, CG, volume_, surface_, Ipri_, Irot);
+    ComputePhysicalProperties(phyMesh_.get(), thickness, mat_.density, mass_, CG, volume_, surface_, Ipri_, Irot);
     T_CG2C_.setOrigin(-CG); //Set CG position
     T_CG2C_ = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C_; //Align CG frame to principal axes of inertia
     T_CG2O_ = T_CG2C_ * T_O2C_.inverse();
@@ -63,8 +63,8 @@ Wing::Wing(std::string uniqueName, PhysicsSettings phy, Scalar baseChordLength, 
     P_CB_ = Vector3(0,0,0);
 }
     
-Wing::Wing(std::string uniqueName, PhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength, std::string NACA, Scalar wingLength, const Transform& origin, 
-           std::string material, std::string look, Scalar thickness)
+Wing::Wing(const std::string& uniqueName, PhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength, const std::string& NACA, Scalar wingLength, const Transform& origin, 
+           const std::string& material, const std::string& look, Scalar thickness)
            : SolidEntity(uniqueName, phy, material, look, thickness)
 {
     T_O2G_ = T_O2C_ = origin;
@@ -104,7 +104,7 @@ Wing::Wing(std::string uniqueName, PhysicsSettings phy, Scalar baseChordLength, 
     //3. Compute physical properties
     Vector3 CG;
     Matrix3 Irot;
-    ComputePhysicalProperties(phyMesh_, thickness, mat_.density, mass_, CG, volume_, surface_, Ipri_, Irot);
+    ComputePhysicalProperties(phyMesh_.get(), thickness, mat_.density, mass_, CG, volume_, surface_, Ipri_, Irot);
     T_CG2C_.setOrigin(-CG); //Set CG position
     T_CG2C_ = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C_; //Align CG frame to principal axes of inertia
     T_CG2O_ = T_CG2C_ * T_O2C_.inverse();

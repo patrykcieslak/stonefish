@@ -23,8 +23,7 @@
 //  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Compound__
-#define __Stonefish_Compound__
+#pragma once
 
 #include "entities/SolidEntity.h"
 
@@ -50,7 +49,7 @@ namespace sf
          \param firstExternalPart a pointer to the first external rigid body
          \param origin a transformation from the compound body origin to the first part origin
          */
-        Compound(std::string uniqueName, PhysicsSettings phy, std::unique_ptr<SolidEntity> firstExternalPart, const Transform& origin);
+        Compound(const std::string& uniqueName, PhysicsSettings phy, std::unique_ptr<SolidEntity> firstExternalPart, const Transform& origin);
         
         //! A method adding new internal rigid body to the compound body.
         /*!
@@ -131,5 +130,3 @@ namespace sf
     };
 
 }
-
-#endif

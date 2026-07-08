@@ -23,8 +23,7 @@
 //  Copyright (c) 2023-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Push__
-#define __Stonefish_Push__
+#pragma once
 
 #include "actuators/LinkActuator.h"
 
@@ -39,7 +38,7 @@ namespace sf
          \param uniqueName a name for the push
          \param inverted a flag indicating if the direction of the generated force should be reversed
         */
-        Push(std::string uniqueName, bool inverted = false);
+        Push(const std::string& uniqueName, bool inverted = false);
         
         //! A method used to update the internal state of the push actuator.
         /*!
@@ -73,5 +72,3 @@ namespace sf
         std::pair<Scalar, Scalar> limits_;
     };
 }
-
-#endif

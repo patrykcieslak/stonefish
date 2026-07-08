@@ -41,7 +41,7 @@ namespace sf
         VelocityField();
         
         //! A destructor.
-        virtual ~VelocityField();
+        virtual ~VelocityField() = default;
         
         //! A method returning velocity at a specified point.
         /*!

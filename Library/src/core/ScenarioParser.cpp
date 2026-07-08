@@ -84,8 +84,8 @@
 #include "actuators/VariableBuoyancy.h"
 #include "actuators/SuctionCup.h"
 #include "comms/AcousticModem.h"
-#include "comms/USBLSimple.h"
-#include "comms/USBLReal.h"
+#include "comms/SimpleUSBL.h"
+#include "comms/RealUSBL.h"
 #include "comms/OpticalModem.h"
 #include "joints/FixedJoint.h"
 #include "graphics/OpenGLDataStructs.h"
@@ -4695,7 +4695,7 @@ std::unique_ptr<Comm> ScenarioParser::ParseComm(XMLElement* element, const std::
         }
         item->QueryAttribute("occlusion_test", &occlusion);
 
-        comm = std::make_unique<USBLSimple>(commName, devId, minFovDeg, maxFovDeg, range);
+        comm = std::make_unique<SimpleUSBL>(commName, devId, minFovDeg, maxFovDeg, range);
         comm->Connect(cId);
         static_cast<AcousticModem*>(comm.get())->setOcclusionTest(occlusion);
         
@@ -4719,7 +4719,7 @@ std::unique_ptr<Comm> ScenarioParser::ParseComm(XMLElement* element, const std::
             if(c == 0)
                 log.Print(MessageType::WARNING, "Noise of communication device '%s' not properly defined - using defaults.", commName.c_str());
             else
-                static_cast<USBLSimple*>(comm.get())->setNoise(rangeDev, hAngleDevDeg, vAngleDevDeg);
+                static_cast<SimpleUSBL*>(comm.get())->setNoise(rangeDev, hAngleDevDeg, vAngleDevDeg);
         }
         //Optional resolution definitions
         if((item = element->FirstChildElement("resolution")) != nullptr)
@@ -4734,7 +4734,7 @@ std::unique_ptr<Comm> ScenarioParser::ParseComm(XMLElement* element, const std::
             if(c == 0)
                 log.Print(MessageType::WARNING, "Resolution of communication device '%s' not properly defined - using defaults.", commName.c_str());
             else
-                static_cast<USBLSimple*>(comm.get())->setResolution(rangeRes, angleResDeg);
+                static_cast<SimpleUSBL*>(comm.get())->setResolution(rangeRes, angleResDeg);
         }
         return comm;
     }
@@ -4767,7 +4767,7 @@ std::unique_ptr<Comm> ScenarioParser::ParseComm(XMLElement* element, const std::
         }
         item->QueryAttribute("occlusion_test", &occlusion);
 
-        comm = std::make_unique<USBLReal>(commName, devId, minFovDeg, maxFovDeg, range, freq, baseline);
+        comm = std::make_unique<RealUSBL>(commName, devId, minFovDeg, maxFovDeg, range, freq, baseline);
         comm->Connect(cId);
         static_cast<AcousticModem*>(comm.get())->setOcclusionTest(occlusion);
         
@@ -4797,7 +4797,7 @@ std::unique_ptr<Comm> ScenarioParser::ParseComm(XMLElement* element, const std::
             if(c == 0)
                 log.Print(MessageType::WARNING, "Noise of communication device '%s' not properly defined - using defaults.", commName.c_str());
             else
-                static_cast<USBLReal*>(comm.get())->setNoise(timeDev, svDev, phaseDev, blError, depthDev);
+                static_cast<RealUSBL*>(comm.get())->setNoise(timeDev, svDev, phaseDev, blError, depthDev);
         }
         return comm;
     }

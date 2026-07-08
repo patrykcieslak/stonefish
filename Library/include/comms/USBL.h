@@ -23,8 +23,7 @@
 //  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_USBL__
-#define __Stonefish_USBL__
+#pragma once
 
 #include "comms/AcousticModem.h"
 #include <random>
@@ -54,7 +53,7 @@ namespace sf
          \param maxVerticalFOVDeg the maximum vertical angle of radiation pattern [deg]
          \param operatingRange the operating range [m]
          */
-        USBL(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange);
+        USBL(const std::string& uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange);
         
         //! A method used to enable the auto pinging of connected transponder to monitor its position.
         /*!
@@ -88,5 +87,3 @@ namespace sf
         static std::mt19937 randomGenerator;
     };
 }
-    
-#endif

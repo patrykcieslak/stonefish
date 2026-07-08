@@ -58,7 +58,7 @@ void JointsTestApp::DoHUD()
     sp = getGUI()->DoSlider(id, 180.f, 110.f, 150.f, sf::Scalar(-M_PI_2), sf::Scalar(M_PI_2), srv3->getDesiredPosition(), "Servo3");
     srv3->setDesiredPosition(sp);
 
-    id.item = 3;
-    sf::SuctionCup* suction = (sf::SuctionCup*)getSimulationManager()->getActuator("Suction");
-    suction->setPump(getGUI()->DoCheckBox(id, 180.f, 160.f, 150.f, suction->getPump(), "Vacuum Pump"));
+    // id.item = 3;
+    // sf::SuctionCup* suction = (sf::SuctionCup*)getSimulationManager()->getActuator("Suction");
+    // suction->setPump(getGUI()->DoCheckBox(id, 180.f, 160.f, 150.f, suction->getPump(), "Vacuum Pump"));
 }

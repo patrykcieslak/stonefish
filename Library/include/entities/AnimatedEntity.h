@@ -39,7 +39,7 @@ namespace sf
          \param uniqueName a name for the entity
          \param traj a pointer to the body trajectory
          */
-        AnimatedEntity(std::string uniqueName, Trajectory* traj);
+        AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Trajectory> traj);
 
         //! A constructor building a spherical body.
         /*!
@@ -51,7 +51,7 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param collides a flag determining if the body can collide with other bodies
          */
-        AnimatedEntity(std::string uniqueName, Trajectory* traj, Scalar sphereRadius, const Transform& origin, std::string material, std::string look = "", bool collides = false);
+        AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Trajectory> traj, Scalar sphereRadius, const Transform& origin, const std::string& material, const std::string& look = "", bool collides = false);
 
         //! A constructor building a cylindrical body.
         /*!
@@ -64,7 +64,7 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param collides a flag determining if the body can collide with other bodies
          */
-        AnimatedEntity(std::string uniqueName, Trajectory* traj, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& origin, std::string material, std::string look = "", bool collides = false);
+        AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Trajectory> traj, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& origin, const std::string& material, const std::string& look = "", bool collides = false);
 
         //! A constructor building a box body.
         /*!
@@ -76,7 +76,7 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param collides a flag determining if the body can collide with other bodies
          */
-        AnimatedEntity(std::string uniqueName, Trajectory* traj, Vector3 boxDimensions, const Transform& origin, std::string material, std::string look = "", bool collides = false);
+        AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Trajectory> traj, Vector3 boxDimensions, const Transform& origin, const std::string& material, const std::string& look = "", bool collides = false);
         
         //! A constructor building a mesh body. 
         /*!
@@ -89,8 +89,8 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param collides a flag determining if the body can collide with other bodies
          */
-        AnimatedEntity(std::string uniqueName, Trajectory* traj, std::string modelFilename, Scalar scale, const Transform& origin,
-                       std::string material, std::string look = "", bool collides = false);
+        AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Trajectory> traj, const std::string& modelFilename, Scalar scale, const Transform& origin,
+                       const std::string& material, const std::string& look = "", bool collides = false);
         
         //! A constructor building a mesh body. 
         /*!
@@ -106,11 +106,11 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param collides a flag determining if the body can collide with other bodies
          */
-        AnimatedEntity(std::string uniqueName, Trajectory* traj, std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
-                       std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin, std::string material, std::string look = "", bool collides = false);
+        AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Trajectory> traj, const std::string& graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
+                       const std::string& physicsFilename, Scalar physicsScale, const Transform& physicsOrigin, const std::string& material, const std::string& look = "", bool collides = false);
         
         //! A destructor.
-        virtual ~AnimatedEntity();
+        virtual ~AnimatedEntity() = default;
 
         //! A method adding the body to the simulation manager.
         /*!
@@ -174,7 +174,7 @@ namespace sf
         Transform T_CG2O_;
         Transform T_O2G_;
         Transform T_O2C_;
-        Trajectory* tr_;
+        std::unique_ptr<Trajectory> traj_;
         int phyObjectId_;
     };
 }

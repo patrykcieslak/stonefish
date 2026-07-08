@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 2/4/13.
-//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_FixedJoint__
-#define __Stonefish_FixedJoint__
+#pragma once
 
 #include "joints/Joint.h"
 
@@ -42,7 +41,7 @@ namespace sf
          \param uniqueName a name for the joint
          \param solid a pointer to the solid body
          */
-        FixedJoint(std::string uniqueName, SolidEntity* solid);
+        FixedJoint(const std::string& uniqueName, SolidEntity* solid);
 
         //! A constructor to create fixed joint between two solid bodies.
         /*!
@@ -50,7 +49,7 @@ namespace sf
          \param solidA a pointer to the first solid body
          \param solidB a pointer to the second solid body
          */
-        FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB);
+        FixedJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB);
         
         //! A constructor to create fixed joint between a solid body and a link of a multibody.
         /*!
@@ -59,7 +58,7 @@ namespace sf
          \param fe a pointer to the multibody
          \param linkId an index of the link of the multibody
          */
-        FixedJoint(std::string uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId);
+        FixedJoint(const std::string& uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId);
         
         //! A constructor to create fixed joint between two multibodies.
         /*!
@@ -69,7 +68,7 @@ namespace sf
          \param linkIdA an index of the link of the first multibody
          \param linkIdB an index of the link of the second multibody
          */
-        FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, FeatherstoneEntity* feB, int linkIdA, int linkIdB);
+        FixedJoint(const std::string& uniqueName, FeatherstoneEntity* feA, FeatherstoneEntity* feB, int linkIdA, int linkIdB);
 
         //! A method updating the definition of the joint based on current position of bodies.
         void UpdateDefinition();
@@ -81,5 +80,3 @@ namespace sf
         JointType getType() const;
     };
 }
-    
-#endif

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 29/03/2014.
-//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Gyroscope.h"
@@ -31,7 +31,7 @@
 namespace sf
 {
 
-Gyroscope::Gyroscope(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Gyroscope::Gyroscope(const std::string& uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels_.push_back(SensorChannel("Angular velocity X", QuantityType::ANGULAR_VELOCITY));
     channels_.push_back(SensorChannel("Angular velocity Y", QuantityType::ANGULAR_VELOCITY));
@@ -51,8 +51,7 @@ void Gyroscope::InternalUpdate(Scalar dt)
     omega += bias_;
 
     //record sample
-    Sample s{std::vector<Scalar>({omega.x(), omega.y(), omega.z()})};
-    AddSampleToHistory(s);
+    AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({omega.x(), omega.y(), omega.z()})));
 }
 
 void Gyroscope::setRange(Vector3 angularVelocityMax)

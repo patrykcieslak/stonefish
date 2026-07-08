@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 24/05/2014.
-//  Copyright (c) 2014-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/StaticEntity.h"
@@ -33,7 +33,7 @@
 namespace sf
 {
 
-StaticEntity::StaticEntity(std::string uniqueName, std::string material, std::string look) : Entity(uniqueName)
+StaticEntity::StaticEntity(const std::string& uniqueName, const std::string& material, const std::string& look) : Entity(uniqueName)
 {
     mat_ = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(material);
     if(SimulationApp::getApp()->hasGraphics())
@@ -42,14 +42,6 @@ StaticEntity::StaticEntity(std::string uniqueName, std::string material, std::st
         lookId_ = -1;
     phyObjectId_ = -1;
     dm_ = DisplayMode::GRAPHICAL;
-    rigidBody_ = nullptr;
-    phyMesh_ = nullptr;
-}
-
-StaticEntity::~StaticEntity()
-{
-    if(phyMesh_ != nullptr) 
-        delete phyMesh_;
 }
 
 EntityType StaticEntity::getType() const
@@ -125,7 +117,7 @@ void StaticEntity::BuildGraphicalObject()
     if(phyMesh_ == nullptr || !SimulationApp::getApp()->hasGraphics())
         return;
     
-    phyObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh_);
+    phyObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh_.get());
 }
 
 void StaticEntity::BuildRigidBody(btCollisionShape* shape)

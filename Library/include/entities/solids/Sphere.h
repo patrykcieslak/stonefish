@@ -23,8 +23,7 @@
 //  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Sphere__
-#define __Stonefish_Sphere__
+#pragma once
 
 #include "entities/SolidEntity.h"
 
@@ -44,7 +43,7 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the sphere walls, if positive the sphere is treated as shell
          */
-        Sphere(std::string uniqueName, PhysicsSettings phy, Scalar radius, const Transform& origin, std::string material, std::string look, Scalar thickness = Scalar(-1));
+        Sphere(const std::string& uniqueName, PhysicsSettings phy, Scalar radius, const Transform& origin, const std::string& material, const std::string& look, Scalar thickness = Scalar(-1));
         
         //! A method that returns the type of body.
         SolidType getSolidType();
@@ -56,5 +55,3 @@ namespace sf
         Scalar r_;
     };
 }
-
-#endif

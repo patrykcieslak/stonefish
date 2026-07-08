@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/30/13.
-//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/solids/Box.h"
@@ -30,7 +30,7 @@
 namespace sf
 {
 
-Box::Box(std::string uniqueName, PhysicsSettings phy, const Vector3& dimensions, const Transform& origin, std::string material, std::string look, Scalar thickness, unsigned int uvMode)
+Box::Box(const std::string& uniqueName, PhysicsSettings phy, const Vector3& dimensions, const Transform& origin, const std::string& material, const std::string& look, Scalar thickness, unsigned int uvMode)
          : SolidEntity(uniqueName, phy, material, look, thickness)
 {
     halfExtents_ = dimensions * Scalar(0.5);

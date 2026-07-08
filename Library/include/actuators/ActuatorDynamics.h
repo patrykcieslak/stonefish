@@ -24,8 +24,7 @@
 //  Copyright (c) 2024-2026 Roger Pi and Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_ActuatorDynamics__
-#define __Stonefish_ActuatorDynamics__
+#pragma once
 
 #include "StonefishCommon.h"
 #include <memory>
@@ -504,5 +503,3 @@ namespace sf
     };
 
 } // namespace sf
-
-#endif

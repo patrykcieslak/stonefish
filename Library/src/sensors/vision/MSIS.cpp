@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/07/20.
-//  Copyright (c) 2020-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/vision/MSIS.h"
@@ -33,7 +33,7 @@
 namespace sf
 {
 
-MSIS::MSIS(std::string uniqueName, Scalar stepAngleDeg, unsigned int numOfBins, Scalar horizontalBeamWidthDeg, Scalar verticalBeamWidthDeg,
+MSIS::MSIS(const std::string& uniqueName, Scalar stepAngleDeg, unsigned int numOfBins, Scalar horizontalBeamWidthDeg, Scalar verticalBeamWidthDeg,
            Scalar minRotationDeg, Scalar maxRotationDeg, Scalar minRange, Scalar maxRange, ColorMap cm, SonarOutputFormat outputFormat, Scalar frequency)
     : Camera(uniqueName, (unsigned int)ceil(Scalar(360)/stepAngleDeg), numOfBins, horizontalBeamWidthDeg, frequency)
 {
@@ -49,15 +49,8 @@ MSIS::MSIS(std::string uniqueName, Scalar stepAngleDeg, unsigned int numOfBins, 
     fovV_ = verticalBeamWidthDeg <= Scalar(0) ? Scalar(20) : (verticalBeamWidthDeg > Scalar(179) ? Scalar(179) : verticalBeamWidthDeg);
     cMap_ = cm;
     outputFormat_ = outputFormat;
-    sonarData_ = NULL;
-    displayData_ = NULL;
-    newDataCallback_ = NULL;
-    glMSIS_ = nullptr;
-}
-
-MSIS::~MSIS()
-{
-    if(displayData_ != NULL) delete [] displayData_;
+    sonarData_ = nullptr;
+    newDataCallback_ = nullptr;
     glMSIS_ = nullptr;
 }
 
@@ -126,7 +119,7 @@ void MSIS::getDisplayResolution(unsigned int& x, unsigned int& y) const
 
 GLubyte* MSIS::getDisplayDataPointer()
 {
-    return displayData_;
+    return displayData_.data();
 }
 
 void MSIS::getRotationLimits(Scalar& l1Deg, Scalar& l2Deg) const
@@ -184,19 +177,26 @@ void MSIS::InitGraphics(bool& seesParticles)
 {
     seesParticles = false;
 
-    glMSIS_ = new OpenGLMSIS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),
-                           (GLfloat)fovH_, (GLfloat)fovV_, (GLint)resX_, (GLint)resY_, range_, outputFormat_);
+    // Create sonar
+    std::unique_ptr<OpenGLMSIS> glMSIS = std::make_unique<OpenGLMSIS>(
+        glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),
+        (GLfloat)fovH_, (GLfloat)fovV_, (GLint)resX_, (GLint)resY_, range_, outputFormat_
+    );
+
+    // Set up sonar
+    glMSIS_ = glMSIS.get();
     glMSIS_->setNoise(noise_);
     glMSIS_->setSonar(this);
     glMSIS_->setColorMap(cMap_);
     UpdateTransform();
     glMSIS_->UpdateTransform();
     InternalUpdate(0);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glMSIS_);
+
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glMSIS));
 
     unsigned int w, h;
     getDisplayResolution(w, h);
-    displayData_ = new GLubyte[w*h*3];
+    displayData_.resize(w*h*3);
 }
 
 void MSIS::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
@@ -220,7 +220,7 @@ void MSIS::NewDataReady(void* data, unsigned int index)
         {
             unsigned int w, h;
             getDisplayResolution(w, h);
-            memcpy(displayData_, data, w*h*3);
+            memcpy(displayData_.data(), data, w*h*3);
         }
         else
         {

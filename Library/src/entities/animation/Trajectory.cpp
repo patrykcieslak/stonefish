@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/10/2020.
-//  Copyright (c) 2020-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/animation/Trajectory.h"
@@ -30,10 +30,6 @@ namespace sf
 
 Trajectory::Trajectory(PlaybackMode playback) 
     : playMode_(playback), playTime_(0), endTime_(0), iteration_(0), forward_(true)
-{
-}
-
-Trajectory::~Trajectory()
 {
 }
 

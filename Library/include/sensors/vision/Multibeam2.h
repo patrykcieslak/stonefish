@@ -23,8 +23,7 @@
 //  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Multibeam2__
-#define __Stonefish_Multibeam2__
+#pragma once
 
 #include <functional>
 #include "sensors/vision/Camera.h"
@@ -60,11 +59,8 @@ namespace sf
          \param maxRange the maximum measured range [m]
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          */
-        Multibeam2(std::string uniqueName, unsigned int horizontalRes, unsigned int verticalRes, Scalar horizontalFOVDeg, Scalar verticalFOVDeg,
+        Multibeam2(const std::string& uniqueName, unsigned int horizontalRes, unsigned int verticalRes, Scalar horizontalFOVDeg, Scalar verticalFOVDeg,
                     Scalar minRange, Scalar maxRange, Scalar frequency = Scalar(-1));
-        
-        //! A destructor.
-        ~Multibeam2();
         
         //! A method performing internal sensor state update.
         /*!
@@ -133,8 +129,8 @@ namespace sf
         void InitGraphics(bool& seesParticles);
         
         std::vector<CamData> cameras_;
-        GLfloat* imageData_;
-        GLfloat* rangeData_;
+        std::vector<GLfloat> imageData_;
+        std::vector<GLfloat> rangeData_;
         Scalar fovV_;
         glm::vec2 range_;
         std::function<void(Multibeam2*)> newDataCallback_;
@@ -145,5 +141,3 @@ namespace sf
 
 
 }
-
-#endif

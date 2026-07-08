@@ -23,8 +23,7 @@
 //  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_GraphicalSimulationApp__
-#define __Stonefish_GraphicalSimulationApp__
+#pragma once
 
 #include "graphics/OpenGLDataStructs.h"
 #include <SDL2/SDL.h>
@@ -51,10 +50,10 @@ namespace sf
          \param h a structure containing the helper objects display settings
          \param sim a pointer to the simulation manager
          */
-        GraphicalSimulationApp(std::string title, std::string dataDirPath, RenderSettings s, HelperSettings h, SimulationManager* sim);
-        
+        GraphicalSimulationApp(std::string title, std::string dataDirPath, RenderSettings s, HelperSettings h, std::unique_ptr<SimulationManager> sim);
+
         //! A destructor.
-        virtual ~GraphicalSimulationApp();
+        virtual ~GraphicalSimulationApp() = default;
 
         //! A method that starts the simulation on demand.
         void StartSimulation() override;
@@ -205,17 +204,19 @@ namespace sf
         SDL_Thread* loadingThread_;
         SDL_Thread* simulationThread_;
         SDL_Window* window_;
-        SDL_Joystick* joystick_;
-        bool* joystickButtons_;
-        int16_t* joystickAxes_;
-        uint8_t* joystickHats_;
         SDL_Event mouseWasDown_;
+        SDL_Joystick* joystick_;
+        std::vector<bool> joystickButtons_;
+        std::vector<int16_t> joystickAxes_;
+        std::vector<uint8_t> joystickHats_;
         
-        IMGUI* gui_;
-        OpenGLPipeline* glPipeline_;
+        std::unique_ptr<IMGUI> gui_;
+        std::unique_ptr<OpenGLPipeline> glPipeline_;
+        
         OpenGLTrackball* trackball_;
         MovingEntity* trackballCenter_;
         std::pair<Entity*, int> selectedEntity_;
+        
         bool displayHUD_;
         bool displayKeymap_;
         bool displayConsole_;
@@ -243,4 +244,3 @@ namespace sf
         GraphicalSimulationApp& app;
     };
 }
-#endif

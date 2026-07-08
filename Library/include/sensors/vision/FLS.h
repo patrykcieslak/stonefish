@@ -23,8 +23,7 @@
 //  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_FLS__
-#define __Stonefish_FLS__
+#pragma once
 
 #include <functional>
 #include "sensors/vision/Camera.h"
@@ -51,11 +50,8 @@ namespace sf
          \param outputFormat the format of the sonar output data
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated based on maximum range)
          */
-        FLS(std::string uniqueName, unsigned int numOfBeams, unsigned int numOfBins, Scalar horizontalFOVDeg, Scalar verticalFOVDeg,
+        FLS(const std::string& uniqueName, unsigned int numOfBeams, unsigned int numOfBins, Scalar horizontalFOVDeg, Scalar verticalFOVDeg,
                     Scalar minRange, Scalar maxRange, ColorMap cm, SonarOutputFormat outputFormat = SonarOutputFormat::U8, Scalar frequency = Scalar(-1));
-       
-        //! A destructor.
-        ~FLS();
         
         //! A method performing internal sensor state update.
         /*!
@@ -151,7 +147,7 @@ namespace sf
         
         OpenGLFLS* glFLS_;
         void* sonarData_;
-        GLubyte* displayData_;
+        std::vector<GLubyte> displayData_;
         glm::vec2 range_;
         glm::vec2 noise_;
         Scalar gain_;
@@ -161,5 +157,3 @@ namespace sf
         std::function<void(FLS*)> newDataCallback_;
     };
 }
-
-#endif

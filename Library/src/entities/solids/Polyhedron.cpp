@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 29/12/12.
-//  Copyright (c) 2012-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/solids/Polyhedron.h"
@@ -33,10 +33,10 @@
 namespace sf
 {
 
-Polyhedron::Polyhedron(std::string uniqueName, PhysicsSettings phy, 
-                       std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
-                       std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
-                       std::string material, std::string look, Scalar thickness, GeometryApproxType approx)
+Polyhedron::Polyhedron(const std::string& uniqueName, PhysicsSettings phy, 
+                       const std::string& graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
+                       const std::string& physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
+                       const std::string& material, const std::string& look, Scalar thickness, GeometryApproxType approx)
                         : SolidEntity(uniqueName, phy, material, look, thickness)
 {
     //1.Load geometry from file
@@ -54,12 +54,12 @@ Polyhedron::Polyhedron(std::string uniqueName, PhysicsSettings phy,
         T_O2C_ = T_O2G_;
     }
     
-    OpenGLContent::Refine(phyMesh_, 3.f);
+    OpenGLContent::Refine(phyMesh_.get(), 3.f);
     
     //2. Compute physical properties
     Vector3 CG;
     Matrix3 Irot;
-    ComputePhysicalProperties(phyMesh_, thickness, mat_.density, mass_, CG, volume_, surface_, Ipri_, Irot);
+    ComputePhysicalProperties(phyMesh_.get(), thickness, mat_.density, mass_, CG, volume_, surface_, Ipri_, Irot);
     T_CG2C_.setOrigin(-CG); //Set CG position
     T_CG2C_ = Transform(Irot, Vector3(0,0,0)).inverse() * T_CG2C_; //Align CG frame to principal axes of inertia
     T_CG2O_ = T_CG2C_ * T_O2C_.inverse();
@@ -71,17 +71,11 @@ Polyhedron::Polyhedron(std::string uniqueName, PhysicsSettings phy,
     P_CB_ = Vector3(0,0,0);
 }
     
-Polyhedron::Polyhedron(std::string uniqueName, PhysicsSettings phy, 
-                       std::string modelFilename, Scalar scale, const Transform& origin,
-                       std::string material, std::string look, Scalar thickness, GeometryApproxType approx)
+Polyhedron::Polyhedron(const std::string& uniqueName, PhysicsSettings phy, 
+                       const std::string& modelFilename, Scalar scale, const Transform& origin,
+                       const std::string& material, const std::string& look, Scalar thickness, GeometryApproxType approx)
                         : Polyhedron(uniqueName, phy, modelFilename, scale, origin, "", scale, origin, material, look, thickness, approx)
 {
-}
-
-Polyhedron::~Polyhedron()
-{
-    if(graMesh_ != nullptr && graMesh_ != phyMesh_)
-        delete graMesh_;
 }
     
 SolidType Polyhedron::getSolidType()
@@ -108,8 +102,8 @@ void Polyhedron::BuildGraphicalObject()
     if(graMesh_ == NULL || !SimulationApp::getApp()->hasGraphics())
         return;
     
-    graObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(graMesh_);
-    phyObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh_);
+    graObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(graMesh_.get());
+    phyObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh_.get());
 }
 
 }

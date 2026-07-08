@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 25/05/2014.
-//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Pose.h"
@@ -31,7 +31,7 @@
 namespace sf
 {
 
-Pose::Pose(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Pose::Pose(const std::string& uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels_.push_back(SensorChannel("Coordinate X", QuantityType::LENGTH));
     channels_.push_back(SensorChannel("Coordinate Y", QuantityType::LENGTH));
@@ -49,8 +49,9 @@ void Pose::InternalUpdate(Scalar dt)
     trajFrame.getBasis().getEulerYPR(yaw, pitch, roll);
     
     //record sample
-    Sample s{std::vector<Scalar>({trajFrame.getOrigin().x(), trajFrame.getOrigin().y(), trajFrame.getOrigin().z(), roll, pitch, yaw})};
-    AddSampleToHistory(s);
+    AddSampleToHistory(std::make_unique<Sample>(
+        std::vector<Scalar>({trajFrame.getOrigin().x(), trajFrame.getOrigin().y(), trajFrame.getOrigin().z(), roll, pitch, yaw})
+    ));
 }
 
 ScalarSensorType Pose::getScalarSensorType() const

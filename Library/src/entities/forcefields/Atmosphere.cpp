@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 02/12/2018.
-//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/forcefields/Atmosphere.h"
@@ -32,7 +32,7 @@
 namespace sf
 {
     
-Atmosphere::Atmosphere(std::string uniqueName, Fluid g) : ForcefieldEntity(uniqueName)
+Atmosphere::Atmosphere(const std::string& uniqueName, Fluid g) : ForcefieldEntity(uniqueName), gas_(g)
 {
     ghost_->setCollisionFlags(ghost_->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
     
@@ -40,28 +40,11 @@ Atmosphere::Atmosphere(std::string uniqueName, Fluid g) : ForcefieldEntity(uniqu
     Vector3 halfExtents = Vector3(size/Scalar(2), size/Scalar(2), size/Scalar(2));
     ghost_->setWorldTransform(Transform(Quaternion::getIdentity(), Vector3(0,0,-size/Scalar(2)))); //Above ocean surface and ground (z=0)
     ghost_->setCollisionShape(new btBoxShape(halfExtents));
-    
-    gas_ = g;
-    wind_ = std::vector<VelocityField*>(0);
-    glAtmosphere_ = nullptr;
 }
-    
-Atmosphere::~Atmosphere()
-{
-    if(wind_.size() > 0)
-    {
-        for(unsigned int i=0; i<wind_.size(); ++i)
-            delete wind_[i];
-        wind_.clear();
-    }
-    
-    if(glAtmosphere_ != nullptr) 
-        delete glAtmosphere_;
-}
-    
+        
 OpenGLAtmosphere* Atmosphere::getOpenGLAtmosphere()
 {
-    return glAtmosphere_;
+    return glAtmosphere_.get();
 }
     
 ForcefieldType Atmosphere::getForcefieldType()
@@ -76,7 +59,7 @@ Fluid Atmosphere::getGas() const
 
 void Atmosphere::InitGraphics(const RenderSettings& s)
 {
-    glAtmosphere_ = new OpenGLAtmosphere(GetShaderPath() + "earth_atm.dat", s.shadows);
+    glAtmosphere_ = std::make_unique<OpenGLAtmosphere>(GetShaderPath() + "earth_atm.dat", s.shadows);
 }
 
 void Atmosphere::SetSunPosition(Scalar longitudeDeg, Scalar latitudeDeg, std::tm& utc)
@@ -114,9 +97,9 @@ void Atmosphere::SetConditions(Scalar temperature, Scalar pressure, Scalar humid
     glAtmosphere_->setAirHumidity((float)humidity); 
 }
 
-void Atmosphere::AddVelocityField(VelocityField* field)
+void Atmosphere::AddVelocityField(std::unique_ptr<VelocityField> field)
 {
-    wind_.push_back(field);
+    wind_.push_back(std::move(field));
 }
     
 void Atmosphere::GetSunPosition(Scalar &azimuthDeg, Scalar &elevationDeg)

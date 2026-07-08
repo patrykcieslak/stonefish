@@ -23,8 +23,7 @@
 //  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_LinkActuator__
-#define __Stonefish_LinkActuator__
+#pragma once
 
 #include "actuators/Actuator.h"
 
@@ -40,7 +39,10 @@ namespace sf
         /*!
          \param uniqueName a name of the link actuator
          */
-        LinkActuator(std::string uniqueName);
+        LinkActuator(const std::string& uniqueName);
+
+        //! A destructor.
+        virtual ~LinkActuator() = default;
         
         //! A method used to attach the actuator to a specified rigid body.
         /*!
@@ -66,5 +68,3 @@ namespace sf
         Transform o2a_;
     };
 }
-
-#endif

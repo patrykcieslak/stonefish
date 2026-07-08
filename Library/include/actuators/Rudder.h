@@ -23,8 +23,7 @@
 //  Copyright (c) 2021-2026 Nils Bore, Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Rudder__
-#define __Stonefish_Rudder__
+#pragma once
 
 #include "actuators/LinkActuator.h"
 
@@ -45,11 +44,8 @@ namespace sf
          \param maxAngle the maximum angle of the rudder [rad]
          \param inverted a flag to indicate if the setpoint is inverted (positive value results in left-handed rotation)
         */
-        Rudder(std::string uniqueName, SolidEntity* rudder, Scalar area, Scalar liftCoeff, Scalar dragCoeff, Scalar stallAngle, 
+        Rudder(const std::string& uniqueName, std::unique_ptr<SolidEntity> rudder, Scalar area, Scalar liftCoeff, Scalar dragCoeff, Scalar stallAngle, 
             Scalar maxAngle, bool inverted = false, Scalar maxAngularRate = Scalar(0));
-        
-        //! A destructor.
-        ~Rudder();
         
         //! A method used to update the internal state of the rudder.
         /*!
@@ -83,7 +79,7 @@ namespace sf
         Scalar stallAngle_;
         Scalar maxAngle_;
         Scalar maxAngularRate_;
-        SolidEntity* rudder_;
+        std::unique_ptr<SolidEntity> rudder_;
         bool inv_;
         
         //States
@@ -94,4 +90,3 @@ namespace sf
     };
 }
 
-#endif

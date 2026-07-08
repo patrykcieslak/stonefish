@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 09/11/2017.
-//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Odometry.h"
@@ -31,7 +31,7 @@
 namespace sf
 {
 
-Odometry::Odometry(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Odometry::Odometry(const std::string& uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels_.push_back(SensorChannel("Position X", QuantityType::LENGTH));
     channels_.push_back(SensorChannel("Position Y", QuantityType::LENGTH));
@@ -65,8 +65,9 @@ void Odometry::InternalUpdate(Scalar dt)
     Vector3 av = odomTrans.getBasis().inverse() * attach_->getAngularVelocity();
     
     //Record sample
-    Sample s{std::vector<Scalar>({pos.x(), pos.y(), pos.z(), v.x(), v.y(), v.z(), orn.x(), orn.y(), orn.z(), orn.w(), av.x(), av.y(), av.z()})};
-    AddSampleToHistory(s);
+    AddSampleToHistory(std::make_unique<Sample>(
+        std::vector<Scalar>({pos.x(), pos.y(), pos.z(), v.x(), v.y(), v.z(), orn.x(), orn.y(), orn.z(), orn.w(), av.x(), av.y(), av.z()})
+    ));
 }
    
 void Odometry::setNoise(Scalar positionStdDev, Scalar velocityStdDev, Scalar angleStdDev, Scalar angularVelocityStdDev)

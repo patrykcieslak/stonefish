@@ -23,8 +23,7 @@
 //  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Sample__
-#define __Stonefish_Sample__
+#pragma once
 
 #include "StonefishCommon.h"
 
@@ -41,13 +40,6 @@ namespace sf
          \param index a number specifying the id of the sample
          */
         Sample(const std::vector<Scalar>& data, bool invalid = false, size_t index = 0);
-        
-        //! A copy constructor.
-        /*!
-         \param other a reference to a sample object
-         \param index a number specifying the id of the sample
-         */
-        Sample(const Sample& other, size_t index = 0);
         
         //! A method returning the timestamp of the sample.
         Scalar getTimestamp() const;
@@ -70,6 +62,9 @@ namespace sf
 
         //! A method returning the id of the sample.
         size_t getId() const;
+
+        //! A method to set the id of the sample.
+        void setId(size_t id);
         
     private:
         Scalar timestamp_;
@@ -78,4 +73,3 @@ namespace sf
     };
 }
 
-#endif

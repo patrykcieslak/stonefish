@@ -23,8 +23,7 @@
 //  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_MSIS__
-#define __Stonefish_MSIS__
+#pragma once
 
 #include <functional>
 #include "sensors/vision/Camera.h"
@@ -53,12 +52,9 @@ namespace sf
          \param outputFormat the output format of the sensor data
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated based on maximum range)
          */
-        MSIS(std::string uniqueName, Scalar stepAngleDeg, unsigned int numOfBins, Scalar horizontalBeamWidthDeg, Scalar verticalBeamWidthDeg,
+        MSIS(const std::string& uniqueName, Scalar stepAngleDeg, unsigned int numOfBins, Scalar horizontalBeamWidthDeg, Scalar verticalBeamWidthDeg,
              Scalar minRotationDeg, Scalar maxRotationDeg, Scalar minRange, Scalar maxRange, ColorMap cm, 
              SonarOutputFormat outputFormat = SonarOutputFormat::U8, Scalar frequency = Scalar(-1));
-       
-        //! A destructor.
-        ~MSIS();
         
         //! A method performing internal sensor state update.
         /*!
@@ -177,7 +173,7 @@ namespace sf
         
         OpenGLMSIS* glMSIS_;
         void* sonarData_;
-        GLubyte* displayData_;
+        std::vector<GLubyte> displayData_;
         int currentStep_;
         bool cw_;
         glm::ivec2 roi_;
@@ -192,5 +188,3 @@ namespace sf
         std::function<void(MSIS*)> newDataCallback_;
     };
 }
-
-#endif

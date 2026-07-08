@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 4/5/18.
-//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/vision/ColorCamera.h"
@@ -33,16 +33,12 @@
 namespace sf
 {
 
-ColorCamera::ColorCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency, 
+ColorCamera::ColorCamera(const std::string& uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency, 
     Scalar minDistance, Scalar maxDistance) : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
 {
     depthRange_ = glm::vec2((GLfloat)minDistance, (GLfloat)maxDistance);
     newDataCallback_ = nullptr;
     imageData_ = nullptr;
-}
-
-ColorCamera::~ColorCamera()
-{
     glCamera_ = nullptr;
 }
     
@@ -79,12 +75,18 @@ void ColorCamera::InitGraphics(bool& seesParticles)
 {
     seesParticles = true;
     
-    glCamera_ = new OpenGLRealCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX_, resY_, (GLfloat)fovH_, depthRange_, freq_ < Scalar(0));
+    // Create camera
+    std::unique_ptr<OpenGLRealCamera> glCamera = 
+        std::make_unique<OpenGLRealCamera>(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX_, resY_, (GLfloat)fovH_, depthRange_, freq_ < Scalar(0));
+    
+    // Set up camera
+    glCamera_ = glCamera.get();
     glCamera_->setCamera(this);
     UpdateTransform();
     glCamera_->UpdateTransform();
     InternalUpdate(0);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera_);
+    
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glCamera));
 }
 
 void ColorCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)

@@ -23,8 +23,7 @@
 //  Copyright (c) 2025-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_SegmentationCamera__
-#define __Stonefish_SegmentationCamera__
+#pragma once
 
 #include <functional>
 #include "sensors/vision/Camera.h"
@@ -48,7 +47,7 @@ namespace sf
          \param minDistance the minimum drawing distance [m]
          \param maxDistance the maximum drawing distance [m]
          */
-        SegmentationCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency = Scalar(-1), 
+        SegmentationCamera(const std::string& uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency = Scalar(-1), 
             Scalar minDistance = Scalar(STD_NEAR_PLANE_DISTANCE), Scalar maxDistance = Scalar(STD_FAR_PLANE_DISTANCE)); //Rendering options
         
         //! A destructor.
@@ -101,10 +100,8 @@ namespace sf
         
         OpenGLSegmentationCamera* glCamera_;
         GLushort* segmentationData_;
-        GLubyte* displayData_;
+        std::vector<GLubyte> displayData_;
         glm::vec2 depthRange_;
         std::function<void(SegmentationCamera*)> newDataCallback_;
     };
 }
-
-#endif

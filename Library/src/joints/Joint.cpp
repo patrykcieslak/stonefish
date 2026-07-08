@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/13/13.
-//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/Joint.h"
@@ -32,7 +32,7 @@
 namespace sf
 {
 
-Joint::Joint(std::string uniqueName, bool collideLinkedEntities)
+Joint::Joint(const std::string& uniqueName, bool collideLinkedEntities)
 {
     name_ = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     collisionEnabled_ = collideLinkedEntities;
@@ -58,7 +58,7 @@ btTypedConstraint* Joint::getConstraint()
     return constraint_;
 }
 
-std::string Joint::getName() const
+const std::string& Joint::getName() const
 {
     return name_;
 }

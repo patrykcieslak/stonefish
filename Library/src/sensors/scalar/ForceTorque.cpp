@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/10/2017.
-//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/ForceTorque.h"
@@ -33,7 +33,8 @@
 namespace sf
 {
 
-ForceTorque::ForceTorque(std::string uniqueName, SolidEntity* attachment, const Transform& origin, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
+ForceTorque::ForceTorque(const std::string& uniqueName, SolidEntity* attachment, const Transform& origin, Scalar frequency, int historyLength)
+    : JointSensor(uniqueName, frequency, historyLength)
 {
     attach_ = attachment;
     o2s_ = origin;
@@ -47,8 +48,8 @@ ForceTorque::ForceTorque(std::string uniqueName, SolidEntity* attachment, const 
     channels_.push_back(SensorChannel("Torque Z", QuantityType::TORQUE));
 }
 
-ForceTorque::ForceTorque(std::string uniqueName, const Transform& origin, Scalar frequency, int historyLength) :
-    ForceTorque(uniqueName, NULL, origin, frequency, historyLength)
+ForceTorque::ForceTorque(const std::string& uniqueName, const Transform& origin, Scalar frequency, int historyLength) 
+    : ForceTorque(uniqueName, nullptr, origin, frequency, historyLength)
 {
 }
 
@@ -59,7 +60,7 @@ Transform ForceTorque::getSensorFrame() const
 
 void ForceTorque::InternalUpdate(Scalar dt)
 {
-    if(j_ != NULL && attach_ != NULL)
+    if(j_ != nullptr && attach_ != nullptr)
     {
         Vector3 force(j_->getFeedback(0), j_->getFeedback(1), j_->getFeedback(2));
         Vector3 torque(j_->getFeedback(3), j_->getFeedback(4), j_->getFeedback(5));
@@ -74,9 +75,10 @@ void ForceTorque::InternalUpdate(Scalar dt)
         Matrix3 toSensor = lastFrame_.getBasis().inverse();
         force = toSensor * force;
         torque = toSensor * torque;
-	
-        Sample s{std::vector<Scalar>({force.getX(), force.getY(), force.getZ(), torque.getX(), torque.getY(), torque.getZ()})};
-        AddSampleToHistory(s);
+
+        AddSampleToHistory(std::make_unique<Sample>(
+            std::vector<Scalar>({force.getX(), force.getY(), force.getZ(), torque.getX(), torque.getY(), torque.getZ()})
+        ));
     }
     else
     {   
@@ -88,8 +90,9 @@ void ForceTorque::InternalUpdate(Scalar dt)
         torque = toSensor * torque;
         lastFrame_ = fe_->getLink(childId).solid->getCGTransform() * lastFrame_; //From local to global
         
-        Sample s{std::vector<Scalar>({force.getX(), force.getY(), force.getZ(), torque.getX(), torque.getY(), torque.getZ()})};
-        AddSampleToHistory(s);
+        AddSampleToHistory(std::make_unique<Sample>(
+            std::vector<Scalar>({force.getX(), force.getY(), force.getZ(), torque.getX(), torque.getY(), torque.getZ()})
+        ));
     }
 }
 

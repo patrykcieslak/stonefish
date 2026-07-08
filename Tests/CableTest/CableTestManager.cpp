@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/11/2025.
-//  Copyright (c) 2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2025-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "CableTestManager.h"
@@ -76,28 +76,28 @@ void CableTestManager::BuildScenario()
     getOcean()->EnableCurrents();
     
     ////////OBJECTS
-    sf::Plane* floor = new sf::Plane("Floor", 10000, "Ground", "Grid");
-    AddStaticEntity(floor, sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 10.0)));
+    AddStaticEntity(std::make_unique<sf::Plane>("Floor", 10000, "Ground", "Grid"), sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 10.0)));
 
     sf::PhysicsSettings phy;
     phy.mode = sf::PhysicsMode::SUBMERGED;
     phy.collisions = true;
 
     // Box attached to a fixed cable
-    sf::Box* box = new sf::Box("Box", phy, sf::Vector3(0.1, 0.1, 0.1), sf::I4(), "Steel", "Red");
-    AddSolidEntity(box, sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 2.0)));
+    sf::SolidEntity* box = AddSolidEntity(std::make_unique<sf::Box>("Box", phy, sf::Vector3(0.1, 0.1, 0.1), sf::I4(), "Steel", "Red"), 
+        sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 2.0)));
 
-    sf::CableEntity* cable = new sf::CableEntity("Cable1", phy, sf::Vector3(2.0, 0, -2), sf::Vector3(0, 0, 1.5), 100, 0.01, "Steel", "Red", 0.0);
+    std::unique_ptr<sf::CableEntity> cable = std::make_unique<sf::CableEntity>("Cable1", phy, sf::Vector3(2.0, 0, -2), sf::Vector3(0, 0, 1.5), 100, 0.01, "Steel", "Red", 0.0);
     cable->AttachToWorld(sf::CableEnds::FIRST);
     cable->AttachToSolid(sf::CableEnds::SECOND, box);
-    AddEntity(cable);
+    AddEntity(std::move(cable));
 
     // Winch with cable
-    sf::Box* box2 = new sf::Box("WinchBase", phy, sf::Vector3(0.1, 0.1, 0.1), sf::I4(), "Steel", "Green");
-    sf::Cylinder* cyl = new sf::Cylinder("WinchCylinder", phy, 0.2, 2.0, sf::Transform(sf::Quaternion(0.0, 0.0, M_PI_2), sf::Vector3(0.0, 0.0, 0.0)), "Steel", "Green");
-
-    sf::FeatherstoneRobot* winch = new sf::FeatherstoneRobot("Winch", true);
-    winch->DefineLinks(box2, {cyl}, false);
+    std::unique_ptr<sf::Box> box2 = std::make_unique<sf::Box>("WinchBase", phy, sf::Vector3(0.1, 0.1, 0.1), sf::I4(), "Steel", "Green");
+    std::vector<std::unique_ptr<sf::SolidEntity>> links;
+    links.push_back(std::make_unique<sf::Cylinder>("WinchCylinder", phy, 0.2, 2.0, sf::Transform(sf::Quaternion(0.0, 0.0, M_PI_2), sf::Vector3(0.0, 0.0, 0.0)), "Steel", "Green"));
+    
+    std::unique_ptr<sf::FeatherstoneRobot> winch = std::make_unique<sf::FeatherstoneRobot>("Winch", true);
+    winch->DefineLinks(std::move(box2), std::move(links), false);
     winch->DefineRevoluteJoint("Joint1", "WinchBase", "WinchCylinder", sf::Transform(sf::IQ(), sf::Vector3(0.0, 1.0, 0.0)), sf::Vector3(0.0, 1.0, 0.0));
     winch->BuildKinematicStructure();
     
@@ -105,23 +105,23 @@ void CableTestManager::BuildScenario()
     servo->setControlMode(sf::ServoControlMode::VELOCITY);
     winch->AddJointActuator(servo, "Joint1");
     
-    AddRobot(winch, sf::Transform(sf::IQ(), sf::Vector3(5.0, 0.0, -5.0)));
+    sf::FeatherstoneRobot* winchPtr = static_cast<sf::FeatherstoneRobot*>(
+        AddRobot(std::move(winch), sf::Transform(sf::IQ(), sf::Vector3(5.0, 0.0, -5.0))));
     
-    sf::Sphere* sphere = new sf::Sphere("CableAttachSphere", phy, 0.01, sf::I4(), "Steel", "Green");
-    AddSolidEntity(sphere, sf::Transform(sf::IQ(), sf::Vector3(5.0, 1.0, -4.8)));
+    sf::SolidEntity* sphere = AddSolidEntity(std::make_unique<sf::Sphere>("CableAttachSphere", phy, 0.01, sf::I4(), "Steel", "Green"), 
+        sf::Transform(sf::IQ(), sf::Vector3(5.0, 1.0, -4.8)));
 
-    sf::FixedJoint* fixedJoint = new sf::FixedJoint("CableAttachJoint", sphere, winch->getDynamics(), 0);
-    AddJoint(fixedJoint);
+    AddJoint(std::make_unique<sf::FixedJoint>("CableAttachJoint", sphere, winchPtr->getDynamics(), 0));
 
-    sf::CableEntity* cable2 = new sf::CableEntity("Cable2", phy, sf::Vector3(5.0, 1.0, -4.78), sf::Vector3(5.0, 1.0, -1.0), 100, 0.02, "Wood", "Rope", 0.0, 80.f);
+    sf::CableEntity* cable2 = static_cast<sf::CableEntity*>(
+        AddEntity(std::make_unique<sf::CableEntity>("Cable2", phy, sf::Vector3(5.0, 1.0, -4.78), sf::Vector3(5.0, 1.0, -1.0), 100, 0.02f, "Wood", "Rope", 0.f, 80.f))
+    );
     cable2->AttachToSolid(sf::CableEnds::FIRST, sphere);
-    AddEntity(cable2);
 
-    sf::CableEntity* cable3 = new sf::CableEntity("Cable3", phy, sf::Vector3(4.0, -1.5, -2.0), sf::Vector3(4.0, 1.5, -2.0), 50, 0.05, "Wood", "Rope", 0.0, 80.f);
-    AddEntity(cable3);
+    AddEntity(std::make_unique<sf::CableEntity>("Cable3", phy, sf::Vector3(4.0, -1.5, -2.0), sf::Vector3(4.0, 1.5, -2.0), 50, 0.05, "Wood", "Rope", 0.0, 80.f));
 
-    sf::Obstacle* obs = new sf::Obstacle("Obstacle", 0.25, 2.0, sf::I4(), "Steel", "Red");
-    AddStaticEntity(obs, sf::Transform(sf::IQ(), sf::Vector3(7.0, 0.0, 0.0)));
+    AddStaticEntity(std::make_unique<sf::Obstacle>("Obstacle", 0.25, 2.0, sf::I4(), "Steel", "Red"), 
+        sf::Transform(sf::IQ(), sf::Vector3(7.0, 0.0, 0.0)));
 }
 
 void CableTestManager::SimulationStepCompleted(sf::Scalar timeStep)

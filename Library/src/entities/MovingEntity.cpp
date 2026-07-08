@@ -34,7 +34,7 @@
 namespace sf
 {
 
-MovingEntity::MovingEntity(std::string uniqueName, std::string material, std::string look) : Entity(uniqueName)
+MovingEntity::MovingEntity(const std::string& uniqueName, const std::string& material, const std::string& look) : Entity(uniqueName)
 {
     rigidBody_ = nullptr;
     mat_ = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(material);
@@ -45,10 +45,6 @@ MovingEntity::MovingEntity(std::string uniqueName, std::string material, std::st
     graObjectId_ = -1;
     dm_ = DisplayMode::GRAPHICAL;
     particles_.reset();
-}
-
-MovingEntity::~MovingEntity()
-{ 
 }
 
 Material MovingEntity::getMaterial() const

@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 15/02/23.
-//  Copyright (c) 2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2023-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_SpringJoint__
-#define __Stonefish_SpringJoint__
+#pragma once
 
 #include "joints/Joint.h"
 
@@ -46,7 +45,7 @@ namespace sf
          \param linearDamping damping for the linear DOFs
          \param angularDamping damping for the angular DOFs
          */
-        SpringJoint(std::string uniqueName, SolidEntity* solid, const Transform& attachment, 
+        SpringJoint(const std::string& uniqueName, SolidEntity* solid, const Transform& attachment, 
             const Vector3& linearStiffness, const Vector3& angularStiffness,
             const Vector3& linearDamping, const Vector3& angularDamping);
 
@@ -62,7 +61,7 @@ namespace sf
          \param angularDamping damping for the angular DOFs
          \
          */
-        SpringJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Transform& attachment,
+        SpringJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Transform& attachment,
             const Vector3& linearStiffness, const Vector3& angularStiffness,
             const Vector3& linearDamping, const Vector3& angularDamping);
         
@@ -73,5 +72,4 @@ namespace sf
         JointType getType() const;
     };
 }
-    
-#endif
+

@@ -23,8 +23,7 @@
 //  Copyright(c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_FeatherstoneRobot__
-#define __Stonefish_FeatherstoneRobot__
+#pragma once
 
 #include "core/Robot.h"
 
@@ -112,5 +111,3 @@ namespace sf
         FeatherstoneEntity* dynamics_;
     };
 }
-
-#endif

@@ -23,8 +23,7 @@
 //  Copyright (c) 2023-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_SuctionCup__
-#define __Stonefish_SuctionCup__
+#pragma once
 
 #include "actuators/LinkActuator.h"
 
@@ -42,10 +41,7 @@ namespace sf
         /*!
          \param uniqueName a name for the suction cup actuator
         */
-        SuctionCup(std::string uniqueName);
-        
-        //! A destructor.
-        ~SuctionCup();
+        SuctionCup(const std::string& uniqueName);
 
         //! A method used to attach the actuator to a specified rigid body.
         /*!
@@ -86,5 +82,3 @@ namespace sf
         unsigned int attachLinkId_;
     };
 }
-
-#endif

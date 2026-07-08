@@ -23,8 +23,7 @@
 //  Copyright(c) 2020-2023 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_CRTrajectory__
-#define __Stonefish_CRTrajectory__
+#pragma once
 
 #include "entities/animation/PWLTrajectory.h"
 
@@ -53,5 +52,3 @@ namespace sf
                                      Scalar t0, Scalar t1, Scalar t2, Scalar t3, Scalar t);
     };
 }
-
-#endif

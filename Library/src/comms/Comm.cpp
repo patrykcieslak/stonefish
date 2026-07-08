@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 25/02/20.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "comms/Comm.h"
@@ -34,7 +34,7 @@
 namespace sf
 {
 
-Comm::Comm(std::string uniqueName, uint64_t deviceId)
+Comm::Comm(const std::string& uniqueName, uint64_t deviceId)
 {
     name_ = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     id_ = deviceId;
@@ -66,7 +66,7 @@ Transform Comm::getDeviceFrame()
     return o2c_;
 }
 
-std::string Comm::getName()
+const std::string& Comm::getName() const
 {
     return name_;
 }

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/30/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/solids/Sphere.h"
@@ -30,7 +30,7 @@
 namespace sf
 {
 
-Sphere::Sphere(std::string uniqueName, PhysicsSettings phy, Scalar radius, const Transform& origin, std::string material, std::string look, Scalar thickness)
+Sphere::Sphere(const std::string& uniqueName, PhysicsSettings phy, Scalar radius, const Transform& origin, const std::string& material, const std::string& look, Scalar thickness)
     : SolidEntity(uniqueName, phy, material, look, thickness)
 {
     r_ = radius;

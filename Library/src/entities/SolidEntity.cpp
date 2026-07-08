@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 29/12/12.
-//  Copyright (c) 2012-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/SolidEntity.h"
@@ -38,7 +38,7 @@
 namespace sf
 {
 
-SolidEntity::SolidEntity(std::string uniqueName, PhysicsSettings phy, std::string material, std::string look, Scalar thickness) 
+SolidEntity::SolidEntity(const std::string& uniqueName, PhysicsSettings phy, const std::string& material, const std::string& look, Scalar thickness) 
     : MovingEntity(uniqueName, material, look), thick_(thickness), phy_(phy)
 {
     //Check if ocean is enabled and change physics mode accordingly
@@ -96,19 +96,12 @@ SolidEntity::SolidEntity(std::string uniqueName, PhysicsSettings phy, std::strin
     
     //Set pointers
     multibodyCollider_ = nullptr;
-    phyMesh_ = nullptr;
     graObjectId_ = -1;
     phyObjectId_ = -1;
     dm_ = DisplayMode::GRAPHICAL;
     submerged_.type = RenderableType::HYDRO_LINES;
     submerged_.model = glm::mat4(1.f);
     submerged_.data = std::make_shared<std::vector<glm::vec3>>();
-}
-
-SolidEntity::~SolidEntity()
-{
-    if(phyMesh_ != nullptr) 
-        delete phyMesh_;
 }
 
 EntityType SolidEntity::getType() const
@@ -678,7 +671,7 @@ void SolidEntity::getGeometryApprox(GeometryApproxType& type, std::vector<Scalar
 
 const Mesh* SolidEntity::getPhysicsMesh()
 {
-    return phyMesh_;
+    return phyMesh_.get();
 }
 
 std::vector<Vector3>* SolidEntity::getMeshVertices() const
@@ -1046,7 +1039,7 @@ void SolidEntity::BuildGraphicalObject()
     if (graObjectId_ > -1) // Object already built
         return;
         
-    graObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh_);
+    graObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh_.get());
     phyObjectId_ = graObjectId_;
 }
 

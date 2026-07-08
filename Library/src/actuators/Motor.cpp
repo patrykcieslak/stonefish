@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 15/09/2015.
-//  Copyright (c) 2015-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2015-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Motor.h"
@@ -31,7 +31,7 @@
 namespace sf
 {
 
-Motor::Motor(std::string uniqueName) : JointActuator(uniqueName)
+Motor::Motor(const std::string& uniqueName) : JointActuator(uniqueName)
 {
     torque_ = Scalar(0);
     setTorqueLimits(1, -1); // No limits

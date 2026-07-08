@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 14/05/2025.
-//  Copyright (c) 2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2025-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "comms/OpticalModem.h"
@@ -157,7 +157,7 @@ std::vector<uint8_t> OpticalModem::introduceErrors(
 }
 
 //Member 
-OpticalModem::OpticalModem(std::string uniqueName, uint64_t deviceId, Scalar fovDeg, Scalar operatingRange, Scalar ambientLightSensitivity)
+OpticalModem::OpticalModem(const std::string& uniqueName, uint64_t deviceId, Scalar fovDeg, Scalar operatingRange, Scalar ambientLightSensitivity)
                                 : Comm(uniqueName, deviceId)
 {
     maxRange_ = operatingRange <= Scalar(0) ? Scalar(100) : operatingRange;

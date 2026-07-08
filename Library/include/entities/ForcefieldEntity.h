@@ -41,10 +41,10 @@ namespace sf
         /*!
          \param uniqueName a name for the force field
          */
-        ForcefieldEntity(std::string uniqueName);
+        ForcefieldEntity(const std::string& uniqueName);
         
         //! A destructor.
-        virtual ~ForcefieldEntity();
+        virtual ~ForcefieldEntity() = default;
         
         //! A method used to add the force field to the simulation.
         /*!

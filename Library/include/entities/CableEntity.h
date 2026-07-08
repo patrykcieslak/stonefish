@@ -71,8 +71,8 @@ namespace sf
          \param stretching the allowed stretching factor of the cable (0.0 means inextensible)
          \param uvScale a scaling factor for texture coordinates
          */
-        CableEntity(std::string uniqueName, PhysicsSettings phy, Vector3 firstEnd, Vector3 secondEnd, size_t numSegments, 
-            Scalar diameter, std::string material, std::string look, Scalar stretching = 0.0, float uvScale = 1.0f);
+        CableEntity(const std::string& uniqueName, PhysicsSettings phy, Vector3 firstEnd, Vector3 secondEnd, size_t numSegments, 
+            Scalar diameter, const std::string& material, const std::string& look, Scalar stretching = 0.0, float uvScale = 1.0f);
 
         //! A mrethod attaching the cable ends to the world.
         /*! 

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 25/02/2020.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "comms/USBL.h"
@@ -31,7 +31,7 @@ namespace sf
 std::random_device USBL::randomDevice;
 std::mt19937 USBL::randomGenerator(randomDevice());
     
-USBL::USBL(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange)
+USBL::USBL(const std::string& uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange)
            : AcousticModem(uniqueName, deviceId, minVerticalFOVDeg, maxVerticalFOVDeg, operatingRange)
 {
     ping_ = false;

@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 20/03/2018.
-//  Copyright (c) 2019-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Torque__
-#define __Stonefish_Torque__
+#pragma once
 
 #include "sensors/scalar/JointSensor.h"
 
@@ -40,7 +39,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        Torque(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
+        Torque(const std::string& uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
         
         //! A method performing internal sensor state update.
         /*!
@@ -65,4 +64,3 @@ namespace sf
     };
 }
 
-#endif

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/13/13.
-//  Copyright (c) 2013-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/RevoluteJoint.h"
@@ -33,7 +33,7 @@
 namespace sf
 {
 
-RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, const Vector3& axis, bool collideLinked) : Joint(uniqueName, collideLinked)
+RevoluteJoint::RevoluteJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, const Vector3& axis, bool collideLinked) : Joint(uniqueName, collideLinked)
 {
     Vector3 hingeAxis = axis.normalized();
     btRigidBody* bodyA = solidA->rigidBody_;
@@ -54,7 +54,7 @@ RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solidA, SolidE
     setIC(Scalar(0));
 }
 
-RevoluteJoint::RevoluteJoint(std::string uniqueName, SolidEntity* solid, const Vector3& pivot, const Vector3& axis) : Joint(uniqueName, false)
+RevoluteJoint::RevoluteJoint(const std::string& uniqueName, SolidEntity* solid, const Vector3& pivot, const Vector3& axis) : Joint(uniqueName, false)
 {
     btRigidBody* body = solid->rigidBody_;
     Vector3 hingeAxis = axis.normalized();

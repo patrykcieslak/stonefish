@@ -23,8 +23,7 @@
 //  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_MaterialManager__
-#define __Stonefish_MaterialManager__
+#pragma once
 
 #include <unordered_map>
 #include "core/NameManager.h"
@@ -191,5 +190,3 @@ namespace sf
         NameManager fluidNameManager_;
     };
 }
-
-#endif 

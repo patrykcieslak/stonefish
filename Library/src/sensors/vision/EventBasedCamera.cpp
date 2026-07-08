@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 20/3/24.
-//  Copyright (c) 2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/vision/EventBasedCamera.h"
@@ -33,7 +33,7 @@
 namespace sf
 {
 
-EventBasedCamera::EventBasedCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, 
+EventBasedCamera::EventBasedCamera(const std::string& uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, 
     float Cp, float Cm, uint32_t Tref, Scalar frequency, Scalar minDistance, Scalar maxDistance) 
     : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
 {
@@ -44,11 +44,6 @@ EventBasedCamera::EventBasedCamera(std::string uniqueName, unsigned int resoluti
     lastEventCount_ = 0;
     newDataCallback_ = nullptr;
     imageData_ = nullptr;
-    glCamera_ = nullptr;
-}
-
-EventBasedCamera::~EventBasedCamera()
-{
     glCamera_ = nullptr;
 }
 
@@ -84,14 +79,21 @@ void EventBasedCamera::InitGraphics(bool& seesParticles)
 {
     seesParticles = true;
 
-    glCamera_ = new OpenGLEventBasedCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX_, resY_, (GLfloat)fovH_, 
-                                    depthRange_, C_, Tr_, freq_ < Scalar(0));
+    // Create camera
+    std::unique_ptr<OpenGLEventBasedCamera> glCamera = std::make_unique<OpenGLEventBasedCamera>(
+        glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX_, resY_, (GLfloat)fovH_, 
+        depthRange_, C_, Tr_, freq_ < Scalar(0)
+    );
+
+    // Setup camera
+    glCamera_ = glCamera.get();
     glCamera_->setNoise(sigmaC_);
     glCamera_->setCamera(this);
     UpdateTransform();
     glCamera_->UpdateTransform();
     InternalUpdate(0);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera_);
+
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glCamera));
 }
 
 void EventBasedCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)

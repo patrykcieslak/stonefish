@@ -34,24 +34,24 @@
 namespace sf
 {
 
-Mesh* LoadGeometryFromFile(const std::string& path, GLfloat scale)
+std::unique_ptr<Mesh> LoadGeometryFromFile(const std::string& path, GLfloat scale)
 {
-    std::string extension = path.substr(path.length()-3,3);
-    Mesh* mesh = nullptr;
+    std::string extension = path.substr(path.length()-3,3); // Get file extension
     
     if(extension == "stl" || extension == "STL")
-        mesh = LoadSTL(path, scale);
+        return LoadSTL(path, scale);
     else if(extension == "obj" || extension == "OBJ")
-        mesh = LoadOBJ(path, scale);
-    else
+        return LoadOBJ(path, scale);
+    else // Unsupported file type
+    {
         cError("Unsupported geometry file type: %s!", extension.c_str());
-    
-    return mesh;
+        return nullptr;
+    }
 }
 
-Mesh* LoadOBJ(const std::string& path, GLfloat scale)
+std::unique_ptr<Mesh> LoadOBJ(const std::string& path, GLfloat scale)
 {
-    Mesh* mesh = nullptr;
+    std::unique_ptr<Mesh> mesh {};
 
     cInfo("Loading geometry from: %s", path.c_str());
     
@@ -81,9 +81,8 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
 
     if(hasUVs && hasNormals)
     {
-        TexturableMesh* tmesh = new TexturableMesh;
-        mesh = tmesh;
-
+        std::unique_ptr<TexturableMesh> tmesh = std::make_unique<TexturableMesh>();
+        
         // Initialize positions (there will be at least one new vertex per each new position)
         tmesh->vertices.resize(objData.attributes.positions.size()/3);
         for (size_t i=0; i<tmesh->vertices.size(); ++i)
@@ -168,12 +167,13 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
         tmesh->vertices.resize(tmesh->vertices.size() + sortedGeneratedVertices.size());
         for (size_t i=0; i<sortedGeneratedVertices.size(); ++i)
             tmesh->vertices[genVStart + i] = sortedGeneratedVertices[i].vertex;
+
+        mesh = std::move(tmesh);
     }
     else
     {
-        PlainMesh* pmesh = new PlainMesh;
-        mesh = pmesh;
-        
+        std::unique_ptr<PlainMesh> pmesh = std::make_unique<PlainMesh>();
+
         // Initialize positions
         pmesh->vertices.resize(objData.attributes.positions.size()/3);
         for (size_t i=0; i<pmesh->vertices.size(); ++i)
@@ -269,6 +269,7 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
                 }
             }
         }
+        mesh = std::move(pmesh);
     }
     
     int64_t end = GetTimeInMicroseconds();
@@ -281,7 +282,7 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
     return mesh;
 }
 
-Mesh* LoadSTL(const std::string& path, GLfloat scale)
+std::unique_ptr<Mesh> LoadSTL(const std::string& path, GLfloat scale)
 {
     //Read STL data
     FILE* file = fopen(path.c_str(), "rb");   
@@ -294,9 +295,10 @@ Mesh* LoadSTL(const std::string& path, GLfloat scale)
     
     cInfo("Loading geometry from: %s", path.c_str());
     
+    std::unique_ptr<PlainMesh> mesh = std::make_unique<PlainMesh>();
+
     char line[128];
     char keyword[10];
-    PlainMesh* mesh = new PlainMesh;
     Vertex v;
     
     while(fgets(line, 128, file))
@@ -327,7 +329,7 @@ Mesh* LoadSTL(const std::string& path, GLfloat scale)
     
     fclose(file);
     
-    //Remove duplicates (so that it becomes equivalent to OBJ file representation)
+    //TODO: Remove duplicates (so that it becomes equivalent to OBJ file representation)
     
     return mesh;
 }

@@ -23,8 +23,7 @@
 //  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Propeller__
-#define __Stonefish_Propeller__
+#pragma once
 
 #include "actuators/LinkActuator.h"
 
@@ -45,7 +44,7 @@ namespace sf
          \param rightHand a flag to indicate if the propeller is right hand (clockwise rotation)
          \param inverted a flag to indicate if the setpoint is inverted (positive value results in backward force)
         */
-        Propeller(std::string uniqueName, std::unique_ptr<SolidEntity> propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand, bool inverted = false);
+        Propeller(const std::string& uniqueName, std::unique_ptr<SolidEntity> propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand, bool inverted = false);
         
         //! A method used to update the internal state of the thruster.
         /*!
@@ -104,5 +103,3 @@ namespace sf
         Scalar iError_;
     };
 }
-
-#endif

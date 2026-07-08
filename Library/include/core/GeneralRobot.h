@@ -23,8 +23,7 @@
 //  Copyright(c) 2023-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_GeneralRobot__
-#define __Stonefish_GeneralRobot__
+#pragma once
 
 #include "core/Robot.h"
 
@@ -88,5 +87,3 @@ namespace sf
         std::vector<std::pair<JointActuator*, std::string>> jaAttachments_;
     };
 }
-
-#endif

@@ -23,8 +23,7 @@
 //  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Joint__
-#define __Stonefish_Joint__
+#pragma once
 
 #include "BulletDynamics/Featherstone/btMultiBodyConstraint.h"
 #include "StonefishCommon.h"
@@ -47,7 +46,7 @@ namespace sf
          \param uniqueName a name for the joint
          \param collideLinked a flag that sets if the bodies connected by the joint should coliide
          */
-        Joint(std::string uniqueName, bool collideLinked = true);
+        Joint(const std::string& uniqueName, bool collideLinked = true);
         
         //! A destructor.
         virtual ~Joint();
@@ -81,7 +80,7 @@ namespace sf
         virtual JointType getType() const = 0;
         
         //! A method returning the name of the joint.
-        std::string getName() const;
+        const std::string& getName() const;
         
         //! A method returning the internal constraint.
         btTypedConstraint* getConstraint();
@@ -115,5 +114,3 @@ namespace sf
         bool collisionEnabled_;
     };
 }
-
-#endif

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 02/11/2017.
-//  Copyright (c) 2017-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Pressure.h"
@@ -32,7 +32,7 @@
 namespace sf
 {
 
-Pressure::Pressure(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Pressure::Pressure(const std::string& uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels_.push_back(SensorChannel("Pressure", QuantityType::PRESSURE));
 }
@@ -46,8 +46,7 @@ void Pressure::InternalUpdate(Scalar dt)
         data += liq->GetPressure(getSensorFrame().getOrigin());
     
     //Record sample
-    Sample s{std::vector<Scalar>({data})};
-    AddSampleToHistory(s);
+    AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({data})));
 }
 
 void Pressure::setRange(Scalar max)

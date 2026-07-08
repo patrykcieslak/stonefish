@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 8/20/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLPointLight.h"
@@ -38,9 +38,8 @@ namespace sf
 OpenGLPointLight::OpenGLPointLight(glm::vec3 position, GLfloat radius, glm::vec3 color, GLfloat lum) : OpenGLLight(position, radius, color, lum)
 {
     colorLi_ = glm::vec4(color, (GLfloat)(lum/(4.f*M_PI)));
-	Mesh* m = OpenGLContent::BuildSphere(getSourceRadius());
-	sourceObject_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(m);
-    delete m;
+	std::unique_ptr<Mesh> m = OpenGLContent::BuildSphere(getSourceRadius());
+	sourceObject_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(m.get());
 }
 
 LightType OpenGLPointLight::getType() const

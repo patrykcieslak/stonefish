@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/01/13.
-//  Copyright (c) 2013-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/solids/Torus.h"
@@ -31,7 +31,7 @@
 namespace sf
 {
 
-Torus::Torus(std::string uniqueName, PhysicsSettings phy, Scalar majorRadius, Scalar minorRadius, const Transform& origin, std::string material, std::string look, Scalar thickness)
+Torus::Torus(const std::string& uniqueName, PhysicsSettings phy, Scalar majorRadius, Scalar minorRadius, const Transform& origin, const std::string& material, const std::string& look, Scalar thickness)
     : SolidEntity(uniqueName, phy, material, look, thickness)
 {
     majorRadius_ = majorRadius;

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/SimulationApp.h"
@@ -31,9 +31,9 @@
 namespace sf
 {
 
-SimulationApp::SimulationApp(std::string title, std::string dataDirPath, SimulationManager* sim)
+SimulationApp::SimulationApp(std::string title, std::string dataDirPath, std::unique_ptr<SimulationManager> sim)
     : console_{new Console()}, startTime_{0}, autostep_{true}, timeStep_{Scalar(0)}, state_{SimulationState::NOT_READY},
-      simManager_{sim}, title_{title}, dataPath_{dataDirPath}, physicsTime_{0.0}
+      simManager_{std::move(sim)}, title_{title}, dataPath_{dataDirPath}, physicsTime_{0.0}
 {
     SimulationApp::handle = this;
 
@@ -57,7 +57,7 @@ SimulationState SimulationApp::getState() const
 
 SimulationManager* SimulationApp::getSimulationManager()
 {
-    return simManager_;
+    return simManager_.get();
 }
 
 double SimulationApp::getPhysicsTime()
@@ -77,7 +77,7 @@ std::string SimulationApp::getName()
 
 Console* SimulationApp::getConsole()
 {
-    return console_;
+    return console_.get();
 }
 
 void SimulationApp::Init()

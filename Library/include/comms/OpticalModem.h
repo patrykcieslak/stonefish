@@ -23,8 +23,7 @@
 //  Copyright (c) 2025-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpticalModem__
-#define __Stonefish_OpticalModem__
+#pragma once
 
 #include <map>
 #include "comms/Comm.h"
@@ -43,7 +42,7 @@ namespace sf
          \param operatingRange the maximum ideal operating range [m]
          \param ambientLightSensitivity an empirical unitless factor [0.0, 1.0] specifying how ambient light impacts the device operation
          */
-        OpticalModem(std::string uniqueName, uint64_t deviceId, Scalar fovDeg, Scalar operatingRange, Scalar ambientLightSensitivity);
+        OpticalModem(const std::string& uniqueName, uint64_t deviceId, Scalar fovDeg, Scalar operatingRange, Scalar ambientLightSensitivity);
         
         //! A destructor.
         virtual ~OpticalModem();
@@ -84,5 +83,3 @@ namespace sf
         static std::map<uint64_t, OpticalModem*> nodes;
     };
 }
-    
-#endif

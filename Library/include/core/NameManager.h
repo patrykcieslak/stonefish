@@ -23,8 +23,7 @@
 //  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_NameManager__
-#define __Stonefish_NameManager__
+#pragma once
 
 #include "StonefishCommon.h"
 
@@ -60,5 +59,3 @@ namespace sf
         std::vector<std::string> names_;
     };
 }
-    
-#endif

@@ -23,8 +23,7 @@
 //  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Light__
-#define __Stonefish_Light__
+#pragma once
 
 #include "actuators/LinkActuator.h"
 #include "graphics/OpenGLDataStructs.h"
@@ -46,7 +45,7 @@ namespace sf
          \param color a color of the light
          \param lum the luminous power of the light [lm]
          */
-        Light(std::string uniqueName, Scalar radius, Color color, Scalar lum);
+        Light(const std::string& uniqueName, Scalar radius, Color color, Scalar lum);
         
         //! A constructor of a spot light.
         /*!
@@ -56,7 +55,7 @@ namespace sf
          \param color a color of the light
          \param lum the luminous power of the light [lm]
          */
-        Light(std::string uniqueName, Scalar radius, Scalar coneAngleDeg, Color color, Scalar lum);
+        Light(const std::string& uniqueName, Scalar radius, Scalar coneAngleDeg, Color color, Scalar lum);
         
 		//! A method used to attach the comm device to the world origin.
         /*!
@@ -121,5 +120,3 @@ namespace sf
         OpenGLLight* glLight_;
     };
 }
-
-#endif

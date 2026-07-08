@@ -31,11 +31,11 @@
 namespace sf
 {
 
-JointSensor::JointSensor(std::string uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
+JointSensor::JointSensor(const std::string& uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
 {
-    fe_ = NULL;
+    fe_ = nullptr;
     jId_ = 0;
-    j_ = NULL;
+    j_ = nullptr;
 }
 
 SensorType JointSensor::getType() const
@@ -56,9 +56,9 @@ void JointSensor::getSensorVelocity(Vector3& linear, Vector3& angular) const
 
 std::string JointSensor::getJointName() const
 {
-    if(j_ != NULL)
+    if(j_ != nullptr)
         return j_->getName();
-    else if(fe_ != NULL)
+    else if(fe_ != nullptr)
         return fe_->getJointName(jId_);
     else
         return std::string("");
@@ -66,7 +66,7 @@ std::string JointSensor::getJointName() const
 
 void JointSensor::AttachToJoint(FeatherstoneEntity* multibody, size_t jointId)
 {
-    if(multibody != NULL && jointId < multibody->getNumOfJoints())
+    if(multibody != nullptr && jointId < multibody->getNumOfJoints())
     {
         fe_ = multibody;
         jId_ = jointId;
@@ -75,7 +75,7 @@ void JointSensor::AttachToJoint(FeatherstoneEntity* multibody, size_t jointId)
 
 void JointSensor::AttachToJoint(Joint* joint)
 {
-    if(joint != NULL)
+    if(joint != nullptr)
         j_ = joint;
 }
 

@@ -23,8 +23,7 @@
 //  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Terrain__
-#define __Stonefish_Terrain__
+#pragma once
 
 #include "BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h"
 #include "entities/StaticEntity.h"
@@ -46,10 +45,8 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param uvScale scaling of texture coordinates
          */
-        Terrain(std::string uniqueName, std::string pathToHeightmap, Scalar scaleX, Scalar scaleY, Scalar height, std::string material, std::string look = "", float uvScale = 1.f);
-        
-        //! A destructor.
-        ~Terrain();
+        Terrain(const std::string& uniqueName, const std::string& pathToHeightmap, Scalar scaleX, Scalar scaleY, Scalar height, 
+            const std::string& material, const std::string& look = "", float uvScale = 1.f);
         
         //! A method used to add the terrain to the simulation.
         /*!
@@ -69,9 +66,8 @@ namespace sf
         StaticEntityType getStaticType();
         
     private:
-        Scalar* heightfield_;
+        std::vector<Scalar> heightfield_;
         Scalar maxHeight_;
     };
 }
 
-#endif

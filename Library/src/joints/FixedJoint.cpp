@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 2/4/13.
-//  Copyright (c) 2013-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/FixedJoint.h"
@@ -35,7 +35,7 @@
 namespace sf
 {
 
-FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid) 
+FixedJoint::FixedJoint(const std::string& uniqueName, SolidEntity* solid) 
     : Joint(uniqueName, false)
 {
     btRigidBody* body = solid->rigidBody_;
@@ -53,7 +53,7 @@ FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid)
     cInfo("Fixed joint created between the world and '%s'.", jSolidB_->getName().c_str());
 }
 
-FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB) 
+FixedJoint::FixedJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB) 
     : Joint(uniqueName, false)
 {
     btRigidBody* bodyA = solidA->rigidBody_;
@@ -70,7 +70,7 @@ FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity*
     cInfo("Fixed joint created between '%s' and '%s'.", jSolidA_->getName().c_str(), jSolidB_->getName().c_str());
 }
 
-FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId) 
+FixedJoint::FixedJoint(const std::string& uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId) 
     : Joint(uniqueName, false)
 {
     Transform linkTransform = fe->getLinkTransform(linkId+1);
@@ -92,7 +92,7 @@ FixedJoint::FixedJoint(std::string uniqueName, SolidEntity* solid, FeatherstoneE
     cInfo("Fixed joint created between '%s' and '%s'.", jSolidA_->getName().c_str(), jSolidB_->getName().c_str());
 }
 
-FixedJoint::FixedJoint(std::string uniqueName, FeatherstoneEntity* feA, FeatherstoneEntity* feB, int linkIdA, int linkIdB) : Joint(uniqueName, false)
+FixedJoint::FixedJoint(const std::string& uniqueName, FeatherstoneEntity* feA, FeatherstoneEntity* feB, int linkIdA, int linkIdB) : Joint(uniqueName, false)
 {
     Transform linkATransform = feA->getLinkTransform(linkIdA+1);
     Transform linkBTransform = feB->getLinkTransform(linkIdB+1);

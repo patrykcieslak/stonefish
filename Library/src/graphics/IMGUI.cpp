@@ -836,7 +836,7 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
     DrawRoundedRect(x, y, w, h, theme_[PLOT_COLOR]);
     
     //data
-    const std::vector<Sample>* data = sens->getHistory();
+    std::unique_ptr<std::vector<Sample>> data = sens->getHistory();
     
     if(data->size() > 1)
     {
@@ -953,8 +953,6 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
             DrawPlainText(x + backgroundMargin_, y + backgroundMargin_, theme_[PLOT_TEXT_COLOR], buffer);
         }
     }
-    
-    delete data;
         
     //title
     glm::vec2 titleDim = PlainTextDimensions(title);
@@ -1145,8 +1143,8 @@ bool IMGUI::DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarS
     DrawRoundedRect(x, y, w, h, theme_[PLOT_COLOR]);
     
     //data
-    const std::vector<Sample>* dataX = sensX->getHistory();
-    const std::vector<Sample>* dataY = sensY->getHistory();
+    std::unique_ptr<std::vector<Sample>> dataX = sensX->getHistory();
+    std::unique_ptr<std::vector<Sample>> dataY = sensY->getHistory();
     
     if((dataX->size() > 1) && (dataY->size() > 1))
     {
@@ -1257,9 +1255,6 @@ bool IMGUI::DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarS
             glDeleteBuffers(1, &vbo);
         }
     }
-    
-    delete dataX;
-    delete dataY;
     
     //title
     glm::vec2 titleDim = PlainTextDimensions(title);

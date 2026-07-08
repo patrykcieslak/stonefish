@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/07/2023.
-//  Copyright (c) 2023-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2023-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Push.h"
@@ -31,7 +31,7 @@
 namespace sf
 {
 
-Push::Push(std::string uniqueName, bool inverted) : LinkActuator(uniqueName)
+Push::Push(const std::string& uniqueName, bool inverted) : LinkActuator(uniqueName)
 {
     setpoint_ = Scalar(0);
     inv_ = inverted;

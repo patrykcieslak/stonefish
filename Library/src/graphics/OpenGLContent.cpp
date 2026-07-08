@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/06/17.
-//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLContent.h"
@@ -62,7 +62,7 @@ OpenGLContent::OpenGLContent()
     csBuf_[1] = 0;
     cylinder_.vao = 0;
     ellipsoid_.vao = 0;
-    lightSourceShader_[0] = lightSourceShader_[1] = NULL;
+    lightSourceShader_[0] = lightSourceShader_[1] = nullptr;
     eyePos_ = glm::vec3();
     viewDir_ = glm::vec3(1.f,0,0);
     viewProjection_ = glm::mat4();
@@ -135,7 +135,7 @@ OpenGLContent::OpenGLContent()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     //Cylinder helper
-    Mesh* m = BuildCylinder(1.f, 1.f, 12);
+    std::unique_ptr<Mesh> m = BuildCylinder(1.f, 1.f, 12);
 
     glGenVertexArrays(1, &cylinder_.vao);
     glGenBuffers(1, &cylinder_.vboVertex);
@@ -155,8 +155,6 @@ OpenGLContent::OpenGLContent()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face) * m->faces.size(), m->getFaceDataPointer(), GL_STATIC_DRAW);
     OpenGLState::BindVertexArray(0);
     
-    delete m;
-
     //Ellipsoid helper
     m = BuildSphere(1.f, 3);
     
@@ -177,8 +175,6 @@ OpenGLContent::OpenGLContent()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ellipsoid_.vboIndex);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face) * m->faces.size(), m->getFaceDataPointer(), GL_STATIC_DRAW);
     OpenGLState::BindVertexArray(0);
-
-    delete m;
 
     //Generate UBOs
     glGenBuffers(1, &lightsUBO_);
@@ -553,8 +549,8 @@ OpenGLContent::~OpenGLContent()
     delete basicShaders_["tex_cube"];
     delete basicShaders_["flat"];
     delete basicShaders_["shadow"];
-    if(lightSourceShader_[0] != NULL) delete lightSourceShader_[0];
-    if(lightSourceShader_[1] != NULL) delete lightSourceShader_[1];
+    if(lightSourceShader_[0] != nullptr) delete lightSourceShader_[0];
+    if(lightSourceShader_[1] != nullptr) delete lightSourceShader_[1];
     
     //Material shaders
     for(size_t i=0; i<materialShaders_.size(); ++i)
@@ -562,11 +558,6 @@ OpenGLContent::~OpenGLContent()
         for(auto& [key, shader] : materialShaders_[i].shaders)
             delete shader;
     }
-    
-    //Views
-    if(views_.size() == 1) //Trackball left after destroying content
-        delete views_[0];
-    views_.clear();
 }
 
 void OpenGLContent::Finalize()
@@ -598,14 +589,9 @@ void OpenGLContent::DestroyContent()
         glDeleteVertexArrays(1, &objects_[i].vao);
     }	
     objects_.clear();
-
-    for(size_t i=0; i<views_.size(); ++i)
-		delete views_[i];
-	views_.clear();
-    
-    for(size_t i=0; i<lights_.size(); ++i)
-        delete lights_[i];
+    views_.clear();
     lights_.clear();
+
     OpenGLLight::Destroy();
 }
 
@@ -1371,15 +1357,15 @@ std::string OpenGLContent::CreatePhysicalLook(const std::string& name, glm::vec3
     return look.name;
 }
 
-void OpenGLContent::AddView(OpenGLView *view)
+void OpenGLContent::AddView(std::unique_ptr<OpenGLView> view)
 {
-    views_.push_back(view);
+    views_.push_back(std::move(view));
 }
 
 OpenGLView* OpenGLContent::getView(size_t id)
 {
     if(id < views_.size())
-        return views_[id];
+        return views_[id].get();
     else
         return nullptr;
 }
@@ -1389,16 +1375,16 @@ size_t OpenGLContent::getViewsCount()
     return views_.size();
 }
 
-void OpenGLContent::AddLight(OpenGLLight* light)
+void OpenGLContent::AddLight(std::unique_ptr<OpenGLLight> light)
 {
-    lights_.push_back(light);
+    lights_.push_back(std::move(light));
     std::sort(lights_.begin(), lights_.end());
 }
 
 OpenGLLight* OpenGLContent::getLight(size_t id)
 {
     if(id < lights_.size())
-        return lights_[id];
+        return lights_[id].get();
     else
         return nullptr;
 }
@@ -1640,9 +1626,9 @@ GLuint OpenGLContent::GenerateFramebuffer(const std::vector<FBOTexture>& texture
     }
 }
 
-Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents, GLfloat uvScale)
+std::unique_ptr<Mesh> OpenGLContent::BuildPlane(GLfloat halfExtents, GLfloat uvScale)
 {
-    TexturableMesh* mesh = new TexturableMesh;
+    std::unique_ptr<TexturableMesh> mesh = std::make_unique<TexturableMesh>();
     Face f;
     TexturableVertex vt;
     
@@ -1682,15 +1668,15 @@ Mesh* OpenGLContent::BuildPlane(GLfloat halfExtents, GLfloat uvScale)
     
     int n = btClamped((int)roundf(log2f(halfExtents/50.f)), 0, 8);
     for(int i=0; i<n; ++i)
-        Subdivide(mesh, false);
+        Subdivide(mesh.get(), false);
 
     return mesh;
 }
 
-Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions, unsigned int uvMode)
+std::unique_ptr<Mesh> OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions, unsigned int uvMode)
 {
     //Build mesh
-    TexturableMesh* mesh = new TexturableMesh;
+    std::unique_ptr<TexturableMesh> mesh = std::make_unique<TexturableMesh>();
     Face f;
     TexturableVertex vt;
     
@@ -1939,15 +1925,16 @@ Mesh* OpenGLContent::BuildBox(glm::vec3 halfExtents, unsigned int subdivisions, 
     }
     
     //Postprocess
-    for(unsigned int i=0; i<subdivisions; ++i) Subdivide(mesh);
-    ComputeTangents(mesh);
+    for(unsigned int i=0; i<subdivisions; ++i) 
+        Subdivide(mesh.get());
+    ComputeTangents(mesh.get());
 
     return mesh;
 }
 
-Mesh* OpenGLContent::BuildSphere(GLfloat radius, unsigned int subdivisions) 
+std::unique_ptr<Mesh> OpenGLContent::BuildSphere(GLfloat radius, unsigned int subdivisions) 
 {
-    PlainMesh* mesh = new PlainMesh;
+    std::unique_ptr<PlainMesh> mesh = std::make_unique<PlainMesh>();
     Face f;
     Vertex vt;
     vt.normal = glm::vec3(1,0,0);
@@ -2079,7 +2066,7 @@ Mesh* OpenGLContent::BuildSphere(GLfloat radius, unsigned int subdivisions)
     
     //Subdivide to get smooth sphere
     for(unsigned int i=0; i<subdivisions; ++i)
-        Subdivide(mesh, true);
+        Subdivide(mesh.get(), true);
 
     //Compute polyhedron volume
     Scalar volume = 0;
@@ -2107,9 +2094,9 @@ Mesh* OpenGLContent::BuildSphere(GLfloat radius, unsigned int subdivisions)
     return mesh;
 }
 
-Mesh* OpenGLContent::BuildCylinder(GLfloat radius, GLfloat height, unsigned int slices)
+std::unique_ptr<Mesh> OpenGLContent::BuildCylinder(GLfloat radius, GLfloat height, unsigned int slices)
 {
-    TexturableMesh* mesh = new TexturableMesh;
+    std::unique_ptr<TexturableMesh> mesh = std::make_unique<TexturableMesh>();
     GLfloat halfHeight = height/2.f;
     TexturableVertex vt;
     Face f;
@@ -2189,15 +2176,16 @@ Mesh* OpenGLContent::BuildCylinder(GLfloat radius, GLfloat height, unsigned int 
         mesh->faces.push_back(f);
     }
     
-    Subdivide(mesh);
-    Subdivide(mesh);
-    ComputeTangents(mesh);
+    Subdivide(mesh.get());
+    Subdivide(mesh.get());
+    ComputeTangents(mesh.get());
+
     return mesh;
 }
 
-Mesh* OpenGLContent::BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsigned int majorSlices, unsigned int minorSlices)
+std::unique_ptr<Mesh> OpenGLContent::BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsigned int majorSlices, unsigned int minorSlices)
 {
-    TexturableMesh* mesh = new TexturableMesh;
+    std::unique_ptr<TexturableMesh> mesh = std::make_unique<TexturableMesh>();
     Face f;
     TexturableVertex vt;
 
@@ -2240,13 +2228,14 @@ Mesh* OpenGLContent::BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsign
         }
     }
     
-    ComputeTangents(mesh);
+    ComputeTangents(mesh.get());
+
     return mesh;
 }
     
-Mesh* OpenGLContent::BuildWing(GLfloat baseChordLength, GLfloat tipChordLength, GLfloat maxCamber, GLfloat maxCamberPos, GLfloat profileThickness, GLfloat wingLength)
+std::unique_ptr<Mesh> OpenGLContent::BuildWing(GLfloat baseChordLength, GLfloat tipChordLength, GLfloat maxCamber, GLfloat maxCamberPos, GLfloat profileThickness, GLfloat wingLength)
 {
-    TexturableMesh* mesh = new TexturableMesh;
+    std::unique_ptr<TexturableMesh> mesh = std::make_unique<TexturableMesh>();
     
     GLfloat T = profileThickness/100.f;
     GLfloat m = maxCamber/100.f;
@@ -2446,7 +2435,7 @@ Mesh* OpenGLContent::BuildWing(GLfloat baseChordLength, GLfloat tipChordLength, 
     }
     
     //Smooth the profile normals
-    SmoothNormals(mesh);
+    SmoothNormals(mesh.get());
 
     //Base cap
     v.normal = glm::vec3(0.f,-1.f,0.f);
@@ -2515,13 +2504,14 @@ Mesh* OpenGLContent::BuildWing(GLfloat baseChordLength, GLfloat tipChordLength, 
         f.vertexID[2] = i*2+3;
         mesh->faces.push_back(f);
     }
-    ComputeTangents(mesh);
+    ComputeTangents(mesh.get());
+
     return mesh;
 }
     
-Mesh* OpenGLContent::BuildTerrain(GLfloat* heightfield, int sizeX, int sizeY, GLfloat scaleX, GLfloat scaleY, GLfloat maxHeight, GLfloat uvScale)
+std::unique_ptr<Mesh> OpenGLContent::BuildTerrain(const std::vector<GLdouble>& heightfield, int sizeX, int sizeY, GLfloat scaleX, GLfloat scaleY, GLfloat maxHeight, GLfloat uvScale)
 {
-    TexturableMesh* mesh = new TexturableMesh;
+    std::unique_ptr<TexturableMesh> mesh = std::make_unique<TexturableMesh>();
     Face f;
     TexturableVertex vt;
     
@@ -2533,7 +2523,7 @@ Mesh* OpenGLContent::BuildTerrain(GLfloat* heightfield, int sizeX, int sizeY, GL
     for(int i=0; i<sizeY; ++i)
         for(int j=0; j<sizeX; ++j)
         {
-            vt.pos = glm::vec3((GLfloat)j/(GLfloat)(sizeX-1)*fullSizeX-offsetX, (GLfloat)i/(GLfloat)(sizeY-1)*fullSizeY-offsetY, heightfield[i*sizeX + j]-maxHeight/2.f);
+            vt.pos = glm::vec3((GLfloat)j/(GLfloat)(sizeX-1)*fullSizeX-offsetX, (GLfloat)i/(GLfloat)(sizeY-1)*fullSizeY-offsetY, (GLfloat)heightfield[i*sizeX + j]-maxHeight/2.f);
             vt.normal = glm::vec3(0.f,0.f,-1.f);
             vt.uv = glm::vec2((GLfloat)j/(GLfloat)(sizeX-1), (GLfloat)i/(GLfloat)(sizeY-1)) * uvScale;
             mesh->vertices.push_back(vt);
@@ -2551,22 +2541,24 @@ Mesh* OpenGLContent::BuildTerrain(GLfloat* heightfield, int sizeX, int sizeY, GL
             mesh->faces.push_back(f);
         }
     
-    SmoothNormals(mesh);
-    ComputeTangents(mesh);
+    SmoothNormals(mesh.get());
+    ComputeTangents(mesh.get());
+    
     return mesh;
 }
 
-Mesh* OpenGLContent::LoadMesh(const std::string& filename, GLfloat scale, bool smooth)
+std::unique_ptr<Mesh> OpenGLContent::LoadMesh(const std::string& filename, GLfloat scale, bool smooth)
 {
-    Mesh* mesh = LoadGeometryFromFile(filename, scale);
-    CheckAndRepairFaceVertexOrder(mesh);
-
+    std::unique_ptr<Mesh> mesh = LoadGeometryFromFile(filename, scale);
     if(mesh == nullptr)
-        abort();
+        cCritical("Cannot create mesh from file: %s", filename.c_str());
+    
+    CheckAndRepairFaceVertexOrder(mesh.get());
     if(smooth)
-        SmoothNormals(mesh);
+        SmoothNormals(mesh.get());
     if(mesh->isTexturable())
-        ComputeTangents((TexturableMesh*)mesh);
+        ComputeTangents(static_cast<TexturableMesh*>(mesh.get()));
+
     return mesh;
 }
 

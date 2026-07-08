@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/11/25.
-//  Copyright(c) 2025 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2025-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/CableEntity.h"
@@ -37,8 +37,8 @@
 namespace sf
 {
 
-CableEntity::CableEntity(std::string uniqueName, PhysicsSettings phy, Vector3 firstEnd, Vector3 secondEnd, 
-    size_t numSegments, Scalar diameter, std::string material, std::string look, Scalar stretching, float uvScale) : Entity(uniqueName), phy_(phy)
+CableEntity::CableEntity(const std::string& uniqueName, PhysicsSettings phy, Vector3 firstEnd, Vector3 secondEnd, 
+    size_t numSegments, Scalar diameter, const std::string& material, const std::string& look, Scalar stretching, float uvScale) : Entity(uniqueName), phy_(phy)
 {
     SimulationManager* sm = SimulationApp::getApp()->getSimulationManager();
 

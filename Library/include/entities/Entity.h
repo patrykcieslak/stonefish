@@ -82,7 +82,7 @@ namespace sf
         /*!
          \param uniqueName a name for the entity
          */
-        Entity(std::string uniqueName);
+        Entity(const std::string& uniqueName);
         
         //! A destructor.
         virtual ~Entity();
@@ -97,7 +97,7 @@ namespace sf
         bool isRenderable() const;
         
         //! A method returning the name of the entity.
-        std::string getName() const;
+        const std::string& getName() const;
         
         //! A method returning the type of the entity.
         virtual EntityType getType() const = 0;

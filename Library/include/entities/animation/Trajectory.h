@@ -23,8 +23,7 @@
 //  Copyright(c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Trajectory__
-#define __Stonefish_Trajectory__
+#pragma once
 
 #include "StonefishCommon.h"
 #include "graphics/OpenGLDataStructs.h"
@@ -45,7 +44,7 @@ namespace sf
         Trajectory(PlaybackMode playback);
 
         //! A destructor.
-        virtual ~Trajectory();
+        virtual ~Trajectory() = default;
 
         //! A method updating the trajectory position.
         /*!
@@ -91,5 +90,3 @@ namespace sf
         Vector3 interpAcc_;
     };
 }
-
-#endif

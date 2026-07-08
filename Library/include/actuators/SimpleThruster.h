@@ -23,8 +23,7 @@
 //  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_SimpleThruster__
-#define __Stonefish_SimpleThruster__
+#pragma once
 
 #include "actuators/LinkActuator.h"
 
@@ -40,7 +39,7 @@ namespace sf
          \param propeller a pointer to a rigid body representing the propeller
          \param rightHand a flag to indicate if the propeller is right hand (clockwise rotation)
         */
-        SimpleThruster(std::string uniqueName, std::unique_ptr<SolidEntity> propeller, bool rightHand, bool inverted = false);
+        SimpleThruster(const std::string& uniqueName, std::unique_ptr<SolidEntity> propeller, bool rightHand, bool inverted = false);
         
         //! A method used to update the internal state of the thruster.
         /*!
@@ -94,4 +93,3 @@ namespace sf
     };
 }
 
-#endif

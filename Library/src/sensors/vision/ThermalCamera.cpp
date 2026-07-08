@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 26/05/24.
-//  Copyright (c) 2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/vision/ThermalCamera.h"
@@ -33,7 +33,7 @@
 namespace sf
 {
 
-ThermalCamera::ThermalCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar minTemp, Scalar maxTemp,
+ThermalCamera::ThermalCamera(const std::string& uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar minTemp, Scalar maxTemp,
     Scalar frequency, Scalar minDistance, Scalar maxDistance) : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
 {
     depthRange_ = glm::vec2((GLfloat)minDistance, (GLfloat)maxDistance);
@@ -43,12 +43,6 @@ ThermalCamera::ThermalCamera(std::string uniqueName, unsigned int resolutionX, u
     colorMap_ = ColorMap::JET;
     newDataCallback_ = nullptr;
     temperatureData_ = nullptr;
-    displayData_ = nullptr;
-    glCamera_ = nullptr;
-}
-
-ThermalCamera::~ThermalCamera()
-{
     glCamera_ = nullptr;
 }
 
@@ -88,7 +82,7 @@ void* ThermalCamera::getImageDataPointer(unsigned int index)
 
 GLubyte* ThermalCamera::getDisplayDataPointer()
 {
-    return displayData_;
+    return displayData_.data();
 }
 
 VisionSensorType ThermalCamera::getVisionSensorType() const
@@ -105,7 +99,13 @@ void ThermalCamera::InitGraphics(bool& seesParticles)
 {
     seesParticles = false;
 
-    glCamera_ = new OpenGLThermalCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX_, resY_, (GLfloat)fovH_, measurementRange_, depthRange_, freq_ < Scalar(0));
+    // Create camera
+    std::unique_ptr<OpenGLThermalCamera> glCamera = std::make_unique<OpenGLThermalCamera>(
+        glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX_, resY_, (GLfloat)fovH_, measurementRange_, depthRange_, freq_ < Scalar(0)
+    );
+
+    // Set up camera
+    glCamera_ = glCamera.get();
     glCamera_->setNoise(noiseStdDev_);
     glCamera_->setColorMap(colorMap_);
     glCamera_->setDisplayRange(displayRange_);
@@ -113,11 +113,12 @@ void ThermalCamera::InitGraphics(bool& seesParticles)
     UpdateTransform();
     glCamera_->UpdateTransform();
     InternalUpdate(0);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera_);
+
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glCamera));
 
     unsigned int w, h;
     getResolution(w, h);
-    displayData_ = new GLubyte[w*h*3];
+    displayData_.resize(w*h*3);
 }
 
 void ThermalCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
@@ -141,7 +142,7 @@ void ThermalCamera::NewDataReady(void* data, unsigned int index)
         {
             unsigned int w, h;
             getResolution(w, h);
-            memcpy(displayData_, data, w*h*3);
+            memcpy(displayData_.data(), data, w*h*3);
         }
         else
         {

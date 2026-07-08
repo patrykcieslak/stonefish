@@ -41,7 +41,7 @@ namespace sf
          \param origin the position of the trigger in the world frame
          \param look a name of the material used when rendering the trigger
          */
-        Trigger(std::string uniqueName, Scalar radius, const Transform& origin, std::string look = "");
+        Trigger(const std::string& uniqueName, Scalar radius, const Transform& origin, const std::string& look = "");
         
         //! A constructor of a cylindrical trigger object.
         /*!
@@ -51,7 +51,7 @@ namespace sf
          \param origin the position of the trigger in the world frame
          \param look a name of the material used when rendering the trigger
          */
-        Trigger(std::string uniqueName, Scalar radius, Scalar length, const Transform& origin, std::string look = "");
+        Trigger(const std::string& uniqueName, Scalar radius, Scalar length, const Transform& origin, const std::string& look = "");
         
         //! A constructor of a box-shaped trigger object.
         /*!
@@ -60,7 +60,7 @@ namespace sf
          \param origin the position of the trigger in the world frame
          \param look a name of the material used when rendering the trigger
          */
-        Trigger(std::string uniqueName, const Vector3& dimensions, const Transform& origin, std::string look = "");
+        Trigger(const std::string& uniqueName, const Vector3& dimensions, const Transform& origin, const std::string& look = "");
         
         //! A method used to add solids that will call actions if they come in contact with the trigger.
         /*!

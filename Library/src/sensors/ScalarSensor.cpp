@@ -32,41 +32,33 @@
 namespace sf
 {
 
-ScalarSensor::ScalarSensor(std::string uniqueName, Scalar frequency, int historyLength) : Sensor(uniqueName, frequency)
+ScalarSensor::ScalarSensor(const std::string& uniqueName, Scalar frequency, long int historyLength) 
+    : Sensor(uniqueName, frequency), historyLen_(historyLength), sampleCount_(0)
 {
-    historyLen_ = historyLength;
-    history_ = std::deque<Sample*>(0);
-    sampleCount_ = 0;
 }
 
-ScalarSensor::~ScalarSensor()
-{
-    ClearHistory();
-    channels_.clear();
-}
-
-Sample ScalarSensor::getLastSample() const
+const Sample& ScalarSensor::getLastSample() const
 {
     if(history_.size() > 0)
-        return Sample(*history_.back());
+        return *history_.back();
     else
-        return Sample(std::vector<Scalar>(getNumOfChannels(), Scalar(0)), true);
+        throw std::runtime_error("Sensor '" + getName() + "' has no measurement history");
 }
 
-const std::vector<Sample>* ScalarSensor::getHistory()
+std::unique_ptr<std::vector<Sample>> ScalarSensor::getHistory()
 {
     SDL_LockMutex(updateMutex_);
     
-    std::vector<Sample>* historyCopy = new std::vector<Sample>();
+    std::unique_ptr<std::vector<Sample>> historyCopy = std::make_unique<std::vector<Sample>>();
     for(size_t i=0; i<history_.size(); ++i)
-        (*historyCopy).push_back(*(history_[i]));
+        historyCopy->push_back(*history_[i]);
     
     SDL_UnlockMutex(updateMutex_);
     
     return historyCopy;
 }
 
-unsigned short ScalarSensor::getNumOfChannels() const
+size_t ScalarSensor::getNumOfChannels() const
 {
     return channels_.size();
 }
@@ -74,13 +66,9 @@ unsigned short ScalarSensor::getNumOfChannels() const
 Scalar ScalarSensor::getValue(size_t index, size_t channel) const
 {
     if(index < history_.size() && channel < channels_.size())
-    {
-        Sample* s = history_[index];
-        Scalar v = s->getValue(channel);
-        return v;
-    }
-    
-    return Scalar(0);
+        return history_[index]->getValue(channel);
+    else
+        return Scalar(0);
 }
 
 Scalar ScalarSensor::getLastValue(size_t channel) const
@@ -102,21 +90,19 @@ void ScalarSensor::Reset()
     Sensor::Reset();
 }
 
-void ScalarSensor::AddSampleToHistory(const Sample& s)
+void ScalarSensor::AddSampleToHistory(std::unique_ptr<Sample> sample)
 {
     if(historyLen_ < 0 && history_.size() > 0) //No history
     {
-        delete history_[0];
         history_.pop_front();
     }
     else if(historyLen_ > 0 && (int)history_.size() == historyLen_) //Specified history length
     {
-        delete history_[0];
         history_.pop_front();
     }
     //else == 0 --> unlimited history
     
-    Sample* sample = new Sample(s, sampleCount_);
+    sample->setId(sampleCount_);
     ++sampleCount_;
     
     for(size_t i=0; i<sample->getNumOfDimensions(); ++i)
@@ -135,14 +121,11 @@ void ScalarSensor::AddSampleToHistory(const Sample& s)
     }
     
     //Add to history
-    history_.push_back(sample);
+    history_.push_back(std::move(sample));
 }
 
 void ScalarSensor::ClearHistory()
 {
-    for(size_t i = 0; i < history_.size(); i++)
-        delete history_[i];
-    
     history_.clear();
 }
 
@@ -191,17 +174,15 @@ void ScalarSensor::SaveMeasurementsToTextFile(const std::string& path, bool incl
     
     for(size_t i = 0; i < history_.size(); i++)
     {
-        Sample* s = history_[i];
-        
         if(includeTime)
         {
-            fprintf(fp, format.c_str(), s->getTimestamp());
+            fprintf(fp, format.c_str(), history_[i]->getTimestamp());
             fprintf(fp, "\t");
         }
         
         for(size_t h = 0; h < channels_.size(); h++)
         {
-            Scalar v = s->getValue(h);
+            Scalar v = history_[i]->getValue(h);
             
             fprintf(fp, format.c_str(), v);
             

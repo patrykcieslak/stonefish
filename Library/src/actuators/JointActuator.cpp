@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 23/11/2018.
-//  Copyright (c) 2018-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/JointActuator.h"
@@ -31,14 +31,14 @@
 namespace sf
 {
 
-JointActuator::JointActuator(std::string uniqueName) : Actuator(uniqueName)
+JointActuator::JointActuator(const std::string& uniqueName) : Actuator(uniqueName)
 {
     fe_ = nullptr;
     jId_ = 0;
     j_ = nullptr;
 }
 
-std::string JointActuator::getJointName() const
+const std::string& JointActuator::getJointName() const
 {
     if(fe_ != nullptr)
         return fe_->getJointName(jId_);

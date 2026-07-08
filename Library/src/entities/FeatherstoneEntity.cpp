@@ -32,7 +32,7 @@
 namespace sf
 {
 
-FeatherstoneEntity::FeatherstoneEntity(std::string uniqueName, size_t totalNumOfLinks, std::unique_ptr<SolidEntity> baseSolid, bool fixedBase) : Entity(uniqueName)
+FeatherstoneEntity::FeatherstoneEntity(const std::string& uniqueName, size_t totalNumOfLinks, std::unique_ptr<SolidEntity> baseSolid, bool fixedBase) : Entity(uniqueName)
 {
     Scalar M = baseSolid->getAugmentedMass();
     Vector3 I = baseSolid->getAugmentedInertia();
@@ -436,7 +436,7 @@ void FeatherstoneEntity::AddLink(std::unique_ptr<SolidEntity> solid, const Trans
     }
 }
 
-int FeatherstoneEntity::AddRevoluteJoint(std::string name, size_t parent, size_t child, const Vector3& pivot, const Vector3& axis, bool collisionBetweenJointLinks)
+int FeatherstoneEntity::AddRevoluteJoint(const std::string& name, size_t parent, size_t child, const Vector3& pivot, const Vector3& axis, bool collisionBetweenJointLinks)
 {
     //No self joint possible and base cannot be a child
     if(parent == child || child == 0)
@@ -472,7 +472,7 @@ int FeatherstoneEntity::AddRevoluteJoint(std::string name, size_t parent, size_t
     return ((int)joints_.size() - 1);
 }
 
-int FeatherstoneEntity::AddPrismaticJoint(std::string name, size_t parent, size_t child, const Vector3& axis, bool collisionBetweenJointLinks)
+int FeatherstoneEntity::AddPrismaticJoint(const std::string& name, size_t parent, size_t child, const Vector3& axis, bool collisionBetweenJointLinks)
 {
     //No self joint possible and base cannot be a child
     if(parent == child || child == 0)
@@ -508,7 +508,7 @@ int FeatherstoneEntity::AddPrismaticJoint(std::string name, size_t parent, size_
     return ((int)joints_.size() - 1);
 }
 
-int FeatherstoneEntity::AddFixedJoint(std::string name, size_t parent, size_t child, const Vector3& pivot)
+int FeatherstoneEntity::AddFixedJoint(const std::string& name, size_t parent, size_t child, const Vector3& pivot)
 {
     //No self joint possible and base cannot be a child
     if(parent == child || child == 0)

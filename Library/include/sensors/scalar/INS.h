@@ -23,8 +23,7 @@
 //  Copyright (c) 2021-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_INS__
-#define __Stonefish_INS__
+#pragma once
 
 #include "sensors/scalar/LinkSensor.h"
 #include "sensors/scalar/GPS.h"
@@ -43,7 +42,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        INS(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
+        INS(const std::string& uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
     
         //! A method performing internal sensor state update.
         /*!
@@ -116,4 +115,3 @@ namespace sf
     };
 }
 
-#endif

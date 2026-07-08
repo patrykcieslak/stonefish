@@ -23,8 +23,7 @@
 //  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_SimulationManager__
-#define __Stonefish_SimulationManager__
+#pragma once
 
 #include "StonefishCommon.h"
 #include "entities/forcefields/Ocean.h"
@@ -623,5 +622,3 @@ namespace sf
         std::unique_ptr<OpenGLDebugDrawer> debugDrawer_;
     };
 }
-
-#endif

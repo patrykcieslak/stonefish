@@ -47,7 +47,7 @@ public:
    \param invertedSetpoint a flag to indicate if the setpoint is inverted (positive value results in backward force)
    \param normalizedSetpoint a flag to indicate if the setpoint given by the user is normalized [-1,1] 
   */
-  Thruster(std::string uniqueName, std::unique_ptr<SolidEntity> propeller,     
+  Thruster(const std::string& uniqueName, std::unique_ptr<SolidEntity> propeller,     
                        std::unique_ptr<RotorDynamics> rotorDynamics,   
                        std::unique_ptr<ThrustModel> thrustConversion,  
                        Scalar diameter, bool rightHand, Scalar maxSetpoint, 

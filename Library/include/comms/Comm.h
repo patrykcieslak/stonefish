@@ -23,8 +23,7 @@
 //  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Comm__
-#define __Stonefish_Comm__
+#pragma once
 
 #include <SDL2/SDL_mutex.h>
 #include <deque>
@@ -58,7 +57,7 @@ namespace sf
          \param uniqueName a name for the comm device
          \param deviceId an identification code of the device
          */
-        Comm(std::string uniqueName, uint64_t deviceId);
+        Comm(const std::string& uniqueName, uint64_t deviceId);
         
         //! A destructor.
         virtual ~Comm();
@@ -142,7 +141,7 @@ namespace sf
         uint64_t getConnectedId();
         
         //! A method returning the comm name.
-        std::string getName();
+        const std::string& getName() const;
         
         //! A method returning the type of the comm.
         virtual CommType getType() const = 0;
@@ -172,5 +171,3 @@ namespace sf
         bool renderable_;
     };
 }
-
-#endif

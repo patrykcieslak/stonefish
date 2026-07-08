@@ -23,8 +23,7 @@
 //  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_ServoMotor__
-#define __Stonefish_ServoMotor__
+#pragma once
 
 #include "actuators/JointActuator.h"
 
@@ -44,7 +43,7 @@ namespace sf
          \param velocityGain a gain factor used in velocity control
          \param maxTorque the maximum torque that the motor can generate [Nm]
          */
-        Servo(std::string uniqueName, Scalar positionGain, Scalar velocityGain, Scalar maxTorque);
+        Servo(const std::string& uniqueName, Scalar positionGain, Scalar velocityGain, Scalar maxTorque);
         
         //! A method used to attach the actuator to the specified joint of a rigid multibody.
         /*!
@@ -126,4 +125,3 @@ namespace sf
     };
 }
 
-#endif

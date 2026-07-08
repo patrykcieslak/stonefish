@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 2/3/13.
-//  Copyright (c) 2013-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/SphericalJoint.h"
@@ -32,7 +32,7 @@
 namespace sf
 {
 
-SphericalJoint::SphericalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, bool collideLinked) : Joint(uniqueName, collideLinked)
+SphericalJoint::SphericalJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, bool collideLinked) : Joint(uniqueName, collideLinked)
 {
     btRigidBody* bodyA = solidA->rigidBody_;
     btRigidBody* bodyB = solidB->rigidBody_;
@@ -50,7 +50,7 @@ SphericalJoint::SphericalJoint(std::string uniqueName, SolidEntity* solidA, Soli
     angleIC_ = Vector3(0.,0.,0.);
 }
 
-SphericalJoint::SphericalJoint(std::string uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId, const Vector3& pivot, bool collideLinked) : Joint(uniqueName, collideLinked)
+SphericalJoint::SphericalJoint(const std::string& uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId, const Vector3& pivot, bool collideLinked) : Joint(uniqueName, collideLinked)
 {
     Transform linkTransform = fe->getLinkTransform(linkId+1);
     Transform solidTransform = solid->getCGTransform();

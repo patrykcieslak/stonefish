@@ -43,10 +43,10 @@ namespace sf
          \param material the name of the material the body is made of
          \param look the name of the graphical material used for rendering
          */
-        MovingEntity(std::string uniqueName, std::string material, std::string look);
+        MovingEntity(const std::string& uniqueName, const std::string& material, const std::string& look);
         
         //! A destructor.
-        virtual ~MovingEntity();
+        virtual ~MovingEntity() = default;
         
         //! A method adding the body to the simulation manager.
         /*!

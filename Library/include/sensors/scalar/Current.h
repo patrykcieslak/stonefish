@@ -23,8 +23,7 @@
 //  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Current__
-#define __Stonefish_Current__
+#pragma once
 
 #include "sensors/ScalarSensor.h"
 
@@ -42,7 +41,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        Current(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
+        Current(const std::string& uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
         
         //! A method performing internal sensor state update.
         /*!
@@ -77,4 +76,3 @@ namespace sf
     };
 }
 
-#endif

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 4/7/17.
-//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Light.h"
@@ -37,7 +37,7 @@
 namespace sf
 {
 
-Light::Light(std::string uniqueName, Scalar radius, Color color, Scalar lum) 
+Light::Light(const std::string& uniqueName, Scalar radius, Color color, Scalar lum) 
 	: LinkActuator(uniqueName), attach2_(nullptr), attach3_(nullptr), c_(color), coneAngle_(0), glLight_(nullptr)
 {
     if(!SimulationApp::getApp()->hasGraphics())
@@ -47,7 +47,7 @@ Light::Light(std::string uniqueName, Scalar radius, Color color, Scalar lum)
     Fi_ = lum < Scalar(0) ? Scalar(0) : lum;
 }
 
-Light::Light(std::string uniqueName, Scalar radius, Scalar coneAngleDeg, Color color, Scalar lum) 
+Light::Light(const std::string& uniqueName, Scalar radius, Scalar coneAngleDeg, Color color, Scalar lum) 
 	: Light(uniqueName, radius, color, lum)
 {
     coneAngle_ = coneAngleDeg > Scalar(0) ? coneAngleDeg : Scalar(45);
@@ -120,15 +120,18 @@ void Light::AttachToSolid(SolidEntity* body, const Transform& origin)
 
 void Light::InitGraphics()
 {
+    std::unique_ptr<OpenGLLight> light {};
     if(coneAngle_ > Scalar(0)) //Spot light
-        glLight_ = new OpenGLSpotLight(glm::vec3(0.f), glm::vec3(0.f,0.f,-1.f), (GLfloat)R_, (GLfloat)coneAngle_, c_.rgb, (GLfloat)Fi_);
+        light = std::make_unique<OpenGLSpotLight>(glm::vec3(0.f), glm::vec3(0.f,0.f,-1.f), (GLfloat)R_, (GLfloat)coneAngle_, c_.rgb, (GLfloat)Fi_);
     else //Omnidirectional light
-        glLight_ = new OpenGLPointLight(glm::vec3(0.f), (GLfloat)R_, c_.rgb, (GLfloat)Fi_);
+        light = std::make_unique<OpenGLPointLight>(glm::vec3(0.f), (GLfloat)R_, c_.rgb, (GLfloat)Fi_);
     
+    glLight_ = light.get();
     UpdateTransform();
     glLight_->UpdateTransform();
     glLight_->SwitchOn();
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddLight(glLight_);
+
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddLight(std::move(light));
 }
     
 void Light::Update(Scalar dt)

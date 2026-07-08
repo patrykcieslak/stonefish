@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/04/18.
-//  Copyright(c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/forcefields/Trigger.h"
@@ -32,18 +32,18 @@
 namespace sf
 {
 
-Trigger::Trigger(std::string uniqueName, Scalar radius, const Transform& worldTransform, std::string look) : ForcefieldEntity(uniqueName)
+Trigger::Trigger(const std::string& uniqueName, Scalar radius, const Transform& worldTransform, const std::string& look) : ForcefieldEntity(uniqueName)
 {
     ghost_->setCollisionFlags(ghost_->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
     ghost_->setWorldTransform(worldTransform);
     ghost_->setCollisionShape(new btSphereShape(radius));
     active_ = false;
     
-    Mesh* mesh = OpenGLContent::BuildSphere((GLfloat)radius);
+    std::unique_ptr<Mesh> mesh = OpenGLContent::BuildSphere((GLfloat)radius);
     
     if(SimulationApp::getApp()->hasGraphics())
     {
-        objectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh);
+        objectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh.get());
         lookId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
     }
     else
@@ -53,18 +53,18 @@ Trigger::Trigger(std::string uniqueName, Scalar radius, const Transform& worldTr
     }
 }
 
-Trigger::Trigger(std::string uniqueName, Scalar radius, Scalar length, const Transform& worldTransform, std::string look) : ForcefieldEntity(uniqueName)
+Trigger::Trigger(const std::string& uniqueName, Scalar radius, Scalar length, const Transform& worldTransform, const std::string& look) : ForcefieldEntity(uniqueName)
 {
     ghost_->setCollisionFlags(ghost_->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
     ghost_->setWorldTransform(worldTransform);
     ghost_->setCollisionShape(new btCylinderShape(Vector3(radius, length/Scalar(2), radius)));
     active_ = false;
     
-    Mesh* mesh = OpenGLContent::BuildCylinder((GLfloat)radius, (GLfloat)length);
+    std::unique_ptr<Mesh> mesh = OpenGLContent::BuildCylinder((GLfloat)radius, (GLfloat)length);
     
     if(SimulationApp::getApp()->hasGraphics())
     {
-        objectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh);
+        objectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh.get());
         lookId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
     }
     else
@@ -74,7 +74,7 @@ Trigger::Trigger(std::string uniqueName, Scalar radius, Scalar length, const Tra
     }
 }
 
-Trigger::Trigger(std::string uniqueName, const Vector3& dimensions, const Transform& worldTransform, std::string look) : ForcefieldEntity(uniqueName)
+Trigger::Trigger(const std::string& uniqueName, const Vector3& dimensions, const Transform& worldTransform, const std::string& look) : ForcefieldEntity(uniqueName)
 {
     ghost_->setCollisionFlags(ghost_->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
     ghost_->setWorldTransform(worldTransform);
@@ -82,11 +82,11 @@ Trigger::Trigger(std::string uniqueName, const Vector3& dimensions, const Transf
     active_ = false;
     
     glm::vec3 halfExt((GLfloat)(dimensions.x()/Scalar(2)), (GLfloat)(dimensions.y()/Scalar(2)), (GLfloat)(dimensions.z()/Scalar(2)));
-    Mesh* mesh = OpenGLContent::BuildBox(halfExt);
+    std::unique_ptr<Mesh> mesh = OpenGLContent::BuildBox(halfExt);
     
     if(SimulationApp::getApp()->hasGraphics())
     {
-        objectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh);
+        objectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh.get());
         lookId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
     }
     else

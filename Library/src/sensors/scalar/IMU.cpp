@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/05/2014.
-//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/IMU.h"
@@ -33,7 +33,7 @@
 namespace sf
 {
 
-IMU::IMU(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+IMU::IMU(const std::string& uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels_.push_back(SensorChannel("Roll", QuantityType::ANGLE));
     channels_.push_back(SensorChannel("Pitch", QuantityType::ANGLE));
@@ -75,8 +75,7 @@ void IMU::InternalUpdate(Scalar dt)
                 );
     
     //record sample
-    Sample s{std::vector<Scalar>({roll, pitch, yaw, av.x(), av.y(), av.z(), la.x(), la.y(), la.z()})};
-    AddSampleToHistory(s);
+    AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({roll, pitch, yaw, av.x(), av.y(), av.z(), la.x(), la.y(), la.z()})));
 }
 
 void IMU::Reset()

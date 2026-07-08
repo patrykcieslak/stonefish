@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 2/05/19.
-//  Copyright(c) 2019-2025 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/forcefields/Uniform.h"

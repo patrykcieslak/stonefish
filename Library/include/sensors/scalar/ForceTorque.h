@@ -23,8 +23,7 @@
 //  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_ForceTorque__
-#define __Stonefish_ForceTorque__
+#pragma once
 
 #include "sensors/scalar/JointSensor.h"
 
@@ -44,7 +43,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        ForceTorque(std::string uniqueName, SolidEntity* attachment, const Transform& origin, Scalar frequency = Scalar(-1), int historyLength = -1);
+        ForceTorque(const std::string& uniqueName, SolidEntity* attachment, const Transform& origin, Scalar frequency = Scalar(-1), int historyLength = -1);
         
         //! A constructor.
         /*!
@@ -53,7 +52,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        ForceTorque(std::string uniqueName, const Transform& origin, Scalar frequency = Scalar(-1), int historyLength = -1);
+        ForceTorque(const std::string& uniqueName, const Transform& origin, Scalar frequency = Scalar(-1), int historyLength = -1);
         
         //! A method performing internal sensor state update.
         /*!
@@ -90,5 +89,3 @@ namespace sf
         Transform lastFrame_;
     };
 }
-
-#endif

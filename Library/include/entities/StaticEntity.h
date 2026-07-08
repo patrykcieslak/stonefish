@@ -45,10 +45,10 @@ namespace sf
          \param material the name of the material the entity is made of
          \param look the name of the graphical material used for rendering
          */
-        StaticEntity(std::string uniqueName, std::string material, std::string look);
+        StaticEntity(const std::string& uniqueName, const std::string& material, const std::string& look);
         
         //! A destructor.
-        virtual ~StaticEntity();
+        virtual ~StaticEntity() = default;
         
         //! A method implementing the rendering of the entity.
         virtual std::vector<Renderable> Render();
@@ -114,7 +114,7 @@ namespace sf
         
         btRigidBody* rigidBody_;
         Material mat_;
-        Mesh* phyMesh_;
+        std::shared_ptr<Mesh> phyMesh_;
         
         int lookId_;
         int phyObjectId_;

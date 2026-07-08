@@ -23,8 +23,7 @@
 //  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_ScalarSensor__
-#define __Stonefish_ScalarSensor__
+#pragma once
 
 #include <deque>
 #include "sensors/Sensor.h"
@@ -65,7 +64,7 @@ namespace sf
          \param name_ a name for the channel
          \param type_ a type of quantity represented by channel data
          */
-        SensorChannel(std::string name_, QuantityType type_) : name(name_), type(type_), stdDev(0), rangeMin(-BT_LARGE_FLOAT), rangeMax(BT_LARGE_FLOAT) {}
+        SensorChannel(const std::string& name_, QuantityType type_) : name(name_), type(type_), stdDev(0), rangeMin(-BT_LARGE_FLOAT), rangeMax(BT_LARGE_FLOAT) {}
         
         //! A method used to set standard deviation of the measurement
         /*!
@@ -93,10 +92,10 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (0 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        ScalarSensor(std::string uniqueName, Scalar frequency, int historyLength);
+        ScalarSensor(const std::string& uniqueName, Scalar frequency, long int historyLength);
         
         //! A destructor.
-        virtual ~ScalarSensor();
+        virtual ~ScalarSensor() = default;
             
         //! A method resetting the sensor.
         virtual void Reset();
@@ -113,13 +112,13 @@ namespace sf
         void SaveMeasurementsToTextFile(const std::string& path, bool includeTime = true, size_t fixedPrecision = 6);
         
         //! A method returning the number of channels of the sensor.
-        unsigned short getNumOfChannels() const;
+        size_t getNumOfChannels() const;
         
         //! A method returning the last sample.
-        Sample getLastSample() const;
+        const Sample& getLastSample() const;
         
         //! A method returing a pointer to a copy of the history of sensor measurements.
-        const std::vector<Sample>* getHistory();
+        std::unique_ptr<std::vector<Sample>> getHistory();
         
         //! A method returning the value of the measurement.
         /*!
@@ -147,14 +146,13 @@ namespace sf
         virtual ScalarSensorType getScalarSensorType() const = 0;
         
     protected:
-        void AddSampleToHistory(const Sample& s);
-        std::deque<Sample*> history_;
+        void AddSampleToHistory(std::unique_ptr<Sample> s);
+        std::deque<std::unique_ptr<Sample>> history_;
         std::vector<SensorChannel> channels_;
         size_t sampleCount_;
         
     private:
-        int historyLen_;
+        long int historyLen_;
     };
 }
-    
-#endif
+

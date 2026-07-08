@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 26/02/2020.
-//  Copyright (c) 2020-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "comms/AcousticModem.h"
@@ -113,8 +113,8 @@ bool AcousticModem::mutualContact(uint64_t device1Id, uint64_t device2Id)
 }
 
 //Member 
-AcousticModem::AcousticModem(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange)
-                                : Comm(uniqueName, deviceId)
+AcousticModem::AcousticModem(const std::string& uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange)
+    : Comm(uniqueName, deviceId)
 {
     btClamp(maxVerticalFOVDeg, Scalar(0), Scalar(360));
     btClamp(minVerticalFOVDeg, Scalar(0), maxVerticalFOVDeg);

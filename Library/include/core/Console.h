@@ -23,8 +23,7 @@
 //  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Console__
-#define __Stonefish_Console__
+#pragma once
 
 #include <SDL2/SDL_thread.h>
 #include "StonefishCommon.h"
@@ -91,4 +90,3 @@ namespace sf
     };
 }
 
-#endif

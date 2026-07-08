@@ -16,43 +16,45 @@
 */
 
 //
-//  USBLReal.cpp
+//  SimpleUSBL.cpp
 //  Stonefish
 //
-//  Created by Patryk Cieślak on 21/12/2020.
-//  Copyright (c) 2020-2025 Patryk Cieslak. All rights reserved.
+//  Created by Patryk Cieślak on 25/02/2020.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#include "comms/USBLReal.h"
+#include "comms/SimpleUSBL.h"
 
 namespace sf
 {
-
-USBLReal::USBLReal(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange,
-             Scalar carrierFrequency, Scalar baseline) 
+        
+SimpleUSBL::SimpleUSBL(const std::string& uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange) 
            : USBL(uniqueName, deviceId, minVerticalFOVDeg, maxVerticalFOVDeg, operatingRange)
 {
-    freq_ = carrierFrequency;
-    bl_ = baseline;
-    blError_ = Scalar(0);
+    rangeRes_ = Scalar(0);
+    angleRes_ = Scalar(0);
 }
     
-void USBLReal::setNoise(Scalar timeDev, Scalar soundVelocityDev, Scalar phaseDev, Scalar baselineError, Scalar depthDev)
+void SimpleUSBL::setNoise(Scalar rangeDev, Scalar horizontalAngleDevDeg, Scalar verticalAngleDevDeg)
 {
-    noiseTime_ = std::normal_distribution<Scalar>(Scalar(0), btFabs(timeDev));
-    noiseSV_ = std::normal_distribution<Scalar>(Scalar(0), btFabs(soundVelocityDev));
-    noisePhase_ = std::normal_distribution<Scalar>(Scalar(0), btFabs(phaseDev));
-    noiseDepth_ = std::normal_distribution<Scalar>(Scalar(0), btFabs(depthDev));
-    blError_ = baselineError;
+    noiseRange_ = std::normal_distribution<Scalar>(Scalar(0), btFabs(rangeDev));
+    noiseHAngle_ = std::normal_distribution<Scalar>(Scalar(0), btFabs(horizontalAngleDevDeg)/Scalar(180)*M_PI);
+    noiseVAngle_ = std::normal_distribution<Scalar>(Scalar(0), btFabs(verticalAngleDevDeg)/Scalar(180)*M_PI);
     noise_ = true;
 }
 
-void USBLReal::ProcessMessages()
+void SimpleUSBL::setResolution(Scalar range, Scalar angleDeg)
+{
+    rangeRes_ = btFabs(range);
+    angleRes_ = btFabs(angleDeg)/Scalar(180)*M_PI;
+}
+
+void SimpleUSBL::ProcessMessages()
 {
     std::shared_ptr<AcousticDataFrame> msg;
     std::string ack {"ACK"};
     std::vector<uint8_t> ackData(ack.begin(), ack.end());
-    
+
     for(auto it = rxBuffer_.begin(); it != rxBuffer_.end(); ++it)
     {
         msg = std::static_pointer_cast<AcousticDataFrame>(*it);
@@ -64,58 +66,60 @@ void USBLReal::ProcessMessages()
             Transform dT = getDeviceFrame();
             Vector3 dO = dT.getOrigin();
             Vector3 dir = getDeviceFrame().getBasis().inverse() * ((cO - dO).normalized()); //Direction in device frame
-            Scalar slantRange = msg->travelled/Scalar(2); //Distance to node is half of the full travelled distance
+            Scalar slantRange = msg->travelled/Scalar(2); //Distance to node is hald of the full travelled distance
             Scalar t = msg->timeStamp + slantRange/SOUND_VELOCITY_WATER;
             
-            //Find plane coordinates
-            Scalar xLocal = CalcModel(slantRange, btAngle(dir, VX()));
-            Scalar yLocal = CalcModel(slantRange, btAngle(dir, VY()));
-            
-            //Find depth coordinate
-            Scalar zGlobal = cO.getZ();
-            if(noise_)
-            {
-                zGlobal += noiseDepth_(randomGenerator); //Transmitter
-                zGlobal -= noiseDepth_(randomGenerator); //Receiver
-            }
-            
-            //Update position in the transponder and in the USBL
-            Vector3 worldPos = dT * Vector3(xLocal, yLocal, 0);
-            worldPos.setZ(zGlobal);
-            cNode->UpdatePosition(worldPos, true);
-            
-            //Populate beacon info structure
+            //Find ranging angles
             Scalar d = Vector3(dir.getX(), dir.getY(), Scalar(0)).length();
             Scalar hAngle = atan2(dir.getY(), dir.getX());
             Scalar vAngle = atan2(d, dir.getZ());
         
+            //Apply noise and quantization
+            if(noise_)
+            {
+                slantRange += noiseRange_(randomGenerator);
+                hAngle += noiseHAngle_(randomGenerator);
+                vAngle += noiseVAngle_(randomGenerator);
+            }
+
+            if(rangeRes_ > Scalar(0))
+                slantRange -= btFmod(slantRange, rangeRes_); //Quantization
+
+            if(angleRes_ > Scalar(0))
+            {
+                hAngle -= btFmod(hAngle, angleRes_); //Quantization
+                vAngle -= btFmod(vAngle, angleRes_); //Quantization
+            }
+            
+            //Calculate receiver position
+            Vector3 pos;
+            dir.setX(btCos(hAngle) * btSin(vAngle));
+            dir.setY(btSin(hAngle) * btSin(vAngle));
+            dir.setZ(btCos(vAngle));
+            dir.normalize();
+            pos = dir * slantRange;
+
+            //Update position in the transponder and in the USBL
+            Vector3 worldPos = dT * pos;
+            cNode->UpdatePosition(worldPos, true);
+
+            //Populate beacon info structure
             BeaconInfo b;
             b.t = t;
-            b.relPos = dT.inverse() * worldPos;
+            b.relPos = pos;
             b.azimuth = hAngle;
             b.elevation = M_PI_2 - vAngle;
             b.range = slantRange;
             b.localDepth = dO.getZ();
             b.localOri = dT.getRotation();
             beacons_[msg->source] = b;
-            
+
             newDataAvailable_ = true;
         }
     }
 
     // Standard processing of messages and removal of "ACK and "PING" messages
     AcousticModem::ProcessMessages();
-}
-
-Scalar USBLReal::CalcModel(Scalar R, Scalar theta)
-{
-    Scalar result = R * btCos(theta);
-    if(noise_)
-    {
-        result += R * btCos(theta) * (noiseTime_(randomGenerator) + noiseSV_(randomGenerator) - blError_/bl_);
-        result += R * SOUND_VELOCITY_WATER/freq_ * noisePhase_(randomGenerator)/(Scalar(2.0*M_PI) * bl_);  
-    }
-    return result;
 }
 
 }

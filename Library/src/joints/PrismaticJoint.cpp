@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 27/03/2014.
-//  Copyright (c) 2014-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/PrismaticJoint.h"
@@ -30,7 +30,7 @@
 namespace sf
 {
 
-PrismaticJoint::PrismaticJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& axis, bool collideLinked) : Joint(uniqueName, collideLinked)
+PrismaticJoint::PrismaticJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& axis, bool collideLinked) : Joint(uniqueName, collideLinked)
 {
     btRigidBody* bodyA = solidA->rigidBody_;
     btRigidBody* bodyB = solidB->rigidBody_;

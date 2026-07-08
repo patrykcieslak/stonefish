@@ -23,8 +23,7 @@
 //  Copyright(c) 2023-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_BSTrajectory__
-#define __Stonefish_BSTrajectory__
+#pragma once
 
 #include "entities/animation/PWLTrajectory.h"
 #include "tinysplinecxx.h"
@@ -60,5 +59,3 @@ namespace sf
         double lastPlayTime_;
     };
 }
-
-#endif

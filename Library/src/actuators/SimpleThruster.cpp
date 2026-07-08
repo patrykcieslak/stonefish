@@ -34,7 +34,7 @@
 namespace sf
 {
 
-SimpleThruster::SimpleThruster(std::string uniqueName, std::unique_ptr<SolidEntity> propeller, bool rightHand, bool inverted) : LinkActuator(uniqueName)
+SimpleThruster::SimpleThruster(const std::string& uniqueName, std::unique_ptr<SolidEntity> propeller, bool rightHand, bool inverted) : LinkActuator(uniqueName)
 {
     RH_ = rightHand;
     inv_ = inverted;

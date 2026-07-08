@@ -23,8 +23,7 @@
 //  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_DepthCamera__
-#define __Stonefish_DepthCamera__
+#pragma once
 
 #include <functional>
 #include "sensors/vision/Camera.h"
@@ -48,11 +47,8 @@ namespace sf
          \param maxDepth the maximum measured depth [m]
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          */
-        DepthCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg,
+        DepthCamera(const std::string& uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg,
                     Scalar minDepth, Scalar maxDepth, Scalar frequency = Scalar(-1));
-       
-        //! A destructor.
-        ~DepthCamera();
         
         //! A method performing internal sensor state update.
         /*!
@@ -113,4 +109,3 @@ namespace sf
     };
 }
 
-#endif

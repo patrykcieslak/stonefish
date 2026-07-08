@@ -23,8 +23,7 @@
 //  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_AcousticModem__
-#define __Stonefish_AcousticModem__
+#pragma once
 
 #include <map>
 #include "comms/Comm.h"
@@ -49,7 +48,7 @@ namespace sf
          \param maxVerticalFOVDeg the maximum vertical angle of radiation pattern [deg]
          \param operatingRange the operating range [m]
          */
-        AcousticModem(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange);
+        AcousticModem(const std::string& uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange);
         
         //! A destructor.
         virtual ~AcousticModem();
@@ -121,5 +120,3 @@ namespace sf
         static std::map<uint64_t, AcousticModem*> nodes;
     };
 }
-    
-#endif

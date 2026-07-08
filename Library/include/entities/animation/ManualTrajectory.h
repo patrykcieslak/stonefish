@@ -23,8 +23,7 @@
 //  Copyright(c) 2020-2023 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_ManualTrajectory__
-#define __Stonefish_ManualTrajectory__
+#pragma once
 
 #include "entities/animation/Trajectory.h"
 
@@ -62,5 +61,3 @@ namespace sf
         std::vector<Renderable> Render();
     };
 }
-
-#endif

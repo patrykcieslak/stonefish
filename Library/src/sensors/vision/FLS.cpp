@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 17/02/20.
-//  Copyright (c) 2020-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/vision/FLS.h"
@@ -33,7 +33,7 @@
 namespace sf
 {
 
-FLS::FLS(std::string uniqueName, unsigned int numOfBeams, unsigned int numOfBins, Scalar horizontalFOVDeg, 
+FLS::FLS(const std::string& uniqueName, unsigned int numOfBeams, unsigned int numOfBins, Scalar horizontalFOVDeg, 
     Scalar verticalFOVDeg, Scalar minRange, Scalar maxRange, ColorMap cm, SonarOutputFormat outputFormat, Scalar frequency)
     : Camera(uniqueName, numOfBeams, numOfBins, horizontalFOVDeg, frequency)
 {
@@ -46,15 +46,8 @@ FLS::FLS(std::string uniqueName, unsigned int numOfBeams, unsigned int numOfBins
     fovV_ = verticalFOVDeg <= Scalar(0) ? Scalar(20) : (verticalFOVDeg > Scalar(179) ? Scalar(179) : verticalFOVDeg);
     cMap_ = cm;
     outputFormat_ = outputFormat;
-    sonarData_ = NULL;
-    displayData_ = NULL;
-    newDataCallback_ = NULL;
-    glFLS_ = nullptr;
-}
-
-FLS::~FLS()
-{
-    if(displayData_ != NULL) delete [] displayData_;
+    sonarData_ = nullptr;
+    newDataCallback_ = nullptr;
     glFLS_ = nullptr;
 }
 
@@ -100,7 +93,7 @@ void FLS::getDisplayResolution(unsigned int& x, unsigned int& y) const
 
 GLubyte* FLS::getDisplayDataPointer()
 {
-    return displayData_;
+    return displayData_.data();
 }
 
 Scalar FLS::getRangeMin() const
@@ -137,19 +130,26 @@ void FLS::InitGraphics(bool& seesParticles)
 {
     seesParticles = false;
 
-    glFLS_ = new OpenGLFLS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 
-                          (GLfloat)fovH_, (GLfloat)fovV_, (GLint)resX_, (GLint)resY_, range_, outputFormat_);
+    // Create sonar
+    std::unique_ptr<OpenGLFLS> glFLS = std::make_unique<OpenGLFLS>(
+        glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 
+        (GLfloat)fovH_, (GLfloat)fovV_, (GLint)resX_, (GLint)resY_, range_, outputFormat_
+    );
+
+    // Set up sonar
+    glFLS_ = glFLS.get();
     glFLS_->setNoise(noise_);
     glFLS_->setSonar(this);
     glFLS_->setColorMap(cMap_);
     UpdateTransform();
     glFLS_->UpdateTransform();
     InternalUpdate(0);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glFLS_);
+
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glFLS));
 
     unsigned int w, h;
     getDisplayResolution(w, h);
-    displayData_ = new GLubyte[w*h*3];
+    displayData_.resize(w*h*3);
 }
 
 void FLS::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
@@ -167,19 +167,19 @@ void FLS::InstallNewDataHandler(std::function<void(FLS*)> callback)
 
 void FLS::NewDataReady(void* data, unsigned int index)
 {
-    if(newDataCallback_ != NULL)
+    if(newDataCallback_ != nullptr)
     {
         if(index == 0)
         {
             unsigned int w, h;
             getDisplayResolution(w, h);
-            memcpy(displayData_, data, w*h*3);
+            memcpy(displayData_.data(), data, w*h*3);
         }
         else
         {
             sonarData_ = data;
             newDataCallback_(this);
-            sonarData_ = NULL;
+            sonarData_ = nullptr;
         }
     }
 }

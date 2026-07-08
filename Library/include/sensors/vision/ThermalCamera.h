@@ -23,8 +23,7 @@
 //  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_ThermalCamera__
-#define __Stonefish_ThermalCamera__
+#pragma once
 
 #include <functional>
 #include "sensors/vision/Camera.h"
@@ -50,11 +49,8 @@ namespace sf
          \param minDistance the minimum drawing distance [m]
          \param maxDistance the maximum drawing distance [m]
          */
-        ThermalCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar minTemp, Scalar maxTemp, 
+        ThermalCamera(const std::string& uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar minTemp, Scalar maxTemp, 
             Scalar frequency = Scalar(-1), Scalar minDistance = Scalar(STD_NEAR_PLANE_DISTANCE), Scalar maxDistance = Scalar(STD_FAR_PLANE_DISTANCE));
-        
-        //! A destructor.
-        ~ThermalCamera();
         
         //! A method performing internal sensor state update.
         /*!
@@ -117,7 +113,7 @@ namespace sf
         
         OpenGLThermalCamera* glCamera_;
         GLfloat* temperatureData_;
-        GLubyte* displayData_;
+        std::vector<GLubyte> displayData_;
         glm::vec2 depthRange_;
         GLfloat noiseStdDev_;
         glm::vec2 measurementRange_;
@@ -126,5 +122,3 @@ namespace sf
         std::function<void(ThermalCamera*)> newDataCallback_;
     };
 }
-
-#endif

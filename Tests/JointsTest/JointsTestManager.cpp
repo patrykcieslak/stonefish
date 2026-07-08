@@ -67,86 +67,97 @@ void JointsTestManager::BuildScenario()
     ////////OBJECTS
     setSolverParams(0.25, 0.5, 0.25, 0.25, 0.0, -1.0, -1.0);
     getAtmosphere()->SetSunPosition(0.0, 70.0);
-    getTrackball()->MoveCenter(glm::vec3(1.f,3.f,0.f));
+    static_cast<sf::GraphicalSimulationApp*>(sf::SimulationApp::getApp())->getTrackball()->MoveCenter(glm::vec3(1.f,3.f,0.f));
     getNED()->Init(-10.0, -10.0, 0.0);
     
-    sf::Plane* floor = new sf::Plane("Floor", 1000.f, "Steel", "grid");
-    AddStaticEntity(floor, sf::I4());
+    std::unique_ptr<sf::Plane> floor = std::make_unique<sf::Plane>("Floor", 1000.f, "Steel", "grid");
+    AddStaticEntity(std::move(floor), sf::I4());
     
     sf::PhysicsSettings phy;
     phy.mode = sf::PhysicsMode::SURFACE;
     phy.collisions = true;
 
     //----Fixed Joint----
-    sf::Box* box = new sf::Box("Box", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic","green");
-    AddSolidEntity(box, sf::Transform(sf::IQ(), sf::Vector3(-2.0,0.0,-3.0)));
+    sf::SolidEntity* box = AddSolidEntity(
+        std::make_unique<sf::Box>("Box", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic","green"), 
+        sf::Transform(sf::IQ(), sf::Vector3(-2.0,0.0,-3.0))
+    );
     
-    sf::Sphere* sph = new sf::Sphere("Sph1", phy, sf::Scalar(0.2), sf::I4(), "Steel", "orange");
-    AddSolidEntity(sph, sf::Transform(sf::IQ(), sf::Vector3(-2.0,-0.5,-3.0)));
-    
-    sf::FixedJoint* fixed = new sf::FixedJoint("Fix", box, sph);
-    AddJoint(fixed);
+    sf::SolidEntity* sph = AddSolidEntity(
+        std::make_unique<sf::Sphere>("Sph1", phy, sf::Scalar(0.2), sf::I4(), "Steel", "orange"), 
+        sf::Transform(sf::IQ(), sf::Vector3(-2.0,-0.5,-3.0))
+    );
+    AddJoint(std::make_unique<sf::FixedJoint>("Fix", box, sph));
     
     //----Revolute Joint----
-    box = new sf::Box("Box1", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", "green");
-    AddSolidEntity(box, sf::Transform(sf::IQ(), sf::Vector3(-2.5,0.0,-1.0)));
+    box = AddSolidEntity(
+        std::make_unique<sf::Box>("Box1", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", "green"), 
+        sf::Transform(sf::IQ(), sf::Vector3(-2.5,0.0,-1.0))
+    );
     
-    sf::Box* box2 = new sf::Box("Box2", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", "orange");
-    AddSolidEntity(box2, sf::Transform(sf::IQ(), sf::Vector3(-2.5,0.2,-1.0)));
+    sf::SolidEntity* box2 = AddSolidEntity(
+        std::make_unique<sf::Box>("Box2", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", "orange"), 
+        sf::Transform(sf::IQ(), sf::Vector3(-2.5,0.2,-1.0))
+    );
+    AddJoint(std::make_unique<sf::RevoluteJoint>("Revolute", box, box2, sf::Vector3(-2.5,0.1,-0.9), sf::Vector3(0,1,0), false));
     
-    sf::RevoluteJoint* revo = new sf::RevoluteJoint("Revolute", box, box2, sf::Vector3(-2.5,0.1,-0.9), sf::Vector3(0,1,0), false);
-    AddJoint(revo);
-    
-    sph = new sf::Sphere("Sph2", phy, sf::Scalar(0.2), sf::I4(), "Plastic", "green");
-    AddSolidEntity(sph, sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,-3.0)));
-    
-    revo = new sf::RevoluteJoint("RevoluteFix", sph, sf::Vector3(0.0,1.0,-3.0), sf::Vector3(1.0,0.0,0.0));
-    AddJoint(revo);
+    sph = AddSolidEntity(
+        std::make_unique<sf::Sphere>("Sph2", phy, sf::Scalar(0.2), sf::I4(), "Plastic", "green"),
+        sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,-3.0))
+    );
+    AddJoint(std::make_unique<sf::RevoluteJoint>("RevoluteFix", sph, sf::Vector3(0.0,1.0,-3.0), sf::Vector3(1.0,0.0,0.0)));
     
     //----Spherical Joint----
-    sph = new sf::Sphere("Sph3", phy, sf::Scalar(0.2), sf::I4(), "Plastic", "green");
-    AddSolidEntity(sph, sf::Transform(sf::IQ(), sf::Vector3(0.0, -2.0, -1.0)));
-    sf::Sphere* sph2 = new sf::Sphere("Sph4", phy, sf::Scalar(0.15), sf::I4(), "Plastic", "orange");
-    AddSolidEntity(sph2, sf::Transform(sf::IQ(), sf::Vector3(0.0, -2.2, -0.4)));
-    
-    sf::SphericalJoint* spher = new sf::SphericalJoint("Spherical", sph, sph2, sf::Vector3(0.0, -2.0, -0.6));
-    AddJoint(spher);
+    sph = AddSolidEntity(
+        std::make_unique<sf::Sphere>("Sph3", phy, sf::Scalar(0.2), sf::I4(), "Plastic", "green"),
+        sf::Transform(sf::IQ(), sf::Vector3(0.0, -2.0, -1.0))
+    );
+    sf::SolidEntity* sph2 = AddSolidEntity(
+        std::make_unique<sf::Sphere>("Sph4", phy, sf::Scalar(0.15), sf::I4(), "Plastic", "orange"),
+        sf::Transform(sf::IQ(), sf::Vector3(0.0, -2.2, -0.4))
+    );
+    AddJoint(std::make_unique<sf::SphericalJoint>("Spherical", sph, sph2, sf::Vector3(0.0, -2.0, -0.6)));
     
     //----Prismatic Joint----
-    box = new sf::Box("Box4", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", "green");
-    AddSolidEntity(box, sf::Transform(sf::IQ(), sf::Vector3(2.0,0.0,-0.051)));
+    box = AddSolidEntity(
+        std::make_unique<sf::Box>("Box4", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", "green"),
+        sf::Transform(sf::IQ(), sf::Vector3(2.0,0.0,-0.051))
+    );
     
-    box2 = new sf::Box("Box5", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", "orange");
-    AddSolidEntity(box2, sf::Transform(sf::IQ(), sf::Vector3(2.0,0.0,-0.5)));
-    
-    sf::PrismaticJoint* trans = new sf::PrismaticJoint("Prismatic", box, box2, sf::Vector3(0.5,0,-1.0));
-    AddJoint(trans);
+    box2 = AddSolidEntity(
+        std::make_unique<sf::Box>("Box5", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", "orange"),
+        sf::Transform(sf::IQ(), sf::Vector3(2.0,0.0,-0.5))
+    );
+    AddJoint(std::make_unique<sf::PrismaticJoint>("Prismatic", box, box2, sf::Vector3(0.5,0,-1.0)));
     
     // //----Cylindrical Joint----
-    box = new sf::Box("Box6", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", "green");
-    AddSolidEntity(box, sf::Transform(sf::IQ(), sf::Vector3(-1.0,0.0,-0.051)));
+    box = AddSolidEntity(
+        std::make_unique<sf::Box>("Box6", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", "green"),
+        sf::Transform(sf::IQ(), sf::Vector3(-1.0,0.0,-0.051))
+    );
     
-    box2 = new sf::Box("Box7", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", "orange");
-    AddSolidEntity(box2, sf::Transform(sf::IQ(), sf::Vector3(-1.0,0.0,-0.5)));
+    box2 = AddSolidEntity(
+        std::make_unique<sf::Box>("Box7", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Plastic", "orange"),
+        sf::Transform(sf::IQ(), sf::Vector3(-1.0,0.0,-0.5))
+    );
     
-    sf::CylindricalJoint* cyli = new sf::CylindricalJoint("Cylindrical", box, box2, sf::Vector3(-1.0, 0.050, -0.25), sf::Vector3(0,0,1));
-    AddJoint(cyli);
+    AddJoint(std::make_unique<sf::CylindricalJoint>("Cylindrical", box, box2, sf::Vector3(-1.0, 0.050, -0.25), sf::Vector3(0,0,1)));
 
     //----General robot
-    sf::GeneralRobot* robot = new sf::GeneralRobot("Manipulator", true);
+    std::unique_ptr<sf::GeneralRobot> robot = std::make_unique<sf::GeneralRobot>("Manipulator", true);
     
     // Base link
-    sf::Box* base = new sf::Box("Base", phy, sf::Vector3(0.1,0.1,0.1), sf::Transform(sf::IQ(), sf::Vector3(0.0, 0, 0.0)), "Plastic","green");
+    std::unique_ptr<sf::Box> base = std::make_unique<sf::Box>("Base", phy, sf::Vector3(0.1,0.1,0.1), sf::Transform(sf::IQ(), sf::Vector3(0.0, 0, 0.0)), "Plastic","green");
     // Arm
-    sf::Box* arm1 = new sf::Box("Arm1", phy, sf::Vector3(0.1,0.1,0.5), sf::Transform(sf::IQ(), sf::Vector3(0.0, 0, -0.25)), "Plastic","green");
-    sf::Box* arm2 = new sf::Box("Arm2", phy, sf::Vector3(0.8,0.1,0.1), sf::Transform(sf::IQ(), sf::Vector3(0.4, 0, -0.5)), "Plastic","green");
-    sf::Box* arm3 = new sf::Box("Arm3", phy, sf::Vector3(0.1,0.1,0.5), sf::Transform(sf::IQ(), sf::Vector3(0.8, 0, -0.25)), "Plastic","green");
+    std::unique_ptr<sf::Box> arm1 = std::make_unique<sf::Box>("Arm1", phy, sf::Vector3(0.1,0.1,0.5), sf::Transform(sf::IQ(), sf::Vector3(0.0, 0, -0.25)), "Plastic","green");
+    std::unique_ptr<sf::Box> arm2 = std::make_unique<sf::Box>("Arm2", phy, sf::Vector3(0.8,0.1,0.1), sf::Transform(sf::IQ(), sf::Vector3(0.4, 0, -0.5)), "Plastic","green");
+    std::unique_ptr<sf::Box> arm3 = std::make_unique<sf::Box>("Arm3", phy, sf::Vector3(0.1,0.1,0.5), sf::Transform(sf::IQ(), sf::Vector3(0.8, 0, -0.25)), "Plastic","green");
 
-    std::vector<sf::SolidEntity*> links;
-    links.push_back(arm1);
-    links.push_back(arm2);
-    links.push_back(arm3);
-    robot->DefineLinks(base, links);
+    std::vector<std::unique_ptr<sf::SolidEntity>> links;
+    links.push_back(std::move(arm1));
+    links.push_back(std::move(arm2));
+    links.push_back(std::move(arm3));
+    robot->DefineLinks(std::move(base), std::move(links));
     
     robot->DefineRevoluteJoint("joint1", "Base", "Arm1", sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.0)), sf::Vector3(0, 0, 1.0));
     robot->DefineRevoluteJoint("joint2", "Arm1", "Arm2", sf::Transform(sf::IQ(), sf::Vector3(0, 0.0, -0.5)), sf::Vector3(0, 1.0, 0.0));
@@ -169,9 +180,9 @@ void JointsTestManager::BuildScenario()
     sf::SuctionCup* suction = new sf::SuctionCup("Suction");
     robot->AddLinkActuator(suction, "Arm3", sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.0)));
 
-    AddRobot(robot, sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,-0.75)));
+    AddRobot(std::move(robot), sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,-0.75)));
 
-    sf::Box* tallbox = new sf::Box("BoxBig", phy, sf::Vector3(0.2,0.2,0.6), sf::I4(), "Plastic","green");
+    std::unique_ptr<sf::Box> tallbox = std::make_unique<sf::Box>("BoxBig", phy, sf::Vector3(0.2,0.2,0.6), sf::I4(), "Plastic","green");
     tallbox->ScalePhysicalPropertiesToArbitraryMass(1.0);
-    AddSolidEntity(tallbox, sf::Transform(sf::IQ(), sf::Vector3(0.7, 0.0, -0.3) ));
+    AddSolidEntity(std::move(tallbox), sf::Transform(sf::IQ(), sf::Vector3(0.7, 0.0, -0.3) ));
 }

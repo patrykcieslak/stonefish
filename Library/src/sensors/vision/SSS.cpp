@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/06/20.
-//  Copyright (c) 2020-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/vision/SSS.h"
@@ -33,7 +33,7 @@
 namespace sf
 {
 
-SSS::SSS(std::string uniqueName, unsigned int numOfBins, unsigned int numOfLines, Scalar verticalBeamWidthDeg,
+SSS::SSS(const std::string& uniqueName, unsigned int numOfBins, unsigned int numOfLines, Scalar verticalBeamWidthDeg,
          Scalar horizontalBeamWidthDeg, Scalar verticalTiltDeg, Scalar minRange, Scalar maxRange, ColorMap cm, SonarOutputFormat outputFormat, Scalar frequency)
     : Camera(uniqueName, (numOfBins%2==0 ? numOfBins : numOfBins+1), numOfLines, verticalBeamWidthDeg, frequency)
 {
@@ -47,15 +47,8 @@ SSS::SSS(std::string uniqueName, unsigned int numOfBins, unsigned int numOfLines
     tilt_ = verticalTiltDeg < Scalar(0) ? Scalar(0) : (verticalTiltDeg > Scalar(90) ? Scalar(90) : verticalTiltDeg);
     cMap_ = cm;
     outputFormat_ = outputFormat;
-    sonarData_ = NULL;
-    displayData_ = NULL;
-    newDataCallback_ = NULL;
-    glSSS_ = nullptr;
-}
-
-SSS::~SSS()
-{
-    if(displayData_ != NULL) delete [] displayData_;
+    sonarData_ = nullptr;
+    newDataCallback_ = nullptr;
     glSSS_ = nullptr;
 }
 
@@ -99,7 +92,7 @@ void SSS::getDisplayResolution(unsigned int& x, unsigned int& y) const
 
 GLubyte* SSS::getDisplayDataPointer()
 {
-    return displayData_;
+    return displayData_.data();
 }
 
 Scalar SSS::getRangeMin() const
@@ -136,19 +129,26 @@ void SSS::InitGraphics(bool& seesParticles)
 {
     seesParticles = false;
 
-    glSSS_ = new OpenGLSSS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),
-                          (GLfloat)fovH_, (GLfloat)fovV_, (GLint)resX_, (GLint)resY_, (GLfloat)tilt_, range_, outputFormat_);
+    // Create sonar
+    std::unique_ptr<OpenGLSSS> glSSS = std::make_unique<OpenGLSSS>(
+        glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),
+        (GLfloat)fovH_, (GLfloat)fovV_, (GLint)resX_, (GLint)resY_, (GLfloat)tilt_, range_, outputFormat_
+    );
+
+    // Set up sonar
+    glSSS_ = glSSS.get();
     glSSS_->setNoise(noise_);
     glSSS_->setSonar(this);
     glSSS_->setColorMap(cMap_);
     UpdateTransform();
     glSSS_->UpdateTransform();
     InternalUpdate(0);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glSSS_);
+
+    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glSSS));
 
     unsigned int w, h;
     getDisplayResolution(w, h);
-    displayData_ = new GLubyte[w*h*3];
+    displayData_.resize(w*h*3);
 }
 
 void SSS::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
@@ -172,7 +172,7 @@ void SSS::NewDataReady(void* data, unsigned int index)
         {
             unsigned int w, h;
             getDisplayResolution(w, h);
-            memcpy(displayData_, data, w*h*3);
+            memcpy(displayData_.data(), data, w*h*3);
         }
         else
         {

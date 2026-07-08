@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/30/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Plane__
-#define __Stonefish_Plane__
+#pragma once
 
 #include "entities/StaticEntity.h"
 
@@ -42,7 +41,7 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param uvScale scaling of the texture coordinates
          */
-        Plane(std::string uniqueName, Scalar size, std::string material, std::string look = "", float uvScale = 1.f);
+        Plane(const std::string& uniqueName, Scalar size, const std::string& material, const std::string& look = "", float uvScale = 1.f);
         
         //! A method returning the extents of the plane axis alligned bounding box.
         /*!
@@ -55,5 +54,3 @@ namespace sf
         StaticEntityType getStaticType();
     };
 }
-
-#endif

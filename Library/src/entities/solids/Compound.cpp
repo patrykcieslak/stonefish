@@ -32,7 +32,7 @@
 namespace sf
 {
 
-Compound::Compound(std::string uniqueName, PhysicsSettings phy, std::unique_ptr<SolidEntity> firstExternalPart, const Transform& origin)
+Compound::Compound(const std::string& uniqueName, PhysicsSettings phy, std::unique_ptr<SolidEntity> firstExternalPart, const Transform& origin)
     : SolidEntity(uniqueName, phy, "", "", Scalar(-1))
 {
     //All transformations are zero -> transforming the origin of a compound body doesn't make sense...

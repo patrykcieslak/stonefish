@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 29/03/2014.
-//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/RealRotaryEncoder.h"
@@ -31,7 +31,7 @@
 namespace sf
 {
 
-RealRotaryEncoder::RealRotaryEncoder(std::string uniqueName, unsigned int cpr_resolution, bool absolute, Scalar frequency, int historyLength) : RotaryEncoder(uniqueName, frequency, historyLength)
+RealRotaryEncoder::RealRotaryEncoder(const std::string& uniqueName, unsigned int cpr_resolution, bool absolute, Scalar frequency, int historyLength) : RotaryEncoder(uniqueName, frequency, historyLength)
 {
     cprResolution_ = cpr_resolution;
     abs_ = absolute;
@@ -88,8 +88,9 @@ void RealRotaryEncoder::InternalUpdate(Scalar dt)
     }
     
     //record sample
-    Sample s{std::vector<Scalar>({angle_, Scalar(0)})};
-    AddSampleToHistory(s);
+    AddSampleToHistory(std::make_unique<Sample>(
+        std::vector<Scalar>({angle_, Scalar(0)})
+    ));
 }
 
 ScalarSensorType RealRotaryEncoder::getScalarSensorType() const

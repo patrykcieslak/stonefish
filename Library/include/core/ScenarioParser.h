@@ -23,8 +23,7 @@
 //  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_ScenarioParser__
-#define __Stonefish_ScenarioParser__
+#pragma once
 
 #include "StonefishCommon.h"
 #include "core/Console.h"
@@ -300,4 +299,3 @@ namespace sf
     };
 }
 
-#endif

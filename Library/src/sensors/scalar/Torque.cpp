@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 20/03/2018.
-//  Copyright (c) 2018-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Torque.h"
@@ -32,7 +32,7 @@
 namespace sf
 {
 
-Torque::Torque(std::string uniqueName, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
+Torque::Torque(const std::string& uniqueName, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
 {
     channels_.push_back(SensorChannel("Torque", QuantityType::TORQUE));
 }
@@ -43,11 +43,10 @@ void Torque::InternalUpdate(Scalar dt)
     //fe->getJointFeedback(jId, force, torque);
     //Vector3 axis = fe->getJointAxis(jId);
     //Scalar tau = torque.dot(axis);
-    if(fe_ != NULL)
+    if(fe_ != nullptr)
     {
         Scalar tau = fe_->getMotorForceTorque(jId_);
-        Sample s{std::vector<Scalar>({tau})};
-        AddSampleToHistory(s);
+        AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({tau})));
     }
 }
 

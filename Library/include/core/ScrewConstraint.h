@@ -23,8 +23,7 @@
 //  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_ScrewConstraint__
-#define __Stonefish_ScrewConstraint__
+#pragma once
 
 #include <limits>
 #include <cmath>
@@ -83,5 +82,3 @@ namespace sf
         double threadPitch_;
     };
 }
-    
-#endif

@@ -40,13 +40,6 @@ Sample::Sample(const std::vector<Scalar>& data, bool invalid, size_t index)
         timestamp_ = SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true);
 }
 
-Sample::Sample(const Sample& other, size_t index)
-{
-    timestamp_ = other.timestamp_;
-    data_ = other.data_;
-    id_ = index;
-}
-
 Scalar Sample::getTimestamp() const
 {
     return timestamp_;
@@ -78,6 +71,11 @@ std::vector<Scalar> Sample::getData() const
 size_t Sample::getId() const
 {
     return id_;
+}
+
+void Sample::setId(size_t id)
+{
+    id_ = id;
 }
 
 }

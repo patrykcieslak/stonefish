@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/03/2014.
-//  Copyright (c) 2014-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "FallingTestManager.h"
@@ -66,8 +66,8 @@ void FallingTestManager::BuildScenario()
     sf::Plane* floor = new sf::Plane("Floor", 10000.f, "Ground", "Grid");
     AddStaticEntity(floor, sf::Transform::getIdentity());
 	
-	sf::Obstacle* dragon = new sf::Obstacle("Dragon", sf::GetDataPath() + "dragon.obj", 0.1, sf::I4(), "Steel", "Green");
-	AddStaticEntity(dragon, sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0,0,0)));
+	sf::Obstacle* dragon = new sf::Obstacle("Dragon", sf::GetDataPath() + "dragon_hires.obj", 10.f, sf::I4(), false, "Steel", "Green");
+	AddStaticEntity(dragon, sf::I4());
 	
 	sf::Obstacle* pillar = new sf::Obstacle("Pillar", sf::Vector3(0.5,0.3,4.0), sf::I4(), "Steel", "Green");
 	AddStaticEntity(pillar, sf::Transform(sf::IQ(), sf::Vector3(-2.0,0.0,-2.0)));

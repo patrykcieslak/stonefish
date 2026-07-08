@@ -54,7 +54,7 @@ namespace sf
          \param uniqueName a name for the robot
          \param fixedBase is the robot fixed to the world?
          */
-        Robot(std::string uniqueName, bool fixedBase = false);
+        Robot(const std::string& uniqueName, bool fixedBase = false);
         
         //! A destructor.
         virtual ~Robot();
@@ -233,7 +233,7 @@ namespace sf
         virtual Transform getTransform() const = 0;
         
         //! A method returning the name of the robot.
-        std::string getName();
+        const std::string& getName() const;
 
         //! A method returning type of algorithm used for the robot.
         virtual RobotType getType() const = 0;

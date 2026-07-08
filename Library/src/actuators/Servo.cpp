@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 08/01/2019.
-//  Copyright (c) 2019-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Servo.h"
@@ -33,7 +33,7 @@
 namespace sf
 {
 
-Servo::Servo(std::string uniqueName, Scalar positionGain, Scalar velocityGain, Scalar maxTorque) : JointActuator(uniqueName)
+Servo::Servo(const std::string& uniqueName, Scalar positionGain, Scalar velocityGain, Scalar maxTorque) : JointActuator(uniqueName)
 {
     Kp_ = btFabs(positionGain);
     Kv_ = btFabs(velocityGain);

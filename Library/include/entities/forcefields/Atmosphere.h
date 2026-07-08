@@ -45,10 +45,7 @@ namespace sf
          \param uniqueName the name for the atmosphere
          \param f a pointer to the gas filling the atmosphere (normally air)
          */
-        Atmosphere(std::string uniqueName, Fluid g);
-        
-        //! A destructor.
-        ~Atmosphere();
+        Atmosphere(const std::string& uniqueName, Fluid g);
         
         //! A method implementing graphics initialization.
         /*!
@@ -83,7 +80,7 @@ namespace sf
         /*!
          \param field a pointer to a velocity field object
          */
-        void AddVelocityField(VelocityField* field);
+        void AddVelocityField(std::unique_ptr<VelocityField> field);
         
         //! A method running the aerodynamics computation.
         /*!
@@ -138,8 +135,8 @@ namespace sf
         
     private:
         Fluid gas_;
-        std::vector<VelocityField*> wind_;
-        OpenGLAtmosphere* glAtmosphere_;
+        std::vector<std::unique_ptr<VelocityField>> wind_;
+        std::unique_ptr<OpenGLAtmosphere> glAtmosphere_;
     };
 }
 

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/10/2017.
-//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/DVL.h"
@@ -35,7 +35,7 @@
 namespace sf
 {
 
-DVL::DVL(std::string uniqueName, Scalar beamAngleDeg, bool beamPositiveZ, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+DVL::DVL(const std::string& uniqueName, Scalar beamAngleDeg, bool beamPositiveZ, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     range_[0] = range_[1] = range_[2] = range_[3] = Scalar(0.);
     beamAngle_ = btRadians(beamAngleDeg);
@@ -199,8 +199,9 @@ void DVL::InternalUpdate(Scalar dt)
     channels_[6].setStdDev(mulNoiseFactor_[1] * wv.z() + addNoiseStdDev_[1]);
     
     //Save data
-    Sample s{std::vector<Scalar>({v.x(), v.y(), v.z(), altitude, wv.x(), wv.y(), wv.z(), Scalar(status)})};
-    AddSampleToHistory(s);
+    AddSampleToHistory(std::make_unique<Sample>(
+        std::vector<Scalar>({v.x(), v.y(), v.z(), altitude, wv.x(), wv.y(), wv.z(), Scalar(status)})
+    ));
 }
 
 std::vector<Renderable> DVL::Render()

@@ -23,8 +23,7 @@
 //  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Polyhedron__
-#define __Stonefish_Polyhedron__
+#pragma once
 
 #include "entities/SolidEntity.h"
 
@@ -49,10 +48,10 @@ namespace sf
          \param thickness defines the thickness of the physics geometry walls, if higher than zero the mesh is considered a shell
          \param approx defines what type of approximation of the body shape should be used in the fluid dynamics computation
          */
-        Polyhedron(std::string uniqueName, PhysicsSettings phy, 
-                   std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
-                   std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
-                   std::string material, std::string look, Scalar thickness = Scalar(-1), GeometryApproxType approx = GeometryApproxType::AUTO);
+        Polyhedron(const std::string& uniqueName, PhysicsSettings phy, 
+                   const std::string& graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
+                   const std::string& physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
+                   const std::string& material, const std::string& look, Scalar thickness = Scalar(-1), GeometryApproxType approx = GeometryApproxType::AUTO);
         
         //! A constructor.
         /*!
@@ -66,11 +65,8 @@ namespace sf
          \param thickness defines the thickness of the model walls, if higher than zero the mesh is considered a shell
          \param approx defines what type of approximation of the body shape should be used in the fluid dynamics computation
          */
-        Polyhedron(std::string uniqueName, PhysicsSettings phy, std::string modelFilename, Scalar scale, const Transform& origin,
-                   std::string material, std::string look, Scalar thickness = Scalar(-1), GeometryApproxType approx =  GeometryApproxType::AUTO);
-        
-        //! A destructor.
-        ~Polyhedron();
+        Polyhedron(const std::string& uniqueName, PhysicsSettings phy, const std::string& modelFilename, Scalar scale, const Transform& origin,
+                   const std::string& material, const std::string& look, Scalar thickness = Scalar(-1), GeometryApproxType approx =  GeometryApproxType::AUTO);
         
         //! A method that returns the type of solid.
         SolidType getSolidType();
@@ -82,8 +78,6 @@ namespace sf
         void BuildGraphicalObject();
         
     private:
-        Mesh *graMesh_; //Mesh used for rendering
+        std::shared_ptr<Mesh> graMesh_; //Mesh used for rendering
     };
 }
-
-#endif
