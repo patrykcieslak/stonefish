@@ -1026,6 +1026,13 @@ void GraphicalSimulationApp::StopSimulation()
 void GraphicalSimulationApp::StepSimulation()
 {
     SimulationApp::StepSimulation();
+
+    if(getGLPipeline()->isDrawingQueueEmpty())
+    {
+        SDL_LockMutex(getGLPipeline()->getDrawingQueueMutex());
+        getSimulationManager()->UpdateDrawingQueue();
+        SDL_UnlockMutex(getGLPipeline()->getDrawingQueueMutex());
+    }
 }
 
 void GraphicalSimulationApp::CleanUp()
@@ -1093,8 +1100,8 @@ int GraphicalSimulationApp::RunSimulation(void* data)
 
     simManager->setCallSimulationStepCompleted(simApp.timeStep_ == Scalar(0));
 
-    //int maxThreads = std::max(omp_get_max_threads()/2, 1);
-    //omp_set_num_threads(maxThreads);
+    int maxThreads = std::max(omp_get_max_threads()/2, 1);
+    omp_set_num_threads(maxThreads);
     
     while(simApp.getState() == SimulationState::RUNNING)
     {
