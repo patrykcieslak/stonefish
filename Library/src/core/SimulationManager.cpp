@@ -1664,20 +1664,6 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
     //Update simulation time
     simManager->simulationTime_ += timeStep;
     
-    //Update drawing of graphical simulation app
-    if (SimulationApp::getApp()->hasGraphics())
-    {
-        OpenGLPipeline* pipeline = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline();
-        if(pipeline != nullptr && pipeline->isDrawingQueueEmpty())
-        {
-            if (SDL_TryLockMutex(pipeline->getDrawingQueueMutex()) == 0)
-            {
-                simManager->UpdateDrawingQueue();
-                SDL_UnlockMutex(pipeline->getDrawingQueueMutex());
-            }
-        }
-    }
-  
     //Optional method to update some post simulation data (like ROS messages...)
     if (simManager->getCallSimulationStepCompleted())
     {
