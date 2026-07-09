@@ -23,8 +23,7 @@
 //  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLEventBasedCamera__
-#define __Stonefish_OpenGLEventBasedCamera__
+#pragma once
 
 #include "graphics/OpenGLCamera.h"
 #include <random>
@@ -152,9 +151,8 @@ namespace sf
         bool initialized_;
         double lastSimTime_;
 
-        static GLSLShader** eventOutputShaders;
-        static GLSLShader* eventVisualizeShader;
+        static std::array<std::unique_ptr<GLSLShader>, 2> eventOutputShaders;
+        static std::unique_ptr<GLSLShader> eventVisualizeShader;
     };
 }
 
-#endif

@@ -23,8 +23,7 @@
 //  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLParticles__
-#define __Stonefish_OpenGLParticles__
+#pragma once
 
 #include "graphics/OpenGLDataStructs.h"
 
@@ -51,5 +50,3 @@ namespace sf
         GLuint particleEAB_; //Indices of particle triangles
 	};
 }
-
-#endif

@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 8/24/13.
-//  Copyright (c) 2013-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_UnitSystem__
-#define __Stonefish_UnitSystem__
+#pragma once
 
 #include "StonefishCommon.h"
 
@@ -73,5 +72,3 @@ namespace sf
         static const Scalar CGStoOther[2][9];
     };
 }
-
-#endif

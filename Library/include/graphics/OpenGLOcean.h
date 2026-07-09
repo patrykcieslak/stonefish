@@ -23,8 +23,7 @@
 //  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLOcean__
-#define __Stonefish_OpenGLOcean__
+#pragma once
 
 #include "graphics/OpenGLContent.h"
 #include <SDL2/SDL_mutex.h>
@@ -39,8 +38,8 @@ namespace sf
         unsigned int slopeVarianceSize;
         int fftSize;
         glm::vec4 gridSizes;
-        float* spectrum12;
-        float* spectrum34;
+        std::vector<GLfloat> spectrum12;
+        std::vector<GLfloat> spectrum34;
         bool propagate; //wave propagation
         float wind; //wind speed in meters per second (at 10m above surface)
         float omega; //sea state (inverse wave age)
@@ -239,13 +238,13 @@ namespace sf
         glm::vec3 lightScattering_;
         GLfloat waterTemperature_;
 
-        std::map<std::string, GLSLShader*> oceanShaders_;
+        std::unordered_map<std::string, std::unique_ptr<GLSLShader>> oceanShaders_;
         GLuint oceanFBOs_[3];
         GLuint oceanTextures_[6];
         GLuint oceanCurrentsUBO_;
         
     private:
-        GLfloat* ComputeButterflyLookupTable(unsigned int size, unsigned int passes);
+        std::vector<GLfloat> ComputeButterflyLookupTable(unsigned int size, unsigned int passes);
         int bitReverse(int i, int N);
         void computeWeight(int N, int k, float &Wr, float &Wi);
         float ComputeSlopeVariance();
@@ -259,5 +258,3 @@ namespace sf
         bool particlesEnabled_;
     };
 }
-
-#endif

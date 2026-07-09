@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 13/02/20.
-//  Copyright (c) 2020-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLFLS.h"
@@ -183,7 +183,7 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
                          + "\n#define N_BEAM_SAMPLES " + std::to_string(nBeamSamples_) + "\n"; 
     std::vector<GLSLSource> sources;
     sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "flsOutput.comp", header));
-    sonarOutputShader_ = new GLSLShader(sources);
+    sonarOutputShader_ = std::make_unique<GLSLShader>(sources);
     sonarOutputShader_->AddUniform("sonarInput", ParameterType::INT);
     sonarOutputShader_->AddUniform("sonarOutput", ParameterType::INT);
     sonarOutputShader_->AddUniform("beams", ParameterType::UVEC2);
@@ -217,7 +217,7 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
             shaderFilename = "flsPostprocessF32.comp";
             break;
     }
-    sonarPostprocessShader_ = new GLSLShader({GLSLSource(GL_COMPUTE_SHADER, shaderFilename)});
+    sonarPostprocessShader_ = std::make_unique<GLSLShader>(std::vector<GLSLSource>({GLSLSource(GL_COMPUTE_SHADER, shaderFilename)}));
     sonarPostprocessShader_->AddUniform("sonarOutput", ParameterType::INT);
     sonarPostprocessShader_->AddUniform("sonarPost", ParameterType::INT);
     sonarPostprocessShader_->Use();
@@ -228,8 +228,6 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
 
 OpenGLFLS::~OpenGLFLS()
 {
-    delete sonarOutputShader_;
-    delete sonarPostprocessShader_;
     glDeleteTextures(2, outputTex_);
 }
 
@@ -385,7 +383,7 @@ void OpenGLFLS::ComputeOutput(std::vector<Renderable>& objects)
             glm::mat4 M = objects[h].model;
             Material mat = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(objects[h].materialName);
             bool normalMapping = obj.texturable && (look.normalMap > 0);
-            shader = normalMapping ? sonarInputShader_[1] : sonarInputShader_[0];
+            shader = normalMapping ? sonarInputShader_[1].get() : sonarInputShader_[0].get();
             shader->Use();
             shader->SetUniform("MVP", VP * M);
             shader->SetUniform("M", M);

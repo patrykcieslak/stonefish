@@ -31,18 +31,9 @@
 namespace sf
 {
 
-Mux::Mux()
+bool Mux::AddComponent(ScalarSensor* s, size_t channel)
 {
-}
-
-Mux::~Mux()
-{
-    components_.clear();
-}
-
-bool Mux::AddComponent(ScalarSensor* s, unsigned short channel)
-{
-    if(s == NULL)
+    if(s == nullptr)
         return false;
     
     if(channel >= s->getNumOfChannels())
@@ -52,28 +43,30 @@ bool Mux::AddComponent(ScalarSensor* s, unsigned short channel)
     cmp.sensor = s;
     cmp.channel = channel;
     components_.push_back(cmp);
+
     return true;
 }
 
-MuxComponent* Mux::getComponent(unsigned int index)
+MuxComponent* Mux::getComponent(size_t index)
 {
     if(index < components_.size())
         return &components_[index];
     
-    return NULL;
+    return nullptr;
 }
 
-Scalar* Mux::getLastSample()
+std::vector<Scalar> Mux::getLastSample()
 {
-    Scalar* sample = new Scalar[components_.size()];
-    for(unsigned int i = 0; i < components_.size(); ++i)
+    std::vector<Scalar> sample(components_.size());
+    for(size_t i = 0; i < components_.size(); ++i)
         sample[i] = components_[i].sensor->getLastSample().getValue(components_[i].channel);
+
     return sample;
 }
 
-unsigned int Mux::getNumOfComponents() const
+size_t Mux::getNumOfComponents() const
 {
-    return (unsigned int)components_.size();
+    return components_.size();
 }
     
 }

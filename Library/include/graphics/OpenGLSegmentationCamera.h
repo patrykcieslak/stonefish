@@ -23,8 +23,7 @@
 //  Copyright (c) 2025-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLSegmentationCamera__
-#define __Stonefish_OpenGLSegmentationCamera__
+#pragma once
 
 #include "graphics/OpenGLView.h"
 #include <random>
@@ -160,10 +159,8 @@ namespace sf
         GLuint displayFBO_;
         GLuint displayVAO_;
         GLuint displayVBO_;
-        static GLSLShader* segmentationCameraOutputShader;
-        static GLSLShader* segmentationVisualizeShader;
-        static GLSLShader* flipShader;
+        static std::unique_ptr<GLSLShader> segmentationCameraOutputShader;
+        static std::unique_ptr<GLSLShader> segmentationVisualizeShader;
+        static std::unique_ptr<GLSLShader> flipShader;
     };
 }
-
-#endif

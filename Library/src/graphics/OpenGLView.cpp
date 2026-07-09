@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/05/18.
-//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLView.h"
@@ -41,10 +41,6 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height)
     viewUBOData_.VP = glm::mat4(1.f);
     viewUBOData_.eye = glm::vec3(0.f);
     ExtractFrustumFromVP(viewUBOData_.frustum, viewUBOData_.VP);
-}
-
-OpenGLView::~OpenGLView()
-{
 }
 
 GLuint OpenGLView::getRenderFBO() const
@@ -77,9 +73,9 @@ void OpenGLView::SetViewport()
     OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
 }
 
-GLint* OpenGLView::GetViewport() const
+std::vector<GLint> OpenGLView::GetViewport() const
 {
-    GLint* view = new GLint[4];
+    std::vector<GLint> view(4);
     view[0] = originX_;
     view[1] = originY_;
     view[2] = viewportWidth_;

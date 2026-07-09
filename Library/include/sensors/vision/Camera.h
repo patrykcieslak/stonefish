@@ -23,8 +23,7 @@
 //  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Camera__
-#define __Stonefish_Camera__
+#pragma once
 
 #include "sensors/VisionSensor.h"
 
@@ -113,5 +112,3 @@ namespace sf
         bool screen_;
     };
 }
-
-#endif

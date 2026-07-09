@@ -23,8 +23,7 @@
 //  Copyright (c) 2022-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_PerformanceMonitor__
-#define __Stonefish_PerformanceMonitor__
+#pragma once
 
 #include <SDL2/SDL_mutex.h>
 #include <chrono>
@@ -85,5 +84,3 @@ namespace sf
         SDL_mutex* updateMtx_;
     };
 }
-
-#endif

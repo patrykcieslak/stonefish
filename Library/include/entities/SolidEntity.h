@@ -355,7 +355,7 @@ namespace sf
         const Mesh* getPhysicsMesh();
 
         //! A method that returns a copy of all physics mesh vertices in body origin frame.
-        virtual std::vector<Vector3>* getMeshVertices() const;
+        virtual std::vector<Vector3> getMeshVertices() const;
         
         //! A method informing if the body is using buoyancy computation.
         bool isBuoyant() const;

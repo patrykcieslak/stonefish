@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/12/12.
-//  Copyright (c) 2012-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLRealCamera.h"
@@ -43,7 +43,7 @@ OpenGLRealCamera::OpenGLRealCamera(glm::vec3 eyePosition, glm::vec3 direction, g
     needsUpdate_ = false;
     newData_ = false;
     continuous_ = continuousUpdate;
-    camera_ = NULL;
+    camera_ = nullptr;
     cameraFBO_ = 0;
     
     //Setup view
@@ -58,7 +58,7 @@ OpenGLRealCamera::OpenGLRealCamera(glm::vec3 eyePosition, glm::vec3 direction, g
 
 OpenGLRealCamera::~OpenGLRealCamera()
 {
-    if(camera_ != NULL)
+    if(camera_ != nullptr)
     {
         glDeleteFramebuffers(1, &cameraFBO_);
         glDeleteBuffers(1, &cameraPBO_);
@@ -176,8 +176,8 @@ void OpenGLRealCamera::DrawLDR(GLuint destinationFBO, bool updated)
         OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
         glDrawBuffer(GL_COLOR_ATTACHMENT1);
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cameraColorTex_[0]);
-        flipShader->Use();
-        flipShader->SetUniform("texSource", TEX_POSTPROCESS1);
+        shaders["flip"]->Use();
+        shaders["flip"]->SetUniform("texSource", TEX_POSTPROCESS1);
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
         OpenGLState::UseProgram(0);
         OpenGLState::BindFramebuffer(0);
@@ -214,7 +214,6 @@ void OpenGLRealCamera::DrawLDR(GLuint destinationFBO, bool updated)
 }
 
 }
-
 
 /*
 float computeEV100(float aperture, float shutterTime , float ISO)

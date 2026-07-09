@@ -50,9 +50,6 @@ namespace sf
         SegmentationCamera(const std::string& uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency = Scalar(-1), 
             Scalar minDistance = Scalar(STD_NEAR_PLANE_DISTANCE), Scalar maxDistance = Scalar(STD_FAR_PLANE_DISTANCE)); //Rendering options
         
-        //! A destructor.
-        ~SegmentationCamera();
-        
         //! A method performing internal sensor state update.
         /*!
          \param dt the step time of the simulation [s]

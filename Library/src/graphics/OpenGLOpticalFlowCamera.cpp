@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/02/2024.
-//  Copyright (c) 2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLOpticalFlowCamera.h"
@@ -36,9 +36,9 @@
 namespace sf
 {
 
-GLSLShader* OpenGLOpticalFlowCamera::opticalFlowCameraOutputShader = nullptr;
-GLSLShader* OpenGLOpticalFlowCamera::opticalFlowVisualizeShader = nullptr;
-GLSLShader* OpenGLOpticalFlowCamera::flipShader = nullptr;
+std::unique_ptr<GLSLShader> OpenGLOpticalFlowCamera::opticalFlowCameraOutputShader;
+std::unique_ptr<GLSLShader> OpenGLOpticalFlowCamera::opticalFlowVisualizeShader;
+std::unique_ptr<GLSLShader> OpenGLOpticalFlowCamera::flipShader;
 
 OpenGLOpticalFlowCamera::OpenGLOpticalFlowCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
                           GLint originX, GLint originY, GLint width, GLint height,
@@ -374,7 +374,7 @@ void OpenGLOpticalFlowCamera::DrawLDR(GLuint destinationFBO, bool updated)
 ///////////////////////// Static /////////////////////////////
 void OpenGLOpticalFlowCamera::Init()
 {
-    opticalFlowCameraOutputShader = new GLSLShader("opticalFlow.frag", "opticalFlow.vert");
+    opticalFlowCameraOutputShader = std::make_unique<GLSLShader>("opticalFlow.frag", "opticalFlow.vert");
     opticalFlowCameraOutputShader->AddUniform("MVP", ParameterType::MAT4);
     opticalFlowCameraOutputShader->AddUniform("M", ParameterType::MAT4);
     opticalFlowCameraOutputShader->AddUniform("FC", ParameterType::FLOAT);
@@ -389,19 +389,19 @@ void OpenGLOpticalFlowCamera::Init()
     opticalFlowCameraOutputShader->AddUniform("c", ParameterType::VEC2);
     opticalFlowCameraOutputShader->AddUniform("f", ParameterType::FLOAT);
 
-    opticalFlowVisualizeShader = new GLSLShader("opticalFlowVisualize.frag");
+    opticalFlowVisualizeShader = std::make_unique<GLSLShader>("opticalFlowVisualize.frag");
     opticalFlowVisualizeShader->AddUniform("texFlow", ParameterType::INT);
     opticalFlowVisualizeShader->AddUniform("maxVel", ParameterType::FLOAT);
 
-    flipShader = new GLSLShader("verticalFlip.frag");
+    flipShader = std::make_unique<GLSLShader>("verticalFlip.frag");
     flipShader->AddUniform("texSource", ParameterType::INT);
 }
 
 void OpenGLOpticalFlowCamera::Destroy()
 {
-    if(opticalFlowCameraOutputShader != nullptr) delete opticalFlowCameraOutputShader;
-    if(opticalFlowVisualizeShader != nullptr) delete opticalFlowVisualizeShader;
-    if(flipShader != nullptr) delete flipShader;
+    opticalFlowCameraOutputShader.reset();
+    opticalFlowVisualizeShader.reset();
+    flipShader.reset();
 }
 
 }

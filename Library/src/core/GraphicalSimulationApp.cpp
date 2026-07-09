@@ -34,6 +34,7 @@
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLConsole.h"
+#include "graphics/OpenGLPrinter.h"
 #include "graphics/IMGUI.h"
 #include "graphics/OpenGLTrackball.h"
 #include "utils/SystemUtil.hpp"
@@ -47,7 +48,7 @@
 namespace sf
 {
 
-GraphicalSimulationApp::GraphicalSimulationApp(std::string title, std::string dataDirPath, 
+GraphicalSimulationApp::GraphicalSimulationApp(const std::string& title, const std::string& dataDirPath, 
     RenderSettings r, HelperSettings h, std::unique_ptr<SimulationManager> sim)
 : SimulationApp(title, dataDirPath, std::move(sim))
 {
@@ -276,6 +277,7 @@ void GraphicalSimulationApp::InitializeSDL()
     cInfo("Window created. OpenGL %d.%d contexts created.", vmajor, vminor);
     OpenGLState::Init();
     GLSLShader::Init();
+    OpenGLPrinter::Init();
     
     //Initialize console output
     std::vector<ConsoleMessage> textLines = console_->getLines();
@@ -313,10 +315,11 @@ void GraphicalSimulationApp::CreateTrackball()
 {
     if(getGLPipeline()->getContent()->getViewsCount() == 0)
     {
-        trackball_ = new OpenGLTrackball(glm::vec3(0.f,0.f,-1.f), 5.0, glm::vec3(0.f,0.f,-1.f), 0, 0, 
+        std::unique_ptr<OpenGLTrackball> trackball = std::make_unique<OpenGLTrackball>(glm::vec3(0.f,0.f,-1.f), 5.0, glm::vec3(0.f,0.f,-1.f), 0, 0, 
             getWindowWidth(), getWindowHeight(), 90.f, glm::vec2(STD_NEAR_PLANE_DISTANCE, STD_FAR_PLANE_DISTANCE));
+        trackball_ = trackball.get();
         trackball_->Rotate(glm::quat(glm::eulerAngleYXZ(0.0, 0.0, 0.25)));
-        getGLPipeline()->getContent()->AddView(trackball_);
+        getGLPipeline()->getContent()->AddView(std::move(trackball));
     }
 }
 
@@ -674,45 +677,45 @@ void GraphicalSimulationApp::DoHUD()
     offset += 15.f;
     
     Uid id;
-    id.owner_ = 0;
+    id.owner = 0;
     
-    id.item_ = 0;
+    id.item = 0;
     bool displayPhysical = getSimulationManager()->getSolidDisplayMode() == DisplayMode::PHYSICAL; 
     displayPhysical = gui_->DoCheckBox(id, 15.f, offset, 110.f, displayPhysical, "Physical objects");
     getSimulationManager()->setSolidDisplayMode(displayPhysical ? DisplayMode::PHYSICAL : DisplayMode::GRAPHICAL);
     offset += 22.f;
     
-    id.item_ = 1;
+    id.item = 1;
     hs.showCoordSys = gui_->DoCheckBox(id, 15.f, offset, 110.f, hs.showCoordSys, "Frames");
     offset += 22.f;
     
-    id.item_ = 2;
+    id.item = 2;
     hs.showSensors = gui_->DoCheckBox(id, 15.f, offset, 110.f, hs.showSensors, "Sensors");
     offset += 22.f;
     
-    id.item_ = 3;
+    id.item = 3;
     hs.showActuators = gui_->DoCheckBox(id, 15.f, offset, 110.f, hs.showActuators, "Actuators");
     offset += 22.f;
     
-    id.item_ = 4;
+    id.item = 4;
     hs.showJoints = gui_->DoCheckBox(id, 15.f, offset, 110.f, hs.showJoints, "Joints");
     offset += 22.f;
     
-    id.item_ = 5;
+    id.item = 5;
     hs.showBulletDebugInfo = gui_->DoCheckBox(id, 15.f, offset, 110.f, hs.showBulletDebugInfo, "Collision");
     offset += 22.f;
     
     if(ocn != nullptr)
     {
-        id.item_ = 6;
+        id.item = 6;
         hs.showForces = gui_->DoCheckBox(id, 15.f, offset, 110.f, hs.showForces, "Fluid Forces");
         offset += 22.f;
     
-        id.item_ = 7;
+        id.item = 7;
         hs.showFluidDynamics = gui_->DoCheckBox(id, 15.f, offset, 110.f, hs.showFluidDynamics, "Hydrodynamics");
         offset += 22.f;
 
-        id.item_ = 8;
+        id.item = 8;
         hs.showOceanVelocityField = gui_->DoCheckBox(id, 15.f, offset, 110.f, hs.showOceanVelocityField, "Water velocity");
         offset += 22.f;
     }
@@ -728,12 +731,12 @@ void GraphicalSimulationApp::DoHUD()
     gui_->DoLabel(15.f, offset, "SUN POSITION");
     offset += 15.f;
     
-    id.owner_ = 1;
-    id.item_ = 0;
+    id.owner = 1;
+    id.item = 0;
     az = gui_->DoSlider(id, 15.f, offset, 150.f, Scalar(-180), Scalar(180), az, "Azimuth[deg]");
     offset += 50.f;
     
-    id.item_ = 1;
+    id.item = 1;
     elev = gui_->DoSlider(id, 15.f, offset, 150.f, Scalar(-10), Scalar(90), elev, "Elevation[deg]");
     offset += 61.f;
     
@@ -749,19 +752,19 @@ void GraphicalSimulationApp::DoHUD()
         gui_->DoPanel(10.f, offset, 160.f, oceanOn ? 112.f : 33.f);
         offset += 5.f;
        
-        id.owner_ = 2;
-        id.item_ = 0;
+        id.owner = 2;
+        id.item = 0;
         ocn->setRenderable(gui_->DoCheckBox(id, 15.f, offset, 110.f, oceanOn, "OCEAN"));
         offset += 26.f;
         
         if(oceanOn)
         {
-            id.item_ = 1;
+            id.item = 1;
             waterType = gui_->DoSlider(id, 15.f, offset, 150.f, Scalar(0), Scalar(1), waterType, "Jerlov water type");
             ocn->setWaterType(waterType);
             offset += 50.f;
             
-            id.item_ = 2;
+            id.item = 2;
             ocn->setParticles(gui_->DoCheckBox(id, 19.f, offset, 110.f, ocn->hasParticles(), "Suspended particles"));
             offset += 29.f;
         }
@@ -775,8 +778,8 @@ void GraphicalSimulationApp::DoHUD()
     gui_->DoLabel(15.f, offset, "VIEW");
     offset += 15.f;
     
-    id.owner_ = 3;
-    id.item_ = 0;
+    id.owner = 3;
+    id.item = 0;
     std::vector<std::string> options;
     options.push_back("Free");
 
@@ -826,8 +829,8 @@ void GraphicalSimulationApp::DoHUD()
     }
     offset += 51.f;
     
-    id.owner_ = 3;
-    id.item_ = 1;
+    id.owner = 3;
+    id.item = 1;
     trackball_->setExposureCompensation(gui_->DoSlider(id, 15.f, offset, 150.f, Scalar(-3), Scalar(3), trackball_->getExposureCompensation(), "Exposure[EV]"));
     offset += 61.f;
     
@@ -886,8 +889,8 @@ void GraphicalSimulationApp::DoHUD()
                 if(ent->getSolidType() == SolidType::COMPOUND)
                 {
                     Compound* cmp = (Compound*)ent;
-                    id.owner_ = 4;
-                    id.item_ = 0;
+                    id.owner = 4;
+                    id.item = 0;
                     cmp->setDisplayInternalParts(gui_->DoCheckBox(id, 15.f, offset, 110.f, cmp->isDisplayingInternalParts(), "Show internals"));
                     offset += 22.f;
 
@@ -968,8 +971,8 @@ void GraphicalSimulationApp::DoHUD()
         perfData.push_back(getSimulationManager()->getPerformanceMonitor().getPhysicsTimeHistory<GLfloat>(100));
         perfData.push_back(getSimulationManager()->getPerformanceMonitor().getHydrodynamicsTimeHistory<GLfloat>(100));
 
-        id.owner_ = 4;
-        id.item_ = 0;
+        id.owner = 4;
+        id.item = 0;
         gui_->DoTimePlot(id, getWindowWidth()-300, getWindowHeight()-200, 290, 160, perfData, "Performance Monitor", new Scalar[2]{-1, 10000});
     }
 }

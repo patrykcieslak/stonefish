@@ -54,9 +54,6 @@ namespace sf
         SSS(const std::string& uniqueName, unsigned int numOfBins, unsigned int numOfLines, Scalar verticalBeamWidthDeg,
             Scalar horizontalBeamWidthDeg, Scalar verticalTiltDeg, Scalar minRange, Scalar maxRange, ColorMap cm, 
             SonarOutputFormat outputFormat = SonarOutputFormat::U8, Scalar frequency = Scalar(-1));
-       
-        //! A destructor.
-        ~SSS();
         
         //! A method performing internal sensor state update.
         /*!

@@ -38,7 +38,7 @@ NameManager::~NameManager()
     names_.clear();
 }
 
-std::string NameManager::AddName(std::string proposedName)
+std::string NameManager::AddName(const std::string& proposedName)
 {
     std::string goodName = proposedName;
     int number = 1;
@@ -58,7 +58,7 @@ checkname:
     return goodName;
 }
 
-void NameManager::RemoveName(std::string name)
+void NameManager::RemoveName(const std::string& name)
 {
     std::vector<std::string>::iterator it;
     for(it = names_.begin(); it < names_.end(); it++)

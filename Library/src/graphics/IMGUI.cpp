@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/27/12.
-//  Copyright (c) 2012-2022 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/IMGUI.h"
@@ -50,11 +50,6 @@ IMGUI::IMGUI(GLint windowWidth, GLint windowHeight, GLfloat hue)
     translucentFBO_ = 0;
     translucentTexture_[0] = 0;
     translucentTexture_[1] = 0;
-    downsampleShader_ = NULL;
-    gaussianShader_ = NULL;
-    guiShader_[0] = NULL;
-    guiShader_[1] = NULL;
-    plainPrinter_ = NULL;
     logoTexture_ = 0;
     guiTexture_ = 0;
     
@@ -75,7 +70,7 @@ IMGUI::IMGUI(GLint windowWidth, GLint windowHeight, GLfloat hue)
     Resize(windowWidth, windowHeight);
     
     //Create printers
-    plainPrinter_ = new OpenGLPrinter(GetShaderPath() + std::string(STANDARD_FONT_NAME), STANDARD_FONT_SIZE);
+    plainPrinter_ = std::make_unique<OpenGLPrinter>(GetShaderPath() + std::string(STANDARD_FONT_NAME), STANDARD_FONT_SIZE);
     backgroundMargin_ = 5.f;
     
     //Load logo texture
@@ -90,15 +85,15 @@ IMGUI::IMGUI(GLint windowWidth, GLint windowHeight, GLfloat hue)
     OpenGLState::BindVertexArray(0);
     
     //Load translucent shaders
-    downsampleShader_ = new GLSLShader("downsample2x.frag");
+    downsampleShader_ = std::make_unique<GLSLShader>("downsample2x.frag");
     downsampleShader_->AddUniform("source", INT);
     downsampleShader_->AddUniform("srcViewport", VEC2);
-    gaussianShader_ = new GLSLShader("gaussianBlur.frag", "gaussianBlur.vert");
+    gaussianShader_ = std::make_unique<GLSLShader>("gaussianBlur.frag", "gaussianBlur.vert");
     gaussianShader_->AddUniform("source", INT);
     gaussianShader_->AddUniform("texelOffset", VEC2);
-    guiShader_[0] = new GLSLShader("guiFlat.frag","guiFlat.vert");
+    guiShader_[0] = std::make_unique<GLSLShader>("guiFlat.frag","guiFlat.vert");
     guiShader_[0]->AddUniform("color", VEC4);
-    guiShader_[1] = new GLSLShader("guiTex.frag","guiTex.vert");
+    guiShader_[1] = std::make_unique<GLSLShader>("guiTex.frag","guiTex.vert");
     guiShader_[1]->AddUniform("tex", INT);
     guiShader_[1]->AddUniform("backTex", INT);
     guiShader_[1]->AddUniform("color", VEC4);
@@ -147,20 +142,10 @@ void IMGUI::Resize(GLint windowWidth, GLint windowHeight)
 
 IMGUI::~IMGUI()
 {
-    if(plainPrinter_ != NULL)
-        delete plainPrinter_;
     if(logoTexture_ > 0)
         glDeleteTextures(1, &logoTexture_);
     if(guiTexture_ > 0) 
         glDeleteTextures(1, &guiTexture_);
-    if(downsampleShader_ != NULL)
-        delete downsampleShader_;
-    if(gaussianShader_ != NULL)
-        delete gaussianShader_;
-    if(guiShader_[0] != NULL)
-        delete guiShader_[0];
-    if(guiShader_[1] != NULL)
-        delete guiShader_[1];
     if(translucentTexture_[0] > 0)
         glDeleteTextures(2, translucentTexture_);
     if(guiVAO_ > 0)
@@ -191,27 +176,27 @@ void IMGUI::setActive(Uid newActive)
 
 bool IMGUI::isHot(Uid id)
 {
-    return (hot_.owner_ == id.owner_ && hot_.item_ == id.item_ && hot_.index_ == id.index_);
+    return (hot_.owner == id.owner && hot_.item == id.item && hot_.index == id.index);
 }
 
 bool IMGUI::isActive(Uid id)
 {
-    return (active_.owner_ == id.owner_ && active_.item_ == id.item_ && active_.index_ == id.index_);
+    return (active_.owner == id.owner && active_.item == id.item && active_.index == id.index);
 }
 
 bool IMGUI::isAnyActive()
 {
-    return (active_.owner_ != -1);
+    return (active_.owner != -1);
 }
 
 void IMGUI::clearActive()
 {
-    active_.owner_ = -1;
+    active_.owner = -1;
 }
 
 void IMGUI::clearHot()
 {
-    hot_.owner_ = -1;
+    hot_.owner = -1;
 }
 
 int IMGUI::getMouseX()
@@ -733,19 +718,19 @@ unsigned int IMGUI::DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const st
     
     if(MouseInRect(x + backgroundMargin_ + comboW + 5.f, y + backgroundMargin_ + STANDARD_FONT_SIZE + 10.f, size, size))
     {
-        id.index_ = 0;
+        id.index = 0;
         setHot(id);
     }
     else if(MouseInRect(x + backgroundMargin_ + comboW + 5.f + size, y + backgroundMargin_ + STANDARD_FONT_SIZE + 10.f, size, size))
     {
-        id.index_ = 1;
+        id.index = 1;
         setHot(id);
     }
     
     int change = 0;
     
     //Arrow down
-    id.index_ = 0;
+    id.index = 0;
     
     if(isActive(id))
     {
@@ -770,7 +755,7 @@ unsigned int IMGUI::DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const st
         DrawArrow(x + backgroundMargin_ + comboW + 5.f + size/2.f, y + backgroundMargin_ + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, false, theme_[ACTIVE_CONTROL_COLOR]);
     
     //Arrow up
-    id.index_ = 1;
+    id.index = 1;
     
     if(isActive(id))
     {

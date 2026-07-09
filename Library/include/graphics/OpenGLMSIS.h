@@ -23,8 +23,7 @@
 //  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLMSIS__
-#define __Stonefish_OpenGLMSIS__
+#pragma once
 
 #include "graphics/OpenGLSonar.h"
 #include <random>
@@ -98,9 +97,7 @@ namespace sf
         //OpenGL
         GLuint outputTex_[2];
         GLuint fanDiv_;
-        GLSLShader* sonarOutputShader_;
-        GLSLShader* sonarUpdateShader_;
+        std::unique_ptr<GLSLShader> sonarOutputShader_;
+        std::unique_ptr<GLSLShader> sonarUpdateShader_;
     };
 }
-
-#endif

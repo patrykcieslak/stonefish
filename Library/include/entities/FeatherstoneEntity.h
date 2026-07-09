@@ -228,7 +228,7 @@ namespace sf
          \param index an id of the joint
          \return the name of the joint
          */
-        std::string getJointName(size_t index);
+        const std::string& getJointName(size_t index) const;
         
         //! A method returning the position of the joint.
         /*!

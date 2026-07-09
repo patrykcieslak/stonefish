@@ -23,8 +23,7 @@
 //  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLOpticalFlowCamera__
-#define __Stonefish_OpenGLOpticalFlowCamera__
+#pragma once
 
 #include "graphics/OpenGLView.h"
 #include <random>
@@ -174,10 +173,8 @@ namespace sf
         GLuint displayFBO_;
         GLuint displayVAO_;
         GLuint displayVBO_;
-        static GLSLShader* opticalFlowCameraOutputShader;
-        static GLSLShader* opticalFlowVisualizeShader;
-        static GLSLShader* flipShader;
+        static std::unique_ptr<GLSLShader> opticalFlowCameraOutputShader;
+        static std::unique_ptr<GLSLShader> opticalFlowVisualizeShader;
+        static std::unique_ptr<GLSLShader> flipShader;
     };
 }
-
-#endif

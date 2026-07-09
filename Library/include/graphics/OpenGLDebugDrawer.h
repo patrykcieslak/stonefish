@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 28/06/2014.
-//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLDebugDrawer__
-#define __Stonefish_OpenGLDebugDrawer__
+#pragma once
 
 #include "LinearMath/btIDebugDraw.h"
 #include "StonefishCommon.h"
@@ -101,4 +100,3 @@ namespace sf
     };
 }
 
-#endif

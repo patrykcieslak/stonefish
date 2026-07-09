@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 28/06/2022.
-//  Copyright (c) 2022 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2022-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_RayTest__
-#define __Stonefish_RayTest__
+#pragma once
 
 #include "BulletCollision/CollisionDispatch/btCollisionWorld.h"
 
@@ -47,5 +46,3 @@ struct DetailedRayResultCallback : public btCollisionWorld::ClosestRayResultCall
 
     int m_childShapeIndex;
 };
-
-#endif

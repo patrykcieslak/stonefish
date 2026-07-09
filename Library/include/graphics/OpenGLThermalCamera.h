@@ -23,8 +23,7 @@
 //  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLThermalCamera__
-#define __Stonefish_OpenGLThermalCamera__
+#pragma once
 
 #include "graphics/OpenGLView.h"
 #include <random>
@@ -180,9 +179,8 @@ namespace sf
         GLuint displayFBO_;
         GLuint displayVAO_;
         GLuint displayVBO_;
-        static GLSLShader* thermalVisualizeShader;
-        static GLSLShader* thermalOutputShader;
+        static std::unique_ptr<GLSLShader> thermalVisualizeShader;
+        static std::unique_ptr<GLSLShader> thermalOutputShader;
     };
 }
 
-#endif

@@ -23,8 +23,7 @@
 //  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_GeometryFileUtil__
-#define __Stonefish_GeometryFileUtil__
+#pragma once
 
 #include "StonefishCommon.h"
 #include "graphics/OpenGLDataStructs.h"
@@ -187,6 +186,3 @@ namespace sf
     */
     bool IsDiagonal(const Matrix3& A);
 }
-
-#endif
-

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/06/17.
-//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLPrinter.h"
@@ -37,7 +37,7 @@ namespace sf
 
 GLuint OpenGLPrinter::windowW = 800;
 GLuint OpenGLPrinter::windowH = 600;
-GLSLShader* OpenGLPrinter::printShader = NULL;
+std::unique_ptr<GLSLShader> OpenGLPrinter::printShader;
 
 void OpenGLPrinter::SetWindowSize(GLuint width, GLuint height)
 {
@@ -75,76 +75,65 @@ OpenGLPrinter::OpenGLPrinter(const std::string& fontPath, GLuint size)
     
     if(!error)
     {
-        //Load shader if not already loaded
-        if(printShader == NULL)
+        //Calculate texture atlas dimensions
+        FT_Set_Pixel_Sizes(face, 0, nativeFontSize_);
+        
+        unsigned int w = 0;
+        unsigned int h = 0;
+        
+        for(int i = 32; i < 128; ++i)
         {
-            printShader = new GLSLShader("printer.frag","printer.vert");
-            printShader->AddUniform("tex", ParameterType::INT);
-            printShader->AddUniform("color", ParameterType::VEC4);
+            if(FT_Load_Char(face, i, FT_LOAD_RENDER))
+            {
+                fprintf(stderr, "Loading character %c failed!\n", i);
+                continue;
+            }
+            
+            w += face->glyph->bitmap.width;
+            h = face->glyph->bitmap.rows > h ? face->glyph->bitmap.rows : h;
         }
-                
-        if(printShader->isValid())
+        
+        texWidth_ = (GLfloat)w;
+        texHeight_ = (GLfloat)h;
+        
+        //Create texture
+        glGenTextures(1, &fontTexture_);
+        OpenGLState::BindTexture(TEX_GUI1, GL_TEXTURE_2D, fontTexture_);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, (GLint)w, (GLint)h, 0, GL_RED, GL_UNSIGNED_BYTE, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        
+        //Load all characters
+        GLuint x = 0;
+        
+        for(int i = 32; i < 128; ++i)
         {
-            //Calculate texture atlas dimensions
-            FT_Set_Pixel_Sizes(face, 0, nativeFontSize_);
+            if(FT_Load_Char(face, i, FT_LOAD_RENDER))
+                continue;
             
-            unsigned int w = 0;
-            unsigned int h = 0;
+            glTexSubImage2D(GL_TEXTURE_2D, 0, x, 0, face->glyph->bitmap.width, face->glyph->bitmap.rows, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
             
-            for(int i = 32; i < 128; ++i)
-            {
-                if(FT_Load_Char(face, i, FT_LOAD_RENDER))
-                {
-                    fprintf(stderr, "Loading character %c failed!\n", i);
-                    continue;
-                }
-                
-                w += face->glyph->bitmap.width;
-                h = face->glyph->bitmap.rows > h ? face->glyph->bitmap.rows : h;
-            }
+            chars_[i-32] = {glm::vec2((GLfloat)(face->glyph->advance.x >> 6), (GLfloat)(face->glyph->advance.y >> 6)),
+                        glm::vec2((GLfloat)face->glyph->bitmap.width, (GLfloat)face->glyph->bitmap.rows),
+                        glm::vec2((GLfloat)face->glyph->bitmap_left, (GLfloat)face->glyph->bitmap_top),
+                        (GLfloat)x/texWidth_};
             
-            texWidth_ = (GLfloat)w;
-            texHeight_ = (GLfloat)h;
-            
-            //Create texture
-            glGenTextures(1, &fontTexture_);
-            OpenGLState::BindTexture(TEX_GUI1, GL_TEXTURE_2D, fontTexture_);
-            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, (GLint)w, (GLint)h, 0, GL_RED, GL_UNSIGNED_BYTE, 0);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            
-            //Load all characters
-            GLuint x = 0;
-            
-            for(int i = 32; i < 128; ++i)
-            {
-                if(FT_Load_Char(face, i, FT_LOAD_RENDER))
-                    continue;
-                
-                glTexSubImage2D(GL_TEXTURE_2D, 0, x, 0, face->glyph->bitmap.width, face->glyph->bitmap.rows, GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
-                
-                chars_[i-32] = {glm::vec2((GLfloat)(face->glyph->advance.x >> 6), (GLfloat)(face->glyph->advance.y >> 6)),
-                            glm::vec2((GLfloat)face->glyph->bitmap.width, (GLfloat)face->glyph->bitmap.rows),
-                            glm::vec2((GLfloat)face->glyph->bitmap_left, (GLfloat)face->glyph->bitmap_top),
-                            (GLfloat)x/texWidth_};
-                
-                x += face->glyph->bitmap.width;
-            }
-            
-            OpenGLState::UnbindTexture(TEX_GUI1);
-            
-            //Freetype not needed any more
-            FT_Done_Face(face);
-            FT_Done_FreeType(ft);
+            x += face->glyph->bitmap.width;
+        }
+        
+        OpenGLState::UnbindTexture(TEX_GUI1);
+        
+        //Freetype not needed any more
+        FT_Done_Face(face);
+        FT_Done_FreeType(ft);
 
-            glGenBuffers(1, &fontVBO_); //Generate VBO for rendering textured quads
-            
-            //Successfully initialized!
-            initialized_ = true;
-        }
+        glGenBuffers(1, &fontVBO_); //Generate VBO for rendering textured quads
+        
+        //Successfully initialized!
+        initialized_ = true;
     }
 }
 
@@ -249,6 +238,18 @@ GLuint OpenGLPrinter::TextLength(const std::string& text)
 glm::ivec2 OpenGLPrinter::TextDimensions(const std::string& text)
 {
     return glm::ivec2(TextLength(text), nativeFontSize_);
+}
+
+void OpenGLPrinter::Init()
+{
+    printShader = std::make_unique<GLSLShader>("printer.frag","printer.vert");
+    printShader->AddUniform("tex", ParameterType::INT);
+    printShader->AddUniform("color", ParameterType::VEC4);
+}
+
+void OpenGLPrinter::Destroy()
+{
+    printShader.reset();
 }
 
 }

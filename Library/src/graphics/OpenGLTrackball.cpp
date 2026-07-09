@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/29/13.
-//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLTrackball.h"
@@ -47,29 +47,21 @@ OpenGLTrackball::OpenGLTrackball(glm::vec3 centerPosition, GLfloat orbitRadius, 
     fovx_ = horizontalFovDeg/180.f*M_PI;
     GLfloat fovy = 2.f * atanf( (GLfloat)viewportHeight_/(GLfloat)viewportWidth_ * tanf(fovx_/2.f) );
     projection_ = glm::perspectiveFov(fovy, (GLfloat)viewportWidth_, (GLfloat)viewportHeight_, near_, far_);
-    dragging = false;
-    transMode = false;
+    dragging_ = false;
+    transMode_ = false;
     continuous_ = true;
     holdingEntity_ = nullptr;
 
-    outlineShader[0] = new GLSLShader("outline.frag");
-    outlineShader[0]->AddUniform("color", ParameterType::VEC4);
-    outlineShader[0]->AddUniform("texStencil", ParameterType::INT);
-    outlineShader[0]->AddUniform("uvOffset", ParameterType::VEC2);
+    outlineShader_[0] = std::make_unique<GLSLShader>("outline.frag");
+    outlineShader_[0]->AddUniform("color", ParameterType::VEC4);
+    outlineShader_[0]->AddUniform("texStencil", ParameterType::INT);
+    outlineShader_[0]->AddUniform("uvOffset", ParameterType::VEC2);
 
-    outlineShader[1] = new GLSLShader("smallBlur.frag");
-    outlineShader[1]->AddUniform("tex", ParameterType::INT);
-    outlineShader[1]->AddUniform("invTexSize", ParameterType::VEC2);
+    outlineShader_[1] = std::make_unique<GLSLShader>("smallBlur.frag");
+    outlineShader_[1]->AddUniform("tex", ParameterType::INT);
+    outlineShader_[1]->AddUniform("invTexSize", ParameterType::VEC2);
 
     UpdateTransform();
-}
-
-OpenGLTrackball::~OpenGLTrackball()
-{
-    if(outlineShader[0] != nullptr)
-        delete outlineShader[0];
-    if(outlineShader[1] != nullptr)
-        delete outlineShader[1];
 }
 
 ViewType OpenGLTrackball::getType() const
@@ -132,29 +124,29 @@ void OpenGLTrackball::MouseDown(GLfloat x, GLfloat y, bool translate)
     
     if(translate)
     {
-        transMode = true;
+        transMode_ = true;
         translationStart_ = center_;
     }
     else
     {
-        transMode = false;
+        transMode_ = false;
         zStart_ = calculateZ(xStart_, yStart_);
         rotationStart_ = rotation_;
     }
     
-    dragging = true;
+    dragging_ = true;
 }
 
 void OpenGLTrackball::MouseUp()
 {
-    dragging = false;
+    dragging_ = false;
 }
 
 void OpenGLTrackball::MouseMove(GLfloat x, GLfloat y)
 {
-    if(dragging)
+    if(dragging_)
     {
-        if(transMode)
+        if(transMode_)
         {
             glm::vec3 right = glm::normalize(glm::cross(GetLookingDirection(), GetUpDirection()));
             center_ = translationStart_ + (GetUpDirection() * (y-yStart_) * -0.5f + right * (x-xStart_) * -0.5f) * radius_;
@@ -221,12 +213,12 @@ void OpenGLTrackball::DrawSelection(const std::vector<Renderable>& r, GLuint des
     OpenGLState::DisableStencilTest();
     
     //2. Grow
-    outlineShader[0]->Use();
-    outlineShader[0]->SetUniform("color", glm::vec4(1.f,0.55f,0.1f,1.f)); //glm::vec4(0.4f,0.9f,1.f,1.f));
-    outlineShader[0]->SetUniform("texStencil", TEX_POSTPROCESS1);
+    outlineShader_[0]->Use();
+    outlineShader_[0]->SetUniform("color", glm::vec4(1.f,0.55f,0.1f,1.f)); //glm::vec4(0.4f,0.9f,1.f,1.f));
+    outlineShader_[0]->SetUniform("texStencil", TEX_POSTPROCESS1);
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, getColorTexture(0));
     SetRenderBuffers(1, false, false);
-    outlineShader[0]->SetUniform("uvOffset", glm::vec2(1.f/(GLfloat)viewportWidth_, 1.f/(GLfloat)viewportHeight_)*1.5f);
+    outlineShader_[0]->SetUniform("uvOffset", glm::vec2(1.f/(GLfloat)viewportWidth_, 1.f/(GLfloat)viewportHeight_)*1.5f);
     content->DrawSAQ();
 
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, getColorTexture(1));
@@ -244,9 +236,9 @@ void OpenGLTrackball::DrawSelection(const std::vector<Renderable>& r, GLuint des
     //4. Gaussian blur 3x3
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, getColorTexture(1));
     SetRenderBuffers(0, false, false);
-    outlineShader[1]->Use();
-    outlineShader[1]->SetUniform("tex", TEX_POSTPROCESS1);
-    outlineShader[1]->SetUniform("invTexSize", glm::vec2(1.f/(GLfloat)viewportWidth_, 1.f/(GLfloat)viewportHeight_));
+    outlineShader_[1]->Use();
+    outlineShader_[1]->SetUniform("tex", TEX_POSTPROCESS1);
+    outlineShader_[1]->SetUniform("invTexSize", glm::vec2(1.f/(GLfloat)viewportWidth_, 1.f/(GLfloat)viewportHeight_));
     content->DrawSAQ();
 
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, getColorTexture(0));

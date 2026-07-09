@@ -23,8 +23,7 @@
 //  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_TorusShape__
-#define __Stonefish_TorusShape__
+#pragma once
 
 #include "BulletCollision/CollisionShapes/btConvexInternalShape.h"
 #include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
@@ -65,5 +64,3 @@ namespace sf
         Scalar minorRadius_;
     };
 }
-    
-#endif

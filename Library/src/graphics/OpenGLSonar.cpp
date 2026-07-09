@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 22/07/20.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLSonar.h"
@@ -37,8 +37,8 @@
 namespace sf
 {
 
-GLSLShader* OpenGLSonar::sonarInputShader_[2] = {nullptr, nullptr};
-GLSLShader* OpenGLSonar::sonarVisualizeShader_[2] = {nullptr, nullptr};
+std::array<std::unique_ptr<GLSLShader>, 2> OpenGLSonar::sonarInputShader_;
+std::array<std::unique_ptr<GLSLShader>, 2> OpenGLSonar::sonarVisualizeShader_;
 
 OpenGLSonar::OpenGLSonar(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonarUp, glm::uvec2 displayResolution, glm::vec2 range, SonarOutputFormat outputFormat)
     : OpenGLView(0, 0, displayResolution.x, displayResolution.y), randDist_(0.f, 1.f)
@@ -169,14 +169,14 @@ ViewType OpenGLSonar::getType() const
 ///////////////////////// Static /////////////////////////////
 void OpenGLSonar::Init()
 {
-    sonarInputShader_[0] = new GLSLShader("sonarInput.frag", "sonarInput.vert");
+    sonarInputShader_[0] = std::make_unique<GLSLShader>("sonarInput.frag", "sonarInput.vert");
     sonarInputShader_[0]->AddUniform("MVP", ParameterType::MAT4);
     sonarInputShader_[0]->AddUniform("M", ParameterType::MAT4);
     sonarInputShader_[0]->AddUniform("N", ParameterType::MAT3);
     sonarInputShader_[0]->AddUniform("eyePos", ParameterType::VEC3);
     sonarInputShader_[0]->AddUniform("restitution", ParameterType::FLOAT);
     
-    sonarInputShader_[1] = new GLSLShader("sonarInputUv.frag", "sonarInputUv.vert");
+    sonarInputShader_[1] = std::make_unique<GLSLShader>("sonarInputUv.frag", "sonarInputUv.vert");
     sonarInputShader_[1]->AddUniform("MVP", ParameterType::MAT4);
     sonarInputShader_[1]->AddUniform("M", ParameterType::MAT4);
     sonarInputShader_[1]->AddUniform("N", ParameterType::MAT3);
@@ -187,21 +187,21 @@ void OpenGLSonar::Init()
     sonarInputShader_[1]->SetUniform("texNormal", TEX_MAT_NORMAL);
     OpenGLState::UseProgram(0);
     
-    sonarVisualizeShader_[0] = new GLSLShader("sonarVisualize.frag", "printer.vert");
+    sonarVisualizeShader_[0] = std::make_unique<GLSLShader>("sonarVisualize.frag", "printer.vert");
     sonarVisualizeShader_[0]->AddUniform("texSonarData", ParameterType::INT);
     sonarVisualizeShader_[0]->AddUniform("colorMap", ParameterType::INT);
 
-    sonarVisualizeShader_[1] = new GLSLShader("sonarVisualizeU32.frag", "printer.vert");
+    sonarVisualizeShader_[1] = std::make_unique<GLSLShader>("sonarVisualizeU32.frag", "printer.vert");
     sonarVisualizeShader_[1]->AddUniform("texSonarData", ParameterType::INT);
     sonarVisualizeShader_[1]->AddUniform("colorMap", ParameterType::INT);
 }
 
 void OpenGLSonar::Destroy()
 {
-    if(sonarInputShader_[0] != nullptr) delete sonarInputShader_[0];
-    if(sonarInputShader_[1] != nullptr) delete sonarInputShader_[1];
-    if(sonarVisualizeShader_[0] != nullptr) delete sonarVisualizeShader_[0];
-    if(sonarVisualizeShader_[1] != nullptr) delete sonarVisualizeShader_[1];
+    sonarInputShader_[0].reset();
+    sonarInputShader_[1].reset();
+    sonarVisualizeShader_[0].reset();
+    sonarVisualizeShader_[1].reset();
 }
 
 }

@@ -31,8 +31,8 @@
 namespace sf
 {
 
-SimulationApp::SimulationApp(std::string title, std::string dataDirPath, std::unique_ptr<SimulationManager> sim)
-    : console_{new Console()}, startTime_{0}, autostep_{true}, timeStep_{Scalar(0)}, state_{SimulationState::NOT_READY},
+SimulationApp::SimulationApp(const std::string& title, const std::string& dataDirPath, std::unique_ptr<SimulationManager> sim)
+    : console_{std::make_unique<Console>()}, startTime_{0}, autostep_{true}, timeStep_{Scalar(0)}, state_{SimulationState::NOT_READY},
       simManager_{std::move(sim)}, title_{title}, dataPath_{dataDirPath}, physicsTime_{0.0}
 {
     SimulationApp::handle = this;

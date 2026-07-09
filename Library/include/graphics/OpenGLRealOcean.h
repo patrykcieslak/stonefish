@@ -23,8 +23,7 @@
 //  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLRealOcean__
-#define __Stonefish_OpenGLRealOcean__
+#pragma once
 
 #include "graphics/OpenGLOcean.h"
 #include <SDL2/SDL_mutex.h>
@@ -121,12 +120,10 @@ namespace sf
         GLuint fftPBO_;
         std::map<OpenGLView*, OceanQT> oceanTrees_; 
         SDL_mutex* hydroMutex_;
-        GLfloat* fftData_;
+        std::vector<GLfloat> fftData_;
         GLint qtGridTessFactor_;
         GLint qtGPUTessFactor_;
         GLint qtPatchIndexCount_;
         bool wireframe_;
     };
 }
-
-#endif

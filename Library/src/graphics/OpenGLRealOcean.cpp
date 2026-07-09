@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/05/2020.
-//  Copyright (c) 2020-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLRealOcean.h"
@@ -53,7 +53,7 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
     std::vector<GLSLSource> sources;
     sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "qt.comp"));
     sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "oceanSurface.glsl"));
-    oceanShaders_["lod"] = new GLSLShader(sources);
+    oceanShaders_["lod"] = std::make_unique<GLSLShader>(sources);
     oceanShaders_["lod"]->AddUniform("sceneSize", ParameterType::FLOAT);
 	oceanShaders_["lod"]->BindUniformBlock("View", UBO_VIEW);
 	oceanShaders_["lod"]->BindShaderStorageBlock("QTreeIn", SSBO_QTREE_IN);
@@ -65,7 +65,7 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
 
     sources.clear();
     sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "qtIndirect.comp"));
-    oceanShaders_["indirect"] = new GLSLShader(sources);
+    oceanShaders_["indirect"] = std::make_unique<GLSLShader>(sources);
     oceanShaders_["indirect"]->BindShaderStorageBlock("DispatchIndirect", SSBO_QTREE_INDIRECT);
     oceanShaders_["indirect"]->BindShaderStorageBlock("TreeSize", SSBO_QTREE_SIZE);
 
@@ -83,7 +83,7 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
     sources.push_back(GLSLSource(GL_TESS_EVALUATION_SHADER, "qt.tese"));
     sources.push_back(GLSLSource(GL_TESS_EVALUATION_SHADER, "oceanSurface.glsl"));
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanSurface.frag"));
-    oceanShaders_["surface"] = new GLSLShader(sources, precompiled);
+    oceanShaders_["surface"] = std::make_unique<GLSLShader>(sources, precompiled);
     oceanShaders_["surface"]->AddUniform("u_scene_size", ParameterType::FLOAT);
     oceanShaders_["surface"]->AddUniform("eyePos", ParameterType::VEC3);
     oceanShaders_["surface"]->AddUniform("viewDir", ParameterType::VEC3);
@@ -114,7 +114,7 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
     //Surface temperature rendering
     sources.pop_back();
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanSurfaceTemp.frag"));
-    oceanShaders_["surfaceTemp"] = new GLSLShader(sources, precompiled);
+    oceanShaders_["surfaceTemp"] = std::make_unique<GLSLShader>(sources, precompiled);
     oceanShaders_["surfaceTemp"]->AddUniform("u_scene_size", ParameterType::FLOAT);
     oceanShaders_["surfaceTemp"]->AddUniform("eyePos", ParameterType::VEC3);
     oceanShaders_["surfaceTemp"]->AddUniform("viewDir", ParameterType::VEC3);
@@ -148,7 +148,7 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
     sources.pop_back();
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanBacksurface.frag"));
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanOptics.frag"));
-    oceanShaders_["backsurface"] = new GLSLShader(sources, precompiled);
+    oceanShaders_["backsurface"] = std::make_unique<GLSLShader>(sources, precompiled);
     oceanShaders_["backsurface"]->AddUniform("u_scene_size", ParameterType::FLOAT);
     oceanShaders_["backsurface"]->AddUniform("eyePos", ParameterType::VEC3);
     oceanShaders_["backsurface"]->AddUniform("MVP", ParameterType::MAT4);
@@ -177,7 +177,7 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
     sources.pop_back();
     sources.pop_back();
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "flat.frag"));
-    oceanShaders_["mask"] = new GLSLShader(sources);
+    oceanShaders_["mask"] = std::make_unique<GLSLShader>(sources);
     oceanShaders_["mask"]->AddUniform("u_scene_size", ParameterType::FLOAT);
     oceanShaders_["mask"]->AddUniform("eyePos", ParameterType::VEC3);
     oceanShaders_["mask"]->AddUniform("texWaveFFT", ParameterType::INT);
@@ -189,12 +189,11 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
 
     //FFT data transfer
     size_t fftDataSize = params_.fftSize * params_.fftSize * 4 * layers;
-    fftData_ = new GLfloat[fftDataSize];
-    memset(fftData_, 0, sizeof(GLfloat) * fftDataSize);
+    fftData_.resize(fftDataSize, 0);
     
     glGenBuffers(1, &fftPBO_);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, fftPBO_);
-    glBufferData(GL_PIXEL_PACK_BUFFER, params_.fftSize * params_.fftSize * 4 * layers * sizeof(GLfloat), fftData_, GL_STREAM_READ);
+    glBufferData(GL_PIXEL_PACK_BUFFER, params_.fftSize * params_.fftSize * 4 * layers * sizeof(GLfloat), fftData_.data(), GL_STREAM_READ);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
     //Quad tree buffers
@@ -263,8 +262,6 @@ OpenGLRealOcean::~OpenGLRealOcean()
         glDeleteBuffers(1, &it->second.patchDI);
         glDeleteBuffers(1, &it->second.patchAC);
     }
-    oceanTrees_.clear();
-    delete fftData_;
 }
 
 void OpenGLRealOcean::setWireframe(bool enabled)
@@ -338,7 +335,7 @@ void OpenGLRealOcean::Simulate(GLfloat dt)
         GLfloat* src = (GLfloat*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
         if(src)
         {
-            memcpy(fftData_, src, params_.fftSize * params_.fftSize * 4 * 4 * sizeof(GLfloat));
+            memcpy(fftData_.data(), src, params_.fftSize * params_.fftSize * 4 * 4 * sizeof(GLfloat));
             glUnmapBuffer(GL_PIXEL_PACK_BUFFER); //Release pointer to the mapped buffer
         }
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
@@ -475,7 +472,7 @@ void OpenGLRealOcean::UpdateSurface(OpenGLView* view)
 void OpenGLRealOcean::DrawSurface(OpenGLView* view)
 {
     OceanQT& tree = oceanTrees_[view];
-    GLint* viewport = view->GetViewport();
+    std::vector<GLint> viewport = view->GetViewport();
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_QTREE_CULL, tree.patchSSBO[2]);
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures_[3]);
     OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures_[2]);
@@ -508,13 +505,12 @@ void OpenGLRealOcean::DrawSurface(OpenGLView* view)
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
-    delete [] viewport;
 }
 
 void OpenGLRealOcean::DrawSurfaceTemperature(OpenGLView* view)
 {
     OceanQT& tree = oceanTrees_[view];
-    GLint* viewport = view->GetViewport();
+    std::vector<GLint> viewport = view->GetViewport();
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_QTREE_CULL, tree.patchSSBO[2]);
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures_[3]);
     OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures_[2]);
@@ -539,13 +535,12 @@ void OpenGLRealOcean::DrawSurfaceTemperature(OpenGLView* view)
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
-    delete [] viewport;
 }
         
 void OpenGLRealOcean::DrawBacksurface(OpenGLView* view)
 {
     OceanQT& tree = oceanTrees_[view];
-    GLint* viewport = view->GetViewport();
+    std::vector<GLint> viewport = view->GetViewport();
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_QTREE_CULL, tree.patchSSBO[2]);
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures_[3]);
     OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures_[2]);
@@ -581,7 +576,6 @@ void OpenGLRealOcean::DrawBacksurface(OpenGLView* view)
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
-    delete [] viewport;
 }
         
 void OpenGLRealOcean::DrawUnderwaterMask(OpenGLView* view)

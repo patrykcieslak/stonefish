@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/05/18.
-//  Copyright (c) 2018-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLView__
-#define __Stonefish_OpenGLView__
+#pragma once
 
 #include "graphics/OpenGLDataStructs.h"
 
@@ -58,7 +57,7 @@ namespace sf
         OpenGLView(GLint originX, GLint originY, GLint width, GLint height);
         
         //! A destructor.
-        virtual ~OpenGLView();
+        virtual ~OpenGLView() = default;
         
         //! A method to render the low dynamic range (final) image to the screen.
         /*!
@@ -110,7 +109,7 @@ namespace sf
         void SetViewport();
         
         //! A method that returns the viewport origin and size.
-        GLint* GetViewport() const;
+        std::vector<GLint> GetViewport() const;
         
         //! A method returning the rendering framebuffer of the view.
         GLuint getRenderFBO() const;
@@ -148,5 +147,4 @@ namespace sf
         ViewUBO viewUBOData_;
     };
 }
-    
-#endif
+

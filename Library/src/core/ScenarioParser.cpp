@@ -676,9 +676,9 @@ bool ScenarioParser::ParseEnvironment(XMLElement* element)
             Ocean* ocn = sm_->getOcean();
             do
             {
-                VelocityField* current = ParseVelocityField(item);
+                std::unique_ptr<VelocityField> current = ParseVelocityField(item);
                 if(current != nullptr)
-                    ocn->AddVelocityField(current);
+                    ocn->AddVelocityField(std::move(current));
             }
             while((item = item->NextSiblingElement("current")) != nullptr);
         }
@@ -707,9 +707,9 @@ bool ScenarioParser::ParseEnvironment(XMLElement* element)
             Atmosphere* atm = sm_->getAtmosphere();
             do
             {
-                VelocityField* wind = ParseVelocityField(item);
+                std::unique_ptr<VelocityField> wind = ParseVelocityField(item);
                 if(wind != nullptr)
-                    atm->AddVelocityField(wind);
+                    atm->AddVelocityField(std::move(wind));
             }
             while((item = item->NextSiblingElement("wind")) != nullptr);
         }
@@ -873,7 +873,7 @@ bool ScenarioParser::ParseLooks(XMLElement* element)
     return true;
 }
 
-VelocityField* ScenarioParser::ParseVelocityField(XMLElement* element)
+std::unique_ptr<VelocityField> ScenarioParser::ParseVelocityField(XMLElement* element)
 {
     //Get type of current
     const char* vfType;
@@ -897,7 +897,7 @@ VelocityField* ScenarioParser::ParseVelocityField(XMLElement* element)
             log.Print(MessageType::WARNING, "Velocity definition of uniform velocity field missing - skipping.");
             return nullptr;        
         }
-        return new Uniform(v);
+        return std::make_unique<Uniform>(v);
     }
     else if(vfTypeStr == "jet")
     {
@@ -929,7 +929,7 @@ VelocityField* ScenarioParser::ParseVelocityField(XMLElement* element)
             return nullptr;
         }
         Vector3 dir = v.normalized();
-        return new Jet(c, dir, radius, v.norm());
+        return std::make_unique<Jet>(c, dir, radius, v.norm());
     }
     else
     {
@@ -1242,7 +1242,7 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
     }
         
     //---- Trajectory ----
-    Trajectory* tr;
+    std::unique_ptr<Trajectory> tr;
     if((item = element->FirstChildElement("trajectory")) != nullptr)
     {
         const char* trType = nullptr;
@@ -1276,26 +1276,26 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
         
         if(trTypeStr == "manual")
         {
-            tr = new ManualTrajectory();
+            tr = std::make_unique<ManualTrajectory>();
             XMLElement* key = item->FirstChildElement("keypoint");
             Transform T;
             Scalar t;    
             if(key != nullptr && key->QueryAttribute("time", &t) == XML_SUCCESS
                 && ParseTransform(key, T) && t == 0.0)
             {
-                ((ManualTrajectory*)tr)->setTransform(T);
+                static_cast<ManualTrajectory*>(tr.get())->setTransform(T);
             }
         }
         else if(trTypeStr == "pwl" || trTypeStr == "spline" || trTypeStr == "catmull-rom")
         {
             if(trTypeStr == "pwl")
-                tr = new PWLTrajectory(pm);
+                tr = std::make_unique<PWLTrajectory>(pm);
             else if(trTypeStr == "spline")
-                tr = new BSTrajectory(pm);
+                tr = std::make_unique<BSTrajectory>(pm);
             else
-                tr = new CRTrajectory(pm);
+                tr = std::make_unique<CRTrajectory>(pm);
             
-            PWLTrajectory* pwl = (PWLTrajectory*)tr; //Spline has the same mechanism of adding points
+            PWLTrajectory* pwl = static_cast<PWLTrajectory*>(tr.get()); //Spline has the same mechanism of adding points
             
             XMLElement* key = item->FirstChildElement("keypoint");
             while(key != nullptr)
@@ -1305,7 +1305,6 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
                 if(key->QueryAttribute("time", &t) != XML_SUCCESS || !ParseTransform(key, T))
                 {
                     log.Print(MessageType::ERROR, "Trajectory keypoint not properly defined for animated body '%s'!", objectName.c_str());
-                    delete tr;
                     return false;
                 }
                 pwl->AddKeyPoint(t, T);
@@ -1329,7 +1328,7 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
         
     if(typestr == "empty")
     {
-        object = std::make_unique<AnimatedEntity>(objectName, tr);
+        object = std::make_unique<AnimatedEntity>(objectName, std::move(tr));
     }
     else if(typestr == "box")
     {
@@ -1349,7 +1348,7 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
             log.Print(MessageType::ERROR, "Origin frame of animated body '%s' not properly defined!", objectName.c_str());
             return false;        
         }
-        object = std::make_unique<AnimatedEntity>(objectName, tr, dim, origin, std::string(mat), std::string(look), collides);
+        object = std::make_unique<AnimatedEntity>(objectName, std::move(tr), dim, origin, std::string(mat), std::string(look), collides);
     }
     else if(typestr == "cylinder")
     {
@@ -1369,7 +1368,7 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
             log.Print(MessageType::ERROR, "Origin frame of animated body '%s' not properly defined!", objectName.c_str());
             return false;
         }            
-        object = std::make_unique<AnimatedEntity>(objectName, tr, radius, height, origin, std::string(mat), std::string(look), collides);
+        object = std::make_unique<AnimatedEntity>(objectName, std::move(tr), radius, height, origin, std::string(mat), std::string(look), collides);
     }
     else if(typestr == "sphere")
     {
@@ -1387,7 +1386,7 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
             log.Print(MessageType::ERROR, "Origin frame of animated body '%s' not properly defined!", objectName.c_str());
             return false;
         }
-        object = std::make_unique<AnimatedEntity>(objectName, tr, radius, origin, std::string(mat), std::string(look), collides);
+        object = std::make_unique<AnimatedEntity>(objectName, std::move(tr), radius, origin, std::string(mat), std::string(look), collides);
     }
     else if(typestr == "model")
     {
@@ -1433,17 +1432,16 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
                 log.Print(MessageType::ERROR, "Visual mesh of animated body '%s' not properly defined!", objectName.c_str());
                 return false;
             }
-            object = std::make_unique<AnimatedEntity>(objectName, tr, GetFullPath(std::string(graMesh)), graScale, graOrigin, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, std::string(mat), std::string(look), collides);
+            object = std::make_unique<AnimatedEntity>(objectName, std::move(tr), GetFullPath(std::string(graMesh)), graScale, graOrigin, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, std::string(mat), std::string(look), collides);
         }
         else
         {
-            object = std::make_unique<AnimatedEntity>(objectName, tr, GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, std::string(mat), std::string(look), collides);
+            object = std::make_unique<AnimatedEntity>(objectName, std::move(tr), GetFullPath(std::string(phyMesh)), phyScale, phyOrigin, std::string(mat), std::string(look), collides);
         }
     }
     else
     {
         log.Print(MessageType::ERROR, "Incorrect animated body type!");
-        delete tr;
         return false;
     }
         
@@ -3157,9 +3155,9 @@ std::unique_ptr<Actuator> ScenarioParser::ParseActuator(XMLElement* element, con
         phy.collisions = false;
         phy.buoyancy = false;
 
-        Polyhedron* rudder = new Polyhedron(actuatorName + "/Rudder", phy, GetFullPath(std::string(rudderFile)), rudderScale, graOrigin, std::string(mat), lookStr);
+        std::unique_ptr<Polyhedron> rudder = std::make_unique<Polyhedron>(actuatorName + "/Rudder", phy, GetFullPath(std::string(rudderFile)), rudderScale, graOrigin, std::string(mat), lookStr);
         
-        return std::make_unique<Rudder>(actuatorName, rudder, area, liftCoeff, dragCoeff, stallAngle, maxAngle, inverted, maxAngularRate);
+        return std::make_unique<Rudder>(actuatorName, std::move(rudder), area, liftCoeff, dragCoeff, stallAngle, maxAngle, inverted, maxAngularRate);
     }
     else if(typeStr == "vbs")
     {

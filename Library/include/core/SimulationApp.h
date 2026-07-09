@@ -56,7 +56,7 @@ namespace sf
          \param dataDirPath a path to the directory containing simulation data
          \param sim a pointer to the simulation manager
          */
-        SimulationApp(std::string title, std::string dataDirPath, std::unique_ptr<SimulationManager> sim);
+        SimulationApp(const std::string& title, const std::string& dataDirPath, std::unique_ptr<SimulationManager> sim);
         
         //! A destructor.
         virtual ~SimulationApp();

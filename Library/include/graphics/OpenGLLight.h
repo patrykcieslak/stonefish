@@ -56,7 +56,7 @@ namespace sf
         OpenGLLight(glm::vec3 position, GLfloat radius, glm::vec3 color, GLfloat lum);
         
         //! A destructor.
-        virtual ~OpenGLLight();
+        virtual ~OpenGLLight() = default;
         
         //! A method creating shadowmap textures.
         /*!

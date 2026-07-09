@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/03/2014.
-//  Copyright(c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLPipeline.h"
@@ -69,7 +69,7 @@ OpenGLPipeline::OpenGLPipeline(RenderSettings s, HelperSettings h) : rSettings_(
     OpenGLEventBasedCamera::Init();
     OpenGLSonar::Init();
     OpenGLOceanParticles::Init();
-    content_ = new OpenGLContent();
+    content_ = std::make_unique<OpenGLContent>();
     
     //Create display framebuffer
     glGenFramebuffers(1, &screenFBO_);
@@ -101,7 +101,6 @@ OpenGLPipeline::~OpenGLPipeline()
     OpenGLSonar::Destroy();
     OpenGLOceanParticles::Destroy();
     OpenGLLight::Destroy();
-    delete content_;
     
     glDeleteTextures(1, &screenTex_);
     glDeleteFramebuffers(1, &screenFBO_);
@@ -130,7 +129,7 @@ SDL_mutex* OpenGLPipeline::getDrawingQueueMutex()
     
 OpenGLContent* OpenGLPipeline::getContent()
 {
-    return content_;
+    return content_.get();
 }
 
 void OpenGLPipeline::AddToDrawingQueue(const Renderable& r)
@@ -475,7 +474,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 else //Camera above water or no ocean enabled
                 {
                     //Apply view properties
-                    GLint* viewport = camera->GetViewport();
+                    std::vector<GLint> viewport = camera->GetViewport();
                     content_->SetViewportSize(viewport[2],viewport[3]);
                 
                     //Bake parallel-split shadowmaps for sun
@@ -570,7 +569,7 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                 //Apply view properties
                 OpenGLCamera* camera = static_cast<OpenGLCamera*>(view);
                 OpenGLLight::SetCamera(camera);
-                GLint* viewport = camera->GetViewport();
+                std::vector<GLint> viewport = camera->GetViewport();
                 content_->SetViewportSize(viewport[2],viewport[3]);
             
                 //Bake parallel-split shadowmaps for sun
@@ -758,8 +757,6 @@ void OpenGLPipeline::Render(SimulationManager* sim)
                                     
                     OpenGLState::BindFramebuffer(0);
                 }
-            
-                delete [] viewport;
             }
             break;
         }

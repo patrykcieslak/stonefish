@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/08/19.
-//  Copyright (c) 2019-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLOceanParticles.h"
@@ -42,9 +42,9 @@ namespace sf
     
 GLuint OpenGLOceanParticles::flakeTexture = 0;
 GLuint OpenGLOceanParticles::noiseTexture = 0;
-GLSLShader* OpenGLOceanParticles::renderShader = nullptr;
-GLSLShader* OpenGLOceanParticles::renderIdShader = nullptr;
-GLSLShader* OpenGLOceanParticles::updateShader = nullptr;
+std::unique_ptr<GLSLShader> OpenGLOceanParticles::renderShader;
+std::unique_ptr<GLSLShader> OpenGLOceanParticles::renderIdShader;
+std::unique_ptr<GLSLShader> OpenGLOceanParticles::updateShader;
 
 OpenGLOceanParticles::OpenGLOceanParticles(size_t numOfParticles, GLfloat visibleRange) : OpenGLParticles(numOfParticles), uniformd_(0, 1.f), normald_(0, 1.f)
 {
@@ -156,7 +156,7 @@ void OpenGLOceanParticles::Init()
     
 	std::vector<GLSLSource> sources;
     sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "oceanParticle.comp"));
-    updateShader = new GLSLShader(sources);
+    updateShader = std::make_unique<GLSLShader>(sources);
     updateShader->AddUniform("dt", ParameterType::FLOAT);
     updateShader->AddUniform("numParticles", ParameterType::UINT);
     updateShader->AddUniform("eyePos", ParameterType::VEC3);
@@ -181,7 +181,7 @@ void OpenGLOceanParticles::Init()
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanParticle.frag"));
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "materialUUv.frag"));
     
-    renderShader = new GLSLShader(sources, precompiled);
+    renderShader = std::make_unique<GLSLShader>(sources, precompiled);
     renderShader->AddUniform("MV", ParameterType::MAT4);
     renderShader->AddUniform("iMV", ParameterType::MAT4);
     renderShader->AddUniform("P", ParameterType::MAT4);
@@ -217,7 +217,7 @@ void OpenGLOceanParticles::Init()
     sources.push_back(GLSLSource(GL_VERTEX_SHADER, "particle.vert"));
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanParticleSegmentation.frag"));
     
-    renderIdShader = new GLSLShader(sources);
+    renderIdShader = std::make_unique<GLSLShader>(sources);
     renderIdShader->AddUniform("MV", ParameterType::MAT4);
     renderIdShader->AddUniform("iMV", ParameterType::MAT4);
     renderIdShader->AddUniform("P", ParameterType::MAT4);
@@ -237,8 +237,8 @@ void OpenGLOceanParticles::Init()
     std::mt19937 generator(seed);
     std::uniform_int_distribution<int8_t> dist(-127,127);
     glm::uvec3 noiseSize3(noiseSize, noiseSize, noiseSize);
-    int8_t* noiseData = new int8_t[noiseSize3.x * noiseSize3.y * noiseSize3.z * 4];
-    int8_t *ptr = noiseData;
+    std::vector<int8_t> noiseData(noiseSize3.x * noiseSize3.y * noiseSize3.z * 4);
+    int8_t* ptr = noiseData.data();
     for(unsigned int z=0; z<noiseSize3.z; ++z)
         for(unsigned int y=0; y<noiseSize3.y; ++y) 
             for(unsigned int x=0; x<noiseSize3.x; ++x) 
@@ -249,17 +249,16 @@ void OpenGLOceanParticles::Init()
               *ptr++ = dist(generator);
             }
     noiseTexture = OpenGLContent::GenerateTexture(GL_TEXTURE_3D, noiseSize3,
-                                                  GL_RGBA8_SNORM, GL_RGBA, GL_BYTE, noiseData, FilteringMode::BILINEAR, true);
-    delete [] noiseData;                                
+                                                  GL_RGBA8_SNORM, GL_RGBA, GL_BYTE, noiseData.data(), FilteringMode::BILINEAR, true);
 }
 
 void OpenGLOceanParticles::Destroy()
 {
-    if(updateShader != nullptr) delete updateShader;
-    if(renderShader != nullptr) delete renderShader;
-    if(renderIdShader != nullptr) delete renderIdShader;
     if(flakeTexture != 0) glDeleteTextures(1, &flakeTexture);
     if(noiseTexture != 0) glDeleteTextures(1, &noiseTexture);
+    updateShader.reset();
+    renderShader.reset();
+    renderIdShader.reset();
 }
     
 }

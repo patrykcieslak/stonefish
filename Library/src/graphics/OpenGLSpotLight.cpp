@@ -47,7 +47,7 @@ OpenGLSpotLight::OpenGLSpotLight(glm::vec3 position, glm::vec3 direction, GLfloa
     zNear_ = glm::max(0.05f, near);
     zFar_ = sqrtf(colorLi_.a/MIN_INTENSITY_THRESHOLD);
 
-    PlainMesh* m = new PlainMesh;
+    std::unique_ptr<PlainMesh> m = std::make_unique<PlainMesh>();
     Vertex vt;
     Face f;
     unsigned int slices = 24;    
@@ -68,8 +68,7 @@ OpenGLSpotLight::OpenGLSpotLight(glm::vec3 position, glm::vec3 direction, GLfloa
         f.vertexID[2] = i + 1;
         m->faces.push_back(f);
     }
-    sourceObject_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(m);
-    delete m;
+    sourceObject_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(m.get());
     
 	UpdatePosition(position);
     UpdateDirection(direction);

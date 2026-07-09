@@ -23,8 +23,7 @@
 //  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLSpotLight__
-#define __Stonefish_OpenGLSpotLight__
+#pragma once
 
 #include "graphics/OpenGLLight.h"
 
@@ -123,4 +122,3 @@ namespace sf
     };
 }
 
-#endif

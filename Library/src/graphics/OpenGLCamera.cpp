@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/29/13.
-//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLCamera.h"
@@ -37,17 +37,7 @@
 namespace sf
 {
 
-GLSLShader** OpenGLCamera::tonemappingShaders =  nullptr;
-GLSLShader* OpenGLCamera::depthLinearizeShader = nullptr;
-GLSLShader* OpenGLCamera::aoDeinterleaveShader = nullptr;
-GLSLShader* OpenGLCamera::aoCalcShader = nullptr;
-GLSLShader* OpenGLCamera::aoReinterleaveShader = nullptr;
-GLSLShader** OpenGLCamera::aoBlurShader = nullptr;
-GLSLShader* OpenGLCamera::ssrShader = nullptr;
-GLSLShader* OpenGLCamera::fxaaShader = nullptr;
-GLSLShader* OpenGLCamera::flipShader = nullptr;
-GLSLShader* OpenGLCamera::ssrBlur = nullptr;
-GLSLShader* OpenGLCamera::bloomBlur = nullptr;
+std::unordered_map<std::string, std::unique_ptr<GLSLShader>> OpenGLCamera::shaders;
 
 OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec2 range) : OpenGLView(x, y, width, height)
 {
@@ -449,9 +439,9 @@ void OpenGLCamera::GenerateLinearDepth(bool front)
     renderBuffs[0] = front ? GL_COLOR_ATTACHMENT0 : GL_COLOR_ATTACHMENT1;
     glDrawBuffers(1, renderBuffs);    
     OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
-    depthLinearizeShader->Use();
-    depthLinearizeShader->SetUniform("texLogDepth", TEX_POSTPROCESS1);
-    depthLinearizeShader->SetUniform("FC", GetLogDepthConstant());
+    shaders["depth_linearize"]->Use();
+    shaders["depth_linearize"]->SetUniform("texLogDepth", TEX_POSTPROCESS1);
+    shaders["depth_linearize"]->SetUniform("FC", GetLogDepthConstant());
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
     OpenGLState::BindFramebuffer(0);
@@ -497,13 +487,13 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
         OpenGLState::BindFramebuffer(aoDeinterleaveFBO_);
         OpenGLState::Viewport(0, 0, quarterWidth, quarterHeight);
 
-        aoDeinterleaveShader->Use();
-        aoDeinterleaveShader->SetUniform("texLinearDepth", TEX_POSTPROCESS1);
+        shaders["ao_deinterleave"]->Use();
+        shaders["ao_deinterleave"]->SetUniform("texLinearDepth", TEX_POSTPROCESS1);
         
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, linearDepthTex_[0]);
         for(int i=0; i<HBAO_RANDOM_ELEMENTS; i+=NUM_MRT)
         {
-            aoDeinterleaveShader->SetUniform("info", glm::vec4(float(i % 4) + 0.5f, float(i / 4) + 0.5f, invFullRes.x, invFullRes.y));
+            shaders["ao_deinterleave"]->SetUniform("info", glm::vec4(float(i % 4) + 0.5f, float(i / 4) + 0.5f, invFullRes.x, invFullRes.y));
             
             for(int layer = 0; layer < NUM_MRT; ++layer)
 		    glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + layer, aoDepthArrayTex_, 0, i+layer);
@@ -516,9 +506,9 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
         //Calculate HBAO
         OpenGLState::BindFramebuffer(aoCalcFBO_);
         OpenGLState::Viewport(0, 0, quarterWidth, quarterHeight);
-        aoCalcShader->Use();
-        aoCalcShader->SetUniform("texLinearDepth", TEX_POSTPROCESS1);
-        aoCalcShader->SetUniform("texViewNormal", TEX_POSTPROCESS2);
+        shaders["ao_calculate"]->Use();
+        shaders["ao_calculate"]->SetUniform("texLinearDepth", TEX_POSTPROCESS1);
+        shaders["ao_calculate"]->SetUniform("texViewNormal", TEX_POSTPROCESS2);
 
         OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_2D, renderViewNormalTex_);
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, aoDepthArrayTex_);
@@ -532,8 +522,8 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
         OpenGLState::BindFramebuffer(aoFinalFBO_);
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
         OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
-        aoReinterleaveShader->Use();
-        aoReinterleaveShader->SetUniform("texResultArray", TEX_POSTPROCESS1);
+        shaders["ao_reinterleave"]->Use();
+        shaders["ao_reinterleave"]->SetUniform("texResultArray", TEX_POSTPROCESS1);
     
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, aoResultArrayTex_);
         glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -541,10 +531,10 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
     
         //Blur
         glDrawBuffer(GL_COLOR_ATTACHMENT1);
-        aoBlurShader[0]->Use();
-        aoBlurShader[0]->SetUniform("sharpness", blurSharpness);
-        aoBlurShader[0]->SetUniform("invResolutionDirection", glm::vec2(1.f/(GLfloat)viewportWidth_, 0));
-        aoBlurShader[0]->SetUniform("texSource", TEX_POSTPROCESS1);
+        shaders["ao_blur0"]->Use();
+        shaders["ao_blur0"]->SetUniform("sharpness", blurSharpness);
+        shaders["ao_blur0"]->SetUniform("invResolutionDirection", glm::vec2(1.f/(GLfloat)viewportWidth_, 0));
+        shaders["ao_blur0"]->SetUniform("texSource", TEX_POSTPROCESS1);
     
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, aoResultTex_);
         glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -558,10 +548,10 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
         OpenGLState::EnableBlend();
         //glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_DST_ALPHA);
         glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-        aoBlurShader[1]->Use();
-        aoBlurShader[1]->SetUniform("sharpness", blurSharpness);
-        aoBlurShader[1]->SetUniform("invResolutionDirection", glm::vec2(0, 1.f/(GLfloat)viewportHeight_));
-        aoBlurShader[1]->SetUniform("texSource", TEX_POSTPROCESS1);
+        shaders["ao_blur1"]->Use();
+        shaders["ao_blur1"]->SetUniform("sharpness", blurSharpness);
+        shaders["ao_blur1"]->SetUniform("invResolutionDirection", glm::vec2(0, 1.f/(GLfloat)viewportHeight_));
+        shaders["ao_blur1"]->SetUniform("texSource", TEX_POSTPROCESS1);
     
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, aoBlurTex_);
         glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -579,7 +569,7 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
 
 void OpenGLCamera::DrawSSR()
 {
-    if(ssrShader == nullptr)
+    if(shaders["ssr"] == nullptr)
         return;
     
     //Compute SSR
@@ -609,18 +599,18 @@ void OpenGLCamera::DrawSSR()
     OpenGLState::DisableDepthTest();          
     SetRenderBuffers(1, false, true);
     OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
-    ssrShader->Use();
-    ssrShader->SetUniform("texColor", TEX_POSTPROCESS1);
-    ssrShader->SetUniform("texViewNormal", TEX_POSTPROCESS2);
-    ssrShader->SetUniform("texLinearDepth", TEX_POSTPROCESS3);
-    ssrShader->SetUniform("texLinearBackfaceDepth", TEX_POSTPROCESS4);
-    ssrShader->SetUniform("P", projPix);
-    ssrShader->SetUniform("invP", glm::inverse(proj));
-    ssrShader->SetUniform("projInfo", projInfo);
-    ssrShader->SetUniform("viewportSize", glm::vec2(viewportWidth_, viewportHeight_));
-    ssrShader->SetUniform("invViewportSize", glm::vec2(1.f/(GLfloat)viewportWidth_, 1.f/(GLfloat)viewportHeight_));
-    ssrShader->SetUniform("near", near_);
-    ssrShader->SetUniform("far", far_);
+    shaders["ssr"]->Use();
+    shaders["ssr"]->SetUniform("texColor", TEX_POSTPROCESS1);
+    shaders["ssr"]->SetUniform("texViewNormal", TEX_POSTPROCESS2);
+    shaders["ssr"]->SetUniform("texLinearDepth", TEX_POSTPROCESS3);
+    shaders["ssr"]->SetUniform("texLinearBackfaceDepth", TEX_POSTPROCESS4);
+    shaders["ssr"]->SetUniform("P", projPix);
+    shaders["ssr"]->SetUniform("invP", glm::inverse(proj));
+    shaders["ssr"]->SetUniform("projInfo", projInfo);
+    shaders["ssr"]->SetUniform("viewportSize", glm::vec2(viewportWidth_, viewportHeight_));
+    shaders["ssr"]->SetUniform("invViewportSize", glm::vec2(1.f/(GLfloat)viewportWidth_, 1.f/(GLfloat)viewportHeight_));
+    shaders["ssr"]->SetUniform("near", near_);
+    shaders["ssr"]->SetUniform("far", far_);
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS4);
@@ -632,9 +622,9 @@ void OpenGLCamera::DrawSSR()
     SetRenderBuffers(0, false, false);
     OpenGLState::EnableBlend();
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    ssrBlur->Use();
-    ssrBlur->SetUniform("tex", TEX_POSTPROCESS1);
-    ssrBlur->SetUniform("invTexSize", glm::vec2(1.f/(GLfloat)viewportWidth_, 1.f/(GLfloat)viewportHeight_));
+    shaders["ssr_blur"]->Use();
+    shaders["ssr_blur"]->SetUniform("tex", TEX_POSTPROCESS1);
+    shaders["ssr_blur"]->SetUniform("invTexSize", glm::vec2(1.f/(GLfloat)viewportWidth_, 1.f/(GLfloat)viewportHeight_));
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
@@ -644,7 +634,7 @@ void OpenGLCamera::DrawSSR()
 
 void OpenGLCamera::GenerateBloom()
 {
-    //if(ssrShader == nullptr)
+    //if(shaders["ssr"] == nullptr)
     //    return;
     
     //Initialise bloom
@@ -656,8 +646,8 @@ void OpenGLCamera::GenerateBloom()
     ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(renderColorTex_[getLastActiveColorBuffer()]);
 
     //Blur
-    bloomBlur->Use();
-    bloomBlur->SetUniform("source", TEX_POSTPROCESS1);
+    shaders["bloom_blur"]->Use();
+    shaders["bloom_blur"]->SetUniform("source", TEX_POSTPROCESS1);
 
     for(int i=0; i<9; ++i)
     {
@@ -665,14 +655,14 @@ void OpenGLCamera::GenerateBloom()
         renderBuffs[0] = GL_COLOR_ATTACHMENT1;
         glDrawBuffers(1, renderBuffs);
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, quaterPostprocessTex_[0]);
-        bloomBlur->SetUniform("texelOffset", glm::vec2(2.f/(GLfloat)viewportWidth_, 0.f));
+        shaders["bloom_blur"]->SetUniform("texelOffset", glm::vec2(2.f/(GLfloat)viewportWidth_, 0.f));
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
 
         //Vertical blur
         renderBuffs[0] = GL_COLOR_ATTACHMENT0;
         glDrawBuffers(1, renderBuffs);
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, quaterPostprocessTex_[1]);
-        bloomBlur->SetUniform("texelOffset", glm::vec2(0.f, 2.f/(GLfloat)viewportHeight_));
+        shaders["bloom_blur"]->SetUniform("texelOffset", glm::vec2(0.f, 2.f/(GLfloat)viewportHeight_));
         ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     }
     
@@ -715,16 +705,16 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
             glBindImageTexture(TEX_POSTPROCESS2, exposureTex_, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
 
             //Compute histogram of luminance
-            tonemappingShaders[0]->Use();
-            tonemappingShaders[0]->SetUniform("params", glm::vec2(histogramRange_.x, 1.f/(histogramRange_.y-histogramRange_.x)));
-            tonemappingShaders[0]->SetUniform("texSource", TEX_POSTPROCESS1);
+            shaders["tonemapping0"]->Use();
+            shaders["tonemapping0"]->SetUniform("params", glm::vec2(histogramRange_.x, 1.f/(histogramRange_.y-histogramRange_.x)));
+            shaders["tonemapping0"]->SetUniform("texSource", TEX_POSTPROCESS1);
             glDispatchCompute((GLuint)ceilf(viewportWidth_/16.f), (GLuint)ceilf(viewportHeight_/16.f), 1);
             glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
             
             //Compute exposure
-            tonemappingShaders[1]->Use();
-            tonemappingShaders[1]->SetUniform("texExposure", TEX_POSTPROCESS2);
-            tonemappingShaders[1]->SetUniform("params", glm::vec4(histogramRange_.x, histogramRange_.y-histogramRange_.x, 
+            shaders["tonemapping1"]->Use();
+            shaders["tonemapping1"]->SetUniform("texExposure", TEX_POSTPROCESS2);
+            shaders["tonemapping1"]->SetUniform("params", glm::vec4(histogramRange_.x, histogramRange_.y-histogramRange_.x, 
                                                                         0.1f, (GLfloat)(viewportWidth_ * viewportHeight_)));    
             glDispatchCompute(1, 1, 1);
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -741,10 +731,10 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
             glDrawBuffers(1, renderBuffs);    
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
             OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
-            tonemappingShaders[2]->Use();
-            tonemappingShaders[2]->SetUniform("texSource", TEX_POSTPROCESS1);
-            tonemappingShaders[2]->SetUniform("texExposure", TEX_POSTPROCESS2);
-            tonemappingShaders[2]->SetUniform("exposureComp", (GLfloat)powf(2.f,exposureComp_));
+            shaders["tonemapping2"]->Use();
+            shaders["tonemapping2"]->SetUniform("texSource", TEX_POSTPROCESS1);
+            shaders["tonemapping2"]->SetUniform("texExposure", TEX_POSTPROCESS2);
+            shaders["tonemapping2"]->SetUniform("exposureComp", (GLfloat)powf(2.f,exposureComp_));
             ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
             OpenGLState::BindFramebuffer(0);
 
@@ -755,9 +745,9 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
             OpenGLState::BindFramebuffer(destinationFBO);
             OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
             glDrawBuffer(GL_COLOR_ATTACHMENT0);
-            fxaaShader->Use();
-            fxaaShader->SetUniform("texSource", TEX_POSTPROCESS1);
-            fxaaShader->SetUniform("RCPFrame", glm::vec2(1.f/(GLfloat)viewportWidth_, 1.f/(GLfloat)viewportHeight_));
+            shaders["fxaa"]->Use();
+            shaders["fxaa"]->SetUniform("texSource", TEX_POSTPROCESS1);
+            shaders["fxaa"]->SetUniform("RCPFrame", glm::vec2(1.f/(GLfloat)viewportWidth_, 1.f/(GLfloat)viewportHeight_));
             ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
             OpenGLState::BindFramebuffer(0);
             OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
@@ -767,10 +757,10 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
             OpenGLState::BindFramebuffer(destinationFBO);
             OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
             glDrawBuffer(GL_COLOR_ATTACHMENT0);
-            tonemappingShaders[2]->Use();
-            tonemappingShaders[2]->SetUniform("texSource", TEX_POSTPROCESS1);
-            tonemappingShaders[2]->SetUniform("texExposure", TEX_POSTPROCESS2);
-            tonemappingShaders[2]->SetUniform("exposureComp", (GLfloat)powf(2.f,exposureComp_));
+            shaders["tonemapping2"]->Use();
+            shaders["tonemapping2"]->SetUniform("texSource", TEX_POSTPROCESS1);
+            shaders["tonemapping2"]->SetUniform("texExposure", TEX_POSTPROCESS2);
+            shaders["tonemapping2"]->SetUniform("exposureComp", (GLfloat)powf(2.f,exposureComp_));
             ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
             OpenGLState::BindFramebuffer(0);
             OpenGLState::UnbindTexture(TEX_POSTPROCESS2);   
@@ -793,127 +783,125 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
 void OpenGLCamera::Init(const RenderSettings& rSettings)
 {
     /////Tonemapping//////
-    tonemappingShaders = new GLSLShader*[3];
     std::vector<GLSLSource> sources;
     sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "lumHistogram.comp"));
-    tonemappingShaders[0] = new GLSLShader(sources);
-    tonemappingShaders[0]->AddUniform("params", ParameterType::VEC2);
-    tonemappingShaders[0]->AddUniform("texSource", ParameterType::INT);
-    tonemappingShaders[0]->BindShaderStorageBlock("Histogram", SSBO_HISTOGRAM);
+    shaders["tonemapping0"] = std::make_unique<GLSLShader>(sources);
+    shaders["tonemapping0"]->AddUniform("params", ParameterType::VEC2);
+    shaders["tonemapping0"]->AddUniform("texSource", ParameterType::INT);
+    shaders["tonemapping0"]->BindShaderStorageBlock("Histogram", SSBO_HISTOGRAM);
 
     sources.clear();
     sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "autoExposure.comp"));
-    tonemappingShaders[1] = new GLSLShader(sources);
-    tonemappingShaders[1]->AddUniform("params", ParameterType::VEC4);
-    tonemappingShaders[1]->AddUniform("texExposure", ParameterType::INT);
-    tonemappingShaders[1]->BindShaderStorageBlock("Histogram", SSBO_HISTOGRAM);
+    shaders["tonemapping1"] = std::make_unique<GLSLShader>(sources);
+    shaders["tonemapping1"]->AddUniform("params", ParameterType::VEC4);
+    shaders["tonemapping1"]->AddUniform("texExposure", ParameterType::INT);
+    shaders["tonemapping1"]->BindShaderStorageBlock("Histogram", SSBO_HISTOGRAM);
 
     sources.clear();
     sources.push_back(GLSLSource(GL_VERTEX_SHADER, "saq.vert"));
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "tonemap.frag"));
-    tonemappingShaders[2] = new GLSLShader(sources);
-    tonemappingShaders[2]->AddUniform("texSource", ParameterType::INT);
-    tonemappingShaders[2]->AddUniform("texExposure", ParameterType::INT);
-    tonemappingShaders[2]->AddUniform("exposureComp", ParameterType::FLOAT);
+    shaders["tonemapping2"] = std::make_unique<GLSLShader>(sources);
+    shaders["tonemapping2"]->AddUniform("texSource", ParameterType::INT);
+    shaders["tonemapping2"]->AddUniform("texExposure", ParameterType::INT);
+    shaders["tonemapping2"]->AddUniform("exposureComp", ParameterType::FLOAT);
     
     /////Linear depth////
-    depthLinearizeShader = new GLSLShader("depthLinearize.frag");
-    depthLinearizeShader->AddUniform("texLogDepth", ParameterType::INT);
-    depthLinearizeShader->AddUniform("FC", ParameterType::FLOAT);
+    shaders["depth_linearize"] = std::make_unique<GLSLShader>("depthLinearize.frag");
+    shaders["depth_linearize"]->AddUniform("texLogDepth", ParameterType::INT);
+    shaders["depth_linearize"]->AddUniform("FC", ParameterType::FLOAT);
     
     /////AO//////////////
     if(rSettings.ao != RenderQuality::DISABLED)
     {
-        aoDeinterleaveShader = new GLSLShader("hbaoDeinterleave.frag");
-        aoDeinterleaveShader->AddUniform("info", ParameterType::VEC4);
-        aoDeinterleaveShader->AddUniform("texLinearDepth", ParameterType::INT);
+        shaders["ao_deinterleave"] = std::make_unique<GLSLShader>("hbaoDeinterleave.frag");
+        shaders["ao_deinterleave"]->AddUniform("info", ParameterType::VEC4);
+        shaders["ao_deinterleave"]->AddUniform("texLinearDepth", ParameterType::INT);
         
         std::vector<GLSLSource> sources;
         sources.push_back(GLSLSource(GL_VERTEX_SHADER, "saq.vert"));
         sources.push_back(GLSLSource(GL_GEOMETRY_SHADER, "saq.geom"));
         sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "hbaoCalc.frag"));
-        aoCalcShader = new GLSLShader(sources);
-        aoCalcShader->AddUniform("texLinearDepth", ParameterType::INT);
-        aoCalcShader->AddUniform("texViewNormal", ParameterType::INT);
+        shaders["ao_calculate"] = std::make_unique<GLSLShader>(sources);
+        shaders["ao_calculate"]->AddUniform("texLinearDepth", ParameterType::INT);
+        shaders["ao_calculate"]->AddUniform("texViewNormal", ParameterType::INT);
         
-        aoReinterleaveShader = new GLSLShader("hbaoReinterleave.frag");
-        aoReinterleaveShader->AddUniform("texResultArray", ParameterType::INT);
+        shaders["ao_reinterleave"] = std::make_unique<GLSLShader>("hbaoReinterleave.frag");
+        shaders["ao_reinterleave"]->AddUniform("texResultArray", ParameterType::INT);
         
-        aoBlurShader = new GLSLShader*[2];
-        aoBlurShader[0] = new GLSLShader("hbaoBlur.frag");
-        aoBlurShader[0]->AddUniform("sharpness", ParameterType::FLOAT);
-        aoBlurShader[0]->AddUniform("invResolutionDirection", ParameterType::VEC2);
-        aoBlurShader[0]->AddUniform("texSource", ParameterType::INT);
-        aoBlurShader[1] = new GLSLShader("hbaoBlur2.frag");
-        aoBlurShader[1]->AddUniform("sharpness", ParameterType::FLOAT);
-        aoBlurShader[1]->AddUniform("invResolutionDirection", ParameterType::VEC2);
-        aoBlurShader[1]->AddUniform("texSource", ParameterType::INT);
+        shaders["ao_blur0"] = std::make_unique<GLSLShader>("hbaoBlur.frag");
+        shaders["ao_blur0"]->AddUniform("sharpness", ParameterType::FLOAT);
+        shaders["ao_blur0"]->AddUniform("invResolutionDirection", ParameterType::VEC2);
+        shaders["ao_blur0"]->AddUniform("texSource", ParameterType::INT);
+        shaders["ao_blur1"] = std::make_unique<GLSLShader>("hbaoBlur2.frag");
+        shaders["ao_blur1"]->AddUniform("sharpness", ParameterType::FLOAT);
+        shaders["ao_blur1"]->AddUniform("invResolutionDirection", ParameterType::VEC2);
+        shaders["ao_blur1"]->AddUniform("texSource", ParameterType::INT);
     }
 
     //SSR - Screen Space Reflections
     if(rSettings.ssr != RenderQuality::DISABLED)
     {
-        ssrShader = new GLSLShader("ssr.frag");
-        ssrShader->AddUniform("texColor", ParameterType::INT);
-        ssrShader->AddUniform("texViewNormal", ParameterType::INT);
-        ssrShader->AddUniform("texLinearDepth", ParameterType::INT);
-        ssrShader->AddUniform("texLinearBackfaceDepth", ParameterType::INT);
-        ssrShader->AddUniform("P", ParameterType::MAT4);
-        ssrShader->AddUniform("invP", ParameterType::MAT4);
-        ssrShader->AddUniform("projInfo", ParameterType::VEC4);
-        ssrShader->AddUniform("viewportSize", ParameterType::VEC2);
-        ssrShader->AddUniform("invViewportSize", ParameterType::VEC2);
-        ssrShader->AddUniform("near", ParameterType::FLOAT);
-        ssrShader->AddUniform("far", ParameterType::FLOAT);
-        ssrShader->AddUniform("maxIterations", ParameterType::INT);
-        ssrShader->AddUniform("maxBinarySearchIterations", ParameterType::INT);
-        ssrShader->AddUniform("pixelZSize", ParameterType::FLOAT);
-        ssrShader->AddUniform("pixelStride", ParameterType::FLOAT);
-        ssrShader->AddUniform("pixelStrideZCutoff", ParameterType::FLOAT);
-        ssrShader->AddUniform("maxRayDistance", ParameterType::FLOAT);
-        ssrShader->AddUniform("screenEdgeFadeStart", ParameterType::FLOAT);
-        ssrShader->AddUniform("eyeFadeStart", ParameterType::FLOAT);
-        ssrShader->AddUniform("eyeFadeEnd", ParameterType::FLOAT);
+        shaders["ssr"] = std::make_unique<GLSLShader>("ssr.frag");
+        shaders["ssr"]->AddUniform("texColor", ParameterType::INT);
+        shaders["ssr"]->AddUniform("texViewNormal", ParameterType::INT);
+        shaders["ssr"]->AddUniform("texLinearDepth", ParameterType::INT);
+        shaders["ssr"]->AddUniform("texLinearBackfaceDepth", ParameterType::INT);
+        shaders["ssr"]->AddUniform("P", ParameterType::MAT4);
+        shaders["ssr"]->AddUniform("invP", ParameterType::MAT4);
+        shaders["ssr"]->AddUniform("projInfo", ParameterType::VEC4);
+        shaders["ssr"]->AddUniform("viewportSize", ParameterType::VEC2);
+        shaders["ssr"]->AddUniform("invViewportSize", ParameterType::VEC2);
+        shaders["ssr"]->AddUniform("near", ParameterType::FLOAT);
+        shaders["ssr"]->AddUniform("far", ParameterType::FLOAT);
+        shaders["ssr"]->AddUniform("maxIterations", ParameterType::INT);
+        shaders["ssr"]->AddUniform("maxBinarySearchIterations", ParameterType::INT);
+        shaders["ssr"]->AddUniform("pixelZSize", ParameterType::FLOAT);
+        shaders["ssr"]->AddUniform("pixelStride", ParameterType::FLOAT);
+        shaders["ssr"]->AddUniform("pixelStrideZCutoff", ParameterType::FLOAT);
+        shaders["ssr"]->AddUniform("maxRayDistance", ParameterType::FLOAT);
+        shaders["ssr"]->AddUniform("screenEdgeFadeStart", ParameterType::FLOAT);
+        shaders["ssr"]->AddUniform("eyeFadeStart", ParameterType::FLOAT);
+        shaders["ssr"]->AddUniform("eyeFadeEnd", ParameterType::FLOAT);
 
-        ssrShader->Use();
+        shaders["ssr"]->Use();
         switch(rSettings.ssr)
         {
             case RenderQuality::DISABLED:
             case RenderQuality::LOW:
-                ssrShader->SetUniform("maxIterations", 50);
-                ssrShader->SetUniform("maxBinarySearchIterations", 2);
-                ssrShader->SetUniform("maxRayDistance", 20.f);
+                shaders["ssr"]->SetUniform("maxIterations", 50);
+                shaders["ssr"]->SetUniform("maxBinarySearchIterations", 2);
+                shaders["ssr"]->SetUniform("maxRayDistance", 20.f);
                 break;
 
             case RenderQuality::MEDIUM:
-                ssrShader->SetUniform("maxIterations", 100);
-                ssrShader->SetUniform("maxBinarySearchIterations", 5);
-                ssrShader->SetUniform("maxRayDistance", 50.f);
+                shaders["ssr"]->SetUniform("maxIterations", 100);
+                shaders["ssr"]->SetUniform("maxBinarySearchIterations", 5);
+                shaders["ssr"]->SetUniform("maxRayDistance", 50.f);
                 break;
 
             case RenderQuality::HIGH:
-                ssrShader->SetUniform("maxIterations", 200);
-                ssrShader->SetUniform("maxBinarySearchIterations", 10);
-                ssrShader->SetUniform("maxRayDistance", 100.f);
+                shaders["ssr"]->SetUniform("maxIterations", 200);
+                shaders["ssr"]->SetUniform("maxBinarySearchIterations", 10);
+                shaders["ssr"]->SetUniform("maxRayDistance", 100.f);
                 break;
         }
-        ssrShader->SetUniform("pixelStride", 2.f);
-        ssrShader->SetUniform("pixelStrideZCutoff", 3.f);
-        ssrShader->SetUniform("pixelZSize", 0.1f);
-        ssrShader->SetUniform("screenEdgeFadeStart", 0.9f);
-        ssrShader->SetUniform("eyeFadeStart", 0.2f);
-        ssrShader->SetUniform("eyeFadeEnd", 0.8f);
+        shaders["ssr"]->SetUniform("pixelStride", 2.f);
+        shaders["ssr"]->SetUniform("pixelStrideZCutoff", 3.f);
+        shaders["ssr"]->SetUniform("pixelZSize", 0.1f);
+        shaders["ssr"]->SetUniform("screenEdgeFadeStart", 0.9f);
+        shaders["ssr"]->SetUniform("eyeFadeStart", 0.2f);
+        shaders["ssr"]->SetUniform("eyeFadeEnd", 0.8f);
         OpenGLState::UseProgram(0);
 
-        ssrBlur = new GLSLShader("smallBlur.frag");
-        ssrBlur->AddUniform("tex", INT);
-        ssrBlur->AddUniform("invTexSize", VEC2);
+        shaders["ssr_blur"] = std::make_unique<GLSLShader>("smallBlur.frag");
+        shaders["ssr_blur"]->AddUniform("tex", INT);
+        shaders["ssr_blur"]->AddUniform("invTexSize", VEC2);
     }
 
     //Bloom
-    bloomBlur = new GLSLShader("gaussianBlur.frag", "gaussianBlur.vert");
-    bloomBlur->AddUniform("source", INT);
-    bloomBlur->AddUniform("texelOffset", VEC2);
+    shaders["bloom_blur"] = std::make_unique<GLSLShader>("gaussianBlur.frag", "gaussianBlur.vert");
+    shaders["bloom_blur"]->AddUniform("source", INT);
+    shaders["bloom_blur"]->AddUniform("texelOffset", VEC2);
 
     //FXAA
     if(rSettings.aa != RenderQuality::DISABLED)
@@ -937,39 +925,19 @@ void OpenGLCamera::Init(const RenderSettings& rSettings)
         sources.clear();
         sources.push_back(GLSLSource(GL_VERTEX_SHADER, "saq.vert"));
         sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "fxaa.frag", header));
-        fxaaShader = new GLSLShader(sources);
-        fxaaShader->AddUniform("texSource", ParameterType::INT);
-        fxaaShader->AddUniform("RCPFrame", ParameterType::VEC2);
+        shaders["fxaa"] = std::make_unique<GLSLShader>(sources);
+        shaders["fxaa"]->AddUniform("texSource", ParameterType::INT);
+        shaders["fxaa"]->AddUniform("RCPFrame", ParameterType::VEC2);
     }
 
     //Real camera
-    flipShader = new GLSLShader("verticalFlip.frag");
-    flipShader->AddUniform("texSource", ParameterType::INT);
+    shaders["flip"] = std::make_unique<GLSLShader>("verticalFlip.frag");
+    shaders["flip"]->AddUniform("texSource", ParameterType::INT);
 }
 
 void OpenGLCamera::Destroy()
 {
-    if(tonemappingShaders != nullptr)
-    {
-        if(tonemappingShaders[0] != nullptr) delete tonemappingShaders[0];
-        if(tonemappingShaders[1] != nullptr) delete tonemappingShaders[1];
-        if(tonemappingShaders[2] != nullptr) delete tonemappingShaders[2];
-        delete [] tonemappingShaders;
-    }
-    if(depthLinearizeShader != nullptr) delete depthLinearizeShader;
-    if(aoDeinterleaveShader != nullptr) delete aoDeinterleaveShader;
-    if(aoCalcShader != nullptr) delete aoCalcShader;
-    if(aoReinterleaveShader != nullptr) delete aoReinterleaveShader;
-    if(aoBlurShader != nullptr)
-    {
-        if(aoBlurShader[0] != nullptr) delete aoBlurShader[0];
-        if(aoBlurShader[1] != nullptr) delete aoBlurShader[1];
-        delete [] aoBlurShader;
-    }
-    if(ssrShader != nullptr) delete ssrShader;    
-    if(fxaaShader != nullptr) delete fxaaShader;
-    if(flipShader != nullptr) delete flipShader;
-    if(ssrBlur != nullptr) delete ssrBlur;
+    shaders.clear();
 }
 
 }

@@ -229,12 +229,12 @@ const FeatherstoneJoint& FeatherstoneEntity::getJoint(size_t index)
     return joints_.at(index);
 }
 
-std::string FeatherstoneEntity::getJointName(size_t index)
+const std::string& FeatherstoneEntity::getJointName(size_t index) const
 {
-    if(index >= joints_.size())
-        return "Invalid id!";
-    else 
+    if (index < joints_.size())
         return joints_[index].name;
+    else
+        throw std::invalid_argument("Joint with id=" + std::to_string(index) + " does not exist for '" + getName() + "'!");
 }
 
 void FeatherstoneEntity::getJointPosition(size_t index, Scalar &position, btMultibodyLink::eFeatherstoneJointType &jointType)

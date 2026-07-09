@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 02/12/2018.
-//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLConsole.h"
@@ -42,19 +42,15 @@ OpenGLConsole::OpenGLConsole()
     lastTime_ = 0;
     scrollOffset_ = 0.f;
     scrollVelocity_ = 0.f;
-    printer_ = NULL;
     logoTexture_ = 0;
     consoleVAO_ = 0;
-    texQuadShader_ = NULL;
     lastTime_ = GetTimeInMicroseconds();
 }
     
 OpenGLConsole::~OpenGLConsole()
 {
-    if(printer_ != NULL) delete printer_;
     if(logoTexture_ > 0) glDeleteTextures(1, &logoTexture_);
     if(consoleVAO_ > 0) glDeleteVertexArrays(1, &consoleVAO_);
-    if(texQuadShader_ != NULL) delete texQuadShader_;
 }
     
 void OpenGLConsole::Init(int w, int h)
@@ -73,12 +69,12 @@ void OpenGLConsole::Init(int w, int h)
     glEnableVertexAttribArray(0);
     OpenGLState::BindVertexArray(0);
     
-    texQuadShader_ = new GLSLShader("texQuad.frag","texQuad.vert");
+    texQuadShader_ = std::make_unique<GLSLShader>("texQuad.frag","texQuad.vert");
     texQuadShader_->AddUniform("rect", ParameterType::VEC4);
     texQuadShader_->AddUniform("tex", ParameterType::INT);
     texQuadShader_->AddUniform("color", ParameterType::VEC4);
     
-    printer_ = new OpenGLPrinter(GetShaderPath() + std::string(STANDARD_FONT_NAME), STANDARD_FONT_SIZE);
+    printer_ = std::make_unique<OpenGLPrinter>(GetShaderPath() + std::string(STANDARD_FONT_NAME), STANDARD_FONT_SIZE);
 }
     
 void OpenGLConsole::Scroll(GLfloat amount)
@@ -242,8 +238,6 @@ void OpenGLConsole::Render(bool overlay)
             printer_->Print(msg->text.c_str(), color, 10.f, scrollOffset_ + 10.f + i * (STANDARD_FONT_SIZE + 5), STANDARD_FONT_SIZE, true);
         }
     }
-    
-    
 }
     
 }

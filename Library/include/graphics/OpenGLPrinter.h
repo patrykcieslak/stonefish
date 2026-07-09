@@ -23,8 +23,7 @@
 //  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLPrinter__
-#define __Stonefish_OpenGLPrinter__
+#pragma once
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -93,6 +92,12 @@ namespace sf
          \param height the height of hte window [pix]
          */
         static void SetWindowSize(GLuint width, GLuint height);
+
+        //! A static method that loads the necessary resources.
+        static void Init();
+
+        //! A static method used to clean the allocated resources.
+        static void Destroy();
         
     private:
         bool initialized_;
@@ -103,9 +108,8 @@ namespace sf
         GLfloat texHeight_;
         Character chars_[128-32];
         
-        static GLSLShader* printShader;
+        static std::unique_ptr<GLSLShader> printShader;
         static GLuint windowW, windowH;
     };
 }
 
-#endif

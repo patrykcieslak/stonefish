@@ -144,7 +144,7 @@ namespace sf
          \param element a pointer to the XML node
          \return a pointer to the new velocity field object
          */
-        virtual VelocityField* ParseVelocityField(XMLElement* element);
+        virtual std::unique_ptr<VelocityField> ParseVelocityField(XMLElement* element);
 
         //! A method used to parse a static object description.
         /*!

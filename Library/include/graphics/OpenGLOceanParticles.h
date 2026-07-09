@@ -23,8 +23,7 @@
 //  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLOceanParticles__
-#define __Stonefish_OpenGLOceanParticles__
+#pragma once
 
 #include <random>
 #include "graphics/OpenGLParticles.h"
@@ -89,10 +88,9 @@ namespace sf
 
 		static GLuint flakeTexture;
 		static GLuint noiseTexture; 
-		static GLSLShader* updateShader;
-		static GLSLShader* renderShader;
-		static GLSLShader* renderIdShader;
+		static std::unique_ptr<GLSLShader> updateShader;
+		static std::unique_ptr<GLSLShader> renderShader;
+		static std::unique_ptr<GLSLShader> renderIdShader;
 	};
 }
 
-#endif

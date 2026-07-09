@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 22/07/20.
-//  Copyright (c) 2020-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLSonar__
-#define __Stonefish_OpenGLSonar__
+#pragma once
 
 #include "graphics/OpenGLView.h"
 #include <random>
@@ -159,9 +158,8 @@ namespace sf
         GLuint displayVAO_;
         GLuint displayVBO_;
         
-        static GLSLShader* sonarInputShader_[2];
-        static GLSLShader* sonarVisualizeShader_[2];
+        static std::array<std::unique_ptr<GLSLShader>, 2> sonarInputShader_;
+        static std::array<std::unique_ptr<GLSLShader>, 2> sonarVisualizeShader_;
     };
 }
 
-#endif

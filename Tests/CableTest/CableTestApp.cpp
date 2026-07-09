@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 13/11/2025.
-//  Copyright (c) 2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2025-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "CableTestApp.h"
@@ -31,8 +31,8 @@
 #include <core/Robot.h>
 #include <entities/forcefields/Uniform.h>
 
-CableTestApp::CableTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings h, CableTestManager* sim)
-    : sf::GraphicalSimulationApp("CableTest", dataDirPath, s, h, sim)
+CableTestApp::CableTestApp(const std::string& dataDirPath, sf::RenderSettings s, sf::HelperSettings h, std::unique_ptr<CableTestManager> sim)
+    : sf::GraphicalSimulationApp("CableTest", dataDirPath, s, h, std::move(sim))
 {
 }
 

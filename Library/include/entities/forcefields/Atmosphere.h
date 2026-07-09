@@ -29,11 +29,12 @@
 #include "core/MaterialManager.h"
 #include "entities/ForcefieldEntity.h"
 #include "graphics/OpenGLDataStructs.h"
+#include "graphics/OpenGLAtmosphere.h"
+#include "entities/forcefields/VelocityField.h"
 
 namespace sf
 {
-    class VelocityField;
-    class OpenGLAtmosphere;
+    
     struct RenderSettings;
     
     //! A class representing the atmosphere.

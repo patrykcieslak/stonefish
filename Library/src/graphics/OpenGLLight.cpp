@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/12/12.
-//  Copyright (c) 2012-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLLight.h"
@@ -48,10 +48,6 @@ OpenGLLight::OpenGLLight(glm::vec3 position, GLfloat radius, glm::vec3 c, GLfloa
 	R_ = glm::max(0.01f, radius);
     active_ = true;
     sourceObject_ = -1;
-}
-
-OpenGLLight::~OpenGLLight()
-{
 }
 
 bool OpenGLLight::isActive()

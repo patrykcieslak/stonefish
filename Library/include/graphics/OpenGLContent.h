@@ -30,7 +30,7 @@
 #include "core/NameManager.h"
 #include "graphics/OpenGLPointLight.h"
 #include "graphics/OpenGLSpotLight.h"
-#include <map>
+#include <unordered_map>
 
 namespace sf
 {
@@ -75,14 +75,14 @@ namespace sf
     struct MaterialShader
     {
         std::string shadingAlgorithm;
-        std::map<std::string, GLSLShader*> shaders;
+        std::unordered_map<std::string, std::shared_ptr<GLSLShader>> shaders;
 
         MaterialShader()
         {
             shadingAlgorithm = "";
         }
 
-        MaterialShader(const MaterialShader &obj)
+        MaterialShader(const MaterialShader& obj)
         {
             shadingAlgorithm = obj.shadingAlgorithm;
             for(auto i : obj.shaders)
@@ -571,8 +571,7 @@ namespace sf
         GLuint viewUBO_;
         
         //Shaders
-        std::map<std::string, GLSLShader*> basicShaders_;
+        std::unordered_map<std::string, std::unique_ptr<GLSLShader>> basicShaders_;
         std::vector<MaterialShader> materialShaders_;
-        GLSLShader* lightSourceShader_[2];
     };
 }

@@ -27,6 +27,7 @@
 
 #include <deque>
 #include "sensors/Sensor.h"
+#include "sensors/Sample.h"
 
 namespace sf
 {
@@ -79,8 +80,6 @@ namespace sf
             }
         }
     };
-    
-    class Sample;
     
     //! An abstract class representing a scalar sensor.
     class ScalarSensor : public Sensor

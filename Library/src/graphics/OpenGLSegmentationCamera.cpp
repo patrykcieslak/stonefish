@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 14/03/2025.
-//  Copyright (c) 2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2025-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLSegmentationCamera.h"
@@ -37,9 +37,9 @@
 namespace sf
 {
 
-GLSLShader* OpenGLSegmentationCamera::segmentationCameraOutputShader = nullptr;
-GLSLShader* OpenGLSegmentationCamera::segmentationVisualizeShader = nullptr;
-GLSLShader* OpenGLSegmentationCamera::flipShader = nullptr;
+std::unique_ptr<GLSLShader> OpenGLSegmentationCamera::segmentationCameraOutputShader;
+std::unique_ptr<GLSLShader> OpenGLSegmentationCamera::segmentationVisualizeShader;
+std::unique_ptr<GLSLShader> OpenGLSegmentationCamera::flipShader;
 
 OpenGLSegmentationCamera::OpenGLSegmentationCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
                           GLint originX, GLint originY, GLint width, GLint height,
@@ -348,24 +348,24 @@ void OpenGLSegmentationCamera::DrawLDR(GLuint destinationFBO, bool updated)
 ///////////////////////// Static /////////////////////////////
 void OpenGLSegmentationCamera::Init()
 {
-    segmentationCameraOutputShader = new GLSLShader("segmentation.frag", "segmentation.vert");
+    segmentationCameraOutputShader = std::make_unique<GLSLShader>("segmentation.frag", "segmentation.vert");
     segmentationCameraOutputShader->AddUniform("MVP", ParameterType::MAT4);
     segmentationCameraOutputShader->AddUniform("M", ParameterType::MAT4);
     segmentationCameraOutputShader->AddUniform("FC", ParameterType::FLOAT);
     segmentationCameraOutputShader->AddUniform("objectId", ParameterType::UINT);
     
-    segmentationVisualizeShader = new GLSLShader("segmentationVisualize.frag");
+    segmentationVisualizeShader = std::make_unique<GLSLShader>("segmentationVisualize.frag");
     segmentationVisualizeShader->AddUniform("texSeg", ParameterType::INT);
 
-    flipShader = new GLSLShader("uintVerticalFlip.frag");
+    flipShader = std::make_unique<GLSLShader>("uintVerticalFlip.frag");
     flipShader->AddUniform("texSource", ParameterType::INT);
 }
 
 void OpenGLSegmentationCamera::Destroy()
 {
-    if(segmentationCameraOutputShader != nullptr) delete segmentationCameraOutputShader;
-    if(segmentationVisualizeShader != nullptr) delete segmentationVisualizeShader;
-    if(flipShader != nullptr) delete flipShader;
+    segmentationCameraOutputShader.reset();
+    segmentationVisualizeShader.reset();
+    flipShader.reset();
 }
 
 }

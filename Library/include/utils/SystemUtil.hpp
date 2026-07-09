@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_SystemUtil__
-#define __Stonefish_SystemUtil__
+#pragma once
 
 #include <cstdint>
 #include <cstdio>
@@ -182,5 +181,3 @@ inline float grandom(float mean, float stdDeviation, long *seed)
 }
 
 }
-
-#endif 

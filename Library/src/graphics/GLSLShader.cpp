@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 18/05/2014.
-//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/GLSLShader.h"
@@ -81,7 +81,7 @@ GLSLShader::GLSLShader(const std::vector<GLuint>& precompiled)
         valid_ = true;
 }
 
-GLSLShader::GLSLShader(std::string fragment, std::string vertex)
+GLSLShader::GLSLShader(const std::string& fragment, const std::string& vertex)
 {
     valid_ = false;
     GLint compiled = 0;
@@ -125,7 +125,7 @@ void GLSLShader::Use()
 #endif
 }
 
-bool GLSLShader::AddAttribute(std::string name, ParameterType type)
+bool GLSLShader::AddAttribute(const std::string& name, ParameterType type)
 {
     GLSLAttribute att;
     att.name = name;
@@ -142,7 +142,7 @@ bool GLSLShader::AddAttribute(std::string name, ParameterType type)
     return true;
 }
 
-bool GLSLShader::AddUniform(std::string name, ParameterType type)
+bool GLSLShader::AddUniform(const std::string& name, ParameterType type)
 {
     GLSLUniform uni;
     uni.name = name;
@@ -164,7 +164,7 @@ bool GLSLShader::AddUniform(std::string name, ParameterType type)
     return true;
 }
 
-bool GLSLShader::SetAttribute(std::string name, GLfloat x)
+bool GLSLShader::SetAttribute(const std::string& name, GLfloat x)
 {
     GLint index = 0;
     bool success = GetAttribute(name, FLOAT, index);
@@ -175,7 +175,7 @@ bool GLSLShader::SetAttribute(std::string name, GLfloat x)
     return success;
 }
 
-bool GLSLShader::SetUniform(std::string name, bool x)
+bool GLSLShader::SetUniform(const std::string& name, bool x)
 {
     GLint location = 0;
     bool success = GetUniform(name, BOOLEAN, location);
@@ -186,7 +186,7 @@ bool GLSLShader::SetUniform(std::string name, bool x)
     return success;
 }
 
-bool GLSLShader::SetUniform(std::string name, GLfloat x)
+bool GLSLShader::SetUniform(const std::string& name, GLfloat x)
 {
     GLint location = 0;
     bool success = GetUniform(name, FLOAT, location);
@@ -197,7 +197,7 @@ bool GLSLShader::SetUniform(std::string name, GLfloat x)
     return success;
 }
 
-bool GLSLShader::SetUniform(std::string name, glm::vec2 x)
+bool GLSLShader::SetUniform(const std::string& name, glm::vec2 x)
 {
     GLint location = 0;
     bool success = GetUniform(name, VEC2, location);
@@ -208,7 +208,7 @@ bool GLSLShader::SetUniform(std::string name, glm::vec2 x)
     return success;
 }
 
-bool GLSLShader::SetUniform(std::string name, glm::vec3 x)
+bool GLSLShader::SetUniform(const std::string& name, glm::vec3 x)
 {
     GLint location = 0;
     bool success = GetUniform(name, VEC3, location);
@@ -219,7 +219,7 @@ bool GLSLShader::SetUniform(std::string name, glm::vec3 x)
     return success;
 }
 
-bool GLSLShader::SetUniform(std::string name, glm::vec4 x)
+bool GLSLShader::SetUniform(const std::string& name, glm::vec4 x)
 {
     GLint location = 0;
     bool success = GetUniform(name, VEC4, location);
@@ -230,7 +230,7 @@ bool GLSLShader::SetUniform(std::string name, glm::vec4 x)
     return success;
 }
 
-bool GLSLShader::SetUniform(std::string name, GLuint x)
+bool GLSLShader::SetUniform(const std::string& name, GLuint x)
 {
     GLint location = 0;
     bool success = GetUniform(name, UINT, location);
@@ -241,7 +241,7 @@ bool GLSLShader::SetUniform(std::string name, GLuint x)
     return success;
 }
 
-bool GLSLShader::SetUniform(std::string name, GLint x)
+bool GLSLShader::SetUniform(const std::string& name, GLint x)
 {
     GLint location = 0;
     bool success = GetUniform(name, INT, location);
@@ -252,7 +252,7 @@ bool GLSLShader::SetUniform(std::string name, GLint x)
     return success;
 }
 
-bool GLSLShader::SetUniform(std::string name, glm::ivec2 x)
+bool GLSLShader::SetUniform(const std::string& name, glm::ivec2 x)
 {
     GLint location = 0;
     bool success = GetUniform(name, IVEC2, location);
@@ -263,7 +263,7 @@ bool GLSLShader::SetUniform(std::string name, glm::ivec2 x)
     return success;
 }
 
-bool GLSLShader::SetUniform(std::string name, glm::ivec3 x)
+bool GLSLShader::SetUniform(const std::string& name, glm::ivec3 x)
 {
     GLint location = 0;
     bool success = GetUniform(name, IVEC3, location);
@@ -274,7 +274,7 @@ bool GLSLShader::SetUniform(std::string name, glm::ivec3 x)
     return success;
 }
 
-bool GLSLShader::SetUniform(std::string name, glm::ivec4 x)
+bool GLSLShader::SetUniform(const std::string& name, glm::ivec4 x)
 {
     GLint location = 0;
     bool success = GetUniform(name, IVEC4, location);
@@ -285,7 +285,7 @@ bool GLSLShader::SetUniform(std::string name, glm::ivec4 x)
     return success;
 }
 
-bool GLSLShader::SetUniform(std::string name, glm::uvec2 x)
+bool GLSLShader::SetUniform(const std::string& name, glm::uvec2 x)
 {
     GLint location = 0;
     bool success = GetUniform(name, UVEC2, location);
@@ -296,7 +296,7 @@ bool GLSLShader::SetUniform(std::string name, glm::uvec2 x)
     return success;
 }
 
-bool GLSLShader::SetUniform(std::string name, glm::uvec3 x)
+bool GLSLShader::SetUniform(const std::string& name, glm::uvec3 x)
 {
     GLint location = 0;
     bool success = GetUniform(name, UVEC3, location);
@@ -307,7 +307,7 @@ bool GLSLShader::SetUniform(std::string name, glm::uvec3 x)
     return success;
 }
 
-bool GLSLShader::SetUniform(std::string name, glm::uvec4 x)
+bool GLSLShader::SetUniform(const std::string& name, glm::uvec4 x)
 {
     GLint location = 0;
     bool success = GetUniform(name, UVEC4, location);
@@ -318,7 +318,7 @@ bool GLSLShader::SetUniform(std::string name, glm::uvec4 x)
     return success;
 }
 
-bool GLSLShader::SetUniform(std::string name, glm::mat3 x)
+bool GLSLShader::SetUniform(const std::string& name, glm::mat3 x)
 {
     GLint location = 0;
     bool success = GetUniform(name, MAT3, location);
@@ -329,7 +329,7 @@ bool GLSLShader::SetUniform(std::string name, glm::mat3 x)
     return success;
 }
 
-bool GLSLShader::SetUniform(std::string name, glm::mat4 x)
+bool GLSLShader::SetUniform(const std::string& name, glm::mat4 x)
 {
     GLint location = 0;
     bool success = GetUniform(name, MAT4, location);
@@ -340,7 +340,7 @@ bool GLSLShader::SetUniform(std::string name, glm::mat4 x)
     return success;
 }
 
-bool GLSLShader::GetUniform(std::string name, ParameterType type, GLint& location)
+bool GLSLShader::GetUniform(const std::string& name, ParameterType type, GLint& location)
 {
     for(unsigned int i = 0; i < uniforms_.size(); i++)
         if(uniforms_[i].name == name)
@@ -363,7 +363,7 @@ bool GLSLShader::GetUniform(std::string name, ParameterType type, GLint& locatio
     return false;
 }
 
-bool GLSLShader::GetAttribute(std::string name, ParameterType type, GLint& index)
+bool GLSLShader::GetAttribute(const std::string& name, ParameterType type, GLint& index)
 {
     for(unsigned int i = 0; i < attributes_.size(); i++)
         if(attributes_[i].name == name)
@@ -380,7 +380,7 @@ bool GLSLShader::GetAttribute(std::string name, ParameterType type, GLint& index
     return false;
 }
 
-bool GLSLShader::BindUniformBlock(std::string name, GLuint bindingPoint)
+bool GLSLShader::BindUniformBlock(const std::string& name, GLuint bindingPoint)
 {
     GLuint blockIndex = glGetUniformBlockIndex(program_, name.c_str());
     if(blockIndex != GL_INVALID_INDEX)
@@ -397,7 +397,7 @@ bool GLSLShader::BindUniformBlock(std::string name, GLuint bindingPoint)
     }
 }
 
-bool GLSLShader::BindShaderStorageBlock(std::string name, GLuint bindingPoint)
+bool GLSLShader::BindShaderStorageBlock(const std::string& name, GLuint bindingPoint)
 {
     GLuint blockIndex = glGetProgramResourceIndex(program_, GL_SHADER_STORAGE_BLOCK, name.c_str());
     if(blockIndex != GL_INVALID_INDEX)

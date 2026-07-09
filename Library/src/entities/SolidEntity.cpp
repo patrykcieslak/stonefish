@@ -674,15 +674,15 @@ const Mesh* SolidEntity::getPhysicsMesh()
     return phyMesh_.get();
 }
 
-std::vector<Vector3>* SolidEntity::getMeshVertices() const
+std::vector<Vector3> SolidEntity::getMeshVertices() const
 {
-    std::vector<Vector3>* vertices = new std::vector<Vector3>(0);
+    std::vector<Vector3> vertices;
     if(phyMesh_ != nullptr)
     {
         for(size_t i=0; i<phyMesh_->getNumOfVertices(); ++i)
         {
             glm::vec3 pos = phyMesh_->getVertexPos(i);
-            vertices->push_back(Vector3(pos.x, pos.y, pos.z));
+            vertices.push_back(Vector3(pos.x, pos.y, pos.z));
         }
     }
     return vertices;
@@ -712,16 +712,16 @@ void SolidEntity::ComputeFluidDynamicsApprox(GeometryApproxType t)
 
 void SolidEntity::ComputeSphericalApprox()
 {
-    std::vector<Vector3>* x = getMeshVertices();
-    if(x->size() < 2)
+    std::vector<Vector3> x = getMeshVertices();
+    if(x.size() < 2)
         return;
-    for(size_t i=0; i<x->size(); ++i)
-        x->at(i) = T_CG2C_ * x->at(i) - P_CB_;
+    for(size_t i=0; i<x.size(); ++i)
+        x[i] = T_CG2C_ * x[i] - P_CB_;
     
     Scalar r(0);
-    for(size_t i=0; i<x->size(); ++i)
+    for(size_t i=0; i<x.size(); ++i)
     {
-        Scalar rc = x->at(i).length2();
+        Scalar rc = x[i].length2();
         if(rc > r)
             r = rc;
     }
@@ -746,34 +746,32 @@ void SolidEntity::ComputeSphericalApprox()
 
     Vector3 Cd(1,1,1);
     SetHydrodynamicCoefficients(Cd, Scalar(0.1)*Cd); //No need to trasform (all equal)
-
-    delete x;
 }
 
 void SolidEntity::ComputeCylindricalApprox()
 {
-    std::vector<Vector3>* x = getMeshVertices();
-    if(x->size() < 2)
+    std::vector<Vector3> x = getMeshVertices();
+    if(x.size() < 2)
         return;
-    for(size_t i=0; i<x->size(); ++i)
-        x->at(i) = T_CG2C_ * x->at(i) - P_CB_;
+    for(size_t i=0; i<x.size(); ++i)
+        x[i] = T_CG2C_ * x[i] - P_CB_;
         
     //Radius
     Scalar r[3] = {0,0,0};
-    for(size_t i=0; i<x->size(); ++i)
+    for(size_t i=0; i<x.size(); ++i)
     {
         Scalar d;
         
         //X
-        d = btSqrt(x->at(i).y()*x->at(i).y() + x->at(i).z()*x->at(i).z());
+        d = btSqrt(x[i].y()*x[i].y() + x[i].z()*x[i].z());
         r[0] = d > r[0] ? d : r[0];
         
         //Y
-        d = btSqrt(x->at(i).x()*x->at(i).x() + x->at(i).z()*x->at(i).z());
+        d = btSqrt(x[i].x()*x[i].x() + x[i].z()*x[i].z());
         r[1] = d > r[1] ? d : r[1];
         
         //Z
-        d = btSqrt(x->at(i).x()*x->at(i).x() + x->at(i).y()*x->at(i).y());
+        d = btSqrt(x[i].x()*x[i].x() + x[i].y()*x[i].y());
         r[2] = d > r[2] ? d : r[2];
     }
     
@@ -787,9 +785,9 @@ void SolidEntity::ComputeCylindricalApprox()
         axis = 2;
     
     Scalar l_2 = 0;
-    for(size_t i=0; i<x->size(); ++i)
+    for(size_t i=0; i<x.size(); ++i)
     {
-        Scalar d = btFabs(x->at(i).m_floats[axis]);
+        Scalar d = btFabs(x[i].m_floats[axis]);
         l_2 = d > l_2 ? d : l_2;
     }
     
@@ -835,8 +833,6 @@ void SolidEntity::ComputeCylindricalApprox()
     Cd = T_CG2O_.getBasis().inverse() * T_CG2H_.getBasis() * Cd; // To origin frame
     Cd = Vector3(btFabs(Cd.getX()), btFabs(Cd.getY()), btFabs(Cd.getZ()));
     SetHydrodynamicCoefficients(Cd, Scalar(0.1)*Cd);
-
-    delete x;
 }
 
 void SolidEntity::ComputeEllipsoidalApprox()
@@ -844,11 +840,11 @@ void SolidEntity::ComputeEllipsoidalApprox()
 #ifdef DEBUG
     cInfo("---- Computing ellipsoidal approximation of geometry for %s ----", getName().c_str());
 #endif
-    std::vector<Vector3>* x = getMeshVertices();
-    if(x->size() < 2)
+    std::vector<Vector3> x = getMeshVertices();
+    if(x.size() < 2)
         return;
-    for(size_t i=0; i<x->size(); ++i)
-        x->at(i) = T_CG2C_ * x->at(i) - P_CB_; //Points in CG frame around center of buoyancy
+    for(size_t i=0; i<x.size(); ++i)
+        x[i] = T_CG2C_ * x[i] - P_CB_; //Points in CG frame around center of buoyancy
     
     //P. Kumar, E.A. Yıldırım, Computing Minimum-Volume Enclosing Axis-Aligned Ellipsoids
     //J Optim Theory Appl (2008) 136: 211–228
@@ -858,24 +854,24 @@ void SolidEntity::ComputeEllipsoidalApprox()
     for(size_t k=0; k<3; ++k) //3 dimensions
     {
         //Construct vector for current dimension
-        std::vector<Scalar> x_k(x->size());
-        for(size_t i=0; i<x->size(); ++i)
-            x_k[i] = x->at(i).m_floats[k];
+        std::vector<Scalar> x_k(x.size());
+        for(size_t i=0; i<x.size(); ++i)
+            x_k[i] = x[i].m_floats[k];
 
         //Find range of values
         auto result = std::minmax_element(x_k.begin(), x_k.end());
         
         //Add limits to the set x0
-        x0.push_back(x->at(result.first - x_k.begin()));
-        x0.push_back(x->at(result.second - x_k.begin()));
+        x0.push_back(x[result.first - x_k.begin()]);
+        x0.push_back(x[result.second - x_k.begin()]);
     }
 
     //Initial sigma
-    std::vector<Scalar> sigma(x->size());
-    for(size_t i=0; i<x->size(); ++i)
+    std::vector<Scalar> sigma(x.size());
+    for(size_t i=0; i<x.size(); ++i)
     {
         std::vector<Vector3>::iterator it;
-        it = std::find(x0.begin(), x0.end(), x->at(i));
+        it = std::find(x0.begin(), x0.end(), x[i]);
         if(it != x0.end())
             sigma[i] = Scalar(1)/Scalar(6);
         else
@@ -886,16 +882,16 @@ void SolidEntity::ComputeEllipsoidalApprox()
     auto u = [](auto j, auto& x, auto& sigma)
     {
         auto sum = Scalar(0);
-        for(size_t i=0; i<x->size(); ++i)
-            sum += sigma[i] * x->at(i).m_floats[j] * x->at(i).m_floats[j]; 
+        for(size_t i=0; i<x.size(); ++i)
+            sum += sigma[i] * x[i].m_floats[j] * x[i].m_floats[j]; 
         return sum;
     };
     
     auto v = [](auto j, auto& x, auto& sigma)
     {
         auto sum = Scalar(0);
-        for(size_t i=0; i<x->size(); ++i)
-            sum += sigma[i] * x->at(i).m_floats[j]; 
+        for(size_t i=0; i<x.size(); ++i)
+            sum += sigma[i] * x[i].m_floats[j]; 
         return sum;	
     };
     
@@ -906,15 +902,15 @@ void SolidEntity::ComputeEllipsoidalApprox()
         {
             auto vj = v(j, x, sigma);
             auto uj = u(j, x, sigma);
-            sum += (x->at(i).m_floats[j] - vj)*(x->at(i).m_floats[j] - vj)/(3*(uj - vj*vj));
+            sum += (x[i].m_floats[j] - vj)*(x[i].m_floats[j] - vj)/(3*(uj - vj*vj));
         }
         return sum;
     };
 
     //Initialize i* and epsilon
     size_t iStar;
-    std::vector<Scalar> I(x->size());
-    for(size_t i=0; i<x->size(); ++i) I[i] = lambda(i);
+    std::vector<Scalar> I(x.size());
+    for(size_t i=0; i<x.size(); ++i) I[i] = lambda(i);
     auto IStar = std::max_element(I.begin(), I.end());
     iStar = IStar - I.begin();
     Scalar epsilon = lambda(iStar) - Scalar(1);
@@ -930,7 +926,7 @@ void SolidEntity::ComputeEllipsoidalApprox()
 #endif
     while(epsilon > epsilonTol && k < maxIter)
     {
-        x0.push_back(x->at(iStar));
+        x0.push_back(x[iStar]);
         
         Scalar beta = epsilon/(Scalar(3+1)*(Scalar(1)+epsilon));
 
@@ -940,7 +936,7 @@ void SolidEntity::ComputeEllipsoidalApprox()
         sigma[iStar] += beta;
 
         //Update i* and epsilon
-        for(size_t i=0; i<x->size(); ++i) I[i] = lambda(i);
+        for(size_t i=0; i<x.size(); ++i) I[i] = lambda(i);
         IStar = std::max_element(I.begin(), I.end());
         iStar = IStar - I.begin();
         epsilon = lambda(iStar) - Scalar(1);
@@ -1014,7 +1010,6 @@ void SolidEntity::ComputeEllipsoidalApprox()
 #ifdef DEBUG
     cInfo("--------------------------------------------------------------------");
 #endif
-    delete x;
 }
 
 Scalar SolidEntity::LambKFactor(Scalar r1, Scalar r2)

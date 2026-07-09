@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/02/2024.
-//  Copyright (c) 2024-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLThermalCamera.h"
@@ -36,8 +36,8 @@
 namespace sf
 {
 
-GLSLShader* OpenGLThermalCamera::thermalVisualizeShader = nullptr;
-GLSLShader* OpenGLThermalCamera::thermalOutputShader = nullptr;
+std::unique_ptr<GLSLShader> OpenGLThermalCamera::thermalVisualizeShader;
+std::unique_ptr<GLSLShader> OpenGLThermalCamera::thermalOutputShader;
 
 OpenGLThermalCamera::OpenGLThermalCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
                           GLint originX, GLint originY, GLint width, GLint height, GLfloat horizontalFOVDeg, 
@@ -335,13 +335,13 @@ void OpenGLThermalCamera::DrawLDR(GLuint destinationFBO, bool updated)
 ///////////////////////// Static /////////////////////////////
 void OpenGLThermalCamera::Init()
 {   
-    thermalOutputShader = new GLSLShader("thermalOutput.frag");
+    thermalOutputShader = std::make_unique<GLSLShader>("thermalOutput.frag");
     thermalOutputShader->AddUniform("texSource", ParameterType::INT);
     thermalOutputShader->AddUniform("temperatureRange", ParameterType::VEC2);
     thermalOutputShader->AddUniform("noiseSeed", ParameterType::VEC3);
     thermalOutputShader->AddUniform("noiseStddev", ParameterType::FLOAT);
     
-    thermalVisualizeShader = new GLSLShader("thermalVisualize.frag");
+    thermalVisualizeShader = std::make_unique<GLSLShader>("thermalVisualize.frag");
     thermalVisualizeShader->AddUniform("texTemperature", ParameterType::INT);
     thermalVisualizeShader->AddUniform("colorMap", ParameterType::INT);
     thermalVisualizeShader->AddUniform("displayRange", ParameterType::VEC2);
@@ -349,8 +349,8 @@ void OpenGLThermalCamera::Init()
 
 void OpenGLThermalCamera::Destroy()
 {
-    if(thermalOutputShader != nullptr) delete thermalOutputShader;
-    if(thermalVisualizeShader != nullptr) delete thermalVisualizeShader;
+    thermalOutputShader.reset();
+    thermalVisualizeShader.reset();
 }
 
 }

@@ -23,8 +23,7 @@
 //  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLFlatOcean__
-#define __Stonefish_OpenGLFlatOcean__
+#pragma once
 
 #include "graphics/OpenGLOcean.h"
 
@@ -78,5 +77,3 @@ namespace sf
         GLuint vbo_;
     };
 }
-
-#endif

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/05/2020.
-//  Copyright (c) 2020-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLFlatOcean.h"
@@ -51,7 +51,7 @@ OpenGLFlatOcean::OpenGLFlatOcean(GLfloat size) : OpenGLOcean(200000.f)
     std::vector<GLSLSource> sources;
     sources.push_back(GLSLSource(GL_VERTEX_SHADER, "oceanSurface.vert"));
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanSurface.frag"));
-    oceanShaders_["surface"] = new GLSLShader(sources, precompiled);
+    oceanShaders_["surface"] = std::make_unique<GLSLShader>(sources, precompiled);
     oceanShaders_["surface"]->AddUniform("size", ParameterType::FLOAT);
     oceanShaders_["surface"]->AddUniform("texWaveFFT", ParameterType::INT);
     oceanShaders_["surface"]->AddUniform("texSlopeVariance", ParameterType::INT);
@@ -80,7 +80,7 @@ OpenGLFlatOcean::OpenGLFlatOcean(GLfloat size) : OpenGLOcean(200000.f)
     //Surface temeperature rendering
     sources.pop_back();
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanSurfaceTemp.frag"));
-    oceanShaders_["surfaceTemp"] = new GLSLShader(sources, precompiled);
+    oceanShaders_["surfaceTemp"] = std::make_unique<GLSLShader>(sources, precompiled);
     oceanShaders_["surfaceTemp"]->AddUniform("size", ParameterType::FLOAT);
     oceanShaders_["surfaceTemp"]->AddUniform("texWaveFFT", ParameterType::INT);
     oceanShaders_["surfaceTemp"]->AddUniform("texSlopeVariance", ParameterType::INT);
@@ -114,7 +114,7 @@ OpenGLFlatOcean::OpenGLFlatOcean(GLfloat size) : OpenGLOcean(200000.f)
 
     sources.pop_back();
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "oceanBacksurface.frag"));
-    oceanShaders_["backsurface"] = new GLSLShader(sources, precompiled);
+    oceanShaders_["backsurface"] = std::make_unique<GLSLShader>(sources, precompiled);
     oceanShaders_["backsurface"]->AddUniform("size", ParameterType::FLOAT);
     oceanShaders_["backsurface"]->AddUniform("texWaveFFT", ParameterType::INT);
     oceanShaders_["backsurface"]->AddUniform("texSlopeVariance", ParameterType::INT);
@@ -142,7 +142,7 @@ OpenGLFlatOcean::OpenGLFlatOcean(GLfloat size) : OpenGLOcean(200000.f)
     //Mask rendering
     sources.pop_back();
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "flat.frag"));
-    oceanShaders_["mask"] = new GLSLShader(sources);
+    oceanShaders_["mask"] = std::make_unique<GLSLShader>(sources);
     oceanShaders_["mask"]->AddUniform("size", ParameterType::FLOAT);
     oceanShaders_["mask"]->AddUniform("MVP", ParameterType::MAT4);
     oceanShaders_["mask"]->AddUniform("FC", ParameterType::FLOAT);    
@@ -189,7 +189,7 @@ void OpenGLFlatOcean::UpdateSurface(OpenGLView* view)
         
 void OpenGLFlatOcean::DrawSurface(OpenGLView* view)
 {
-    GLint* viewport = view->GetViewport();
+    std::vector<GLint> viewport = view->GetViewport();
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures_[3]);
     OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures_[2]);
 
@@ -211,12 +211,11 @@ void OpenGLFlatOcean::DrawSurface(OpenGLView* view)
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
-    delete [] viewport;
 }
 
 void OpenGLFlatOcean::DrawSurfaceTemperature(OpenGLView* view)
 {
-    GLint* viewport = view->GetViewport();
+    std::vector<GLint> viewport = view->GetViewport();
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures_[3]);
     OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures_[2]);
 
@@ -240,12 +239,11 @@ void OpenGLFlatOcean::DrawSurfaceTemperature(OpenGLView* view)
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
-    delete [] viewport;
 }
         
 void OpenGLFlatOcean::DrawBacksurface(OpenGLView* view)
 {
-    GLint* viewport = view->GetViewport();
+    std::vector<GLint> viewport = view->GetViewport();
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, oceanTextures_[3]);
     OpenGLState::BindTexture(TEX_POSTPROCESS2, GL_TEXTURE_3D, oceanTextures_[2]);
 
@@ -269,7 +267,6 @@ void OpenGLFlatOcean::DrawBacksurface(OpenGLView* view)
     OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
     OpenGLState::UseProgram(0);
-    delete [] viewport;
 }
         
 void OpenGLFlatOcean::DrawUnderwaterMask(OpenGLView* view)

@@ -23,10 +23,10 @@
 //  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLTrackball__
-#define __Stonefish_OpenGLTrackball__
+#pragma once
 
 #include "graphics/OpenGLCamera.h"
+#include <array>
 
 namespace sf
 {
@@ -51,9 +51,6 @@ namespace sf
         OpenGLTrackball(glm::vec3 centerPosition, GLfloat orbitRadius, glm::vec3 up,
                         GLint originX, GLint originY, GLint width, GLint height,
                         GLfloat horizontalFovDeg, glm::vec2 range);
-
-        //! A destructor.
-        ~OpenGLTrackball();
         
         //! A method to apply a rotation to the trackball.
         /*!
@@ -143,12 +140,11 @@ namespace sf
         GLfloat xStart_, yStart_, zStart_;
         glm::quat rotationStart_;
         glm::vec3 translationStart_;
-        bool dragging;
-        bool transMode;
+        bool dragging_;
+        bool transMode_;
 
         //Shaders
-        GLSLShader* outlineShader[2];
+        std::array<std::unique_ptr<GLSLShader>, 2> outlineShader_;
     };
 }
 
-#endif

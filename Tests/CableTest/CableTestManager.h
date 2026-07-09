@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/11/2025.
-//  Copyright (c) 2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2025-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish__CableTestManager__
-#define __Stonefish__CableTestManager__
+#pragma once
 
 #include <core/SimulationManager.h>
 
@@ -37,4 +36,3 @@ public:
     void SimulationStepCompleted(sf::Scalar timeStep) override;
 };
 
-#endif

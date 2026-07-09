@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/03/24.
-//  Copyright (c) 2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLEventBasedCamera.h"
@@ -35,8 +35,8 @@
 namespace sf
 {
 
-GLSLShader** OpenGLEventBasedCamera::eventOutputShaders = nullptr;
-GLSLShader* OpenGLEventBasedCamera::eventVisualizeShader = nullptr;
+std::array<std::unique_ptr<GLSLShader>, 2> OpenGLEventBasedCamera::eventOutputShaders;
+std::unique_ptr<GLSLShader> OpenGLEventBasedCamera::eventVisualizeShader;
 
 OpenGLEventBasedCamera::OpenGLEventBasedCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
                                    GLint x, GLint y, GLint width, GLint height, GLfloat horizontalFovDeg, 
@@ -337,11 +337,9 @@ void OpenGLEventBasedCamera::Init()
 {
     glm::uvec3 maxTextureSize = OpenGLState::GetMaxTextureSize();
 
-    eventOutputShaders = new GLSLShader*[2];
-
     std::vector<GLSLSource> sources;
     sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "eventInit.comp"));
-    eventOutputShaders[0] = new GLSLShader(sources);
+    eventOutputShaders[0] = std::make_unique<GLSLShader>(sources);
     eventOutputShaders[0]->AddUniform("currColor", ParameterType::INT);
     eventOutputShaders[0]->AddUniform("logLum", ParameterType::INT);
     eventOutputShaders[0]->AddUniform("eventTimes", ParameterType::INT);
@@ -350,7 +348,7 @@ void OpenGLEventBasedCamera::Init()
     sources.clear();
     std::string header = "#version 430\n#define MAX_TEXTURE_WIDTH " + std::to_string(maxTextureSize.x) + "\n";
     sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "event.comp", header));
-    eventOutputShaders[1] = new GLSLShader(sources);
+    eventOutputShaders[1] = std::make_unique<GLSLShader>(sources);
     eventOutputShaders[1]->AddUniform("currColor", ParameterType::INT);
     eventOutputShaders[1]->AddUniform("logLum", ParameterType::INT);
     eventOutputShaders[1]->AddUniform("events", ParameterType::INT);
@@ -366,7 +364,7 @@ void OpenGLEventBasedCamera::Init()
     sources.clear();
     sources.push_back(GLSLSource(GL_VERTEX_SHADER, "texQuad.vert"));
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "eventVisualize.frag"));
-    eventVisualizeShader = new GLSLShader(sources);
+    eventVisualizeShader = std::make_unique<GLSLShader>(sources);
     eventVisualizeShader->AddUniform("rect", ParameterType::VEC4);
     eventVisualizeShader->AddUniform("texCamera", ParameterType::INT);
     eventVisualizeShader->AddUniform("texEventTimes", ParameterType::INT);
@@ -374,15 +372,9 @@ void OpenGLEventBasedCamera::Init()
         
 void OpenGLEventBasedCamera::Destroy()
 {
-    if(eventOutputShaders != nullptr)
-    {
-        if(eventOutputShaders[0] != nullptr) delete eventOutputShaders[0];
-        if(eventOutputShaders[1] != nullptr) delete eventOutputShaders[1];
-        delete [] eventOutputShaders;
-    }
-
-    if(eventVisualizeShader != nullptr)
-        delete eventVisualizeShader;
+    eventOutputShaders[0].reset();
+    eventOutputShaders[1].reset();
+    eventVisualizeShader.reset();
 }
 
 }

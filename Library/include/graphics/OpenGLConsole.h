@@ -23,8 +23,7 @@
 //  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLConsole__
-#define __Stonefish_OpenGLConsole__
+#pragma once
 
 #include "core/Console.h"
 #include "graphics/OpenGLDataStructs.h"
@@ -71,11 +70,9 @@ namespace sf
         float scrollOffset_;
         float scrollVelocity_;
         int64_t lastTime_;
-        OpenGLPrinter* printer_;
+        std::unique_ptr<OpenGLPrinter> printer_;
         GLuint logoTexture_;
         GLuint consoleVAO_;
-        GLSLShader* texQuadShader_;
+        std::unique_ptr<GLSLShader> texQuadShader_;
     };
 }
-
-#endif

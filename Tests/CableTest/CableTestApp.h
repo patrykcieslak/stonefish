@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 13/11/2025.
-//  Copyright (c) 2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2025-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish__CableTestApp__
-#define __Stonefish__CableTestApp__
+#pragma once
 
 #include <core/GraphicalSimulationApp.h>
 #include "CableTestManager.h"
@@ -32,9 +31,8 @@
 class CableTestApp : public sf::GraphicalSimulationApp
 {
 public:
-    CableTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings h, CableTestManager* sim);
+    CableTestApp(const std::string& dataDirPath, sf::RenderSettings s, sf::HelperSettings h, std::unique_ptr<CableTestManager> sim);
     
     void DoHUD();
 };
 
-#endif

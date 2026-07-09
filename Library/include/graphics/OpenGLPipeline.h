@@ -23,8 +23,7 @@
 //  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLPipeline__
-#define __Stonefish_OpenGLPipeline__
+#pragma once
 
 #include <SDL2/SDL_thread.h>
 #include <deque>
@@ -122,9 +121,7 @@ namespace sf
         std::deque<unsigned int> viewsQueue_;
         GLuint screenFBO_;
         GLuint screenTex_;
-        OpenGLContent* content_;
+        std::unique_ptr<OpenGLContent> content_;
         Scalar lastSimTime_;
     };
 }
-
-#endif

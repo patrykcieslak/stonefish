@@ -23,8 +23,7 @@
 //  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_IMGUI__
-#define __Stonefish_IMGUI__
+#pragma once
 
 #include <SDL2/SDL_keyboard.h>
 #include "StonefishCommon.h"
@@ -47,14 +46,14 @@
 namespace sf
 {
     //! A class holiding widget id.
-    class Uid
+    struct Uid
     {
     public:
-        int owner_;
-        int item_;
+        int owner;
+        int item;
         
     private:
-        int index_ = 0;
+        int index = 0;
         friend class IMGUI;
     };
     
@@ -291,7 +290,7 @@ namespace sf
         Uid hot_;
         Uid active_;
         
-        OpenGLPrinter* plainPrinter_;
+        std::unique_ptr<OpenGLPrinter> plainPrinter_;
         GLuint logoTexture_;
         GLuint guiTexture_;
         glm::vec4 theme_[11];
@@ -301,10 +300,8 @@ namespace sf
         GLuint guiVAO_;
         GLuint translucentFBO_;
         GLuint translucentTexture_[2];
-        GLSLShader* downsampleShader_;
-        GLSLShader* gaussianShader_;
-        GLSLShader* guiShader_[2];
+        std::unique_ptr<GLSLShader> downsampleShader_;
+        std::unique_ptr<GLSLShader> gaussianShader_;
+        std::array<std::unique_ptr<GLSLShader>, 2> guiShader_;
     };
 }
-
-#endif

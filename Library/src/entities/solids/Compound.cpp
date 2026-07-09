@@ -98,22 +98,21 @@ SolidType Compound::getSolidType()
     return SolidType::COMPOUND;
 }
 
-std::vector<Vector3>* Compound::getMeshVertices() const
+std::vector<Vector3> Compound::getMeshVertices() const
 {
-    std::vector<Vector3>* pVert = new std::vector<Vector3>(0);
+    std::vector<Vector3> pVert;
         
     for(size_t i=0; i<parts_.size(); ++i)
     {
         if(parts_[i].isExternal)
         {
-            std::vector<Vector3>* pPartVert = parts_[i].solid->getMeshVertices();
+            std::vector<Vector3> pPartVert = parts_[i].solid->getMeshVertices();
             Transform phyMeshTrans = parts_[i].origin * parts_[i].solid->getO2GTransform();
-            for(size_t h=0; h < pPartVert->size(); ++h)
+            for(size_t h=0; h < pPartVert.size(); ++h)
             {
-                Vector3 v = phyMeshTrans * pPartVert->at(h);
-                pVert->push_back(v);
-            }    
-            delete pPartVert;
+                Vector3 v = phyMeshTrans * pPartVert[h];
+                pVert.push_back(v);
+            }
         }
     }
         

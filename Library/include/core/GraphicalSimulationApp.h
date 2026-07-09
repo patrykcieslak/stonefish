@@ -25,15 +25,15 @@
 
 #pragma once
 
-#include "graphics/OpenGLDataStructs.h"
-#include <SDL2/SDL.h>
 #include "core/SimulationApp.h"
+#include <SDL2/SDL.h>
+#include "graphics/OpenGLDataStructs.h"
+#include "graphics/OpenGLConsole.h"
+#include "graphics/IMGUI.h"
+#include "graphics/OpenGLPipeline.h"
 
 namespace sf
 {
-    class OpenGLConsole;
-    class IMGUI;
-    class OpenGLPipeline;
     class Entity;
     class MovingEntity;
     class OpenGLTrackball;
@@ -50,7 +50,7 @@ namespace sf
          \param h a structure containing the helper objects display settings
          \param sim a pointer to the simulation manager
          */
-        GraphicalSimulationApp(std::string title, std::string dataDirPath, RenderSettings s, HelperSettings h, std::unique_ptr<SimulationManager> sim);
+        GraphicalSimulationApp(const std::string& title, const std::string& dataDirPath, RenderSettings s, HelperSettings h, std::unique_ptr<SimulationManager> sim);
 
         //! A destructor.
         virtual ~GraphicalSimulationApp() = default;

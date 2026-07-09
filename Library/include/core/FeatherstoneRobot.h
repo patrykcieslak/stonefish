@@ -40,7 +40,7 @@ namespace sf
          \param uniqueName a name for the robot
          \param fixedBase is the robot fixed to the world?
          */
-        FeatherstoneRobot(std::string uniqueName, bool fixedBase = false);
+        FeatherstoneRobot(const std::string& uniqueName, bool fixedBase = false);
         
         //! A method used to define a list of rigid bodies constituting the mechanical part of the robot (dynamic tree).
         /*!

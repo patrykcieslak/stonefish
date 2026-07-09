@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 20/06/20.
-//  Copyright (c) 2020-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLSSS.h"
@@ -164,7 +164,7 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
     std::string header = "#version 430\n#define N_HALF_BINS " + std::to_string(viewportWidth_/2)
                          + "\n#define N_HORI_BEAM_SAMPLES " + std::to_string(nBeamSamples_.y)
                          + "\n#define N_VERT_BEAM_SAMPLES " + std::to_string(nBeamSamples_.x) + "\n"; ; 
-    sonarOutputShader_[0] = new GLSLShader({GLSLSource(GL_COMPUTE_SHADER, "sssOutput.comp", header)});
+    sonarOutputShader_[0] = std::make_unique<GLSLShader>(std::vector<GLSLSource>({GLSLSource(GL_COMPUTE_SHADER, "sssOutput.comp", header)}));
     sonarOutputShader_[0]->AddUniform("sonarInput", ParameterType::INT);
     sonarOutputShader_[0]->AddUniform("sonarHist", ParameterType::INT);
     sonarOutputShader_[0]->AddUniform("range", ParameterType::VEC3);
@@ -191,7 +191,7 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
             shaderFilename = "sssLineF32.comp";
             break;
     }
-    sonarOutputShader_[1] = new GLSLShader({GLSLSource(GL_COMPUTE_SHADER, shaderFilename, header)});
+    sonarOutputShader_[1] = std::make_unique<GLSLShader>(std::vector<GLSLSource>({GLSLSource(GL_COMPUTE_SHADER, shaderFilename, header)}));
     sonarOutputShader_[1]->AddUniform("sonarHist", ParameterType::INT);
     sonarOutputShader_[1]->AddUniform("sonarOutput", ParameterType::INT);
     sonarOutputShader_[1]->AddUniform("noiseSeed", ParameterType::VEC3);
@@ -222,7 +222,7 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
             shaderFilename = "sssShiftF32.comp";
             break;
     }
-    sonarShiftShader_ = new GLSLShader({GLSLSource(GL_COMPUTE_SHADER, shaderFilename)});
+    sonarShiftShader_ = std::make_unique<GLSLShader>(std::vector<GLSLSource>({GLSLSource(GL_COMPUTE_SHADER, shaderFilename)}));
     sonarShiftShader_->AddUniform("sonarOutputIn", ParameterType::INT);
     sonarShiftShader_->AddUniform("sonarOutputOut", ParameterType::INT);
     sonarShiftShader_->Use();
@@ -233,9 +233,6 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
 
 OpenGLSSS::~OpenGLSSS()
 {
-    delete sonarOutputShader_[0];
-    delete sonarOutputShader_[1];
-    delete sonarShiftShader_;
     glDeleteTextures(3, outputTex_);
 }
 
@@ -363,7 +360,7 @@ void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
             glm::mat4 M = objects[h].model;
             Material mat = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(objects[h].materialName);
             bool normalMapping = obj.texturable && (look.normalMap > 0);
-            shader = normalMapping ? sonarInputShader_[1] : sonarInputShader_[0];
+            shader = normalMapping ? sonarInputShader_[1].get() : sonarInputShader_[0].get();
             shader->Use();
             shader->SetUniform("MVP", VP * M);
             shader->SetUniform("M", M);

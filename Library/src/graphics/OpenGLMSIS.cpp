@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/07/20.
-//  Copyright (c) 2020-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLMSIS.h"
@@ -159,7 +159,7 @@ OpenGLMSIS::OpenGLMSIS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 son
                          + "\n#define N_HORI_BEAM_SAMPLES " + std::to_string(nBeamSamples_.x) + "\n"; 
     std::vector<GLSLSource> sources;
     sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "msisOutput.comp", header));
-    sonarOutputShader_ = new GLSLShader(sources);
+    sonarOutputShader_ = std::make_unique<GLSLShader>(sources);
     sonarOutputShader_->AddUniform("sonarInput", ParameterType::INT);
     sonarOutputShader_->AddUniform("sonarHist", ParameterType::INT);
     sonarOutputShader_->AddUniform("range", ParameterType::VEC3);
@@ -187,7 +187,7 @@ OpenGLMSIS::OpenGLMSIS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 son
             shaderFilename = "msisUpdateF32.comp";
             break;
     }
-    sonarUpdateShader_ = new GLSLShader({GLSLSource(GL_COMPUTE_SHADER, shaderFilename)});
+    sonarUpdateShader_ = std::make_unique<GLSLShader>(std::vector<GLSLSource>({GLSLSource(GL_COMPUTE_SHADER, shaderFilename)}));
     sonarUpdateShader_->AddUniform("sonarHist", ParameterType::INT);
     sonarUpdateShader_->AddUniform("sonarOutput", ParameterType::INT);
     sonarUpdateShader_->AddUniform("rotationStep", ParameterType::UINT);
@@ -202,8 +202,6 @@ OpenGLMSIS::OpenGLMSIS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 son
 
 OpenGLMSIS::~OpenGLMSIS()
 {
-    delete sonarOutputShader_;
-    delete sonarUpdateShader_;
     glDeleteTextures(2, outputTex_);
 }
 
@@ -365,7 +363,7 @@ void OpenGLMSIS::ComputeOutput(std::vector<Renderable>& objects)
         glm::mat4 M = objects[i].model;
         Material mat = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(objects[i].materialName);
         bool normalMapping = obj.texturable && (look.normalMap > 0);
-        shader = normalMapping ? sonarInputShader_[1] : sonarInputShader_[0];
+        shader = normalMapping ? sonarInputShader_[1].get() : sonarInputShader_[0].get();
         shader->Use();
         shader->SetUniform("MVP", VP * M);
         shader->SetUniform("M", M);

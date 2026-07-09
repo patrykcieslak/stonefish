@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/05/18.
-//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLDepthCamera.h"
@@ -36,8 +36,8 @@
 namespace sf
 {
 
-GLSLShader** OpenGLDepthCamera::depthCameraOutputShader = nullptr;
-GLSLShader* OpenGLDepthCamera::depthVisualizeShader = nullptr;
+std::array<std::unique_ptr<GLSLShader>, 2> OpenGLDepthCamera::depthCameraOutputShader;
+std::unique_ptr<GLSLShader> OpenGLDepthCamera::depthVisualizeShader;
 
 OpenGLDepthCamera::OpenGLDepthCamera(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 cameraUp,
                                      GLint originX, GLint originY, GLint width, GLint height,
@@ -356,32 +356,27 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO, bool updated)
 ///////////////////////// Static /////////////////////////////
 void OpenGLDepthCamera::Init()
 {
-    depthCameraOutputShader = new GLSLShader*[2];
-    depthCameraOutputShader[0] = new GLSLShader("depthCameraOutput.frag");
+    depthCameraOutputShader[0] = std::make_unique<GLSLShader>("depthCameraOutput.frag");
     depthCameraOutputShader[0]->AddUniform("rangeInfo", ParameterType::VEC4);
     depthCameraOutputShader[0]->AddUniform("texDepth", ParameterType::INT);
     depthCameraOutputShader[0]->AddUniform("noiseSeed", ParameterType::VEC3);
     depthCameraOutputShader[0]->AddUniform("noiseStddev", ParameterType::FLOAT);
     
-    depthCameraOutputShader[1] = new GLSLShader("depthCameraOutput2.frag");
+    depthCameraOutputShader[1] = std::make_unique<GLSLShader>("depthCameraOutput2.frag");
     depthCameraOutputShader[1]->AddUniform("projInfo", ParameterType::VEC4);
     depthCameraOutputShader[1]->AddUniform("rangeInfo", ParameterType::VEC4);
     depthCameraOutputShader[1]->AddUniform("texDepth", ParameterType::INT);
     
-    depthVisualizeShader = new GLSLShader("depthVisualize.frag");
+    depthVisualizeShader = std::make_unique<GLSLShader>("depthVisualize.frag");
     depthVisualizeShader->AddUniform("range", ParameterType::VEC2);
     depthVisualizeShader->AddUniform("texLinearDepth", ParameterType::INT);
 }
 
 void OpenGLDepthCamera::Destroy()
 {
-    if(depthCameraOutputShader != nullptr) 
-    {
-        if(depthCameraOutputShader[0] != nullptr) delete depthCameraOutputShader[0];
-        if(depthCameraOutputShader[1] != nullptr) delete depthCameraOutputShader[1];
-        delete [] depthCameraOutputShader;
-    }
-    if(depthVisualizeShader != nullptr) delete depthVisualizeShader;
+    depthCameraOutputShader[0].reset();
+    depthCameraOutputShader[1].reset();
+    depthVisualizeShader.reset();
 }
 
 }

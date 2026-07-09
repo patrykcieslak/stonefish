@@ -72,7 +72,7 @@ void CableTestManager::BuildScenario()
 
     EnableOcean();
     getOcean()->setWaterType(0.2);
-    getOcean()->AddVelocityField(new sf::Uniform(sf::Vector3(0.0,0.0,0.0)));
+    getOcean()->AddVelocityField(std::make_unique<sf::Uniform>(sf::Vector3(0.0,0.0,0.0)));
     getOcean()->EnableCurrents();
     
     ////////OBJECTS

@@ -23,10 +23,10 @@
 //  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLCamera__
-#define __Stonefish_OpenGLCamera__
+#pragma once
 
 #include "graphics/OpenGLView.h"
+#include <unordered_map>
 
 #define SCENE_ATTACHMENT        GL_COLOR_ATTACHMENT1
 #define FINAL_ATTACHMENT        GL_COLOR_ATTACHMENT0
@@ -302,18 +302,6 @@ namespace sf
         glm::mat4 projection_;
         
         //Shaders
-        static GLSLShader** tonemappingShaders;
-        static GLSLShader* depthLinearizeShader;
-        static GLSLShader* aoDeinterleaveShader;
-        static GLSLShader* aoCalcShader;
-        static GLSLShader* aoReinterleaveShader;
-        static GLSLShader** aoBlurShader;		  //Two shaders -> first and second pass
-        static GLSLShader* ssrShader;
-        static GLSLShader* fxaaShader;
-        static GLSLShader* flipShader;
-        static GLSLShader* ssrBlur;
-        static GLSLShader* bloomBlur;
+        static std::unordered_map<std::string, std::unique_ptr<GLSLShader>> shaders;
     };
 }
-
-#endif

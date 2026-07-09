@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 22/07/2017.
-//  Copyright (c) 2017-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLAtmosphere.h"
@@ -62,8 +62,6 @@ OpenGLAtmosphere::OpenGLAtmosphere(const std::string& modelFilename, RenderQuali
     sunSkyUBO_ = 0;
     sunDirection_ = glm::vec3(0,0,1.f);
     sunModelView_ = glm::mat4x4(0);
-    sunShadowFrustum_ = nullptr;
-    sunShadowCPM_ = nullptr;
     
     //Set shadow quality
     switch(shadow)
@@ -111,7 +109,7 @@ OpenGLAtmosphere::OpenGLAtmosphere(const std::string& modelFilename, RenderQuali
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "atmSkySun.frag"));
     
     //Sky rendering
-    skySunShaders_[0] = new GLSLShader(sources, compiledShaders);
+    skySunShaders_[0] = std::make_unique<GLSLShader>(sources, compiledShaders);
     skySunShaders_[0]->AddUniform("transmittance_texture", ParameterType::INT);
     skySunShaders_[0]->AddUniform("scattering_texture", ParameterType::INT);
     skySunShaders_[0]->AddUniform("single_mie_scattering_texture", ParameterType::INT);
@@ -126,7 +124,7 @@ OpenGLAtmosphere::OpenGLAtmosphere(const std::string& modelFilename, RenderQuali
 
     sources.pop_back();
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "atmSkySunTemp.frag"));
-    skySunShaders_[1] = new GLSLShader(sources, compiledShaders);
+    skySunShaders_[1] = std::make_unique<GLSLShader>(sources, compiledShaders);
     skySunShaders_[1]->AddUniform("transmittance_texture", ParameterType::INT);
     skySunShaders_[1]->AddUniform("scattering_texture", ParameterType::INT);
     skySunShaders_[1]->AddUniform("single_mie_scattering_texture", ParameterType::INT);
@@ -142,8 +140,8 @@ OpenGLAtmosphere::OpenGLAtmosphere(const std::string& modelFilename, RenderQuali
     skySunShaders_[1]->AddUniform("airTemperature", ParameterType::FLOAT);
 
     //Initialize shadows
-    sunShadowFrustum_ = new ViewFrustum[sunShadowmapSplits_];
-    sunShadowCPM_ = new glm::mat4x4[sunShadowmapSplits_];
+    sunShadowFrustum_.resize(sunShadowmapSplits_);
+    sunShadowCPM_.resize(sunShadowmapSplits_);
 
     //Create sun & sky UBO
     glGenBuffers(1, &sunSkyUBO_);
@@ -154,7 +152,7 @@ OpenGLAtmosphere::OpenGLAtmosphere(const std::string& modelFilename, RenderQuali
 
     if(shadow > RenderQuality::DISABLED)
     {
-        sunShadowmapShader_ = new GLSLShader("sunCSM.frag");
+        sunShadowmapShader_ = std::make_unique<GLSLShader>("sunCSM.frag");
         sunShadowmapShader_->AddUniform("shadowmapArray", ParameterType::INT);
         sunShadowmapShader_->AddUniform("shadowmapLayer", ParameterType::FLOAT);
         
@@ -206,14 +204,10 @@ OpenGLAtmosphere::~OpenGLAtmosphere()
     for(unsigned short i=0; i< AtmosphereTextures::TEXTURE_COUNT; ++i)
         if(textures_[i] != 0) glDeleteTextures(1, &textures_[i]);
 
-    if(skySunShaders_[0] != nullptr) delete skySunShaders_[0];
-    if(skySunShaders_[1] != nullptr) delete skySunShaders_[1];
     //if(atmosphereAPI > 0) glDeleteShader(atmosphereAPI);
 
     if(sunShadowmapArray_ != 0) glDeleteTextures(1, &sunShadowmapArray_);
 
-    delete [] sunShadowFrustum_;
-    delete [] sunShadowCPM_;
     glDeleteBuffers(1, &sunSkyUBO_);
 
     if(sunShadowmapSize_ > 0)
@@ -221,7 +215,6 @@ OpenGLAtmosphere::~OpenGLAtmosphere()
         glDeleteSamplers(1, &sunDepthSampler_);
         glDeleteSamplers(1, &sunShadowSampler_);
         glDeleteFramebuffers(1, &sunShadowFBO_);
-        delete sunShadowmapShader_;
     }
 }
 
@@ -397,9 +390,8 @@ void OpenGLAtmosphere::BakeShadowmaps(OpenGLPipeline* pipe, OpenGLView* view)
     for(unsigned int i = 0; i < sunShadowmapSplits_; ++i)
     {
         sunShadowFrustum_[i].fov = view->GetFOVY() + 0.2f; //avoid artifacts in the borders
-        GLint* viewport = view->GetViewport();
+        std::vector<GLint> viewport = view->GetViewport();
         sunShadowFrustum_[i].ratio = (GLfloat)viewport[2]/(GLfloat)viewport[3];
-        delete [] viewport;
     }
 
     //Compute the z-distances for each split as seen in camera space

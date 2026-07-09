@@ -39,7 +39,7 @@
 namespace sf
 {
 
-GeneralRobot::GeneralRobot(std::string uniqueName, bool fixedBase) : Robot(uniqueName, fixedBase)
+GeneralRobot::GeneralRobot(const std::string& uniqueName, bool fixedBase) : Robot(uniqueName, fixedBase)
 {
 }
 
@@ -174,6 +174,7 @@ void GeneralRobot::AddToSimulation(SimulationManager* sm, const Transform& origi
         }
     }
 
+    // Memory managed by simulation manager, robot only keeps raw pointers
     for(size_t i = 0; i < joints_.size(); ++i)
         sm->AddJoint(std::unique_ptr<Joint>(joints_[i]));
 

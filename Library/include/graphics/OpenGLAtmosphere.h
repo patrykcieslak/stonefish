@@ -23,8 +23,7 @@
 //  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLAtmosphere__
-#define __Stonefish_OpenGLAtmosphere__
+#pragma once
 
 #include <functional>
 #include "graphics/OpenGLDataStructs.h"
@@ -182,11 +181,11 @@ namespace sf
         GLuint sunShadowmapSplits_;
         GLuint sunShadowmapSize_;
         glm::vec3 sunDirection_;
-        glm::mat4x4* sunShadowCPM_;
+        std::vector<glm::mat4x4> sunShadowCPM_;
+        std::vector<ViewFrustum> sunShadowFrustum_;
         glm::mat4x4 sunModelView_;
-        ViewFrustum* sunShadowFrustum_;
         GLuint sunShadowFBO_;
-		GLSLShader* sunShadowmapShader_; //debug draw shadowmap
+		std::unique_ptr<GLSLShader> sunShadowmapShader_; //debug draw shadowmap
         
         //Rendering
         GLfloat sunAzimuth_;
@@ -194,10 +193,8 @@ namespace sf
         GLfloat airTemperature_;
         GLfloat airHumidity_;
 
-        GLSLShader* skySunShaders_[2];
+        std::array<std::unique_ptr<GLSLShader>, 2> skySunShaders_;
         GLuint textures_[AtmosphereTextures::TEXTURE_COUNT];
         static GLuint atmosphereAPI;
     };
 }
-
-#endif

@@ -23,8 +23,7 @@
 //  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLRealCamera__
-#define __Stonefish_OpenGLRealCamera__
+#pragma once
 
 #include "graphics/OpenGLCamera.h"
 
@@ -122,4 +121,3 @@ namespace sf
     };
 }
 
-#endif

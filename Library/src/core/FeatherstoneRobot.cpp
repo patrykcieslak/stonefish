@@ -40,7 +40,7 @@
 namespace sf
 {
 
-FeatherstoneRobot::FeatherstoneRobot(std::string uniqueName, bool fixedBase) : Robot(uniqueName, fixedBase)
+FeatherstoneRobot::FeatherstoneRobot(const std::string& uniqueName, bool fixedBase) : Robot(uniqueName, fixedBase)
 {
     dynamics_ = nullptr;
 }
@@ -97,6 +97,7 @@ void FeatherstoneRobot::DefineLinks(std::unique_ptr<SolidEntity> baseLink, std::
     links_.push_back(baseLink.get()); // Save pointer to base link
     detachedLinks_ = std::move(otherLinks);
 
+    // This is later encapsulated in a unique_ptr
     dynamics_ = new FeatherstoneEntity(name_ + "_Dynamics", (unsigned short)detachedLinks_.size() + 1, std::move(baseLink), fixed_);
     dynamics_->setSelfCollision(selfCollision);
 }

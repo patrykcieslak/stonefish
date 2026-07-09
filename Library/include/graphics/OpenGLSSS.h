@@ -20,14 +20,14 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 20/06/20.
-//  Copyright (c) 2020-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLSSS__
-#define __Stonefish_OpenGLSSS__
+#pragma once
 
 #include "graphics/OpenGLSonar.h"
 #include <random>
+#include <array>
 
 namespace sf
 {
@@ -97,9 +97,7 @@ namespace sf
         //OpenGL
         GLuint outputTex_[3];
         GLint pingpong_;
-        GLSLShader* sonarOutputShader_[2];
-        GLSLShader* sonarShiftShader_;
+        std::array<std::unique_ptr<GLSLShader>, 2> sonarOutputShader_;
+        std::unique_ptr<GLSLShader> sonarShiftShader_;
     };
 }
-
-#endif

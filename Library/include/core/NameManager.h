@@ -44,13 +44,13 @@ namespace sf
          \param proposedName a name proposed by the user
          \return a unique name
          */
-        std::string AddName(std::string proposedName);
+        std::string AddName(const std::string& proposedName);
         
         //! A method used to remove names from the pool.
         /*!
          \param name a name to remove
          */
-        void RemoveName(std::string name);
+        void RemoveName(const std::string& name);
         
         //! A method used to clear the pool of names.
         void ClearNames();

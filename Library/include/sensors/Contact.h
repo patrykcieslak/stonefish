@@ -60,6 +60,16 @@ namespace sf
     {
         Scalar totalAppliedImpulse;
         Vector3 slip;
+
+        ContactInfo()
+        {
+            printf("Created\n");
+        }
+
+        ~ContactInfo()
+        {
+            printf("Destroyed\n");
+        }
     };
     
     struct Renderable;

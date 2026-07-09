@@ -62,7 +62,6 @@ OpenGLContent::OpenGLContent()
     csBuf_[1] = 0;
     cylinder_.vao = 0;
     ellipsoid_.vao = 0;
-    lightSourceShader_[0] = lightSourceShader_[1] = nullptr;
     eyePos_ = glm::vec3();
     viewDir_ = glm::vec3(1.f,0,0);
     viewProjection_ = glm::mat4();
@@ -197,37 +196,37 @@ OpenGLContent::OpenGLContent()
     
     //Load shaders
     //-----BASIC-----
-    basicShaders_["helper"] = new GLSLShader("helpers.frag","helpers.vert");
+    basicShaders_["helper"] = std::make_unique<GLSLShader>("helpers.frag","helpers.vert");
     basicShaders_["helper"]->AddUniform("MVP", ParameterType::MAT4);
     basicShaders_["helper"]->AddUniform("scale", ParameterType::VEC3);
     
-    basicShaders_["tex_saq"] = new GLSLShader("texQuad.frag");
+    basicShaders_["tex_saq"] = std::make_unique<GLSLShader>("texQuad.frag");
     basicShaders_["tex_saq"]->AddUniform("tex", ParameterType::INT);
     basicShaders_["tex_saq"]->AddUniform("color", ParameterType::VEC4);
     
-    basicShaders_["tex_quad"] = new GLSLShader("texQuad.frag","texQuad.vert");
+    basicShaders_["tex_quad"] = std::make_unique<GLSLShader>("texQuad.frag","texQuad.vert");
     basicShaders_["tex_quad"]->AddUniform("rect", ParameterType::VEC4);
     basicShaders_["tex_quad"]->AddUniform("tex", ParameterType::INT);
     basicShaders_["tex_quad"]->AddUniform("color", ParameterType::VEC4);
     
-    basicShaders_["tex_layer_quad"] = new GLSLShader("texLayerQuad.frag", "texQuad.vert");
+    basicShaders_["tex_layer_quad"] = std::make_unique<GLSLShader>("texLayerQuad.frag", "texQuad.vert");
     basicShaders_["tex_layer_quad"]->AddUniform("rect", ParameterType::VEC4);
     basicShaders_["tex_layer_quad"]->AddUniform("tex", ParameterType::INT);
     basicShaders_["tex_layer_quad"]->AddUniform("layer", ParameterType::INT);
     
-    basicShaders_["tex_level_quad"] = new GLSLShader("texLevelQuad.frag", "texQuad.vert");
+    basicShaders_["tex_level_quad"] = std::make_unique<GLSLShader>("texLevelQuad.frag", "texQuad.vert");
     basicShaders_["tex_level_quad"]->AddUniform("rect", ParameterType::VEC4);
     basicShaders_["tex_level_quad"]->AddUniform("tex", ParameterType::INT);
     basicShaders_["tex_level_quad"]->AddUniform("level", ParameterType::INT);
     
-    basicShaders_["tex_cube"] = new GLSLShader("texCube.frag", "texCube.vert");
+    basicShaders_["tex_cube"] = std::make_unique<GLSLShader>("texCube.frag", "texCube.vert");
     basicShaders_["tex_cube"]->AddUniform("tex", ParameterType::INT);
     
-    basicShaders_["flat"] = new GLSLShader("flat.frag", "flat.vert");
+    basicShaders_["flat"] = std::make_unique<GLSLShader>("flat.frag", "flat.vert");
     basicShaders_["flat"]->AddUniform("MVP", ParameterType::MAT4);
     basicShaders_["flat"]->AddUniform("FC", ParameterType::FLOAT);
 
-    basicShaders_["shadow"] = new GLSLShader("shadow.frag", "shadow.vert");
+    basicShaders_["shadow"] = std::make_unique<GLSLShader>("shadow.frag", "shadow.vert");
     basicShaders_["shadow"]->AddUniform("MVP", ParameterType::MAT4);
     
     //-----MATERIALS-----
@@ -269,24 +268,24 @@ OpenGLContent::OpenGLContent()
         // Plain shaders
         precompiled.push_back(materialVertex);
         precompiled.push_back(materialFragment);
-        ms.shaders["plain"] = new GLSLShader(precompiled);
+        ms.shaders["plain"] = std::make_unique<GLSLShader>(precompiled);
         
         precompiled.pop_back();
         precompiled.push_back(materialTFragment);
-        ms.shaders["plain_temperature"] = new GLSLShader(precompiled);
+        ms.shaders["plain_temperature"] = std::make_unique<GLSLShader>(precompiled);
         ms.shaders["plain_temperature"]->AddUniform("temperature", ParameterType::FLOAT);
         
         precompiled.pop_back();
         precompiled.push_back(materialUFragment);
         precompiled.push_back(oceanOpticsFragment);
         precompiled.push_back(oceanFlatFragment);
-        ms.shaders["plain_underwater"] = new GLSLShader(precompiled);
+        ms.shaders["plain_underwater"] = std::make_unique<GLSLShader>(precompiled);
         ms.shaders["plain_underwater"]->AddUniform("cWater", ParameterType::VEC3);
         ms.shaders["plain_underwater"]->AddUniform("bWater", ParameterType::VEC3);
         
         precompiled.pop_back();
         precompiled.push_back(oceanWavesFragment);
-        ms.shaders["plain_underwater_waves"] = new GLSLShader(precompiled);
+        ms.shaders["plain_underwater_waves"] = std::make_unique<GLSLShader>(precompiled);
         ms.shaders["plain_underwater_waves"]->AddUniform("cWater", ParameterType::VEC3);
         ms.shaders["plain_underwater_waves"]->AddUniform("bWater", ParameterType::VEC3);
         ms.shaders["plain_underwater_waves"]->AddUniform("texWaveFFT", ParameterType::INT);
@@ -298,7 +297,7 @@ OpenGLContent::OpenGLContent()
         precompiled.push_back(shadingFragment);
         precompiled.push_back(materialUvVertex);
         precompiled.push_back(materialUvFragment);
-        ms.shaders["textured"] = new GLSLShader(precompiled);
+        ms.shaders["textured"] = std::make_unique<GLSLShader>(precompiled);
         ms.shaders["textured"]->AddUniform("texAlbedo", ParameterType::INT);
         ms.shaders["textured"]->AddUniform("texNormal", ParameterType::INT);
         ms.shaders["textured"]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
@@ -306,7 +305,7 @@ OpenGLContent::OpenGLContent()
         
         precompiled.pop_back();
         precompiled.push_back(materialTUvFragment);
-        ms.shaders["textured_temperature"] = new GLSLShader(precompiled);
+        ms.shaders["textured_temperature"] = std::make_unique<GLSLShader>(precompiled);
         ms.shaders["textured_temperature"]->AddUniform("texAlbedo", ParameterType::INT);
         ms.shaders["textured_temperature"]->AddUniform("texNormal", ParameterType::INT);
         ms.shaders["textured_temperature"]->AddUniform("texTemperature", ParameterType::INT);
@@ -319,7 +318,7 @@ OpenGLContent::OpenGLContent()
         precompiled.push_back(materialUUvFragment);
         precompiled.push_back(oceanOpticsFragment);
         precompiled.push_back(oceanFlatFragment);
-        ms.shaders["textured_underwater"] = new GLSLShader(precompiled);
+        ms.shaders["textured_underwater"] = std::make_unique<GLSLShader>(precompiled);
         ms.shaders["textured_underwater"]->AddUniform("texAlbedo", ParameterType::INT);
         ms.shaders["textured_underwater"]->AddUniform("texNormal", ParameterType::INT);
         ms.shaders["textured_underwater"]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
@@ -329,7 +328,7 @@ OpenGLContent::OpenGLContent()
         
         precompiled.pop_back();
         precompiled.push_back(oceanWavesFragment);
-        ms.shaders["textured_underwater_waves"] = new GLSLShader(precompiled);
+        ms.shaders["textured_underwater_waves"] = std::make_unique<GLSLShader>(precompiled);
         ms.shaders["textured_underwater_waves"]->AddUniform("texAlbedo", ParameterType::INT);
         ms.shaders["textured_underwater_waves"]->AddUniform("texNormal", ParameterType::INT);
         ms.shaders["textured_underwater_waves"]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
@@ -346,7 +345,7 @@ OpenGLContent::OpenGLContent()
         precompiled.push_back(cableVertex);
         precompiled.push_back(cableGeometry);
         precompiled.push_back(materialUvFragment);
-        ms.shaders["cable_textured"] = new GLSLShader(precompiled);
+        ms.shaders["cable_textured"] = std::make_unique<GLSLShader>(precompiled);
         ms.shaders["cable_textured"]->AddUniform("texAlbedo", ParameterType::INT);
         ms.shaders["cable_textured"]->AddUniform("texNormal", ParameterType::INT);
         ms.shaders["cable_textured"]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
@@ -357,7 +356,7 @@ OpenGLContent::OpenGLContent()
         precompiled.push_back(materialUUvFragment);
         precompiled.push_back(oceanOpticsFragment);
         precompiled.push_back(oceanFlatFragment);
-        ms.shaders["cable_textured_underwater"] = new GLSLShader(precompiled);
+        ms.shaders["cable_textured_underwater"] = std::make_unique<GLSLShader>(precompiled);
         ms.shaders["cable_textured_underwater"]->AddUniform("texAlbedo", ParameterType::INT);
         ms.shaders["cable_textured_underwater"]->AddUniform("texNormal", ParameterType::INT);
         ms.shaders["cable_textured_underwater"]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
@@ -368,7 +367,7 @@ OpenGLContent::OpenGLContent()
 
         precompiled.pop_back();
         precompiled.push_back(oceanWavesFragment);
-        ms.shaders["cable_textured_underwater_waves"] = new GLSLShader(precompiled);
+        ms.shaders["cable_textured_underwater_waves"] = std::make_unique<GLSLShader>(precompiled);
         ms.shaders["cable_textured_underwater_waves"]->AddUniform("texAlbedo", ParameterType::INT);
         ms.shaders["cable_textured_underwater_waves"]->AddUniform("texNormal", ParameterType::INT);
         ms.shaders["cable_textured_underwater_waves"]->AddUniform("enableAlbedoTex", ParameterType::BOOLEAN);
@@ -476,7 +475,7 @@ OpenGLContent::OpenGLContent()
     std::vector<GLSLSource> sources;
     sources.push_back(GLSLSource(GL_VERTEX_SHADER, "material.vert"));
     sources.push_back(GLSLSource(GL_FRAGMENT_SHADER, "light.frag"));
-    lightSourceShader_[0] = new GLSLShader(sources, commonLightShaders);
+    basicShaders_["light_source0"] = std::make_unique<GLSLShader>(sources, commonLightShaders);
 
     //Under surface
     commonLightShaders.pop_back();
@@ -486,47 +485,44 @@ OpenGLContent::OpenGLContent()
     lightSourceFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lightSourceU.frag", "", &compiled);
 	commonLightShaders.push_back(lightSourceFragment);
 	
-    lightSourceShader_[1] = new GLSLShader(sources, commonLightShaders);
-    lightSourceShader_[1]->AddUniform("cWater", ParameterType::VEC3);
-    lightSourceShader_[1]->AddUniform("bWater", ParameterType::VEC3);
+    basicShaders_["light_source1"] = std::make_unique<GLSLShader>(sources, commonLightShaders);
+    basicShaders_["light_source1"]->AddUniform("cWater", ParameterType::VEC3);
+    basicShaders_["light_source1"]->AddUniform("bWater", ParameterType::VEC3);
     
     //Add common uniforms
-    for(size_t i=0; i<2; ++i)
+    std::array<std::string, 2> lightSourceShaders = {"light_source0", "light_source1"};
+    for(size_t i=0; i<lightSourceShaders.size(); ++i)
     {
-        lightSourceShader_[i]->AddUniform("MVP", ParameterType::MAT4);
-        lightSourceShader_[i]->AddUniform("M", ParameterType::MAT4);
-        lightSourceShader_[i]->AddUniform("N", ParameterType::MAT3);
-        lightSourceShader_[i]->AddUniform("MV", ParameterType::MAT3);
-        lightSourceShader_[i]->AddUniform("FC", ParameterType::FLOAT);
-        lightSourceShader_[i]->AddUniform("eyePos", ParameterType::VEC3);
-        lightSourceShader_[i]->AddUniform("viewDir", ParameterType::VEC3);
-        lightSourceShader_[i]->AddUniform("color", ParameterType::VEC3);
-        lightSourceShader_[i]->AddUniform("lightId", ParameterType::IVEC2);
-        lightSourceShader_[i]->AddUniform("spotLightsDepthMap", ParameterType::INT);
-        lightSourceShader_[i]->AddUniform("spotLightsShadowMap", ParameterType::INT);
-        lightSourceShader_[i]->AddUniform("sunShadowMap", ParameterType::INT);
-        lightSourceShader_[i]->AddUniform("sunDepthMap", ParameterType::INT);
-        lightSourceShader_[i]->AddUniform("transmittance_texture", ParameterType::INT);
-        lightSourceShader_[i]->AddUniform("scattering_texture", ParameterType::INT);
-        lightSourceShader_[i]->AddUniform("irradiance_texture", ParameterType::INT);
-        lightSourceShader_[i]->BindUniformBlock("SunSky", UBO_SUNSKY);
-        lightSourceShader_[i]->BindUniformBlock("Lights", UBO_LIGHTS);
-    }
+        basicShaders_[lightSourceShaders[i]]->AddUniform("MVP", ParameterType::MAT4);
+        basicShaders_[lightSourceShaders[i]]->AddUniform("M", ParameterType::MAT4);
+        basicShaders_[lightSourceShaders[i]]->AddUniform("N", ParameterType::MAT3);
+        basicShaders_[lightSourceShaders[i]]->AddUniform("MV", ParameterType::MAT3);
+        basicShaders_[lightSourceShaders[i]]->AddUniform("FC", ParameterType::FLOAT);
+        basicShaders_[lightSourceShaders[i]]->AddUniform("eyePos", ParameterType::VEC3);
+        basicShaders_[lightSourceShaders[i]]->AddUniform("viewDir", ParameterType::VEC3);
+        basicShaders_[lightSourceShaders[i]]->AddUniform("color", ParameterType::VEC3);
+        basicShaders_[lightSourceShaders[i]]->AddUniform("lightId", ParameterType::IVEC2);
+        basicShaders_[lightSourceShaders[i]]->AddUniform("spotLightsDepthMap", ParameterType::INT);
+        basicShaders_[lightSourceShaders[i]]->AddUniform("spotLightsShadowMap", ParameterType::INT);
+        basicShaders_[lightSourceShaders[i]]->AddUniform("sunShadowMap", ParameterType::INT);
+        basicShaders_[lightSourceShaders[i]]->AddUniform("sunDepthMap", ParameterType::INT);
+        basicShaders_[lightSourceShaders[i]]->AddUniform("transmittance_texture", ParameterType::INT);
+        basicShaders_[lightSourceShaders[i]]->AddUniform("scattering_texture", ParameterType::INT);
+        basicShaders_[lightSourceShaders[i]]->AddUniform("irradiance_texture", ParameterType::INT);
+        basicShaders_[lightSourceShaders[i]]->BindUniformBlock("SunSky", UBO_SUNSKY);
+        basicShaders_[lightSourceShaders[i]]->BindUniformBlock("Lights", UBO_LIGHTS);
 
-    //Set permanent texture units
-    for(size_t i=0; i<2; ++i)
-    {
-        lightSourceShader_[i]->Use();
-        lightSourceShader_[i]->SetUniform("spotLightsShadowMap", TEX_SPOT_SHADOW);
-        lightSourceShader_[i]->SetUniform("spotLightsDepthMap", TEX_SPOT_DEPTH);
-        lightSourceShader_[i]->SetUniform("sunDepthMap", TEX_SUN_DEPTH);
-        lightSourceShader_[i]->SetUniform("sunShadowMap", TEX_SUN_SHADOW);
-        lightSourceShader_[i]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
-        lightSourceShader_[i]->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
-        lightSourceShader_[i]->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
+        // Set permanent texture units
+        basicShaders_[lightSourceShaders[i]]->Use();
+        basicShaders_[lightSourceShaders[i]]->SetUniform("spotLightsShadowMap", TEX_SPOT_SHADOW);
+        basicShaders_[lightSourceShaders[i]]->SetUniform("spotLightsDepthMap", TEX_SPOT_DEPTH);
+        basicShaders_[lightSourceShaders[i]]->SetUniform("sunDepthMap", TEX_SUN_DEPTH);
+        basicShaders_[lightSourceShaders[i]]->SetUniform("sunShadowMap", TEX_SUN_SHADOW);
+        basicShaders_[lightSourceShaders[i]]->SetUniform("transmittance_texture", TEX_ATM_TRANSMITTANCE);
+        basicShaders_[lightSourceShaders[i]]->SetUniform("scattering_texture", TEX_ATM_SCATTERING);
+        basicShaders_[lightSourceShaders[i]]->SetUniform("irradiance_texture", TEX_ATM_IRRADIANCE);
+        OpenGLState::UseProgram(0);
     }
-
-    OpenGLState::UseProgram(0);
 
     glDeleteShader(pcssFragment);
     glDeleteShader(oceanOpticsFragment);
@@ -541,23 +537,6 @@ OpenGLContent::~OpenGLContent()
     if(csBuf_[0] != 0) glDeleteBuffers(2, csBuf_);
     if(lightsUBO_ != 0) glDeleteBuffers(1, &lightsUBO_);
     if(viewUBO_ != 0) glDeleteBuffers(1, &viewUBO_);
-    delete basicShaders_["helper"];
-    delete basicShaders_["tex_saq"];
-    delete basicShaders_["tex_quad"];
-    delete basicShaders_["tex_layer_quad"];
-    delete basicShaders_["tex_level_quad"];
-    delete basicShaders_["tex_cube"];
-    delete basicShaders_["flat"];
-    delete basicShaders_["shadow"];
-    if(lightSourceShader_[0] != nullptr) delete lightSourceShader_[0];
-    if(lightSourceShader_[1] != nullptr) delete lightSourceShader_[1];
-    
-    //Material shaders
-    for(size_t i=0; i<materialShaders_.size(); ++i)
-    {
-        for(auto& [key, shader] : materialShaders_[i].shaders)
-            delete shader;
-    }
 }
 
 void OpenGLContent::Finalize()
@@ -892,7 +871,7 @@ void OpenGLContent::DrawLightSource(unsigned int lightId)
         GLint type = lights_[lightId]->getType() == LightType::POINT ? 0 : 1; 
         GLint id = lights_[lightId]->getType() == LightType::POINT ? lightId : lightId - lightsUBOData_.numPointLights;
 
-        GLSLShader* shader = mode_ == DrawingMode::FULL ? lightSourceShader_[0] : lightSourceShader_[1];
+        GLSLShader* shader = mode_ == DrawingMode::FULL ? basicShaders_["light_source0"].get() : basicShaders_["light_source1"].get();
         shader->Use();
         shader->SetUniform("MVP", viewProjection_ * M);
         shader->SetUniform("M", M);
@@ -1040,7 +1019,7 @@ void OpenGLContent::UseLook(const Look& look, bool texturable, const glm::mat4& 
     currentLookName_ = look.name;
     currentShaderMode_ = shaderMode;
     
-    GLSLShader* shader = materialShaders_[look.type == LookType::SIMPLE ? 0 : 1].shaders[currentShaderMode_];
+    GLSLShader* shader = materialShaders_[look.type == LookType::SIMPLE ? 0 : 1].shaders[currentShaderMode_].get();
 
     shader->Use();
     shader->SetUniform("MVP", viewProjection_*M);
@@ -1168,7 +1147,7 @@ void OpenGLContent::UseCableLook(const Look& look, GLfloat radius)
     currentLookName_ = look.name;
     currentShaderMode_ = shaderMode;
     
-    GLSLShader* shader = materialShaders_[look.type == LookType::SIMPLE ? 0 : 1].shaders[currentShaderMode_];
+    GLSLShader* shader = materialShaders_[look.type == LookType::SIMPLE ? 0 : 1].shaders[currentShaderMode_].get();
 
     shader->Use();
     shader->SetUniform("MVP", viewProjection_);

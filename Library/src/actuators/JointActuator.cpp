@@ -45,7 +45,7 @@ const std::string& JointActuator::getJointName() const
     else if(j_ != nullptr)
         return j_->getName();
     else
-        return std::string("");
+        throw std::runtime_error("Actuator '" + getName() + "' not connected to any joint!");
 }
 
 void JointActuator::AttachToJoint(FeatherstoneEntity* multibody, unsigned int jointId)

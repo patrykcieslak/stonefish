@@ -23,8 +23,7 @@
 //  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLDepthCamera__
-#define __Stonefish_OpenGLDepthCamera__
+#pragma once
 
 #include "graphics/OpenGLView.h"
 #include <random>
@@ -171,9 +170,8 @@ namespace sf
         GLuint linearDepthTex_;
         GLuint linearDepthFBO_;
         GLuint linearDepthPBO_;
-        static GLSLShader** depthCameraOutputShader;
-        static GLSLShader* depthVisualizeShader;
+
+        static std::array<std::unique_ptr<GLSLShader>, 2> depthCameraOutputShader;
+        static std::unique_ptr<GLSLShader> depthVisualizeShader;
     };
 }
-
-#endif
