@@ -109,10 +109,12 @@ namespace sf
         static void GroupTransform(std::vector<StaticEntity*>& objects, const Transform& centre, const Transform& transform);
         
     protected:
-        void BuildRigidBody(btCollisionShape* shape);
+        void BuildRigidBody();
         virtual void BuildGraphicalObject();
         
-        btRigidBody* rigidBody_;
+        std::unique_ptr<btRigidBody> rigidBody_;
+        std::unique_ptr<btCollisionShape> collisionShape_;
+        std::unique_ptr<btDefaultMotionState> motionState_;
         Material mat_;
         std::shared_ptr<Mesh> phyMesh_;
         

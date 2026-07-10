@@ -81,9 +81,9 @@ SolidType Box::getSolidType()
     return SolidType::BOX;
 }
 
-btCollisionShape* Box::BuildCollisionShape()
+std::unique_ptr<btCollisionShape> Box::BuildCollisionShape()
 {
-    btCollisionShape* box = new btBoxShape(halfExtents_);
+    std::unique_ptr<btCollisionShape> box = std::make_unique<btBoxShape>(halfExtents_);
     box->setMargin(COLLISION_MARGIN);
     return box;
 }

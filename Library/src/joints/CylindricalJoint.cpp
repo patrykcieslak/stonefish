@@ -32,8 +32,8 @@ namespace sf
 
 CylindricalJoint::CylindricalJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, const Vector3& axis, bool collideLinked) : Joint(uniqueName, collideLinked)
 {
-    btRigidBody* bodyA = solidA->rigidBody_;
-    btRigidBody* bodyB = solidB->rigidBody_;
+    btRigidBody* bodyA = solidA->getRigidBody();
+    btRigidBody* bodyB = solidB->getRigidBody();
     
     Vector3 sliderAxis = axis.normalized();
     Vector3 v2;

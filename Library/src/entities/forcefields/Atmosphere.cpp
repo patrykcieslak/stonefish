@@ -39,7 +39,8 @@ Atmosphere::Atmosphere(const std::string& uniqueName, Fluid g) : ForcefieldEntit
     Scalar size(100000);
     Vector3 halfExtents = Vector3(size/Scalar(2), size/Scalar(2), size/Scalar(2));
     ghost_->setWorldTransform(Transform(Quaternion::getIdentity(), Vector3(0,0,-size/Scalar(2)))); //Above ocean surface and ground (z=0)
-    ghost_->setCollisionShape(new btBoxShape(halfExtents));
+    collisionShape_ = std::make_unique<btBoxShape>(halfExtents);
+    ghost_->setCollisionShape(collisionShape_.get());
 }
         
 OpenGLAtmosphere* Atmosphere::getOpenGLAtmosphere()

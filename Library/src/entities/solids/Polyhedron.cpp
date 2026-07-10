@@ -83,9 +83,9 @@ SolidType Polyhedron::getSolidType()
     return SolidType::POLYHEDRON;
 }
 
-btCollisionShape* Polyhedron::BuildCollisionShape()
+std::unique_ptr<btCollisionShape> Polyhedron::BuildCollisionShape()
 {
-    btConvexHullShape* convex = new btConvexHullShape();
+    std::unique_ptr<btConvexHullShape> convex = std::make_unique<btConvexHullShape>();
     for(size_t i=0; i<phyMesh_->getNumOfVertices(); ++i)
     {
         glm::vec3 pos = phyMesh_->getVertexPos(i);

@@ -79,9 +79,9 @@ SolidType Cylinder::getSolidType()
     return SolidType::CYLINDER;
 }
 
-btCollisionShape* Cylinder::BuildCollisionShape()
+std::unique_ptr<btCollisionShape> Cylinder::BuildCollisionShape()
 {
-    btCollisionShape* cyl = new btCylinderShapeZ(Vector3(r_, r_, halfHeight_));
+    std::unique_ptr<btCollisionShape> cyl = std::make_unique<btCylinderShapeZ>(Vector3(r_, r_, halfHeight_));
     cyl->setMargin(COLLISION_MARGIN);
     return cyl;
 }

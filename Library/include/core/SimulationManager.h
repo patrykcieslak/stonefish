@@ -551,6 +551,7 @@ namespace sf
         std::unique_ptr<btCollisionDispatcher> dwDispatcher_;
         std::unique_ptr<btBroadphaseInterface> dwBroadphase_;
         std::unique_ptr<btDefaultCollisionConfiguration> dwCollisionConfig_;
+        std::unique_ptr<btGhostPairCallback> dwGhostPairCallback_;
         
         std::unique_ptr<MaterialManager> materialManager_;
         

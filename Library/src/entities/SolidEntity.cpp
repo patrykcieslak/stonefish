@@ -95,13 +95,22 @@ SolidEntity::SolidEntity(const std::string& uniqueName, PhysicsSettings phy, con
     angularAcc_.setZero();
     
     //Set pointers
-    multibodyCollider_ = nullptr;
     graObjectId_ = -1;
     phyObjectId_ = -1;
     dm_ = DisplayMode::GRAPHICAL;
     submerged_.type = RenderableType::HYDRO_LINES;
     submerged_.model = glm::mat4(1.f);
     submerged_.data = std::make_shared<std::vector<glm::vec3>>();
+}
+
+SolidEntity::~SolidEntity()
+{
+    if (collisionShape_->getShapeType() == COMPOUND_SHAPE_PROXYTYPE)
+    {
+        btCompoundShape* shape = static_cast<btCompoundShape*>(collisionShape_.get());
+        for (int i = 0; i < shape->getNumChildShapes(); ++i)
+            delete shape->getChildShape(i);
+    }
 }
 
 EntityType SolidEntity::getType() const
@@ -111,7 +120,7 @@ EntityType SolidEntity::getType() const
 
 btMultiBodyLinkCollider* SolidEntity::getMultiBodyLinkCollider() const
 {
-    return multibodyCollider_;
+    return multibodyCollider_.get();
 }
 
 void SolidEntity::ScalePhysicalPropertiesToArbitraryMass(Scalar mass)
@@ -1042,34 +1051,35 @@ void SolidEntity::BuildRigidBody(btDynamicsWorld* world)
 {
     if(rigidBody_ == nullptr)
     {
-        btDefaultMotionState* motionState = new btDefaultMotionState();
+        motionState_ = std::make_unique<btDefaultMotionState>();
         
         //Generate collision shape
-        btCollisionShape* colShape0 = BuildCollisionShape();
-        btCompoundShape* colShape;
+        std::unique_ptr<btCollisionShape> shape0 = BuildCollisionShape();
+        std::unique_ptr<btCompoundShape> shape;
         
-        if(colShape0->getShapeType() == COMPOUND_SHAPE_PROXYTYPE) //For a compound shape just move the children to avoid additional level
+        if(shape0->getShapeType() == COMPOUND_SHAPE_PROXYTYPE) //For a compound shape just move the children to avoid additional level
         {
-            colShape = (btCompoundShape*)colShape0;
-            for(int i=0; i < colShape->getNumChildShapes(); ++i)
-                colShape->updateChildTransform(i, T_CG2C_ * colShape->getChildTransform(i), true);
+            shape.reset(static_cast<btCompoundShape*>(shape0.release()));
+            for(int i=0; i < shape->getNumChildShapes(); ++i)
+                shape->updateChildTransform(i, T_CG2C_ * shape->getChildTransform(i), true);
         }
         else //For other shapes, create compound shape which allow for the shift against gravity centre
         {
-            colShape = new btCompoundShape();
-            colShape->addChildShape(T_CG2C_, colShape0);
+            shape = std::make_unique<btCompoundShape>();
+            shape->addChildShape(T_CG2C_, shape0.release());
         }
+        collisionShape_ = std::move(shape);
         
         //Construct Bullet rigid body
         Scalar M = getAugmentedMass();
         Vector3 I = getAugmentedInertia();
         
-        btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(M, motionState, colShape, I);
+        btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(M, motionState_.get(), collisionShape_.get(), I);
         rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = Scalar(0.); //not used
         rigidBodyCI.m_linearDamping = rigidBodyCI.m_angularDamping = world->getSolverInfo().m_damping;
         rigidBodyCI.m_additionalDamping = false;
 
-        rigidBody_ = new btRigidBody(rigidBodyCI);
+        rigidBody_ = std::make_unique<btRigidBody>(rigidBodyCI);
         rigidBody_->setUserPointer(this);
         rigidBody_->setFlags(rigidBody_->getFlags() | BT_ENABLE_GYROSCOPIC_FORCE_IMPLICIT_BODY);
         rigidBody_->setCollisionFlags(rigidBody_->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
@@ -1090,29 +1100,29 @@ void SolidEntity::BuildMultibodyLinkCollider(btMultiBody *mb, unsigned int child
     if(multibodyCollider_ == nullptr)
     {
         //Generate collision shape
-        btCollisionShape* colShape0 = BuildCollisionShape();
-        btCompoundShape* colShape;
-        if(colShape0->getShapeType() == COMPOUND_SHAPE_PROXYTYPE) //For a compound shape just move the children to avoid additional level
+        std::unique_ptr<btCollisionShape> shape0 = BuildCollisionShape();
+        std::unique_ptr<btCompoundShape> shape;
+        if(shape0->getShapeType() == COMPOUND_SHAPE_PROXYTYPE) //For a compound shape just move the children to avoid additional level
         {
-            colShape = (btCompoundShape*)colShape0;
-            for(int i=0; i < colShape->getNumChildShapes(); ++i)
+            shape.reset(static_cast<btCompoundShape*>(shape0.release()));
+            for(int i=0; i < shape->getNumChildShapes(); ++i)
             {
-                colShape->getChildShape(i)->setMargin(Scalar(0));
-                colShape->updateChildTransform(i, T_CG2C_ * colShape->getChildTransform(i), true);
+                shape->getChildShape(i)->setMargin(Scalar(0));
+                shape->updateChildTransform(i, T_CG2C_ * shape->getChildTransform(i), true);
             }
         }
         else //For other shapes, create compound shape which allow for the shift against gravity centre
         {
-            colShape = new btCompoundShape();
-            colShape0->setMargin(Scalar(0));
-            colShape->addChildShape(T_CG2C_, colShape0);
-            
+            shape = std::make_unique<btCompoundShape>();
+            shape0->setMargin(Scalar(0));
+            shape->addChildShape(T_CG2C_, shape0.release()); 
         }
-        colShape->setMargin(Scalar(0));
+        shape->setMargin(Scalar(0));
+        collisionShape_ = std::move(shape);
         
         //Construct Bullet multi-body link
-        multibodyCollider_ = new btMultiBodyLinkCollider(mb, child - 1);
-        multibodyCollider_->setCollisionShape(colShape);
+        multibodyCollider_ = std::make_unique<btMultiBodyLinkCollider>(mb, child - 1);
+        multibodyCollider_->setCollisionShape(collisionShape_.get());
         multibodyCollider_->setUserPointer(this); //HAS TO BE AFTER SETTING COLLISION SHAPE TO PROPAGATE TO ALL OF COMPOUND SUBSHAPES!!!!!
         multibodyCollider_->setFriction(Scalar(0));
         multibodyCollider_->setRestitution(Scalar(0));
@@ -1122,11 +1132,11 @@ void SolidEntity::BuildMultibodyLinkCollider(btMultiBody *mb, unsigned int child
         multibodyCollider_->setActivationState(DISABLE_DEACTIVATION);
         
         if(child > 0)
-            mb->getLink(child - 1).m_collider = multibodyCollider_;
+            mb->getLink(child - 1).m_collider = multibodyCollider_.get();
         else
-            mb->setBaseCollider(multibodyCollider_);
+            mb->setBaseCollider(multibodyCollider_.get());
         
-        world->addCollisionObject(multibodyCollider_, MASK_DYNAMIC, MASK_GHOST | MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING);
+        world->addCollisionObject(multibodyCollider_.get(), MASK_DYNAMIC, MASK_GHOST | MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING);
         
         if(contactK_ > Scalar(0))
             multibodyCollider_->setContactStiffnessAndDamping(contactK_, contactD_);
@@ -1163,15 +1173,16 @@ void SolidEntity::AddToSimulation(SimulationManager* sm, const Transform& origin
 
         // Add to world
         Transform Tcg = origin * T_CG2O_.inverse();
-        rigidBody_->setMotionState(new btDefaultMotionState(Tcg));
-        sm->getDynamicsWorld()->addRigidBody(rigidBody_, MASK_DYNAMIC, MASK_GHOST | MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING);
+        motionState_ = std::make_unique<btDefaultMotionState>(Tcg);
+        rigidBody_->setMotionState(motionState_.get());
+        sm->getDynamicsWorld()->addRigidBody(rigidBody_.get(), MASK_DYNAMIC, MASK_GHOST | MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING);
     }
 }
 
 void SolidEntity::RemoveFromSimulation(SimulationManager* sm)
 {
-    sm->getDynamicsWorld()->removeRigidBody(rigidBody_);
-    rigidBody_ = nullptr;
+    sm->getDynamicsWorld()->removeRigidBody(rigidBody_.get());
+    rigidBody_.reset();
 }
 
 void SolidEntity::UpdateAcceleration(Scalar dt)

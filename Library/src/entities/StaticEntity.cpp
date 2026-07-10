@@ -77,7 +77,7 @@ Transform StaticEntity::getTransform()
 
 btRigidBody* StaticEntity::getRigidBody()
 {
-    return rigidBody_;
+    return rigidBody_.get();
 }
 
 void StaticEntity::getAABB(Vector3& min, Vector3& max)
@@ -120,17 +120,17 @@ void StaticEntity::BuildGraphicalObject()
     phyObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh_.get());
 }
 
-void StaticEntity::BuildRigidBody(btCollisionShape* shape)
+void StaticEntity::BuildRigidBody()
 {
-    btDefaultMotionState* motionState = new btDefaultMotionState();
+    motionState_ = std::make_unique<btDefaultMotionState>();
     
-    btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(Scalar(0), motionState, shape, Vector3(0,0,0));
+    btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(Scalar(0), motionState_.get(), collisionShape_.get(), Vector3(0,0,0));
     rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = Scalar(0); //not used
     rigidBodyCI.m_linearDamping = rigidBodyCI.m_angularDamping = Scalar(0); //not used
     rigidBodyCI.m_linearSleepingThreshold = rigidBodyCI.m_angularSleepingThreshold = Scalar(0); //not used
     rigidBodyCI.m_additionalDamping = false;
     
-    rigidBody_ = new btRigidBody(rigidBodyCI);
+    rigidBody_ = std::make_unique<btRigidBody>(rigidBodyCI);
     rigidBody_->setUserPointer(this);
     rigidBody_->setCollisionFlags(rigidBody_->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
     
@@ -146,9 +146,9 @@ void StaticEntity::AddToSimulation(SimulationManager* sm, const Transform& origi
 {
     if(rigidBody_ != nullptr)
     {
-        btDefaultMotionState* motionState = new btDefaultMotionState(origin);
-        rigidBody_->setMotionState(motionState);
-        sm->getDynamicsWorld()->addRigidBody(rigidBody_, MASK_STATIC, MASK_DYNAMIC);
+        motionState_ = std::make_unique<btDefaultMotionState>(origin);
+        rigidBody_->setMotionState(motionState_.get());
+        sm->getDynamicsWorld()->addRigidBody(rigidBody_.get(), MASK_STATIC, MASK_DYNAMIC);
     }
 }
 

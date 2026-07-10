@@ -72,6 +72,7 @@ namespace sf
         EntityType getType() const;
         
     protected:
-        btPairCachingGhostObject* ghost_;
+        std::unique_ptr<btPairCachingGhostObject> ghost_;
+        std::unique_ptr<btCollisionShape> collisionShape_;
     };
 }

@@ -38,7 +38,7 @@ namespace sf
 FixedJoint::FixedJoint(const std::string& uniqueName, SolidEntity* solid) 
     : Joint(uniqueName, false)
 {
-    btRigidBody* body = solid->rigidBody_;
+    btRigidBody* body = solid->getRigidBody();
     
     btGeneric6DofConstraint* fixed = new btGeneric6DofConstraint(*body, Transform::getIdentity(), true);
     fixed->setAngularLowerLimit(Vector3(0,0,0));
@@ -56,8 +56,8 @@ FixedJoint::FixedJoint(const std::string& uniqueName, SolidEntity* solid)
 FixedJoint::FixedJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB) 
     : Joint(uniqueName, false)
 {
-    btRigidBody* bodyA = solidA->rigidBody_;
-    btRigidBody* bodyB = solidB->rigidBody_;
+    btRigidBody* bodyA = solidA->getRigidBody();
+    btRigidBody* bodyB = solidB->getRigidBody();
     Transform frameInA = solidA->getCGTransform().inverse() * solidB->getCGTransform();
     Transform frameInB = Transform::getIdentity(); 
     
@@ -82,7 +82,7 @@ FixedJoint::FixedJoint(const std::string& uniqueName, SolidEntity* solid, Feathe
     Vector3 pivotInB = V0();
     Matrix3 frameInB = Matrix3::getIdentity();
 
-    btMultiBodyFixedConstraint* fixed = new btMultiBodyFixedConstraint(fe->getMultiBody(), linkId, solid->rigidBody_, pivotInA, pivotInB, frameInA, frameInB);
+    btMultiBodyFixedConstraint* fixed = new btMultiBodyFixedConstraint(fe->getMultiBody(), linkId, solid->getRigidBody(), pivotInA, pivotInB, frameInA, frameInB);
     fixed->setMaxAppliedImpulse(BT_LARGE_FLOAT);
     setConstraint(fixed);
     

@@ -81,8 +81,11 @@ void OpenGLState::Init()
     glUseProgram(0);
     glActiveTexture(GL_TEXTURE0);
     glPatchParameteri(GL_PATCH_VERTICES, 4);
-    glPatchParameterfv(GL_PATCH_DEFAULT_INNER_LEVEL, new GLfloat[2]{1,1});
-    glPatchParameterfv(GL_PATCH_DEFAULT_OUTER_LEVEL, new GLfloat[4]{1,1,1,1});
+
+    std::array<GLfloat, 2> patchInnerLevel = {1,1};
+    std::array<GLfloat, 4> patchOuterLevel = {1,1,1,1};
+    glPatchParameterfv(GL_PATCH_DEFAULT_INNER_LEVEL, patchInnerLevel.data());
+    glPatchParameterfv(GL_PATCH_DEFAULT_OUTER_LEVEL, patchOuterLevel.data());
     
 	textures.clear();
     for(GLint i=0; i<texUnits; ++i)

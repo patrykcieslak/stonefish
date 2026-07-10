@@ -33,7 +33,7 @@
 namespace sf
 {
     
-Contact::Contact(std::string uniqueName, Entity* entityA, Entity* entityB, unsigned int inclusiveHistoryLength)
+Contact::Contact(const std::string& uniqueName, Entity* entityA, Entity* entityB, unsigned int inclusiveHistoryLength)
 {
     name_ = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     A_ = entityA;
@@ -50,7 +50,7 @@ Contact::~Contact()
         SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name_);
 }
 
-std::string Contact::getName() const
+const std::string& Contact::getName() const
 {
     return name_;
 }
@@ -98,7 +98,7 @@ void Contact::AddContactPoint(const btPersistentManifold* manifold, bool swapped
         ContactPoint p;
         p.locationA = locationA;
         p.locationB = swapped ? mp.getPositionWorldOnA() : mp.getPositionWorldOnB();
-        ContactInfo* cInfo = (ContactInfo*)mp.m_userPersistentData;
+        ContactInfo* cInfo = static_cast<ContactInfo*>(mp.m_userPersistentData);
         p.slippingVelocityA = (swapped ? Scalar(-1.) : Scalar(1.)) * cInfo->slip;
         p.normalForceA = normalForceA;
         AddContactPoint(p);

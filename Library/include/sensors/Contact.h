@@ -60,16 +60,10 @@ namespace sf
     {
         Scalar totalAppliedImpulse;
         Vector3 slip;
+        inline static size_t count = 0; 
 
-        ContactInfo()
-        {
-            printf("Created\n");
-        }
-
-        ~ContactInfo()
-        {
-            printf("Destroyed\n");
-        }
+        ContactInfo() { ++count; }
+        ~ContactInfo() { --count; }
     };
     
     struct Renderable;
@@ -86,7 +80,7 @@ namespace sf
          \param entityB a pointer to the second entity
          \param historyLength defines: 0 -> unlimited history, >0 -> history with a specified length
          */
-        Contact(std::string uniqueName, Entity* entityA, Entity* entityB, unsigned int historyLength = 1);
+        Contact(const std::string& uniqueName, Entity* entityA, Entity* entityB, unsigned int historyLength = 1);
         
         //! A destructor.
         ~Contact();
@@ -124,7 +118,7 @@ namespace sf
         void setDisplayMask(int16_t mask);
         
         //! A method returning the sensor name.
-        std::string getName() const;
+        const std::string& getName() const;
         
         //! A method returning a pointer to the first entity.
         const Entity* getEntityA();

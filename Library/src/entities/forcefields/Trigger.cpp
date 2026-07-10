@@ -36,7 +36,8 @@ Trigger::Trigger(const std::string& uniqueName, Scalar radius, const Transform& 
 {
     ghost_->setCollisionFlags(ghost_->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
     ghost_->setWorldTransform(worldTransform);
-    ghost_->setCollisionShape(new btSphereShape(radius));
+    collisionShape_ = std::make_unique<btSphereShape>(radius);
+    ghost_->setCollisionShape(collisionShape_.get());
     active_ = false;
     
     std::unique_ptr<Mesh> mesh = OpenGLContent::BuildSphere((GLfloat)radius);

@@ -20,15 +20,16 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 03/03/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "SlidingTestApp.h"
 #include <graphics/IMGUI.h>
 #include <sensors/ScalarSensor.h>
+#include <sensors/Contact.h>
 
-SlidingTestApp::SlidingTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings h, SlidingTestManager* sim) 
-                               : GraphicalSimulationApp("Sliding Test", dataDirPath, s, h, sim)
+SlidingTestApp::SlidingTestApp(const std::string& dataDirPath, sf::RenderSettings s, sf::HelperSettings h, std::unique_ptr<SlidingTestManager> sim) 
+    : GraphicalSimulationApp("Sliding Test", dataDirPath, s, h, std::move(sim))
 {
 }
 
@@ -44,5 +45,8 @@ void SlidingTestApp::DoHUD()
     dims.push_back(3);
     dims.push_back(4);
     dims.push_back(5);
-    getGUI()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 240, 300, 200, (sf::ScalarSensor*)getSimulationManager()->getSensor("Odometry"), dims, "Velocity");
+    getGUI()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 240, 300, 200, 
+        static_cast<sf::ScalarSensor*>(getSimulationManager()->getSensor("Odometry")), dims, "Velocity");
+
+    printf("Contacts: %ld\n", sf::ContactInfo::count);
 }

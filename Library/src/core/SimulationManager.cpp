@@ -73,6 +73,7 @@
 
 extern ContactAddedCallback gContactAddedCallback;
 extern ContactProcessedCallback gContactProcessedCallback;
+extern ContactEndedCallback gContactEndedCallback;
 extern ContactDestroyedCallback gContactDestroyedCallback;
 
 namespace sf
@@ -828,10 +829,12 @@ void SimulationManager::InitializeSolver()
     dynamicsWorld_->getWorldInfo().m_sparsesdf.Reset();
 
     //Override default callbacks
+    
     dynamicsWorld_->setWorldUserInfo(this);
-    dynamicsWorld_->getPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
+    dwGhostPairCallback_ = std::make_unique<btGhostPairCallback>();
+    dynamicsWorld_->getPairCache()->setInternalGhostPairCallback(dwGhostPairCallback_.get());
     gContactAddedCallback = SimulationManager::CustomMaterialCombinerCallback; //Compute combined friction and restitution
-    //gContactProcessedCallback = SimulationManager::ContactInfoUpdateCallback; //Update user data
+    gContactProcessedCallback = SimulationManager::ContactInfoUpdateCallback; //Update user data
     gContactDestroyedCallback = SimulationManager::ContactInfoDestroyCallback; //Clear user data allocated in contact points
     dynamicsWorld_->setSynchronizeAllMotionStates(false);
     
@@ -887,34 +890,24 @@ void SimulationManager::DestroyScenario()
     //Destroy dynamics world
     if(dynamicsWorld_ != nullptr)
     {
-        //remove objects from dynamic world
+        // Remove objects from dynamic world
         for(int i = dynamicsWorld_->getNumConstraints()-1; i >= 0; i--)
         {
             btTypedConstraint* constraint = dynamicsWorld_->getConstraint(i);
             dynamicsWorld_->removeConstraint(constraint);
             delete constraint;
         }
-    
-        for(int i = dynamicsWorld_->getNumCollisionObjects()-1; i >= 0; i--)
-        {
-            btCollisionObject* obj = dynamicsWorld_->getCollisionObjectArray()[i];
-            btRigidBody* body = btRigidBody::upcast(obj);
-            if (body && body->getMotionState())
-                delete body->getMotionState();
-            dynamicsWorld_->removeCollisionObject(obj);
-            delete obj;
-        }
-    
-        dynamicsWorld_.reset();
-        mbSolver_.reset();
-        sbSolver_.reset();
-        dwBroadphase_.reset();
-        dwDispatcher_.reset();
-        dwCollisionConfig_.reset();
-        debugDrawer_.reset();
     }
+
+    dynamicsWorld_.reset();
+    mbSolver_.reset();
+    sbSolver_.reset();
+    dwBroadphase_.reset();
+    dwDispatcher_.reset();
+    dwCollisionConfig_.reset();
+    debugDrawer_.reset();
     
-    //Remove simulation manager objects
+    // Remove simulation manager objects
     robots_.clear();
     entities_.clear();
     joints_.clear();
@@ -1298,7 +1291,9 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     ContactInfo* cInfo = new ContactInfo();
     cInfo->totalAppliedImpulse = Scalar(0);
     cInfo->slip = slipVel;
-    cp.m_userPersistentData = cInfo;
+    if (cp.m_userPersistentData != 0)
+        delete static_cast<ContactInfo*>(cp.m_userPersistentData);
+    cp.m_userPersistentData = (void*)cInfo;
     
     //Damping angular velocity around contact normal (reduce spinning)
     //calculate relative angular velocity
@@ -1675,15 +1670,15 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
 //Used to save contact information, including contact forces
 bool SimulationManager::ContactInfoUpdateCallback(btManifoldPoint& cp, void* body0, void* body1)
 {
-    ContactInfo* cInfo = (ContactInfo*)cp.m_userPersistentData;
-    cInfo->totalAppliedImpulse += cp.m_appliedImpulse;  
+    //ContactInfo* cInfo = static_cast<ContactInfo*>(cp.m_userPersistentData);
+    //cInfo->totalAppliedImpulse += cp.m_appliedImpulse;  
     return true;
 }
 
 //Used to deallocate memory reserved for contact information structure
 bool SimulationManager::ContactInfoDestroyCallback(void* userPersistentData)
 {
-    delete ((ContactInfo*)userPersistentData);
+    delete static_cast<ContactInfo*>(userPersistentData);
     return true;
 }
 

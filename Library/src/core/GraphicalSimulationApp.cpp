@@ -1080,6 +1080,10 @@ int GraphicalSimulationApp::RenderLoadingScreen(void* data)
     
     //Detach thread from GL context
     SDL_GL_MakeCurrent(app.window_, nullptr);
+
+    // Destroy thread data to avoid memory leak
+    delete static_cast<GraphicalSimulationThreadData*>(data);
+
     return 0;
 }
 
@@ -1097,7 +1101,10 @@ int GraphicalSimulationApp::RunSimulation(void* data)
     {
         simApp.StepSimulation();
     }
-    
+
+    // Destroy thread data to avoid memory leak
+    delete static_cast<GraphicalSimulationThreadData*>(data);
+
     return 0;
 }
 

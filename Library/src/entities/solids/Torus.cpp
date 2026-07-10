@@ -78,9 +78,9 @@ SolidType Torus::getSolidType()
     return SolidType::TORUS;
 }
 
-btCollisionShape* Torus::BuildCollisionShape()
+std::unique_ptr<btCollisionShape> Torus::BuildCollisionShape()
 {   
-    btCollisionShape* torus = new TorusShape(majorRadius_, minorRadius_);
+    std::unique_ptr<btCollisionShape> torus = std::make_unique<TorusShape>(majorRadius_, minorRadius_);
     torus->setMargin(COLLISION_MARGIN);
     return torus;
 }

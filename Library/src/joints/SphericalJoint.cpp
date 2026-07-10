@@ -34,8 +34,8 @@ namespace sf
 
 SphericalJoint::SphericalJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, bool collideLinked) : Joint(uniqueName, collideLinked)
 {
-    btRigidBody* bodyA = solidA->rigidBody_;
-    btRigidBody* bodyB = solidB->rigidBody_;
+    btRigidBody* bodyA = solidA->getRigidBody();
+    btRigidBody* bodyB = solidB->getRigidBody();
     Vector3 pivotInA = bodyA->getCenterOfMassTransform().inverse() * pivot;
     Vector3 pivotInB = bodyB->getCenterOfMassTransform().inverse() * pivot;
     
@@ -57,7 +57,7 @@ SphericalJoint::SphericalJoint(const std::string& uniqueName, SolidEntity* solid
     Vector3 pivotInA = linkTransform.inverse() * pivot;
     Vector3 pivotInB = solidTransform.inverse() * pivot;
     
-    btMultiBodyPoint2Point* p2p = new btMultiBodyPoint2Point(fe->getMultiBody(), linkId, solid->rigidBody_, pivotInA, pivotInB);
+    btMultiBodyPoint2Point* p2p = new btMultiBodyPoint2Point(fe->getMultiBody(), linkId, solid->getRigidBody(), pivotInA, pivotInB);
     p2p->setMaxAppliedImpulse(BT_LARGE_FLOAT);
     setConstraint(p2p);
     

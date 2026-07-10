@@ -44,8 +44,8 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
     angularAcc_.setZero();
 
     //Build rigid body
-    btEmptyShape* shape = new btEmptyShape();
-    BuildRigidBody(shape, false);
+    collisionShape_ = std::make_unique<btEmptyShape>();
+    BuildRigidBody(false);
     phyObjectId_ = graObjectId_ = -1;
 }
 
@@ -59,8 +59,8 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
     T_CG2O_ = origin.inverse();
 
     //Build rigid body
-    btSphereShape* shape = new btSphereShape(sphereRadius);
-    BuildRigidBody(shape, collides);
+    collisionShape_ = std::make_unique<btSphereShape>(sphereRadius);
+    BuildRigidBody(collides);
 
     //Build graphical objects
     if(SimulationApp::getApp()->hasGraphics())
@@ -82,8 +82,8 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
 
     //Build rigid body
     Scalar halfHeight = cylinderHeight/Scalar(2);
-    btCylinderShape* shape = new btCylinderShapeZ(Vector3(cylinderRadius, cylinderRadius, halfHeight));
-    BuildRigidBody(shape, collides);
+    collisionShape_ = std::make_unique<btCylinderShapeZ>(Vector3(cylinderRadius, cylinderRadius, halfHeight));
+    BuildRigidBody(collides);
 
     //Build graphical objects
     if(SimulationApp::getApp()->hasGraphics())
@@ -104,8 +104,8 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
     T_CG2O_ = origin.inverse();
 
     //Build rigid body
-    btBoxShape* shape = new btBoxShape(boxDimensions/Scalar(2));
-    BuildRigidBody(shape, collides);
+    collisionShape_ = std::make_unique<btBoxShape>(boxDimensions/Scalar(2));
+    BuildRigidBody(collides);
 
     //Build graphical objects
     if(SimulationApp::getApp()->hasGraphics())
@@ -146,7 +146,7 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
     }
 
     //Build rigid body
-    btConvexHullShape* shape = new btConvexHullShape();
+    std::unique_ptr<btConvexHullShape> shape = std::make_unique<btConvexHullShape>();
     for(size_t i=0; i<phyMesh->getNumOfVertices(); ++i)
     {
         glm::vec3 pos = phyMesh->getVertexPos(i);
@@ -154,7 +154,8 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
         shape->addPoint(v);
     }
     shape->optimizeConvexHull();
-    BuildRigidBody(shape, collides);
+    collisionShape_ = std::move(shape);
+    BuildRigidBody(collides);
 
     //Build graphical objects
     if(SimulationApp::getApp()->hasGraphics())
@@ -236,18 +237,18 @@ void AnimatedEntity::getAABB(Vector3& min, Vector3& max)
     }
 }
 
-void AnimatedEntity::BuildRigidBody(btCollisionShape* shape, bool collides)
+void AnimatedEntity::BuildRigidBody(bool collides)
 {
-    btDefaultMotionState* motionState = new btDefaultMotionState(traj_->getInterpolatedTransform());
-    shape->setMargin(0.0);
+    motionState_ = std::make_unique<btDefaultMotionState>(traj_->getInterpolatedTransform());
+    collisionShape_->setMargin(0.0);
     
-    btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(Scalar(0), motionState, shape, V0());
+    btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(Scalar(0), motionState_.get(), collisionShape_.get(), V0());
     rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = Scalar(0); //not used
     rigidBodyCI.m_linearDamping = rigidBodyCI.m_angularDamping = Scalar(0); //not used
     rigidBodyCI.m_linearSleepingThreshold = rigidBodyCI.m_angularSleepingThreshold = Scalar(0); //not used
     rigidBodyCI.m_additionalDamping = false;
     
-    rigidBody_ = new btRigidBody(rigidBodyCI);
+    rigidBody_ = std::make_unique<btRigidBody>(rigidBodyCI);
     rigidBody_->setUserPointer(this);
     rigidBody_->setCollisionFlags(rigidBody_->getCollisionFlags() 
                                      | btCollisionObject::CF_KINEMATIC_OBJECT 
@@ -261,9 +262,9 @@ void AnimatedEntity::AddToSimulation(SimulationManager* sm)
     if(rigidBody_ != nullptr)
     {
         if(rigidBody_->getCollisionFlags() & btCollisionObject::CF_NO_CONTACT_RESPONSE) //No collisions
-            sm->getDynamicsWorld()->addRigidBody(rigidBody_, MASK_ANIMATED_NONCOLLIDING, MASK_DYNAMIC);
+            sm->getDynamicsWorld()->addRigidBody(rigidBody_.get(), MASK_ANIMATED_NONCOLLIDING, MASK_DYNAMIC);
         else
-            sm->getDynamicsWorld()->addRigidBody(rigidBody_, MASK_ANIMATED_COLLIDING, MASK_DYNAMIC); //Only collide with dynamic bodies
+            sm->getDynamicsWorld()->addRigidBody(rigidBody_.get(), MASK_ANIMATED_COLLIDING, MASK_DYNAMIC); //Only collide with dynamic bodies
     }
 }
         

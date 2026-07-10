@@ -169,7 +169,7 @@ namespace sf
         void getAABB(Vector3& min, Vector3& max);
       
     private:
-        void BuildRigidBody(btCollisionShape* shape, bool collides);
+        void BuildRigidBody(bool collides);
 
         Transform T_CG2O_;
         Transform T_O2G_;

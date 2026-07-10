@@ -251,17 +251,17 @@ void Compound::RecalculatePhysicalProperties()
     Ipri_ = compoundPriInertia;
 }
 
-btCollisionShape* Compound::BuildCollisionShape()
+std::unique_ptr<btCollisionShape> Compound::BuildCollisionShape()
 {
     //Build collision shape from external parts
-    btCompoundShape* colShape = new btCompoundShape();
+    std::unique_ptr<btCompoundShape> colShape = std::make_unique<btCompoundShape>();
     for(size_t i = 0; i<parts_.size(); ++i)
     {
         if(parts_[i].isExternal)
         {
             Transform childTrans = parts_[i].origin * parts_[i].solid->getCG2OTransform().inverse() * parts_[i].solid->getCG2CTransform();
-            btCollisionShape* partColShape = parts_[i].solid->BuildCollisionShape();
-            colShape->addChildShape(childTrans, partColShape);
+            std::unique_ptr<btCollisionShape> partColShape = parts_[i].solid->BuildCollisionShape();
+            colShape->addChildShape(childTrans, partColShape.release());
             collisionPartId_.push_back(i);
         }
     }

@@ -48,7 +48,8 @@ Ocean::Ocean(const std::string& uniqueName, Scalar waves, Fluid l) : ForcefieldE
     depth_ = size;
     Vector3 halfExtents = Vector3(size/Scalar(2), size/Scalar(2), size/Scalar(2));
     ghost_->setWorldTransform(Transform(Quaternion::getIdentity(), Vector3(0, 0, size/Scalar(2) - oceanState_*Scalar(3)))); //Move ocean influence zone a bit up to account for waves
-    ghost_->setCollisionShape(new btBoxShape(halfExtents));
+    collisionShape_ = std::make_unique<btBoxShape>(halfExtents);
+    ghost_->setCollisionShape(collisionShape_.get());
     
     currentsEnabled_ = false;
     liquid_ = l;

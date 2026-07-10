@@ -136,7 +136,9 @@ namespace sf
         
     protected:
         //Body
-        btRigidBody* rigidBody_;
+        std::unique_ptr<btRigidBody> rigidBody_;
+        std::unique_ptr<btCollisionShape> collisionShape_;
+        std::unique_ptr<btDefaultMotionState> motionState_;
         Material mat_;
 
         //Motion

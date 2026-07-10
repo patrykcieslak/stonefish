@@ -110,7 +110,7 @@ namespace sf
         bool isDisplayingInternalParts();
         
         //! A method that constructs a collision shape for the body.
-        btCollisionShape* BuildCollisionShape();
+        std::unique_ptr<btCollisionShape> BuildCollisionShape();
         
         //! A method that builds a graphical object for the body.
         void BuildGraphicalObject();

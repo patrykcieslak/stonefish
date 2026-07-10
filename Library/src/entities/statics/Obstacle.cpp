@@ -53,7 +53,7 @@ Obstacle::Obstacle(const std::string& uniqueName,
     //Buidling collision shape
     if(convexHull) // Convex approximation
     {
-        btConvexHullShape* shape = new btConvexHullShape();
+        std::unique_ptr<btConvexHullShape> shape = std::make_unique<btConvexHullShape>();
         for(size_t i=0; i<phyMesh_->getNumOfVertices(); ++i)
         {
             glm::vec3 pos = phyMesh_->getVertexPos(i);
@@ -62,7 +62,7 @@ Obstacle::Obstacle(const std::string& uniqueName,
         }
         //shape->optimizeConvexHull();
         shape->setMargin(0);
-        BuildRigidBody(shape);    
+        collisionShape_ = std::move(shape);
     }
     else // Non-convex (arbitrary triangle mesh)
     {
@@ -86,10 +86,11 @@ Obstacle::Obstacle(const std::string& uniqueName,
         
         btTriangleIndexVertexArray* triangleArray = new btTriangleIndexVertexArray((int)phyMesh_->faces.size(), indices, 3*sizeof(int),
                                                                                 (int)phyMesh_->getNumOfVertices(), vertices, 3*sizeof(Scalar));
-        btBvhTriangleMeshShape* shape = new btBvhTriangleMeshShape(triangleArray, true);
+        std::unique_ptr<btBvhTriangleMeshShape> shape = std::make_unique<btBvhTriangleMeshShape>(triangleArray, true);
         shape->setMargin(0);
-        BuildRigidBody(shape);
+        collisionShape_ = std::move(shape);
     }
+    BuildRigidBody();
 }
     
 Obstacle::Obstacle(const std::string& uniqueName, const std::string& modelFilename, Scalar scale, const Transform& origin, bool convexHull, const std::string& material, const std::string& look)
@@ -105,13 +106,17 @@ Obstacle::Obstacle(const std::string& uniqueName, Scalar sphereRadius, const Tra
     
     btSphereShape* shape = new btSphereShape(sphereRadius);
     if(origin == I4())
-        BuildRigidBody(shape);
+    {
+        collisionShape_.reset(shape);
+        BuildRigidBody();
+    }
     else
     {
         OpenGLContent::TransformMesh(phyMesh_.get(), origin);
-        btCompoundShape* cShape = new btCompoundShape();
+        std::unique_ptr<btCompoundShape> cShape = std::make_unique<btCompoundShape>();
         cShape->addChildShape(origin, shape);
-        BuildRigidBody(cShape);
+        collisionShape_ = std::move(cShape);
+        BuildRigidBody();
     }
 }
 
@@ -126,13 +131,17 @@ Obstacle::Obstacle(const std::string& uniqueName, Vector3 boxDimensions, const T
     btBoxShape* shape = new btBoxShape(halfExtents);
     shape->setMargin(COLLISION_MARGIN);
     if(origin == I4())
-        BuildRigidBody(shape);
+    {
+        collisionShape_.reset(shape);
+        BuildRigidBody();
+    }
     else
     {
         OpenGLContent::TransformMesh(phyMesh_.get(), origin);
-        btCompoundShape* cShape = new btCompoundShape();
+        std::unique_ptr<btCompoundShape> cShape = std::make_unique<btCompoundShape>();
         cShape->addChildShape(origin, shape);
-        BuildRigidBody(cShape);
+        collisionShape_ = std::move(cShape);
+        BuildRigidBody();
     }
 }
 
@@ -146,13 +155,17 @@ Obstacle::Obstacle(const std::string& uniqueName, Scalar cylinderRadius, Scalar 
     btCylinderShape* shape = new btCylinderShapeZ(Vector3(cylinderRadius, cylinderRadius, halfHeight));
     shape->setMargin(COLLISION_MARGIN);
     if(origin == I4())
-        BuildRigidBody(shape);
+    {
+        collisionShape_.reset(shape);    
+        BuildRigidBody();
+    }
     else
     {
         OpenGLContent::TransformMesh(phyMesh_.get(), origin);
-        btCompoundShape* cShape = new btCompoundShape();
+        std::unique_ptr<btCompoundShape> cShape = std::make_unique<btCompoundShape>();
         cShape->addChildShape(origin, shape);
-        BuildRigidBody(cShape);
+        collisionShape_ = std::move(cShape);
+        BuildRigidBody();
     }
 }
 

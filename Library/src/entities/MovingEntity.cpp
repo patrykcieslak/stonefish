@@ -36,7 +36,6 @@ namespace sf
 
 MovingEntity::MovingEntity(const std::string& uniqueName, const std::string& material, const std::string& look) : Entity(uniqueName)
 {
-    rigidBody_ = nullptr;
     mat_ = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(material);
     if(SimulationApp::getApp()->hasGraphics())
         lookId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
@@ -96,7 +95,7 @@ const std::shared_ptr<OpenGLOceanParticles>& MovingEntity::getOceanParticles()
 
 btRigidBody* MovingEntity::getRigidBody()
 {
-    return rigidBody_;
+    return rigidBody_.get();
 }
 
 }

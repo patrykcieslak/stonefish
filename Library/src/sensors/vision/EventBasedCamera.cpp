@@ -114,12 +114,12 @@ void EventBasedCamera::NewDataReady(void* data, unsigned int index)
     lastEventCount_ = index;
 
 #ifdef DEBUG
-    if(lastEventCount > 0)
+    if(lastEventCount_ > 0)
     {
         GLint* data_ = (GLint*)data;
         int firstTime = INT32_MAX;
         int lastTime = 0;
-        for(unsigned int i = 0; i < lastEventCount; ++i)
+        for(unsigned int i = 0; i < lastEventCount_; ++i)
         {
             if(abs(data_[i*2+1]) > lastTime)
                 lastTime = abs(data_[i*2+1]);

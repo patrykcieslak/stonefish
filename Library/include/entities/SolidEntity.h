@@ -59,7 +59,7 @@ namespace sf
         SolidEntity(const std::string& uniqueName, PhysicsSettings phy, const std::string& material, const std::string& look, Scalar thickness);
         
         //! A destructor.
-        virtual ~SolidEntity() = default;
+        virtual ~SolidEntity();
         
         //! A method adding the body to the simulation manager.
         /*!
@@ -81,7 +81,7 @@ namespace sf
         void RemoveFromSimulation(SimulationManager* sm);
 
         //! A pure virtual method building a collision shape for the body.
-        virtual btCollisionShape* BuildCollisionShape() = 0;
+        virtual std::unique_ptr<btCollisionShape> BuildCollisionShape() = 0;
         
         //! A pure virtual method returning the type of the solid that the body represents.
         virtual SolidType getSolidType() = 0;
@@ -395,7 +395,7 @@ namespace sf
         void BuildMultibodyLinkCollider(btMultiBody* mb, unsigned int child, btSoftMultiBodyDynamicsWorld* world);
         
         //Body
-        btMultiBodyLinkCollider* multibodyCollider_;
+        std::unique_ptr<btMultiBodyLinkCollider> multibodyCollider_;
         
         std::shared_ptr<Mesh> phyMesh_; //Mesh used for physics calculation
         Scalar thick_;

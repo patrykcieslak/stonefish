@@ -51,7 +51,7 @@ namespace sf
         SolidType getSolidType();
         
         //! A method that returns the collision shape for the box.
-        btCollisionShape* BuildCollisionShape();
+        std::unique_ptr<btCollisionShape> BuildCollisionShape();
         
     private:
         Vector3 halfExtents_;

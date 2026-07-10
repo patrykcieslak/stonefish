@@ -49,7 +49,7 @@ namespace sf
         SolidType getSolidType();
         
         //! A method that returns the collision shape for the sphere.
-        btCollisionShape* BuildCollisionShape();
+        std::unique_ptr<btCollisionShape> BuildCollisionShape();
         
     private:
         Scalar r_;

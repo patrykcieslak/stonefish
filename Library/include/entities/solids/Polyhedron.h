@@ -72,7 +72,7 @@ namespace sf
         SolidType getSolidType();
         
         //! A method that returns the collision shape.
-        btCollisionShape* BuildCollisionShape();
+        std::unique_ptr<btCollisionShape> BuildCollisionShape();
         
         //! A method used to build the graphical representation of the body.
         void BuildGraphicalObject();

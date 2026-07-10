@@ -36,7 +36,7 @@ SpringJoint::SpringJoint(const std::string& uniqueName, SolidEntity* solid, cons
                         const Vector3& linearStiffness, const Vector3& angularStiffness,
                         const Vector3& linearDamping, const Vector3& angularDamping) : Joint(uniqueName, false)
 {
-    btRigidBody* bodyA = solid->rigidBody_;
+    btRigidBody* bodyA = solid->getRigidBody();
     Transform frameInA = solid->getCGTransform().inverse() * attachment;
 
     btGeneric6DofSpring2Constraint* spring = new btGeneric6DofSpring2Constraint(*bodyA, frameInA, RO_ZYX);
@@ -65,8 +65,8 @@ SpringJoint::SpringJoint(const std::string& uniqueName, SolidEntity* solidA, Sol
                         const Vector3& linearStiffness, const Vector3& angularStiffness,
                         const Vector3& linearDamping, const Vector3& angularDamping) : Joint(uniqueName, false)
 {
-    btRigidBody* bodyA = solidA->rigidBody_;
-    btRigidBody* bodyB = solidB->rigidBody_;
+    btRigidBody* bodyA = solidA->getRigidBody();
+    btRigidBody* bodyB = solidB->getRigidBody();
     Transform frameInA = bodyA->getCenterOfMassTransform().inverse() * attachment;
     Transform frameInB = bodyB->getCenterOfMassTransform().inverse() * attachment;
     

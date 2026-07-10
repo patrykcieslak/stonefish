@@ -36,8 +36,8 @@ namespace sf
 RevoluteJoint::RevoluteJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, const Vector3& axis, bool collideLinked) : Joint(uniqueName, collideLinked)
 {
     Vector3 hingeAxis = axis.normalized();
-    btRigidBody* bodyA = solidA->rigidBody_;
-    btRigidBody* bodyB = solidB->rigidBody_;
+    btRigidBody* bodyA = solidA->getRigidBody();
+    btRigidBody* bodyB = solidB->getRigidBody();
     axisInA_ = bodyA->getCenterOfMassTransform().getBasis().inverse() * hingeAxis;
     Vector3 axisInB = bodyB->getCenterOfMassTransform().getBasis().inverse() * hingeAxis;
     pivotInA_ = bodyA->getCenterOfMassTransform().inverse()(pivot);
@@ -56,7 +56,7 @@ RevoluteJoint::RevoluteJoint(const std::string& uniqueName, SolidEntity* solidA,
 
 RevoluteJoint::RevoluteJoint(const std::string& uniqueName, SolidEntity* solid, const Vector3& pivot, const Vector3& axis) : Joint(uniqueName, false)
 {
-    btRigidBody* body = solid->rigidBody_;
+    btRigidBody* body = solid->getRigidBody();
     Vector3 hingeAxis = axis.normalized();
     axisInA_ = body->getCenterOfMassTransform().getBasis().inverse() * hingeAxis;
     pivotInA_ = body->getCenterOfMassTransform().inverse()(pivot);

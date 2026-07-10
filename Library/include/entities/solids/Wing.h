@@ -72,6 +72,6 @@ namespace sf
         SolidType getSolidType();
         
         //! A method that returns the collision shape for the wing (tapered box).
-        btCollisionShape* BuildCollisionShape();
+        std::unique_ptr<btCollisionShape> BuildCollisionShape();
     };
 }

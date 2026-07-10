@@ -72,9 +72,9 @@ SolidType Sphere::getSolidType()
     return SolidType::SPHERE;
 }
 
-btCollisionShape* Sphere::BuildCollisionShape()
+std::unique_ptr<btCollisionShape> Sphere::BuildCollisionShape()
 {
-    return new btSphereShape(r_); //Note: Entire radius is a collision margin.
+    return std::make_unique<btSphereShape>(r_); //Note: Entire radius is a collision margin.
 }
 
 }

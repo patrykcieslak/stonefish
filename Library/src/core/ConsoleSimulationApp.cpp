@@ -109,6 +109,8 @@ int ConsoleSimulationApp::RunSimulation(void* data)
         simApp.StepSimulation();
     }
 
+    delete static_cast<ConsoleSimulationThreadData*>(data);
+
     return 0;
 }
 

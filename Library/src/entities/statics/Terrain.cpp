@@ -75,11 +75,12 @@ Terrain::Terrain(const std::string& uniqueName, const std::string& pathToHeightm
     phyMesh_ = OpenGLContent::BuildTerrain(heightfield_, w, h, scaleX, scaleY, (GLfloat)maxHeight_, uvScale);
     
     //Generate collision mesh
-    btHeightfieldTerrainShape* shape = new btHeightfieldTerrainShape(w, h, heightfield_.data(), Scalar(1), Scalar(0), maxHeight_, 2, PHY_FLOAT, false);
+    std::unique_ptr<btHeightfieldTerrainShape> shape = std::make_unique<btHeightfieldTerrainShape>(w, h, heightfield_.data(), Scalar(1), Scalar(0), maxHeight_, 2, PHY_FLOAT, false);
     shape->setLocalScaling(Vector3(scaleX, scaleY, 1.0));
     shape->setUseDiamondSubdivision(true);
     shape->setMargin(0);
-    BuildRigidBody(shape);
+    collisionShape_ = std::move(shape);
+    BuildRigidBody();
 }
 
 StaticEntityType Terrain::getStaticType()
@@ -96,11 +97,11 @@ void Terrain::getAABB(Vector3 &min, Vector3 &max)
 
 void Terrain::AddToSimulation(SimulationManager* sm, const Transform& origin)
 {
-    if(rigidBody_ != NULL)
+    if(rigidBody_ != nullptr)
     {
-        btDefaultMotionState* motionState = new btDefaultMotionState(origin*Transform(IQ(), Vector3(0,0,-maxHeight_/Scalar(2))));
-        rigidBody_->setMotionState(motionState);
-        sm->getDynamicsWorld()->addRigidBody(rigidBody_, MASK_STATIC, MASK_DYNAMIC);
+        motionState_ = std::make_unique<btDefaultMotionState>(origin*Transform(IQ(), Vector3(0,0,-maxHeight_/Scalar(2))));
+        rigidBody_->setMotionState(motionState_.get());
+        sm->getDynamicsWorld()->addRigidBody(rigidBody_.get(), MASK_STATIC, MASK_DYNAMIC);
     }
 }
 

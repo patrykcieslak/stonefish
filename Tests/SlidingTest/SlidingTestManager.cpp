@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/03/2014.
-//  Copyright (c) 2014-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "SlidingTestManager.h"
@@ -54,25 +54,24 @@ void SlidingTestManager::BuildScenario()
     ////////OBJECTS
     sf::Scalar angle = M_PI/180.0 * 14.1;
     
-    sf::Plane* floor = new sf::Plane("Floor", sf::Scalar(10000), "Ground", "grid");
-    AddStaticEntity(floor, sf::I4());
+    AddStaticEntity(std::make_unique<sf::Plane>("Floor", sf::Scalar(10000), "Ground", "grid"), sf::I4());
   
-    sf::Obstacle* ramp = new sf::Obstacle("Ramp", sf::Vector3(10,2,0.1), sf::I4(), "Ground", "grid", 2);
-    AddStaticEntity(ramp, sf::Transform(sf::Quaternion(0, angle, 0), sf::Vector3(0,0,-1.0)));
+    AddStaticEntity(std::make_unique<sf::Obstacle>("Ramp", sf::Vector3(10,2,0.1), sf::I4(), "Ground", "grid", 2), 
+        sf::Transform(sf::Quaternion(0, angle, 0), sf::Vector3(0,0,-1.0)));
 
     sf::PhysicsSettings phy;
     phy.mode = sf::PhysicsMode::SURFACE;
     phy.collisions = true;  
-    sf::Box* box = new sf::Box("Box", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Steel", "green");
-    AddSolidEntity(box, sf::Transform(sf::Quaternion(0, angle, 0), sf::Vector3(2.5, 0, -1.72)));
+    sf::SolidEntity* box = AddSolidEntity(std::make_unique<sf::Box>("Box", phy, sf::Vector3(0.1,0.1,0.1), sf::I4(), "Steel", "green"),
+        sf::Transform(sf::Quaternion(0, angle, 0), sf::Vector3(2.5, 0, -1.72)));
     
-    sf::Odometry* traj = new sf::Odometry("Odometry", -1, 1000);
+    std::unique_ptr<sf::Odometry> traj = std::make_unique<sf::Odometry>("Odometry", -1, 1000);
     traj->AttachToSolid(box, sf::I4());
     traj->setRenderable(true);
-    AddSensor(traj);
+    AddSensor(std::move(traj));
     
     //////CAMERA & LIGHT//////
-    sf::Light* omni = new sf::Light("Omni", sf::Scalar(0.1), sf::Color::BlackBody(4000), 1000000);
+    std::unique_ptr<sf::Light> omni = std::make_unique<sf::Light>("Omni", sf::Scalar(0.1), sf::Color::BlackBody(4000), 1000000);
     omni->AttachToSolid(box, sf::Transform(sf::IQ(), sf::Vector3(0,0,-1)));
-    AddActuator(omni);
+    AddActuator(std::move(omni));
 }

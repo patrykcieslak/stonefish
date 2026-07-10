@@ -33,7 +33,7 @@ namespace sf
 
 ForcefieldEntity::ForcefieldEntity(const std::string& uniqueName) : Entity(uniqueName)
 {
-    ghost_ = new btPairCachingGhostObject();
+    ghost_ = std::make_unique<btPairCachingGhostObject>();
     ghost_->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
 }
 
@@ -44,12 +44,12 @@ EntityType ForcefieldEntity::getType() const
 
 btPairCachingGhostObject* ForcefieldEntity::getGhost()
 {
-    return ghost_;
+    return ghost_.get();
 }
 
 void ForcefieldEntity::AddToSimulation(SimulationManager* sm)
 {
-    sm->getDynamicsWorld()->addCollisionObject(ghost_, MASK_GHOST, MASK_DYNAMIC);
+    sm->getDynamicsWorld()->addCollisionObject(ghost_.get(), MASK_GHOST, MASK_DYNAMIC);
 }
 
 std::vector<Renderable> ForcefieldEntity::Render()

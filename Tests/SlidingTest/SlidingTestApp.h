@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 03/03/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish__SlidingTestApp__
-#define __Stonefish__SlidingTestApp__
+#pragma once
 
 #include <core/GraphicalSimulationApp.h>
 #include "SlidingTestManager.h"
@@ -32,9 +31,8 @@
 class SlidingTestApp : public sf::GraphicalSimulationApp
 {
 public:
-    SlidingTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings h, SlidingTestManager* sim);
+    SlidingTestApp(const std::string& dataDirPath, sf::RenderSettings s, sf::HelperSettings h, std::unique_ptr<SlidingTestManager> sim);
     
     void DoHUD();
 };
 
-#endif
