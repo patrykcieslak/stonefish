@@ -1341,7 +1341,9 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     ContactInfo* cInfo = new ContactInfo();
     cInfo->totalAppliedImpulse = Scalar(0);
     cInfo->slip = slipVel;
-    cp.m_userPersistentData = cInfo;
+    if (cp.m_userPersistentData != 0)
+        delete static_cast<ContactInfo*>(cp.m_userPersistentData);
+    cp.m_userPersistentData = (void*)cInfo;
     
     //Damping angular velocity around contact normal (reduce spinning)
     //calculate relative angular velocity
