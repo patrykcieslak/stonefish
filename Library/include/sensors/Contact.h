@@ -60,10 +60,6 @@ namespace sf
     {
         Scalar totalAppliedImpulse;
         Vector3 slip;
-        inline static size_t count = 0; 
-
-        ContactInfo() { ++count; }
-        ~ContactInfo() { --count; }
     };
     
     struct Renderable;

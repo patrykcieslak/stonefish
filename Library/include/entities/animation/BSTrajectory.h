@@ -48,10 +48,10 @@ namespace sf
         void AddKeyPoint(Scalar keyTime, Transform keyTransform);
 
         //! A method updating the interpolated transform and velocities.
-        void Interpolate();
+        void Interpolate() override;
 
         //! A method that builds a graphical representation of the trajectory.
-        void BuildGraphicalPath();
+        void BuildGraphicalPath() override;
 
     private:
         tinyspline::BSpline spline_;

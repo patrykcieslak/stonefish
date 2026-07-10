@@ -20,7 +20,7 @@
 //  FallingTest
 //
 //  Created by Patryk Cieslak on 02/03/2014.
-//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "FallingTestApp.h"
@@ -45,9 +45,8 @@ int main(int argc, const char * argv[])
     h.showSensors = false;
     h.showActuators = false;
     h.showForces = false;
-    
-    FallingTestManager* simulationManager = new FallingTestManager(200.0);
-    FallingTestApp app(std::string(DATA_DIR_PATH), s, h, simulationManager);
+        
+    FallingTestApp app(std::string(DATA_DIR_PATH), s, h, std::make_unique<FallingTestManager>(200.0));
     app.Run(true);
     
     return 0;

@@ -58,14 +58,14 @@ namespace sf
          \param s a pointer to a joint sensor object
          \param monitoredJointName a name of the joint at which the sensor is attached
          */
-        void AddJointSensor(JointSensor* s, const std::string& monitoredJointName);
+        JointSensor* AddJointSensor(std::unique_ptr<JointSensor> s, const std::string& monitoredJointName) override;
 
         //! A method used to attach an actuator to a specified joint of the robot.
         /*!
          \param a a pointer to a joint actuator object
          \param actuatedJointName a name of the joint which is to be driven
          */
-        void AddJointActuator(JointActuator* a, const std::string& actuatedJointName);
+        JointActuator* AddJointActuator(std::unique_ptr<JointActuator> a, const std::string& actuatedJointName) override;
 
         //! A method adding the robot to the simulation world (includes consistency checking).
         /*!

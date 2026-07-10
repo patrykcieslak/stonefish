@@ -57,13 +57,13 @@ namespace sf
         virtual void AddKeyPoint(Scalar keyTime, Transform keyTransform);
 
         //! A method updating the interpolated transform and velocities.
-        virtual void Interpolate();
+        virtual void Interpolate() override;
 
         //! A method that builds a graphical representation of the trajectory.
         virtual void BuildGraphicalPath();
 
         //! A method returning the elements that should be rendered.
-        std::vector<Renderable> Render();
+        std::vector<Renderable> Render() override;
 
     protected:
         std::vector<KeyPoint> points_;

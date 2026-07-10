@@ -245,47 +245,56 @@ void FeatherstoneRobot::Respawn(SimulationManager* sm, const Transform& origin)
     dynamics_->Respawn(origin);
 }
 
-void FeatherstoneRobot::AddJointSensor(JointSensor* s, const std::string& monitoredJointName)
+JointSensor* FeatherstoneRobot::AddJointSensor(std::unique_ptr<JointSensor> s, const std::string& monitoredJointName)
 {
     int jointId = getJoint(monitoredJointName);
     if(jointId > -1)
     {
         s->AttachToJoint(dynamics_, jointId);
-        sensors_.push_back(s);
+        sensors_.push_back(s.release());
+        return static_cast<JointSensor*>(sensors_.back());
     }
     else
+    {
         cCritical("Joint '%s' doesn't exist. Sensor '%s' cannot be attached!", monitoredJointName.c_str(), s->getName().c_str());
+        return nullptr;
+    }
 }
 
-void FeatherstoneRobot::AddJointActuator(JointActuator* a, const std::string& actuatedJointName)
+JointActuator* FeatherstoneRobot::AddJointActuator(std::unique_ptr<JointActuator> a, const std::string& actuatedJointName)
 {
     int jointId = getJoint(actuatedJointName);
     if(jointId > -1)
     {
         a->AttachToJoint(dynamics_, jointId);
-        actuators_.push_back(a);
+        actuators_.push_back(a.release());
+        return static_cast<JointActuator*>(actuators_.back());
     }
     else
+    {
         cCritical("Joint '%s' doesn't exist. Actuator '%s' cannot be attached!", actuatedJointName.c_str(), a->getName().c_str());
+        return nullptr;
+    }
 }
 
-void FeatherstoneRobot::AddLinkActuator(LinkActuator* a, const std::string& actuatedLinkName, const Transform& origin)
+LinkActuator* FeatherstoneRobot::AddLinkActuator(std::unique_ptr<LinkActuator> a, const std::string& actuatedLinkName, const Transform& origin)
 {
     int linkId = getLinkIndex(actuatedLinkName);
     if(linkId < -1)
     {
         cCritical("Link '%s' doesn't exist. Actuator '%s' cannot be attached!", actuatedLinkName.c_str(), a->getName().c_str());
-        return;
+        return nullptr;
     }
     if(a->getType() == ActuatorType::SUCTION_CUP) // Special case
     {
-        static_cast<SuctionCup*>(a)->AttachToLink(getDynamics(), linkId);
+        static_cast<SuctionCup*>(a.get())->AttachToLink(getDynamics(), linkId);
     }
     else
     {
         a->AttachToSolid(getLink(actuatedLinkName), origin);
     }
-    actuators_.push_back(a);
+    actuators_.push_back(a.release());
+    return static_cast<LinkActuator*>(actuators_.back());
 }
 
 }

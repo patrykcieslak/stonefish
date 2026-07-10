@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 09/02/2024.
-//  Copyright (c) 2024-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "CameraTestManager.h"
@@ -70,20 +70,20 @@ void CameraTestManager::BuildScenario()
 #endif
 
     ////////OBJECTS
-    sf::Plane* floor = new sf::Plane("Floor", 10000.f, "Ground", "Grid");
-    AddStaticEntity(floor, sf::Transform(sf::Quaternion(0.,0.,0.), sf::Vector3(0.0, 0.0, 100.0)));
+    AddStaticEntity(std::make_unique<sf::Plane>("Floor", 10000.f, "Ground", "Grid"), 
+        sf::Transform(sf::Quaternion(0.,0.,0.), sf::Vector3(0.0, 0.0, 100.0)));
 
 #ifdef TEST_THERMAL_CAMERA
-    sf::Obstacle* boat = new sf::Obstacle("Boat", sf::GetDataPath() + "aquadelmo.obj", 1.0, sf::I4(), sf::GetDataPath() + "aquadelmo_phy.obj", 1.0, sf::I4(), true, "Steel", "Boat");
-	AddStaticEntity(boat, sf::Transform(sf::Quaternion(1.3,0,0.0), sf::Vector3(0.0,0.0,0)));
-    sf::Obstacle* human = new sf::Obstacle("Human", sf::GetDataPath() + "human.obj", 0.1, sf::I4(), true, "Steel", "Skin");
-	AddStaticEntity(human, sf::Transform(sf::Quaternion(1.3,0,0.0), sf::Vector3(0.0,0.0,0.0)));
+	AddStaticEntity(std::make_unique<sf::Obstacle>("Boat", sf::GetDataPath() + "aquadelmo.obj", 1.0, sf::I4(), sf::GetDataPath() + "aquadelmo_phy.obj", 1.0, sf::I4(), true, "Steel", "Boat"), 
+        sf::Transform(sf::Quaternion(1.3,0,0.0), sf::Vector3(0.0,0.0,0)));
+	AddStaticEntity(std::make_unique<sf::Obstacle>("Human", sf::GetDataPath() + "human.obj", 0.1, sf::I4(), true, "Steel", "Skin"),
+        sf::Transform(sf::Quaternion(1.3,0,0.0), sf::Vector3(0.0,0.0,0.0)));
 #else    
-    sf::Obstacle* canyon = new sf::Obstacle("Canyon", sf::GetDataPath() + "canyon.obj", 1.0, sf::I4(), false, "Ground", "Canyon");
-    AddStaticEntity(canyon, sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 10.0)));
+    AddStaticEntity(std::make_unique<sf::Obstacle>("Canyon", sf::GetDataPath() + "canyon.obj", 1.0, sf::I4(), false, "Ground", "Canyon"), 
+        sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 10.0)));
 #endif
     
-    sf::BSTrajectory* camTraj = new sf::BSTrajectory(sf::PlaybackMode::REPEAT);
+    std::unique_ptr<sf::BSTrajectory> camTraj = std::make_unique<sf::BSTrajectory>(sf::PlaybackMode::REPEAT);
 #ifdef TEST_THERMAL_CAMERA
     camTraj->AddKeyPoint(sf::Scalar(0.), sf::Transform(sf::Quaternion(0.,0.,0.), sf::Vector3(7.0, 0.0, -1.0)));
     camTraj->AddKeyPoint(sf::Scalar(5.), sf::Transform(sf::Quaternion(M_PI_2,0.,0.), sf::Vector3(0.0, 7.0, -1.0)));
@@ -103,35 +103,34 @@ void CameraTestManager::BuildScenario()
     camTraj->AddKeyPoint(sf::Scalar(17.), sf::Transform(sf::Quaternion(0.0, 0.,0.), sf::Vector3(-11.0, -11.0, 9.0)));
 #endif
 
-    sf::AnimatedEntity* camFrame = new sf::AnimatedEntity("CamFrame", camTraj);
-    AddAnimatedEntity(camFrame);
+    sf::AnimatedEntity* camFrame = AddAnimatedEntity(std::make_unique<sf::AnimatedEntity>("CamFrame", std::move(camTraj)));
 
-    sf::ColorCamera* cCam = new sf::ColorCamera("ColorCamera", 400, 300, sf::Scalar(90.0));
+    std::unique_ptr<sf::ColorCamera> cCam = std::make_unique<sf::ColorCamera>("ColorCamera", 400, 300, sf::Scalar(90.0));
     cCam->setDisplayOnScreen(true, 200, 0, 1.0);
     cCam->AttachToSolid(camFrame, sf::Transform(sf::Quaternion(-M_PI_2, 0.0, M_PI_2), sf::Vector3(0,0,0)));
-    AddSensor(cCam);
+    AddSensor(std::move(cCam));
 
 #ifdef TEST_THERMAL_CAMERA
-    sf::ThermalCamera* tCam = new sf::ThermalCamera("ThermalCamera", 400, 300, sf::Scalar(90.0), -100.f, 100.f); 
+    std::unique_ptr<sf::ThermalCamera> tCam = std::make_unique<sf::ThermalCamera>("ThermalCamera", 400, 300, sf::Scalar(90.0), -100.f, 100.f); 
     tCam->setNoise(0.2);
     tCam->setDisplaySettings(sf::ColorMap::JET, 5.0, 50.0);
     tCam->setDisplayOnScreen(true, 600, 0, 1.0);
     tCam->AttachToSolid(camFrame, sf::Transform(sf::Quaternion(-M_PI_2, 0.0, M_PI_2), sf::Vector3(0,0,0)));
-    AddSensor(tCam);
+    AddSensor(std::move(tCam));
 #else
-    sf::DepthCamera* dCam = new sf::DepthCamera("DepthCamera", 400, 300, sf::Scalar(90), sf::Scalar(0.01), sf::Scalar(10.0));
+    std::unique_ptr<sf::DepthCamera> dCam = std::make_unique<sf::DepthCamera>("DepthCamera", 400, 300, sf::Scalar(90), sf::Scalar(0.01), sf::Scalar(10.0));
     dCam->setNoise(0.01);
     dCam->setDisplayOnScreen(true, 200, 300, 1.0);
     dCam->AttachToSolid(camFrame, sf::Transform(sf::Quaternion(-M_PI_2, 0.0, M_PI_2), sf::Vector3(0,0,0)));
-    AddSensor(dCam);
+    AddSensor(std::move(dCam));
 
-    sf::OpticalFlowCamera* ofCam = new sf::OpticalFlowCamera("OpticalFlowCamera", 400, 300, sf::Scalar(90));
+    std::unique_ptr<sf::OpticalFlowCamera> ofCam = std::make_unique<sf::OpticalFlowCamera>("OpticalFlowCamera", 400, 300, sf::Scalar(90));
     ofCam->setDisplayOnScreen(true, 600, 0, 1.0);
     ofCam->setDisplaySettings(800.0);
     ofCam->AttachToSolid(camFrame, sf::Transform(sf::Quaternion(-M_PI_2, 0.0, M_PI_2), sf::Vector3(0,0,0)));
-    AddSensor(ofCam);
+    AddSensor(std::move(ofCam));
 
-    sf::EventBasedCamera* evbCam = new sf::EventBasedCamera("EventBasedCamera", 400, 300, sf::Scalar(90.0), 0.1f, 0.1f, 1000, 10.0);
+    std::unique_ptr<sf::EventBasedCamera> evbCam = std::make_unique<sf::EventBasedCamera>("EventBasedCamera", 400, 300, sf::Scalar(90.0), 0.1f, 0.1f, 1000, 10.0);
     evbCam->setNoise(0.03, 0.03);
     evbCam->setDisplayOnScreen(true, 600, 300, 1.0);
     evbCam->AttachToSolid(camFrame, sf::Transform(sf::Quaternion(-M_PI_2, 0.0, M_PI_2), sf::Vector3(0,0,0)));
@@ -141,10 +140,10 @@ void CameraTestManager::BuildScenario()
         std::cout << "EBC last event count: " << cam->getLastEventCount() << std::endl;
     });
 #endif
-    AddSensor(evbCam);
+    AddSensor(std::move(evbCam));
 #endif
-    sf::SegmentationCamera* sCam = new sf::SegmentationCamera("SegmentationCamera", 400, 300, sf::Scalar(90.0));
+    std::unique_ptr<sf::SegmentationCamera> sCam = std::make_unique<sf::SegmentationCamera>("SegmentationCamera", 400, 300, sf::Scalar(90.0));
     sCam->setDisplayOnScreen(true, 200, 600, 1.0);
     sCam->AttachToSolid(camFrame, sf::Transform(sf::Quaternion(-M_PI_2, 0.0, M_PI_2), sf::Vector3(0,0,0)));
-    AddSensor(sCam);
+    AddSensor(std::move(sCam));
 }

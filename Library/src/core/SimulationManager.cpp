@@ -201,13 +201,18 @@ void SimulationManager::RemoveSolidEntity(SolidEntity* ent)
     }
 }
 
-void SimulationManager::AddFeatherstoneEntity(std::unique_ptr<FeatherstoneEntity> ent, const Transform& origin)
+FeatherstoneEntity* SimulationManager::AddFeatherstoneEntity(std::unique_ptr<FeatherstoneEntity> ent, const Transform& origin)
 {
     if(ent != nullptr)
     {
         entities_.push_back(std::move(ent));
-        static_cast<FeatherstoneEntity*>(entities_.back().get())->AddToSimulation(this, origin);
+
+        FeatherstoneEntity* fe = static_cast<FeatherstoneEntity*>(entities_.back().get());
+        fe->AddToSimulation(this, origin);
+        return fe;
     }
+    else
+        return nullptr;
 }
 
 void SimulationManager::RemoveFeatherstoneEntity(FeatherstoneEntity* ent)
@@ -264,25 +269,38 @@ void SimulationManager::EnableAtmosphere()
     }
 }
 
-void SimulationManager::AddSensor(std::unique_ptr<Sensor> sens)
+Sensor* SimulationManager::AddSensor(std::unique_ptr<Sensor> sens)
 {
     if(sens != nullptr)
+    {
         sensors_.push_back(std::move(sens));
+        return sensors_.back().get();
+    }
+    else 
+        return nullptr;
 }
 
-void SimulationManager::AddComm(std::unique_ptr<Comm> comm)
+Comm* SimulationManager::AddComm(std::unique_ptr<Comm> comm)
 {
     if(comm != nullptr)
+    {
         comms_.push_back(std::move(comm));
+        return comms_.back().get();
+    }
+    else 
+        return nullptr;
 }
 
-void SimulationManager::AddJoint(std::unique_ptr<Joint> jnt)
+Joint* SimulationManager::AddJoint(std::unique_ptr<Joint> jnt)
 {
     if(jnt != nullptr)
     {
         joints_.push_back(std::move(jnt));
         joints_.back()->AddToSimulation(this);
+        return joints_.back().get();
     }
+    else
+        return nullptr;
 }
 
 void SimulationManager::RemoveJoint(Joint* jnt)
@@ -298,19 +316,27 @@ void SimulationManager::RemoveJoint(Joint* jnt)
     }
 }
 
-void SimulationManager::AddActuator(std::unique_ptr<Actuator> act)
+Actuator* SimulationManager::AddActuator(std::unique_ptr<Actuator> act)
 {
     if(act != nullptr)
+    {
         actuators_.push_back(std::move(act));
+        return actuators_.back().get();
+    }
+    else 
+        return nullptr;
 }
 
-void SimulationManager::AddContact(std::unique_ptr<Contact> cnt)
+Contact* SimulationManager::AddContact(std::unique_ptr<Contact> cnt)
 {
     if(cnt != nullptr)
     {
         contacts_.push_back(std::move(cnt));
         EnableCollision(cnt->getEntityA(), cnt->getEntityB());
+        return contacts_.back().get();
     }
+    else
+        return nullptr;
 }
 
 int SimulationManager::CheckCollision(const Entity *entA, const Entity *entB)
@@ -389,11 +415,11 @@ Contact* SimulationManager::getContact(unsigned int index)
 
 Contact* SimulationManager::getContact(const std::string& name)
 {
-    for(size_t i = 0; i < contacts_.size(); ++i)
-        if(contacts_[i]->getName() == name)
-            return contacts_[i].get();
-    
-    return nullptr;
+    auto it = std::find_if(contacts_.begin(), contacts_.end(), [&name](const std::unique_ptr<Contact>& e) { return e->getName() == name; });
+    if(it != contacts_.end())
+        return it->get();
+    else
+        return nullptr;
 }
 
 CollisionFilter SimulationManager::getCollisionFilter() const
@@ -416,11 +442,11 @@ Robot* SimulationManager::getRobot(unsigned int index)
 
 Robot* SimulationManager::getRobot(const std::string& name)
 {
-    for(size_t i = 0; i < robots_.size(); ++i)
-        if(robots_[i]->getName() == name)
-            return robots_[i].get();
-    
-    return nullptr;
+    auto it = std::find_if(robots_.begin(), robots_.end(), [&name](const std::unique_ptr<Robot>& e) { return e->getName() == name; });
+    if(it != robots_.end())
+        return it->get();
+    else
+        return nullptr;
 }
 
 Entity* SimulationManager::getEntity(unsigned int index)
@@ -433,11 +459,11 @@ Entity* SimulationManager::getEntity(unsigned int index)
 
 Entity* SimulationManager::getEntity(const std::string& name)
 {
-    for(size_t i = 0; i < entities_.size(); ++i)
-        if(entities_[i]->getName() == name)
-            return entities_[i].get();
-    
-    return nullptr;
+    auto it = std::find_if(entities_.begin(), entities_.end(), [&name](const std::unique_ptr<Entity>& e) { return e->getName() == name; });
+    if(it != entities_.end())
+        return it->get();
+    else
+        return nullptr;
 }
 
 Joint* SimulationManager::getJoint(unsigned int index)
@@ -450,11 +476,11 @@ Joint* SimulationManager::getJoint(unsigned int index)
 
 Joint* SimulationManager::getJoint(const std::string& name)
 {
-    for(size_t i = 0; i < joints_.size(); ++i)
-        if(joints_[i]->getName() == name)
-            return joints_[i].get();
-    
-    return nullptr;
+    auto it = std::find_if(joints_.begin(), joints_.end(), [&name](const std::unique_ptr<Joint>& e) { return e->getName() == name; });
+    if(it != joints_.end())
+        return it->get();
+    else
+        return nullptr;
 }
 
 Actuator* SimulationManager::getActuator(unsigned int index)
@@ -467,11 +493,11 @@ Actuator* SimulationManager::getActuator(unsigned int index)
 
 Actuator* SimulationManager::getActuator(const std::string& name)
 {
-    for(size_t i = 0; i < actuators_.size(); ++i)
-        if(actuators_[i]->getName() == name)
-            return actuators_[i].get();
-    
-    return nullptr;
+    auto it = std::find_if(actuators_.begin(), actuators_.end(), [&name](const std::unique_ptr<Actuator>& e) { return e->getName() == name; });
+    if(it != actuators_.end())
+        return it->get();
+    else
+        return nullptr;
 }
 
 Sensor* SimulationManager::getSensor(unsigned int index)
@@ -484,11 +510,11 @@ Sensor* SimulationManager::getSensor(unsigned int index)
 
 Sensor* SimulationManager::getSensor(const std::string& name)
 {
-    for(size_t i = 0; i < sensors_.size(); ++i)
-        if(sensors_[i]->getName() == name)
-            return sensors_[i].get();
-    
-    return nullptr;
+    auto it = std::find_if(sensors_.begin(), sensors_.end(), [&name](const std::unique_ptr<Sensor>& e) { return e->getName() == name; });
+    if(it != sensors_.end())
+        return it->get();
+    else
+        return nullptr;
 }
 
 Comm* SimulationManager::getComm(unsigned int index)
@@ -501,11 +527,11 @@ Comm* SimulationManager::getComm(unsigned int index)
 
 Comm* SimulationManager::getComm(const std::string& name)
 {
-    for(size_t i = 0; i < comms_.size(); ++i)
-        if(comms_[i]->getName() == name)
-            return comms_[i].get();
-    
-    return nullptr;
+    auto it = std::find_if(comms_.begin(), comms_.end(), [&name](const std::unique_ptr<Comm>& e) { return e->getName() == name; });
+    if(it != comms_.end())
+        return it->get();
+    else
+        return nullptr;
 }
 
 NED* SimulationManager::getNED()

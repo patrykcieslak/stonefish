@@ -1,6 +1,6 @@
 add_definitions(-DDATA_DIR_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/Data/\")
 
-add_executable(ConsoleTest ConsoleTest/main.cpp ConsoleTest/ConsoleTestApp.cpp ConsoleTest/ConsoleTestManager.cpp)
+add_executable(ConsoleTest ConsoleTest/main.cpp ConsoleTest/ConsoleTestManager.cpp)
 target_link_libraries(ConsoleTest Stonefish_test)
 
 add_executable(CameraTest CameraTest/main.cpp CameraTest/CameraTestManager.cpp)

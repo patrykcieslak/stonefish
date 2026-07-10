@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 23/11/20.
-//  Copyright(c) 2020-2023 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -55,9 +55,9 @@ namespace sf
         void setAngularVelocity(const Vector3& omega);
 
         //! A method updating the interpolated transform and velocities.
-        virtual void Interpolate();
+        virtual void Interpolate() override;
 
         //! A method returning the elements that should be rendered.
-        std::vector<Renderable> Render();
+        std::vector<Renderable> Render() override;
     };
 }

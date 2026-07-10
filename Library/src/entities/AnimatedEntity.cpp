@@ -35,7 +35,7 @@ namespace sf
 
 AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Trajectory> traj) : MovingEntity(uniqueName, "", ""), traj_(std::move(traj))
 {
-    if(traj == nullptr)
+    if(traj_ == nullptr)
         throw std::invalid_argument("Trajectory pointer cannot be null");
 
     T_CG2O_ = T_O2C_ = T_O2G_ = I4();
@@ -52,7 +52,7 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
 AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Trajectory> traj, Scalar sphereRadius, const Transform& origin, const std::string& material, const std::string& look, bool collides) 
     : MovingEntity(uniqueName, material, look), traj_(std::move(traj))
 {   
-    if(traj == nullptr)
+    if(traj_ == nullptr)
         throw std::invalid_argument("Trajectory pointer cannot be null");
 
     T_O2C_ = T_O2G_ = I4();
@@ -74,7 +74,7 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
 AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Trajectory> traj, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& origin, const std::string& material, const std::string& look, bool collides)
     : MovingEntity(uniqueName, material, look), traj_(std::move(traj))
 {
-    if(traj == nullptr)
+    if(traj_ == nullptr)
         throw std::invalid_argument("Trajectory pointer cannot be null");
 
     T_O2C_ = T_O2G_ = I4();
@@ -97,7 +97,7 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
 AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Trajectory> traj, Vector3 boxDimensions, const Transform& origin, const std::string& material, const std::string& look, bool collides) 
     : MovingEntity(uniqueName, material, look), traj_(std::move(traj))
 {
-    if(traj == nullptr)
+    if(traj_ == nullptr)
         throw std::invalid_argument("Trajectory pointer cannot be null");
 
     T_O2C_ = T_O2G_ = I4();
@@ -125,7 +125,7 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
                        const std::string& physicsFilename, Scalar physicsScale, const Transform& physicsOrigin, const std::string& material, const std::string& look, bool collides)
     : MovingEntity(uniqueName, material, look), traj_(std::move(traj))
 {
-    if(traj == nullptr)
+    if(traj_ == nullptr)
         throw std::invalid_argument("Trajectory pointer cannot be null");
 
     //Load geometry from files

@@ -14,7 +14,7 @@ option(EMBED_RESOURCES "Embed internal resources in the library executable" OFF)
 # Compile flags
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS_DEBUG "-Wall -g -DDEBUG")
+set(CMAKE_CXX_FLAGS_DEBUG "-Wall -g -fsanitize=address -fno-omit-frame-pointer -DDEBUG")
 set(CMAKE_CXX_FLAGS_RELEASE "-Wno-stringop-overflow -O3 -DNDEBUG")
 set(OpenGL_GL_PREFERENCE "GLVND")
 

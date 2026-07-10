@@ -20,15 +20,14 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 18/09/2018.
-//  Copyright(c) 2018-2020 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish__ConsoleTestManager__
-#define __Stonefish__ConsoleTestManager__
+#pragma once
 
 #include <core/SimulationManager.h>
 
-#define PARSED_SCENARIO
+//#define PARSED_SCENARIO
 
 class ConsoleTestManager : public sf::SimulationManager
 {
@@ -38,5 +37,3 @@ public:
     void BuildScenario();
     void SimulationStepCompleted(sf::Scalar timeStep);
 };
-
-#endif

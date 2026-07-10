@@ -175,8 +175,9 @@ namespace sf
         /*!
          \param ent a pointer to the multibody object
          \param origin a pose of the multibody base link in the world frame
+         \return pointer to the added multibody object
          */
-        void AddFeatherstoneEntity(std::unique_ptr<FeatherstoneEntity> ent, const Transform& origin);
+        FeatherstoneEntity* AddFeatherstoneEntity(std::unique_ptr<FeatherstoneEntity> ent, const Transform& origin);
 
         //! A method that removes a rigid multibody from the simulation world.
         /*!
@@ -187,8 +188,9 @@ namespace sf
         //! A method that adds a discrete joint to the simulation world.
         /*!
          \param jnt a pointer to the joint object
+         \return pointer to the added joint
          */
-        void AddJoint(std::unique_ptr<Joint> jnt);
+        Joint* AddJoint(std::unique_ptr<Joint> jnt);
 
         //! A method that removes a discrete joint from the simulation world.
         /*!
@@ -199,26 +201,30 @@ namespace sf
         //! A method that adds an actuator to the simulation world.
         /*!
          \param act a pointer to the actuator object
+         \return pointer to the added actuator
          */
-        void AddActuator(std::unique_ptr<Actuator> act);
+        Actuator* AddActuator(std::unique_ptr<Actuator> act);
         
         //! A method that adds a sensor to the simulation world.
         /*!
          \param sens a pointer to the sensor object
+         \return pointer to the add sensor
          */
-        void AddSensor(std::unique_ptr<Sensor> sens);
+        Sensor* AddSensor(std::unique_ptr<Sensor> sens);
         
         //! A method that adds a communication device to the simulation world.
         /*!
          \param comm a pointer to the comm object
+         \return pointer to the add comm
          */
-        void AddComm(std::unique_ptr<Comm> comm);
+        Comm* AddComm(std::unique_ptr<Comm> comm);
         
         //! A method that adds contact monitoring between two entities.
         /*!
           \param a pointer to the contact object
+          \return pointer to hte add contact
          */
-        void AddContact(std::unique_ptr<Contact> cnt);
+        Contact* AddContact(std::unique_ptr<Contact> cnt);
         
         //! A method that enables collision between specified entities.
         /*!

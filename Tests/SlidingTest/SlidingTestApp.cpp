@@ -47,6 +47,4 @@ void SlidingTestApp::DoHUD()
     dims.push_back(5);
     getGUI()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 240, 300, 200, 
         static_cast<sf::ScalarSensor*>(getSimulationManager()->getSensor("Odometry")), dims, "Velocity");
-
-    printf("Contacts: %ld\n", sf::ContactInfo::count);
 }

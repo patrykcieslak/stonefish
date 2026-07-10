@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 03/03/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish__FallingTestApp__
-#define __Stonefish__FallingTestApp__
+#pragma once
 
 #include <core/GraphicalSimulationApp.h>
 #include "FallingTestManager.h"
@@ -32,9 +31,8 @@
 class FallingTestApp : public sf::GraphicalSimulationApp
 {
 public:
-    FallingTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings h, FallingTestManager* sim);
+    FallingTestApp(const std::string& dataDirPath, sf::RenderSettings s, sf::HelperSettings h, std::unique_ptr<FallingTestManager> sim);
     
     void DoHUD();
 };
 
-#endif

@@ -20,14 +20,14 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 18/09/2018.
-//  Copyright(c) 2018-2021 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "ConsoleTestManager.h"
 
 #include <entities/statics/Plane.h>
 #include <entities/solids/Sphere.h>
-#include <core/Robot.h>
+#include <core/FeatherstoneRobot.h>
 #include <utils/UnitSystem.h>
 #include <utils/SystemUtil.hpp>
 #include <core/ScenarioParser.h>
@@ -77,28 +77,25 @@ void ConsoleTestManager::BuildScenario()
     SetMaterialsInteraction("Rock", "Rock", 0.9, 0.7);
     
     //Build scene	
-    sf::Plane* plane = new sf::Plane("Bottom", 1000.0, "Rock");
-    AddStaticEntity(plane, sf::Transform(sf::IQ(), sf::Vector3(0,0,0)));
+    AddStaticEntity(std::make_unique<sf::Plane>("Bottom", 1000.0, "Rock"), sf::Transform(sf::IQ(), sf::Vector3(0,0,0)));
     
     sf::PhysicsSettings phy;
     phy.mode = sf::PhysicsMode::SURFACE;
     phy.collisions = true;
-    sf::Sphere* sph1 = new sf::Sphere("Sphere1", phy, 0.1, sf::I4(), "Rock", "");
-    sf::Sphere* sph2 = new sf::Sphere("Sphere2", phy, 0.1, sf::I4(), "Rock", "");
     
-    std::vector<sf::SolidEntity*> links(0);
-    links.push_back(sph2);
+    std::vector<std::unique_ptr<sf::SolidEntity>> links;
+    links.push_back(std::make_unique<sf::Sphere>("Sphere2", phy, 0.1, sf::I4(), "Rock", ""));
     
-    sf::Robot* robot = new sf::Robot("Robot", false);
-    robot->DefineLinks(sph1, links);
+    std::unique_ptr<sf::FeatherstoneRobot> robot = std::make_unique<sf::FeatherstoneRobot>("Robot", false);
+    robot->DefineLinks(std::make_unique<sf::Sphere>("Sphere1", phy, 0.1, sf::I4(), "Rock", ""), std::move(links));
     robot->DefineRevoluteJoint("Joint1", 
                                "Sphere1", 
                                "Sphere2", 
                                sf::Transform(sf::IQ(), sf::Vector3(0.5,0,0.0)), 
                                sf::Vector3(0.0,1.0,0.0), 
                                std::make_pair<sf::Scalar,sf::Scalar>(-1.0,1.0));
-	robot->BuildKinematicTree();
-    AddRobot(robot, sf::I4());
+	robot->BuildKinematicStructure();
+    AddRobot(std::move(robot), sf::I4());
 #endif
 }
 

@@ -2250,7 +2250,7 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
                 log.Print(MessageType::ERROR, "Light of robot '%s' not properly defined!", robotName.c_str());
                 return false;
             }
-            robot->AddLinkActuator(l.release(), robot->getName() + "/" + std::string(linkName), origin);
+            robot->AddLinkActuator(std::move(l), robot->getName() + "/" + std::string(linkName), origin);
         }
         item = item->NextSiblingElement("light");
     }
@@ -2276,7 +2276,7 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
                 log.Print(MessageType::ERROR, "Communication device of robot '%s' not properly defined!", robotName.c_str());
                 return false;
             }
-            robot->AddComm(comm.release(), robot->getName() + "/" + std::string(linkName), origin);
+            robot->AddComm(std::move(comm), robot->getName() + "/" + std::string(linkName), origin);
         }
         item = item->NextSiblingElement("comm");
     }
@@ -2417,7 +2417,7 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
                 log.Print(MessageType::ERROR, "Joint definition for actuator '%s' missing!", act->getName().c_str());
                 return false;
             }
-            robot->AddJointActuator((JointActuator*)act.release(), robot->getName() + "/" + std::string(jointName));
+            robot->AddJointActuator(std::unique_ptr<JointActuator>(static_cast<JointActuator*>(act.release())), robot->getName() + "/" + std::string(jointName));
         }
             break;
 
@@ -2444,7 +2444,7 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
                 log.Print(MessageType::ERROR, "Origin frame of actuator '%s' missing!", act->getName().c_str());
                 return false;
             }
-            robot->AddLinkActuator((LinkActuator*)act.release(), robot->getName() + "/" + std::string(linkName), origin);
+            robot->AddLinkActuator(std::unique_ptr<LinkActuator>(static_cast<LinkActuator*>(act.release())), robot->getName() + "/" + std::string(linkName), origin);
         }
             break;
 
@@ -2480,7 +2480,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
                 log.Print(MessageType::ERROR, "Joint definition for sensor '%s' missing!", sens->getName().c_str());
                 return false;
             }
-            robot->AddJointSensor((JointSensor*)sens.release(), robot->getName() + "/" + std::string(jointName));
+            robot->AddJointSensor(std::unique_ptr<JointSensor>(static_cast<JointSensor*>(sens.release())), robot->getName() + "/" + std::string(jointName));
         }
             break;
 
@@ -2503,9 +2503,9 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Robot* robot)
                 return false;
             }
             if(sens->getType() == SensorType::LINK)
-                robot->AddLinkSensor((LinkSensor*)sens.release(), robot->getName() + "/" + std::string(linkName), origin);
+                robot->AddLinkSensor(std::unique_ptr<LinkSensor>(static_cast<LinkSensor*>(sens.release())), robot->getName() + "/" + std::string(linkName), origin);
             else
-                robot->AddVisionSensor((VisionSensor*)sens.release(), robot->getName() + "/" + std::string(linkName), origin);
+                robot->AddVisionSensor(std::unique_ptr<VisionSensor>(static_cast<VisionSensor*>(sens.release())), robot->getName() + "/" + std::string(linkName), origin);
         }
             break;
 

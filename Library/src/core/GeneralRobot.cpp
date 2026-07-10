@@ -79,26 +79,28 @@ void GeneralRobot::BuildKinematicStructure()
 {   
 }
         
-void GeneralRobot::AddJointSensor(JointSensor* s, const std::string& monitoredJointName)
+JointSensor* GeneralRobot::AddJointSensor(std::unique_ptr<JointSensor> s, const std::string& monitoredJointName)
 {
     for(size_t i = 0; i < jointsData_.size(); ++i)
         if(jointsData_[i].name == monitoredJointName)
         {
-            jsAttachments_.push_back(std::make_pair(s, monitoredJointName));
-            sensors_.push_back(s);    
-            break;
+            jsAttachments_.push_back(std::make_pair(s.get(), monitoredJointName));
+            sensors_.push_back(s.release());
+            return static_cast<JointSensor*>(sensors_.back());
         }
+    return nullptr;
 }
 
-void GeneralRobot::AddJointActuator(JointActuator* a, const std::string& actuatedJointName)
+JointActuator* GeneralRobot::AddJointActuator(std::unique_ptr<JointActuator> a, const std::string& actuatedJointName)
 {
     for(size_t i = 0; i < jointsData_.size(); ++i)
         if(jointsData_[i].name == actuatedJointName)
         {
-            jaAttachments_.push_back(std::make_pair(a, actuatedJointName));
-            actuators_.push_back(a);    
-            break;
+            jaAttachments_.push_back(std::make_pair(a.get(), actuatedJointName));
+            actuators_.push_back(a.release());    
+            return static_cast<JointActuator*>(actuators_.back());
         }
+    return nullptr;
 }
 
 void GeneralRobot::AddToSimulation(SimulationManager* sm, const Transform& origin)

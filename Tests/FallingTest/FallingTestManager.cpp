@@ -63,69 +63,21 @@ void FallingTestManager::BuildScenario()
     CreateLook("Green", sf::Color::RGB(0.1f, 0.8f, 0.1f), 0.5f, 0.0f);
     
     ////////OBJECTS
-    sf::Plane* floor = new sf::Plane("Floor", 10000.f, "Ground", "Grid");
-    AddStaticEntity(floor, sf::Transform::getIdentity());
+    AddStaticEntity(std::make_unique<sf::Plane>("Floor", 10000.f, "Ground", "Grid"), sf::Transform::getIdentity());
 	
-	sf::Obstacle* dragon = new sf::Obstacle("Dragon", sf::GetDataPath() + "dragon_hires.obj", 10.f, sf::I4(), false, "Steel", "Green");
-	AddStaticEntity(dragon, sf::I4());
-	
-	sf::Obstacle* pillar = new sf::Obstacle("Pillar", sf::Vector3(0.5,0.3,4.0), sf::I4(), "Steel", "Green");
-	AddStaticEntity(pillar, sf::Transform(sf::IQ(), sf::Vector3(-2.0,0.0,-2.0)));
+	AddStaticEntity(std::make_unique<sf::Obstacle>("Dragon", sf::GetDataPath() + "dragon.obj", 0.2f, sf::I4(), false, "Steel", "Green"),
+        sf::Transform(sf::Quaternion(0.0, M_PI/2, 0.0), sf::V0()));
+
+	AddStaticEntity(std::make_unique<sf::Obstacle>("Pillar", sf::Vector3(0.5,0.3,4.0), sf::I4(), "Steel", "Green"), 
+        sf::Transform(sf::IQ(), sf::Vector3(-2.0,0.0,-2.0)));
 	
 	for(int i=1; i<=10; ++i)
 		for(int k=0; k<5; ++k)
 		{
-			sf::Obstacle* box = new sf::Obstacle("Box", sf::Vector3(0.45,0.45,sin(i/2.0)+0.2*i), sf::I4(), "Steel", "Green");
-			AddStaticEntity(box, sf::Transform(sf::IQ(), sf::Vector3(0.5*i+5.0,0.5*k,-sin(i/2.0)/2.0-0.2*i/2.0)));
+			AddStaticEntity(std::make_unique<sf::Obstacle>("Box", sf::Vector3(0.45,0.45,sin(i/2.0)+0.2*i), sf::I4(), "Steel", "Green"), 
+                sf::Transform(sf::IQ(), sf::Vector3(0.5*i+5.0,0.5*k,-sin(i/2.0)/2.0-0.2*i/2.0)));
 		}
 	
-	sf::Light* spot = new sf::Light("Spot", 0.2, 50.0, sf::Color::BlackBody(5000.0), 1000.0);
-	spot->AttachToWorld(sf::Transform(sf::Quaternion(0,0,M_PI/3.0), sf::Vector3(0.0,1.0,-1.0)));
-	AddActuator(spot);
-    
-    //---Robot---
-    sf::PhysicsSettings phy;
-    phy.mode = sf::PhysicsMode::SURFACE;
-    phy.collisions = true;
-    /*
-    //Mechanical parts
-    sf::Sphere* obj = new sf::Sphere("Base", phy, 0.1, sf::I4(), "Steel", "Green");
-    sf::Box* link1 = new sf::Box("Link1", phy, sf::Vector3(0.1,0.02,0.5), sf::Transform(sf::Quaternion(M_PI_2,0,0), sf::Vector3(0.0,0.0,-0.2)), "Steel", "Green");
-    sf::Box* link2 = new sf::Box("Link2", phy, sf::Vector3(0.1,0.02,0.5), sf::Transform(sf::Quaternion(M_PI_2,0,0), sf::Vector3(0.0,0.0,-0.2)), "Steel", "Green");
-    
-    std::vector<sf::SolidEntity*> links;
-    links.push_back(link1);
-    links.push_back(link2);
-
-    //Sensors
-    sf::IMU* imu = new sf::IMU("IMU", -1, 1000);
-    sf::RotaryEncoder* enc = new sf::RotaryEncoder("Encoder", -1, 1000);
-    
-    //Robot
-    sf::Robot* robot = new sf::Robot("Robot", false);
-    
-    robot->DefineLinks(obj, links);
-    robot->DefineRevoluteJoint("Joint1", "Base", "Link1",
-                               sf::Transform(sf::IQ(), sf::Vector3(0,0.25,-0.2)), sf::Vector3(0,1,0), std::make_pair(1.0, -1.0));
-    robot->DefineRevoluteJoint("Joint2", "Base", "Link2",
-                               sf::Transform(sf::IQ(), sf::Vector3(0,-0.25,-0.2)), sf::Vector3(0,1,0), std::make_pair(1.0, -1.0));
-    robot->BuildKinematicTree();
-    robot->AddLinkSensor(imu, "Link2", sf::I4());
-    robot->AddJointSensor(enc, "Joint2");
-    
-    AddRobot(robot, sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,-2.0)));*/
-    
-    //Collisions tests
-    //sf::Sphere* sph = new sf::Sphere("Sphere", phy, 0.1, sf::I4(), "Steel", "Green");
-    //AddSolidEntity(sph, sf::Transform(sf::IQ(), sf::Vector3(1.0,5.0,-2.0)));
-    /*
-    sf::Cylinder* cyl = new sf::Cylinder("Cyl1", phy, 0.2,0.5,sf::I4(), "Steel", "Green");
-    AddSolidEntity(cyl, sf::Transform(sf::Quaternion(0.0,0.0,1.5), sf::Vector3(1.0,2.2,-3.0)));
-
-    sf::Polyhedron* poly1 = new sf::Polyhedron("Poly1", phy, sf::GetDataPath() + "sphere_R=1.obj", 0.2, sf::I4(), "Steel", "Green");
-    AddSolidEntity(poly1, sf::Transform(sf::IQ(), sf::Vector3(1.0, 2.0, -2.0)));
-
-    sf::Odometry* odom = new sf::Odometry("Odom", -1, 0);
-    odom->AttachToSolid(sph, sf::I4());
-    AddSensor(odom);*/
+	sf::Light* spot = static_cast<sf::Light*>(AddActuator(std::make_unique<sf::Light>("Spot", 0.2, 50.0, sf::Color::BlackBody(5000.0), 1000.0)));
+    spot->AttachToWorld(sf::Transform(sf::Quaternion(0,0,M_PI/3.0), sf::Vector3(0.0,1.0,-1.0)));
 }

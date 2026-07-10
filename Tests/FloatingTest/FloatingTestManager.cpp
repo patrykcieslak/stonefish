@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 02/05/2019.
-//  Copyright (c) 2019-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "FloatingTestManager.h"
@@ -60,31 +60,30 @@ void FloatingTestManager::BuildScenario()
     phy.mode = sf::PhysicsMode::FLOATING;
     phy.collisions = true;
     phy.buoyancy = true;
-    sf::Polyhedron* hull = new sf::Polyhedron("Hull", phy, sf::GetDataPath() + "boat_gra.obj", sf::Scalar(1), sf::I4(), sf::GetDataPath() + "boat.obj", sf::Scalar(1), sf::I4(), 
-                                              "Fiberglass", "white", sf::Scalar(0.09));
+    std::unique_ptr<sf::Polyhedron> hull = std::make_unique<sf::Polyhedron>("Hull", phy, sf::GetDataPath() + "boat_gra.obj", sf::Scalar(1), sf::I4(), 
+        sf::GetDataPath() + "boat.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "white", sf::Scalar(0.09));
     hull->ScalePhysicalPropertiesToArbitraryMass(150.0);
 
     //Propeller
     phy.mode = sf::PhysicsMode::SUBMERGED;
     phy.buoyancy = false;
 
-    std::shared_ptr<sf::Polyhedron> propeller = std::make_shared<sf::Polyhedron>("Propeller", phy, sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "propeller");
-    std::shared_ptr<sf::MechanicalPI> rotorDynamics;
-    rotorDynamics = std::make_shared<sf::MechanicalPI>(1.0, 10.0, 5.0, 5.0);
-    std::shared_ptr<sf::FDThrust> thrustModel;
-    thrustModel = std::make_shared<sf::FDThrust>(0.18, 0.48, 0.48, 0.05, true, getOcean()->getLiquid().density);
-    sf::Thruster* thrust = new sf::Thruster("Thruster", propeller, rotorDynamics, thrustModel, 0.18, true, 105.0, false, true);
+    std::unique_ptr<sf::Polyhedron> propeller = std::make_unique<sf::Polyhedron>("Propeller", phy, sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "propeller");
+    std::unique_ptr<sf::MechanicalPI> rotorDynamics =  std::make_unique<sf::MechanicalPI>(1.0, 10.0, 5.0, 5.0);
+    std::unique_ptr<sf::FDThrust> thrustModel = std::make_unique<sf::FDThrust>(0.18, 0.48, 0.48, 0.05, true, getOcean()->getLiquid().density);
+    std::unique_ptr<sf::Thruster> thrust = std::make_unique<sf::Thruster>("Thruster", std::move(propeller), std::move(rotorDynamics), std::move(thrustModel), 
+        0.18, true, 105.0, false, true);
 
     //Sensors   
-    sf::Odometry* odom = new sf::Odometry("Odom");
+    std::unique_ptr<sf::Odometry> odom = std::make_unique<sf::Odometry>("Odom");
     
     //Boat
-    sf::FeatherstoneRobot* boat = new sf::FeatherstoneRobot("Boat");
-    boat->DefineLinks(hull);
+    std::unique_ptr<sf::FeatherstoneRobot> boat = std::make_unique<sf::FeatherstoneRobot>("Boat");
+    boat->DefineLinks(std::move(hull));
     boat->BuildKinematicStructure();
-    boat->AddLinkActuator(thrust, "Hull", sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(-0.8,0.02,0.3)));
-    boat->AddLinkSensor(odom, "Hull", sf::I4());
-    AddRobot(boat, sf::Transform(sf::IQ(), sf::Vector3(0,0,0)));
+    sf::LinkActuator* th = boat->AddLinkActuator(std::move(thrust), "Hull", sf::Transform(sf::Quaternion(0,0,0), sf::Vector3(-0.8,0.02,0.3)));
+    boat->AddLinkSensor(std::move(odom), "Hull", sf::I4());
+    AddRobot(std::move(boat), sf::Transform(sf::IQ(), sf::Vector3(0,0,0)));
     
-    thrust->setSetpoint(1.0);
+    static_cast<sf::Thruster*>(th)->setSetpoint(1.0);
 }

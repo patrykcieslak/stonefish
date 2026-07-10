@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 03/03/2014.
-//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "FallingTestApp.h"
@@ -28,8 +28,8 @@
 #include <sensors/ScalarSensor.h>
 #include <graphics/IMGUI.h>
 
-FallingTestApp::FallingTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings h, FallingTestManager* sim)
-    : sf::GraphicalSimulationApp("Falling Test", dataDirPath, s, h, sim)
+FallingTestApp::FallingTestApp(const std::string& dataDirPath, sf::RenderSettings s, sf::HelperSettings h, std::unique_ptr<FallingTestManager> sim)
+    : sf::GraphicalSimulationApp("Falling Test", dataDirPath, s, h, std::move(sim))
 {
 }
 
