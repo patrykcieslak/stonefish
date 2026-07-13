@@ -1592,7 +1592,13 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
         
         if(numPairs > 0)
         {
-            #pragma omp parallel for schedule(dynamic)
+            // Check current possible thread number
+            int threadLimit = omp_get_max_threads();
+
+            // Leave a thread for the OS, but ensure we use at least 1 thread
+            int safeThreadCount = std::max(1, threadLimit - 1);
+
+            #pragma omp parallel for schedule(dynamic) num_threads(safeThreadCount)
             for(int h=0; h<numPairs; ++h)
             {
                 const btBroadphasePair& pair = pairArray[h];
@@ -1622,7 +1628,13 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
         
         if(numPairs > 0)
         {
-            #pragma omp parallel for schedule(dynamic)
+            // Check current possible thread number
+            int threadLimit = omp_get_max_threads();
+
+            // Leave a thread for the OS, but ensure we use at least 1 thread
+            int safeThreadCount = std::max(1, threadLimit - 1);
+
+            #pragma omp parallel for schedule(dynamic) num_threads(safeThreadCount)
             for(int h=0; h<numPairs; ++h)
             {
                 const btBroadphasePair& pair = pairArray[h];

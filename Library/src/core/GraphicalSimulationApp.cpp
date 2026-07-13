@@ -1099,9 +1099,6 @@ int GraphicalSimulationApp::RunSimulation(void* data)
     SimulationManager* simManager = simApp.getSimulationManager();
 
     simManager->setCallSimulationStepCompleted(simApp.timeStep_ == Scalar(0));
-
-    int maxThreads = std::max(omp_get_max_threads()/2, 1);
-    omp_set_num_threads(maxThreads);
     
     while(simApp.getState() == SimulationState::RUNNING)
     {
