@@ -101,7 +101,7 @@ namespace sf
         const CompoundPart& getPart(size_t partId) const;
 
         //! A method that returns the type of solid.
-        SolidType getSolidType();
+        SolidType getSolidType() const;
         
         //! A method that returns a copy of all physics mesh vertices in body origin frame.
         std::vector<Vector3> getMeshVertices() const;

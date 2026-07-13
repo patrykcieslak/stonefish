@@ -76,7 +76,7 @@ Box::Box(const std::string& uniqueName, PhysicsSettings phy, const Vector3& dime
     //dragCoeff = Vector3(halfExtents.y()*halfExtents.z()*Scalar(4*1.05), halfExtents.x()*halfExtents.z()*Scalar(4*1.05), halfExtents.y()*halfExtents.x()*Scalar(4*1.05));
 }
 
-SolidType Box::getSolidType()
+SolidType Box::getSolidType() const
 {
     return SolidType::BOX;
 }

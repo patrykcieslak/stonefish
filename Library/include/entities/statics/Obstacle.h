@@ -95,6 +95,9 @@ namespace sf
          */
         Obstacle(const std::string& uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& origin, const std::string& material, const std::string& look = "");
         
+        //! A destructor.
+        virtual ~Obstacle();
+
         //! A method implementing the rendering of the entity.
         std::vector<Renderable> Render();
         

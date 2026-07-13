@@ -74,7 +74,7 @@ Cylinder::Cylinder(const std::string& uniqueName, PhysicsSettings phy, Scalar ra
     //dragCoeff = Vector3(radius*halfHeight*Scalar(4*0.5), M_PI*radius*radius*Scalar(0.9), radius*halfHeight*Scalar(4*0.5));
 }
 
-SolidType Cylinder::getSolidType()
+SolidType Cylinder::getSolidType() const
 {
     return SolidType::CYLINDER;
 }

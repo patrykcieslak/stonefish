@@ -67,7 +67,7 @@ Sphere::Sphere(const std::string& uniqueName, PhysicsSettings phy, Scalar radius
     //dragCoeff = Vector3(Scalar(0.47)*M_PI*radius*radius, Scalar(0.47)*M_PI*radius*radius, Scalar(0.47)*M_PI*radius*radius);
 }
 
-SolidType Sphere::getSolidType()
+SolidType Sphere::getSolidType() const
 {
     return SolidType::SPHERE;
 }

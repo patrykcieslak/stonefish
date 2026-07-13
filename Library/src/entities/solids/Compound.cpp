@@ -93,7 +93,7 @@ const CompoundPart& Compound::getPart(size_t partId) const
     }
 }
     
-SolidType Compound::getSolidType()
+SolidType Compound::getSolidType() const
 {
     return SolidType::COMPOUND;
 }

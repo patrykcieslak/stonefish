@@ -84,7 +84,7 @@ namespace sf
         virtual std::unique_ptr<btCollisionShape> BuildCollisionShape() = 0;
         
         //! A pure virtual method returning the type of the solid that the body represents.
-        virtual SolidType getSolidType() = 0;
+        virtual SolidType getSolidType() const = 0;
         
         //! A method updating the acceleration of the body.
         /*!

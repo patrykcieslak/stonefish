@@ -78,7 +78,7 @@ Polyhedron::Polyhedron(const std::string& uniqueName, PhysicsSettings phy,
 {
 }
     
-SolidType Polyhedron::getSolidType()
+SolidType Polyhedron::getSolidType() const
 {
     return SolidType::POLYHEDRON;
 }

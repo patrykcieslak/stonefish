@@ -169,6 +169,18 @@ Obstacle::Obstacle(const std::string& uniqueName, Scalar cylinderRadius, Scalar 
     }
 }
 
+Obstacle::~Obstacle()
+{
+    btBvhTriangleMeshShape* tms;
+    if ((tms = dynamic_cast<btBvhTriangleMeshShape*>(collisionShape_.get())) != nullptr)
+    {
+        btTriangleIndexVertexArray* tva = static_cast<btTriangleIndexVertexArray*>(tms->getMeshInterface());
+        delete [] tva->getIndexedMeshArray()[0].m_vertexBase;
+        delete [] tva->getIndexedMeshArray()[0].m_triangleIndexBase;
+        delete tva;
+    }
+}
+
 StaticEntityType Obstacle::getStaticType()
 {
     return StaticEntityType::OBSTACLE;

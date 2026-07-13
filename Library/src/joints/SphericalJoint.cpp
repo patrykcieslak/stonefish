@@ -39,8 +39,7 @@ SphericalJoint::SphericalJoint(const std::string& uniqueName, SolidEntity* solid
     Vector3 pivotInA = bodyA->getCenterOfMassTransform().inverse() * pivot;
     Vector3 pivotInB = bodyB->getCenterOfMassTransform().inverse() * pivot;
     
-    btPoint2PointConstraint* p2p = new btPoint2PointConstraint(*bodyA, *bodyB, pivotInA, pivotInB);
-    setConstraint(p2p);
+    constraint_ = std::make_unique<btPoint2PointConstraint>(*bodyA, *bodyB, pivotInA, pivotInB);
     
     jSolidA_ = solidA;
     jSolidB_ = solidB;
@@ -57,9 +56,9 @@ SphericalJoint::SphericalJoint(const std::string& uniqueName, SolidEntity* solid
     Vector3 pivotInA = linkTransform.inverse() * pivot;
     Vector3 pivotInB = solidTransform.inverse() * pivot;
     
-    btMultiBodyPoint2Point* p2p = new btMultiBodyPoint2Point(fe->getMultiBody(), linkId, solid->getRigidBody(), pivotInA, pivotInB);
+    std::unique_ptr<btMultiBodyPoint2Point> p2p = std::make_unique<btMultiBodyPoint2Point>(fe->getMultiBody(), linkId, solid->getRigidBody(), pivotInA, pivotInB);
     p2p->setMaxAppliedImpulse(BT_LARGE_FLOAT);
-    setConstraint(p2p);
+    mbConstraint_ = std::move(p2p);
     
     jSolidA_ = fe->getLink(linkId+1).solid.get();
     jSolidB_ = solid;
@@ -96,8 +95,8 @@ void SphericalJoint::ApplyTorque(Vector3 T)
     if(isMultibodyJoint())
         return;
 
-    btRigidBody& bodyA = getConstraint()->getRigidBodyA();
-    btRigidBody& bodyB = getConstraint()->getRigidBodyB();
+    btRigidBody& bodyA = constraint_->getRigidBodyA();
+    btRigidBody& bodyB = constraint_->getRigidBodyB();
     Vector3 torque = T;
     bodyA.applyTorque(torque);
     bodyB.applyTorque(-torque);
@@ -110,8 +109,8 @@ void SphericalJoint::ApplyDamping()
 
     if(sigDamping_.length2() > Scalar(0.) || velDamping_.length2() > Scalar(0.))
     {
-        btRigidBody& bodyA = getConstraint()->getRigidBodyA();
-        btRigidBody& bodyB = getConstraint()->getRigidBodyB();
+        btRigidBody& bodyA = constraint_->getRigidBodyA();
+        btRigidBody& bodyB = constraint_->getRigidBodyB();
         Vector3 relativeAV = bodyA.getAngularVelocity() - bodyB.getAngularVelocity();
         Vector3 torque(0.,0.,0.);
         
@@ -130,8 +129,7 @@ void SphericalJoint::ApplyDamping()
 std::vector<Renderable> SphericalJoint::Render()
 {
     std::vector<Renderable> items(0);
-    btTypedConstraint* c = getConstraint();
-    if(c != nullptr)
+    if(constraint_ != nullptr)
     {
         Renderable item;
         item.model = glm::mat4(1.f);
@@ -139,7 +137,7 @@ std::vector<Renderable> SphericalJoint::Render()
         item.data = std::make_shared<std::vector<glm::vec3>>();
         auto points = item.getDataAsPoints();
         
-        btPoint2PointConstraint* p2p = (btPoint2PointConstraint*)getConstraint();
+        btPoint2PointConstraint* p2p = static_cast<btPoint2PointConstraint*>(constraint_.get());
         Vector3 pivot = p2p->getRigidBodyA().getCenterOfMassTransform()(p2p->getPivotInA());
         Vector3 A = p2p->getRigidBodyA().getCenterOfMassPosition();
         Vector3 B = p2p->getRigidBodyB().getCenterOfMassPosition();

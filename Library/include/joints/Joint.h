@@ -81,10 +81,7 @@ namespace sf
         
         //! A method returning the name of the joint.
         const std::string& getName() const;
-        
-        //! A method returning the internal constraint.
-        btTypedConstraint* getConstraint();
-        
+            
         //! A method returning joint feedback in the world frame.
         /*!
          \param dof degree of freedom for which the feedback is desired
@@ -102,12 +99,10 @@ namespace sf
         SolidEntity* getSolidB();
         
     protected:
-        void setConstraint(btTypedConstraint* c);
-        void setConstraint(btMultiBodyConstraint* c);
         SolidEntity* jSolidA_;
         SolidEntity* jSolidB_;
-        btTypedConstraint* constraint_;
-        btMultiBodyConstraint* mbConstraint_;
+        std::unique_ptr<btTypedConstraint> constraint_;
+        std::unique_ptr<btMultiBodyConstraint> mbConstraint_;
 
     private:
         std::string name_;

@@ -36,8 +36,6 @@ Joint::Joint(const std::string& uniqueName, bool collideLinkedEntities)
 {
     name_ = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
     collisionEnabled_ = collideLinkedEntities;
-    mbConstraint_ = nullptr;
-    constraint_ = nullptr;
     jSolidA_ = nullptr;
     jSolidB_ = nullptr;
 }
@@ -53,24 +51,9 @@ bool Joint::isMultibodyJoint()
     return (constraint_ == nullptr) && (mbConstraint_ != nullptr);
 }
 
-btTypedConstraint* Joint::getConstraint()
-{
-    return constraint_;
-}
-
 const std::string& Joint::getName() const
 {
     return name_;
-}
-
-void Joint::setConstraint(btTypedConstraint *c)
-{
-    constraint_ = c;
-}
-
-void Joint::setConstraint(btMultiBodyConstraint *c)
-{
-    mbConstraint_ = c;
 }
 
 Scalar Joint::getFeedback(unsigned int dof)
@@ -148,14 +131,14 @@ void Joint::AddToSimulation(SimulationManager* sm)
         }
     
         //Add joint to dynamics world
-        sm->getDynamicsWorld()->addConstraint(constraint_, !collisionEnabled_);
+        sm->getDynamicsWorld()->addConstraint(constraint_.get(), !collisionEnabled_);
     }
     else if(mbConstraint_ != nullptr)
     {
         Scalar erp, stopErp;
         sm->getJointErp(erp, stopErp);
         mbConstraint_->setErp(erp);
-        sm->getDynamicsWorld()->addMultiBodyConstraint(mbConstraint_);
+        sm->getDynamicsWorld()->addMultiBodyConstraint(mbConstraint_.get());
         if(!collisionEnabled_)
             SimulationApp::getApp()->getSimulationManager()->DisableCollision(jSolidA_, jSolidB_);
     }
@@ -166,16 +149,16 @@ void Joint::RemoveFromSimulation(SimulationManager* sm)
     if(constraint_ != nullptr)
     {
         delete constraint_->getJointFeedback();
-        sm->getDynamicsWorld()->removeConstraint(constraint_);
+        sm->getDynamicsWorld()->removeConstraint(constraint_.get());
     }
     else if(mbConstraint_ != nullptr)
     {
-        sm->getDynamicsWorld()->removeMultiBodyConstraint(mbConstraint_);
+        sm->getDynamicsWorld()->removeMultiBodyConstraint(mbConstraint_.get());
         if(!collisionEnabled_)
             SimulationApp::getApp()->getSimulationManager()->EnableCollision(jSolidA_, jSolidB_);
     }
 }
-    
+
 void Joint::ApplyDamping()
 {
     //Not applicable.

@@ -914,17 +914,6 @@ void SimulationManager::RestartScenario()
 void SimulationManager::DestroyScenario()
 {
     //Destroy dynamics world
-    if(dynamicsWorld_ != nullptr)
-    {
-        // Remove objects from dynamic world
-        for(int i = dynamicsWorld_->getNumConstraints()-1; i >= 0; i--)
-        {
-            btTypedConstraint* constraint = dynamicsWorld_->getConstraint(i);
-            dynamicsWorld_->removeConstraint(constraint);
-            delete constraint;
-        }
-    }
-
     dynamicsWorld_.reset();
     mbSolver_.reset();
     sbSolver_.reset();

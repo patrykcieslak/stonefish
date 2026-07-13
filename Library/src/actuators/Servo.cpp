@@ -61,7 +61,7 @@ void Servo::setDesiredPosition(Scalar pos)
     
     if(fe_ != nullptr)
     {
-        FeatherstoneJoint jnt = fe_->getJoint(jId_);
+        const FeatherstoneJoint& jnt = fe_->getJoint(jId_);
         if(jnt.lowerLimit < jnt.upperLimit) //Does it have joint limits?
             pos = btClamped(pos, jnt.lowerLimit, jnt.upperLimit);
     }
@@ -264,7 +264,7 @@ void Servo::Update(Scalar dt)
                     Scalar vSetpoint2 = vSetpoint_;
                     
                     //Do not allow to cross limits by changing velocity setpoint
-                    FeatherstoneJoint jnt = fe_->getJoint(jId_);
+                    const FeatherstoneJoint& jnt = fe_->getJoint(jId_);
                     if(jnt.lowerLimit < jnt.upperLimit)
                     {
                         Scalar jpos = getPosition();

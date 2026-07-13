@@ -39,7 +39,7 @@ SpringJoint::SpringJoint(const std::string& uniqueName, SolidEntity* solid, cons
     btRigidBody* bodyA = solid->getRigidBody();
     Transform frameInA = solid->getCGTransform().inverse() * attachment;
 
-    btGeneric6DofSpring2Constraint* spring = new btGeneric6DofSpring2Constraint(*bodyA, frameInA, RO_ZYX);
+    std::unique_ptr<btGeneric6DofSpring2Constraint> spring = std::make_unique<btGeneric6DofSpring2Constraint>(*bodyA, frameInA, RO_ZYX);
     spring->enableSpring(0, true);
     spring->enableSpring(1, true);
     spring->enableSpring(2, true);
@@ -58,7 +58,7 @@ SpringJoint::SpringJoint(const std::string& uniqueName, SolidEntity* solid, cons
     spring->setDamping(3, angularDamping.getX());
     spring->setDamping(4, angularDamping.getY());
     spring->setDamping(5, angularDamping.getZ());
-    setConstraint(spring);
+    constraint_ = std::move(spring);
 }
 
 SpringJoint::SpringJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Transform& attachment,
@@ -70,7 +70,7 @@ SpringJoint::SpringJoint(const std::string& uniqueName, SolidEntity* solidA, Sol
     Transform frameInA = bodyA->getCenterOfMassTransform().inverse() * attachment;
     Transform frameInB = bodyB->getCenterOfMassTransform().inverse() * attachment;
     
-    btGeneric6DofSpring2Constraint* spring = new btGeneric6DofSpring2Constraint(*bodyA, *bodyB, frameInA, frameInB, RO_ZYX);
+    std::unique_ptr<btGeneric6DofSpring2Constraint> spring = std::make_unique<btGeneric6DofSpring2Constraint>(*bodyA, *bodyB, frameInA, frameInB, RO_ZYX);
     spring->enableSpring(0, true);
     spring->enableSpring(1, true);
     spring->enableSpring(2, true);
@@ -89,7 +89,7 @@ SpringJoint::SpringJoint(const std::string& uniqueName, SolidEntity* solidA, Sol
     spring->setDamping(3, angularDamping.getX());
     spring->setDamping(4, angularDamping.getY());
     spring->setDamping(5, angularDamping.getZ());
-    setConstraint(spring);
+    constraint_ = std::move(spring);
 }
 
 JointType SpringJoint::getType() const
@@ -100,7 +100,7 @@ JointType SpringJoint::getType() const
 std::vector<Renderable> SpringJoint::Render()
 {
     std::vector<Renderable> items(0);
-    btGeneric6DofSpring2Constraint* c = (btGeneric6DofSpring2Constraint*)getConstraint();
+    btGeneric6DofSpring2Constraint* c = static_cast<btGeneric6DofSpring2Constraint*>(constraint_.get());
     if(c != nullptr)
     {
         Renderable item;

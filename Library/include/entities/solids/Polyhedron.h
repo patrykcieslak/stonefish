@@ -69,7 +69,7 @@ namespace sf
                    const std::string& material, const std::string& look, Scalar thickness = Scalar(-1), GeometryApproxType approx =  GeometryApproxType::AUTO);
         
         //! A method that returns the type of solid.
-        SolidType getSolidType();
+        SolidType getSolidType() const;
         
         //! A method that returns the collision shape.
         std::unique_ptr<btCollisionShape> BuildCollisionShape();

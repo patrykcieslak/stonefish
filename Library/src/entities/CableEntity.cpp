@@ -47,7 +47,7 @@ CableEntity::CableEntity(const std::string& uniqueName, PhysicsSettings phy, Vec
     
     // Create cable soft body
     numSegments = numSegments < 2 ? 2 : numSegments;
-    cableBody_ = btSoftBodyHelpers::CreateRope(sm->getSoftBodyWorldInfo(), firstEnd, secondEnd, numSegments, 0);
+    cableBody_ = std::unique_ptr<btSoftBody>(btSoftBodyHelpers::CreateRope(sm->getSoftBodyWorldInfo(), firstEnd, secondEnd, numSegments, 0));
     nodalForces_.resize(cableBody_->m_nodes.size());
     restLength_ = (secondEnd - firstEnd).safeNorm();
 
@@ -122,7 +122,7 @@ Scalar CableEntity::getLength() const
     if (cableBody_ != nullptr)
     {
         Scalar length {0};
-        for (size_t i=0; i<cableBody_->m_nodes.size()-1; ++i)
+        for (int i=0; i<cableBody_->m_nodes.size()-1; ++i)
             length += (cableBody_->m_nodes[i+1].m_x - cableBody_->m_nodes[i].m_x).safeNorm();
         return length;
     }
@@ -132,7 +132,7 @@ Scalar CableEntity::getLength() const
 
 btSoftBody* CableEntity::getSoftBody() const
 {
-    return cableBody_;
+    return cableBody_.get();
 }
 
 void CableEntity::getAABB(Vector3& min, Vector3& max)
@@ -199,12 +199,12 @@ void CableEntity::AddToSimulation(SimulationManager* sm)
     {
         if (phy_.collisions)
         {
-            sm->getDynamicsWorld()->addSoftBody(cableBody_, MASK_DYNAMIC, MASK_GHOST | MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING);
+            sm->getDynamicsWorld()->addSoftBody(cableBody_.get(), MASK_DYNAMIC, MASK_GHOST | MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING);
         }
         else
         {
             cableBody_->setCollisionFlags(cableBody_->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
-            sm->getDynamicsWorld()->addSoftBody(cableBody_, MASK_DYNAMIC, MASK_GHOST);
+            sm->getDynamicsWorld()->addSoftBody(cableBody_.get(), MASK_DYNAMIC, MASK_GHOST);
         }
     }
 }
@@ -245,7 +245,7 @@ void CableEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
     for (size_t i = 0; i < nodalForces_.size(); ++i)
         nodalForces_[i].clearForces();
 
-    for (size_t i = 0; i < cableBody_->m_nodes.size()-1; ++i)
+    for (int i = 0; i < cableBody_->m_nodes.size()-1; ++i)
     {
         // Segment
         Vector3 p1 = cableBody_->m_nodes[i].m_x;
@@ -352,14 +352,14 @@ void CableEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
             // Form drag
             {
                 Scalar S = Scalar(2) * radius_ * segmentLength;
-                Vector3 Fdq = -(Scalar(1) - f1) * f2 * Scalar(0.5) * ocn->getLiquid().density * Scalar(Cd) * S * relV.length() * relV;
+                Vector3 Fdq = -(Scalar(1) - f1) * f2 * Scalar(0.5) * ocn->getLiquid().density * Cd * S * relV.length() * relV;
                 nodalForces_[i].Fdq += Fdq / Scalar(2);
                 nodalForces_[i+1].Fdq += Fdq / Scalar(2);
             }
             // Skin friction
             {
                 Scalar S = f2 * (Scalar(2 * M_PI) * radius_ * segmentLength);
-                Vector3 Fdf = -S * relV;
+                Vector3 Fdf = -Cf * S * relV;
                 nodalForces_[i].Fdf += Fdf / Scalar(2);
                 nodalForces_[i+1].Fdf += Fdf / Scalar(2);
             }
@@ -377,7 +377,7 @@ void CableEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
 
 void CableEntity::ApplyHydrodynamicForces()
 {
-    for (size_t i = 0; i < cableBody_->m_nodes.size(); ++i)
+    for (int i = 0; i < cableBody_->m_nodes.size(); ++i)
     {
         Vector3 totalForce = nodalForces_[i].Fb + nodalForces_[i].Fdf + nodalForces_[i].Fdq;
         cableBody_->addForce(totalForce, i);
@@ -485,7 +485,7 @@ std::vector<Renderable> CableEntity::Render()
             itemFdf.data = std::make_shared<std::vector<glm::vec3>>();
             auto pointsFdf = itemFdf.getDataAsPoints();
 
-            for (size_t i = 0; i < cableBody_->m_nodes.size(); ++i)
+            for (int i = 0; i < cableBody_->m_nodes.size(); ++i)
             {
                 glm::vec3 p = glVectorFromVector(cableBody_->m_nodes[i].m_x);
                 pointsFb->push_back(p);

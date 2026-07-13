@@ -33,7 +33,7 @@ namespace sf
 {
 
 ScalarSensor::ScalarSensor(const std::string& uniqueName, Scalar frequency, long int historyLength) 
-    : Sensor(uniqueName, frequency), historyLen_(historyLength), sampleCount_(0)
+    : Sensor(uniqueName, frequency), sampleCount_(0), historyLen_(historyLength)
 {
 }
 

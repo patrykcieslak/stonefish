@@ -101,9 +101,9 @@ void CableTestManager::BuildScenario()
     winch->DefineRevoluteJoint("Joint1", "WinchBase", "WinchCylinder", sf::Transform(sf::IQ(), sf::Vector3(0.0, 1.0, 0.0)), sf::Vector3(0.0, 1.0, 0.0));
     winch->BuildKinematicStructure();
     
-    sf::Servo* servo = new sf::Servo("Servo", 1.0, 1.0, 100.0);
+    std::unique_ptr<sf::Servo> servo = std::make_unique<sf::Servo>("Servo", 1.0, 1.0, 100.0);
     servo->setControlMode(sf::ServoControlMode::VELOCITY);
-    winch->AddJointActuator(servo, "Joint1");
+    winch->AddJointActuator(std::move(servo), "Joint1");
     
     sf::FeatherstoneRobot* winchPtr = static_cast<sf::FeatherstoneRobot*>(
         AddRobot(std::move(winch), sf::Transform(sf::IQ(), sf::Vector3(5.0, 0.0, -5.0))));

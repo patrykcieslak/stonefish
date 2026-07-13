@@ -116,7 +116,7 @@ Wing::Wing(const std::string& uniqueName, PhysicsSettings phy, Scalar baseChordL
     P_CB_ = Vector3(0,0,0);
 }
     
-SolidType Wing::getSolidType()
+SolidType Wing::getSolidType() const
 {
     return SolidType::WING;
 }

@@ -140,7 +140,7 @@ namespace sf
     private:
         Scalar circularSegmentArea(Scalar h) const;
 
-        btSoftBody* cableBody_;
+        std::unique_ptr<btSoftBody> cableBody_;
         Scalar radius_;
         Material mat_;
         std::vector<CableNodalForces> nodalForces_;

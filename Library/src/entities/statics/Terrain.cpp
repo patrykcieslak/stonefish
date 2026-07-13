@@ -47,8 +47,8 @@ Terrain::Terrain(const std::string& uniqueName, const std::string& pathToHeightm
             cCritical("Failed to load heightmap from file '%s'!", pathToHeightmap.c_str());
 
         heightfield_.resize(w*h);
-        for(size_t i=0; i<h; ++i)
-            for(size_t j=0; j<w; ++j)
+        for(size_t i=0; i<(size_t)h; ++i)
+            for(size_t j=0; j<(size_t)w; ++j)
                 heightfield_[i*w+j] = (Scalar(1) - data[i*w+j]/(Scalar)(__UINT16_MAX__)) * height;
         
         stbi_image_free(data);
@@ -60,8 +60,8 @@ Terrain::Terrain(const std::string& uniqueName, const std::string& pathToHeightm
             cCritical("Failed to load heightmap from file '%s'!", pathToHeightmap.c_str());
         
         heightfield_.resize(w*h);
-        for(size_t i=0; i<h; ++i)
-            for(size_t j=0; j<w; ++j)
+        for(size_t i=0; i<(size_t)h; ++i)
+            for(size_t j=0; j<(size_t)w; ++j)
                 heightfield_[i*w+j] = (Scalar(1) - data[i*w+j]/(Scalar)(__UINT8_MAX__)) * height;
 
         stbi_image_free(data);

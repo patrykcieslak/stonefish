@@ -49,12 +49,12 @@ PrismaticJoint::PrismaticJoint(const std::string& uniqueName, SolidEntity* solid
     Transform frameInB = bodyB->getCenterOfMassTransform().inverse() * sliderFrame;
     axisInA_ = frameInA.getBasis().getColumn(0).normalized();
     
-    btSliderConstraint* slider = new btSliderConstraint(*bodyA, *bodyB, frameInA, frameInB, true);
+    std::unique_ptr<btSliderConstraint> slider = std::make_unique<btSliderConstraint>(*bodyA, *bodyB, frameInA, frameInB, true);
     slider->setLowerLinLimit(Scalar(1));
     slider->setUpperLinLimit(Scalar(-1));
     slider->setLowerAngLimit(Scalar(0));
     slider->setUpperAngLimit(Scalar(0));
-    setConstraint(slider);
+    constraint_ = std::move(slider);
     
     sigDamping_ = Scalar(0);
     velDamping_ = Scalar(0);
@@ -69,7 +69,7 @@ void PrismaticJoint::setDamping(Scalar constantFactor, Scalar viscousFactor)
 
 void PrismaticJoint::setLimits(Scalar min, Scalar max)
 {
-    btSliderConstraint* slider = (btSliderConstraint*)getConstraint();    
+    btSliderConstraint* slider = static_cast<btSliderConstraint*>(constraint_.get());
     if(min > max) // No limit
     {    
         slider->setLowerLinLimit(Scalar(1));
@@ -94,8 +94,8 @@ JointType PrismaticJoint::getType() const
 
 void PrismaticJoint::ApplyForce(Scalar F)
 {
-    btRigidBody& bodyA = getConstraint()->getRigidBodyA();
-    btRigidBody& bodyB = getConstraint()->getRigidBodyB();
+    btRigidBody& bodyA = constraint_->getRigidBodyA();
+    btRigidBody& bodyB = constraint_->getRigidBodyB();
     Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA_).normalized();
     Vector3 force = axis * F;
     bodyA.applyCentralForce(force);
@@ -106,8 +106,8 @@ void PrismaticJoint::ApplyDamping()
 {
     if(sigDamping_ > Scalar(0) || velDamping_ > Scalar(0))
     {
-        btRigidBody& bodyA = getConstraint()->getRigidBodyA();
-        btRigidBody& bodyB = getConstraint()->getRigidBodyB();
+        btRigidBody& bodyA = constraint_->getRigidBodyA();
+        btRigidBody& bodyB = constraint_->getRigidBodyB();
         Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA_).normalized();
         Vector3 relativeV = bodyA.getLinearVelocity() - bodyB.getLinearVelocity();
         Scalar v = relativeV.dot(axis);
@@ -132,11 +132,10 @@ std::vector<Renderable> PrismaticJoint::Render()
     item.data = std::make_shared<std::vector<glm::vec3>>();
     auto points = item.getDataAsPoints();
     
-    btTypedConstraint* slider = getConstraint();
-    Vector3 A = slider->getRigidBodyA().getCenterOfMassPosition();
-    Vector3 B = slider->getRigidBodyB().getCenterOfMassPosition();
+    Vector3 A = constraint_->getRigidBodyA().getCenterOfMassPosition();
+    Vector3 B = constraint_->getRigidBodyB().getCenterOfMassPosition();
     Vector3 pivot = (A+B)/Scalar(2.);
-    Vector3 axis = (slider->getRigidBodyA().getCenterOfMassTransform().getBasis() * axisInA_).normalized();
+    Vector3 axis = (constraint_->getRigidBodyA().getCenterOfMassTransform().getBasis() * axisInA_).normalized();
     
     //calculate axis ends
     Scalar e1 = (A-pivot).dot(axis);

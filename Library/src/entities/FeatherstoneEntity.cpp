@@ -93,14 +93,14 @@ void FeatherstoneEntity::AddToSimulation(SimulationManager* sm, const Transform&
     for(size_t i=0; i<joints_.size(); ++i)
     {    
         if(joints_[i].limit != nullptr)
-            sm->getDynamicsWorld()->addMultiBodyConstraint(joints_[i].limit);
+            sm->getDynamicsWorld()->addMultiBodyConstraint(joints_[i].limit.get());
     }
     
     //Creating motors (has to be after joint limits and not interleaved!)
     for(size_t i=0; i<joints_.size(); ++i)
     {
         if(joints_[i].motor != nullptr)
-            sm->getDynamicsWorld()->addMultiBodyConstraint(joints_[i].motor);
+            sm->getDynamicsWorld()->addMultiBodyConstraint(joints_[i].motor.get());
     }
     
     //Resize matrices
@@ -465,9 +465,9 @@ int FeatherstoneEntity::AddRevoluteJoint(const std::string& name, size_t parent,
     multiBody_->setupRevolute(child - 1, M, I, parent - 1, ornParentToChild, joint.axisInChild, parentComToPivotOffset, pivotToChildComOffset, !collisionBetweenJointLinks);
    
     //Add feedback
-    joint.feedback = new btMultiBodyJointFeedback();
-    multiBody_->getLink((int)child - 1).m_jointFeedback = joint.feedback;
-    joints_.push_back(joint);
+    joint.feedback = std::make_unique<btMultiBodyJointFeedback>();
+    multiBody_->getLink((int)child - 1).m_jointFeedback = joint.feedback.get();
+    joints_.push_back(std::move(joint));
     
     return ((int)joints_.size() - 1);
 }
@@ -501,9 +501,9 @@ int FeatherstoneEntity::AddPrismaticJoint(const std::string& name, size_t parent
     multiBody_->setupPrismatic(child - 1, M, I, parent - 1, ornParentToChild, joint.axisInChild, parentComToPivotOffset, pivotToChildComOffset, !collisionBetweenJointLinks);
     
     //Add feedback
-    joint.feedback = new btMultiBodyJointFeedback();
-    multiBody_->getLink((int)child - 1).m_jointFeedback = joint.feedback;
-    joints_.push_back(joint);
+    joint.feedback = std::make_unique<btMultiBodyJointFeedback>();
+    multiBody_->getLink((int)child - 1).m_jointFeedback = joint.feedback.get();
+    joints_.push_back(std::move(joint));
     
     return ((int)joints_.size() - 1);
 }
@@ -536,9 +536,9 @@ int FeatherstoneEntity::AddFixedJoint(const std::string& name, size_t parent, si
     multiBody_->setupFixed(child - 1, M, I, parent - 1, ornParentToChild, parentComToPivotOffset, pivotToChildComOffset);
     
     //Add feedback
-    joint.feedback = new btMultiBodyJointFeedback();
-    multiBody_->getLink((int)child - 1).m_jointFeedback = joint.feedback;
-    joints_.push_back(joint);
+    joint.feedback = std::make_unique<btMultiBodyJointFeedback>();
+    multiBody_->getLink((int)child - 1).m_jointFeedback = joint.feedback.get();
+    joints_.push_back(std::move(joint));
     
     return ((int)joints_.size() - 1);
 }
@@ -550,8 +550,7 @@ void FeatherstoneEntity::AddJointLimit(size_t index, Scalar lower, Scalar upper)
        || lower > upper)
         return;
         
-    btMultiBodyJointLimitConstraint* jlc = new btMultiBodyJointLimitConstraint(multiBody_.get(), index, lower, upper);
-    joints_[index].limit = jlc;
+    joints_[index].limit = std::make_unique<btMultiBodyJointLimitConstraint>(multiBody_.get(), index, lower, upper);
     joints_[index].lowerLimit = lower;
     joints_[index].upperLimit = upper;
 }
@@ -567,8 +566,8 @@ void FeatherstoneEntity::AddJointMotor(size_t index, Scalar maxForceTorque)
     }
     else
     {
-        btMultiBodyJointMotor* jmc = new btMultiBodyJointMotor(multiBody_.get(), index, Scalar(0), maxForceTorque * Scalar(1)/SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond());
-        joints_[index].motor = jmc;
+        joints_[index].motor = std::make_unique<btMultiBodyJointMotor>(multiBody_.get(), index, Scalar(0), 
+            maxForceTorque * Scalar(1)/SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond());
     }
 }
 

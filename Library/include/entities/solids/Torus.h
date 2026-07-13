@@ -48,7 +48,7 @@ namespace sf
               const std::string& material, const std::string& look, Scalar thickness = Scalar(-1));
         
         //! A method that returns the type of body.
-        SolidType getSolidType();
+        SolidType getSolidType() const;
         
         //! A method that returns the collision shape for the torus.
         std::unique_ptr<btCollisionShape> BuildCollisionShape();

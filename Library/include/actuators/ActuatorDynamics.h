@@ -41,6 +41,9 @@ namespace sf
         RotorDynamics() : lastOutput_(0), outputLimit_(-1)
         {}
 
+        //! A destructor.
+        virtual ~RotorDynamics() = default;
+
         //! A method that updates the model.
         /*!
           \param dt simulation time step [s]
@@ -269,6 +272,12 @@ namespace sf
     class ThrustModel
     {
     public:
+        //! A constructor.
+        ThrustModel() = default;
+
+        //! A destructor.
+        virtual ~ThrustModel() = default;
+
         //! A method computing the model output.
         /*!
           \param input the input to the model

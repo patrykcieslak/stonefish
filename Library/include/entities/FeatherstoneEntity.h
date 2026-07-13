@@ -62,13 +62,13 @@ namespace sf
          \param c the id of the child link
          */
         FeatherstoneJoint(const std::string& n, btMultibodyLink::eFeatherstoneJointType t, size_t p, size_t c)
-        : name(n), type(t), feedback(NULL), limit(NULL), motor(NULL), parent(p), child(c), sigDamping(0), velDamping(0), lowerLimit(10e9), upperLimit(-10e9) {}
+        : name(n), type(t), parent(p), child(c), sigDamping(0), velDamping(0), lowerLimit(10e9), upperLimit(-10e9) {}
         
         std::string name;
         btMultibodyLink::eFeatherstoneJointType type;
-        btMultiBodyJointFeedback* feedback;
-        btMultiBodyJointLimitConstraint* limit;
-        btMultiBodyJointMotor* motor;
+        std::unique_ptr<btMultiBodyJointFeedback> feedback;
+        std::unique_ptr<btMultiBodyJointLimitConstraint> limit;
+        std::unique_ptr<btMultiBodyJointMotor> motor;
         
         size_t parent;
         size_t child;
@@ -92,7 +92,7 @@ namespace sf
          \param fixedBase a flag to designate if the multibody is fixed to the world or mobile
          */
         FeatherstoneEntity(const std::string& uniqueName, size_t totalNumOfLinks, std::unique_ptr<SolidEntity> baseSolid, bool fixedBase = false);
-        
+
         //! A method to define a new multibody link.
         /*!
          \param solid a pointer to a rigid body

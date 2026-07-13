@@ -105,7 +105,7 @@ SolidEntity::SolidEntity(const std::string& uniqueName, PhysicsSettings phy, con
 
 SolidEntity::~SolidEntity()
 {
-    if (collisionShape_->getShapeType() == COMPOUND_SHAPE_PROXYTYPE)
+    if (collisionShape_ != nullptr && collisionShape_->getShapeType() == COMPOUND_SHAPE_PROXYTYPE)
     {
         btCompoundShape* shape = static_cast<btCompoundShape*>(collisionShape_.get());
         for (int i = 0; i < shape->getNumChildShapes(); ++i)

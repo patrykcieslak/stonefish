@@ -50,12 +50,12 @@ CylindricalJoint::CylindricalJoint(const std::string& uniqueName, SolidEntity* s
     axisInA_ = frameInA.getBasis().getColumn(0).normalized();
     pivotInA_ = frameInA.getOrigin();
     
-    btSliderConstraint* slider = new btSliderConstraint(*bodyA, *bodyB, frameInA, frameInB, true);
+    std::unique_ptr<btSliderConstraint> slider = std::make_unique<btSliderConstraint>(*bodyA, *bodyB, frameInA, frameInB, true);
     slider->setLowerLinLimit(1.);
     slider->setUpperLinLimit(-1.);
     slider->setLowerAngLimit(1.);
     slider->setUpperAngLimit(-1.);
-    setConstraint(slider);
+    constraint_ = std::move(slider);
     
     linSigDamping_ = Scalar(0.);
     linVelDamping_ = Scalar(0.);
@@ -76,7 +76,7 @@ void CylindricalJoint::setDamping(Scalar linearConstantFactor, Scalar linearVisc
 
 void CylindricalJoint::setLimits(Scalar linearMin, Scalar linearMax, Scalar angularMin, Scalar angularMax)
 {
-    btSliderConstraint* slider = (btSliderConstraint*)getConstraint();
+    btSliderConstraint* slider = static_cast<btSliderConstraint*>(constraint_.get());
     slider->setLowerLinLimit(linearMin);
     slider->setUpperLinLimit(linearMax);
     slider->setLowerAngLimit(angularMin);
@@ -96,8 +96,8 @@ JointType CylindricalJoint::getType() const
 
 void CylindricalJoint::ApplyForce(Scalar F)
 {
-    btRigidBody& bodyA = getConstraint()->getRigidBodyA();
-    btRigidBody& bodyB = getConstraint()->getRigidBodyB();
+    btRigidBody& bodyA = constraint_->getRigidBodyA();
+    btRigidBody& bodyB = constraint_->getRigidBodyB();
     Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA_).normalized();
     Vector3 force = axis * F;
     bodyA.applyCentralForce(force);
@@ -106,8 +106,8 @@ void CylindricalJoint::ApplyForce(Scalar F)
 
 void CylindricalJoint::ApplyTorque(Scalar T)
 {
-    btRigidBody& bodyA = getConstraint()->getRigidBodyA();
-    btRigidBody& bodyB = getConstraint()->getRigidBodyB();
+    btRigidBody& bodyA = constraint_->getRigidBodyA();
+    btRigidBody& bodyB = constraint_->getRigidBodyB();
     Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA_).normalized();
     Vector3 torque = axis * T;
     bodyA.applyTorque(torque);
@@ -118,8 +118,8 @@ void CylindricalJoint::ApplyDamping()
 {
     if(linSigDamping_ > Scalar(0.) || linVelDamping_ > Scalar(0.) || angSigDamping_ > Scalar(0.) || angVelDamping_ > Scalar(0.))
     {
-        btRigidBody& bodyA = getConstraint()->getRigidBodyA();
-        btRigidBody& bodyB = getConstraint()->getRigidBodyB();
+        btRigidBody& bodyA = constraint_->getRigidBodyA();
+        btRigidBody& bodyB = constraint_->getRigidBodyB();
         Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA_).normalized();
         Vector3 relativeV = bodyA.getLinearVelocity() - bodyB.getLinearVelocity();
         Scalar v = relativeV.dot(axis);
@@ -155,11 +155,10 @@ std::vector<Renderable> CylindricalJoint::Render()
     item.data = std::make_shared<std::vector<glm::vec3>>();
     auto points = item.getDataAsPoints();
     
-    btTypedConstraint* cyli = getConstraint();
-    Vector3 A = cyli->getRigidBodyA().getCenterOfMassPosition();
-    Vector3 B = cyli->getRigidBodyB().getCenterOfMassPosition();
-    Vector3 pivot = cyli->getRigidBodyA().getCenterOfMassTransform()(pivotInA_);
-    Vector3 axis = (cyli->getRigidBodyA().getCenterOfMassTransform().getBasis() * axisInA_).normalized();
+    Vector3 A = constraint_->getRigidBodyA().getCenterOfMassPosition();
+    Vector3 B = constraint_->getRigidBodyB().getCenterOfMassPosition();
+    Vector3 pivot = constraint_->getRigidBodyA().getCenterOfMassTransform()(pivotInA_);
+    Vector3 axis = (constraint_->getRigidBodyA().getCenterOfMassTransform().getBasis() * axisInA_).normalized();
     
     //calculate axis ends
     Scalar e1 = (A-pivot).dot(axis);

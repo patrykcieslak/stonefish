@@ -37,13 +37,13 @@ namespace sf
 
 Thruster::Thruster(const std::string& uniqueName, std::unique_ptr<SolidEntity> propeller,
                                             std::unique_ptr<RotorDynamics> rotorDynamics,
-                                            std::unique_ptr<ThrustModel> thrustConversion,
+                                            std::unique_ptr<ThrustModel> thrustModel,
                                             Scalar diameter, bool rightHand, Scalar maxSetpoint,
                                             bool invertedSetpoint, bool normalizedSetpoint)
     : LinkActuator(uniqueName), propeller_(std::move(propeller)), RH_(rightHand), D_(diameter),
       theta_(Scalar(0)), omega_(Scalar(0)), thrust_(Scalar(0)), torque_(Scalar(0)),
       setpoint_(Scalar(0)), setpointLimit_(maxSetpoint), inv_(invertedSetpoint), normalized_(normalizedSetpoint),
-      rotorModel_(std::move(rotorDynamics)), thrustModel_(std::move(thrustConversion))
+      rotorModel_(std::move(rotorDynamics)), thrustModel_(std::move(thrustModel))
 {
     setSetpointLimit(maxSetpoint);
     propeller_->BuildGraphicalObject();

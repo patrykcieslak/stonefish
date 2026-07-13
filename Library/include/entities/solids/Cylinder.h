@@ -47,7 +47,7 @@ namespace sf
         Cylinder(const std::string& uniqueName, PhysicsSettings phy, Scalar radius, Scalar height, const Transform& origin, const std::string& material, const std::string& look, Scalar thickness = Scalar(-1));
         
         //! A method that returns the type of body.
-        SolidType getSolidType();
+        SolidType getSolidType() const;
         
         //! A method that returns the collision shape for the cylinder.
         std::unique_ptr<btCollisionShape> BuildCollisionShape();

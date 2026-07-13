@@ -73,7 +73,7 @@ Torus::Torus(const std::string& uniqueName, PhysicsSettings phy, Scalar majorRad
     //dragCoeff = Vector3(0.5, 0.5, 0.5);//Vector3(radius*halfHeight*4.0*0.5, M_PI*radius*radius*0.9, radius*halfHeight*4.0*0.5);
 }
 
-SolidType Torus::getSolidType()
+SolidType Torus::getSolidType() const
 {
     return SolidType::TORUS;
 }
