@@ -27,7 +27,6 @@
 
 #include <chrono>
 #include <thread>
-#include <omp.h>
 #include "core/SimulationManager.h"
 #include "utils/SystemUtil.hpp"
 
@@ -90,13 +89,15 @@ void ConsoleSimulationApp::ResumeSimulation()
 void ConsoleSimulationApp::StopSimulation()
 {
     SimulationApp::StopSimulation();
-    
+
     if (autostep_ && simulationThread != nullptr)
     {
         int status;
         SDL_WaitThread(simulationThread, &status);
         simulationThread = nullptr;
     }
+
+    physicsThreadPool_.reset();
 }
 
 //Static

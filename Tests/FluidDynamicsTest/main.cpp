@@ -41,7 +41,7 @@ int main(int argc, const char * argv[])
     s.atmosphere = sf::RenderQuality::MEDIUM;
     s.ocean = sf::RenderQuality::HIGH;
     s.ssr = sf::RenderQuality::HIGH;
-    s.verticalSync = true;
+    s.verticalSync = false;
     
     sf::HelperSettings h;
     h.showFluidDynamics = false;
@@ -51,7 +51,7 @@ int main(int argc, const char * argv[])
     h.showActuators = false;
     h.showForces = false;
     
-    FluidDynamicsTestManager simulationManager(500.0);
+    FluidDynamicsTestManager simulationManager(1000.0);
     simulationManager.setRealtimeFactor(1.0);
     sf::GraphicalSimulationApp app("FluidDynamicsTest", std::string(DATA_DIR_PATH), s, h, &simulationManager);
     app.Run();

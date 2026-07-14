@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 02/09/2022.
-//  Copyright (c) 2022 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2022-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "utils/PerformanceMonitor.h"
@@ -35,9 +35,7 @@ PerformanceMonitor::PerformanceMonitor(size_t averageMaxCount)
     
     simTime = 0;
     simFinished = true;
-    phyTime = std::deque<double>(0);
     phyTimeAvg = 0;
-    hydroTime = std::deque<double>(0);
     hydroTimeAvg = 0;
     updateMtx = SDL_CreateMutex();
 }

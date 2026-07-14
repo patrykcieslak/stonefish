@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 01/07/2024.
-//  Copyright(c) 2024 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish__FluidDynamicsTestManager__
-#define __Stonefish__FluidDynamicsTestManager__
+#pragma once
 
 #include <core/SimulationManager.h>
 
@@ -36,5 +35,3 @@ public:
     void BuildScenario();
     void SimulationStepCompleted(sf::Scalar timeStep);
 };
-
-#endif

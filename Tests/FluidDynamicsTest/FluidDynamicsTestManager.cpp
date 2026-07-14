@@ -47,7 +47,7 @@ FluidDynamicsTestManager::FluidDynamicsTestManager(sf::Scalar stepsPerSecond)
 }
 
 void FluidDynamicsTestManager::BuildScenario()
-{
+{    
     ///////SOLVER///////////
     sf::Scalar erp, stopErp;
     getJointErp(erp, stopErp);
@@ -60,6 +60,7 @@ void FluidDynamicsTestManager::BuildScenario()
     globalDamping = 0.1;
     setSolverParams(erp, stopErp, erp2, globalDamping, globalFriction, linSleep, angSleep);
     setFluidDynamicsPrescaler(1);
+    sf::SimulationApp::getApp()->setMaxPhysicsThreads(16);
 
     ///////MATERIALS////////
     CreateMaterial("Light", sf::UnitSystem::Density(sf::CGS, sf::MKS, 0.9), 0.3);
@@ -162,7 +163,9 @@ void FluidDynamicsTestManager::BuildScenario()
 
 void FluidDynamicsTestManager::SimulationStepCompleted(sf::Scalar timeStep)
 {
-    // std::cout << "----------------------------------------------------" << std::endl;
+    std::cout << "Hydrodynamics time: " << getPerformanceMonitor().getHydrodynamicsTimeAverage() << " us\n";
+
+    // std::cout << "----------------------------------------------------\n";
 
     // sf::Scalar rho = getOcean()->getLiquid().density;
 

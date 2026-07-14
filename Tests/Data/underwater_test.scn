@@ -1,5 +1,9 @@
 <?xml version="1.0"?>
 <scenario>
+	<solver>
+		<multithreading max_physics_threads="8"/>
+	</solver>
+
 	<environment>
 		<ned latitude="40.0" longitude="3.0"/>
 		
