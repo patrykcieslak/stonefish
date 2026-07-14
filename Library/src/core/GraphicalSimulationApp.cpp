@@ -27,7 +27,6 @@
 
 #include <chrono>
 #include <thread>
-#include <omp.h>
 #include "core/SimulationManager.h"
 #include "core/Robot.h"
 #include "graphics/OpenGLState.h"
@@ -1011,6 +1010,8 @@ void GraphicalSimulationApp::StopSimulation()
         SDL_WaitThread(simulationThread_, &status);
         simulationThread_ = nullptr;
     }
+
+    physicsThreadPool_.reset();
 }
 
 void GraphicalSimulationApp::StepSimulation()
@@ -1094,9 +1095,6 @@ int GraphicalSimulationApp::RunSimulation(void* data)
 
     simManager->setCallSimulationStepCompleted(simApp.timeStep_ == Scalar(0));
 
-    int maxThreads = std::max(omp_get_max_threads()/2, 1);
-    omp_set_num_threads(maxThreads);
-    
     while(simApp.getState() == SimulationState::RUNNING)
     {
         simApp.StepSimulation();

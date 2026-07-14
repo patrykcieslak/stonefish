@@ -37,7 +37,6 @@
 #include <chrono>
 #include <thread>
 #include <typeinfo>
-#include <omp.h>
 #include <algorithm>
 #include "core/FilteredCollisionDispatcher.h"
 #include "core/GraphicalSimulationApp.h"
@@ -1309,6 +1308,9 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     if (cp.m_userPersistentData != 0)
         delete static_cast<ContactInfo*>(cp.m_userPersistentData);
     cp.m_userPersistentData = (void*)cInfo;
+    if (cp.m_userPersistentData != 0)
+        delete static_cast<ContactInfo*>(cp.m_userPersistentData);
+    cp.m_userPersistentData = (void*)cInfo;
     
     //Damping angular velocity around contact normal (reduce spinning)
     //calculate relative angular velocity
@@ -1483,6 +1485,7 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
 {
     SimulationManager* simManager = (SimulationManager*)world->getWorldUserInfo();
     btSoftMultiBodyDynamicsWorld* dynamicsWorld = static_cast<btSoftMultiBodyDynamicsWorld*>(world);
+    ThreadPool* threads = SimulationApp::getApp()->getPhysicsThreadPool();
         
     //Clear all forces to ensure that no summing occurs
     dynamicsWorld->clearForces(); //Includes clearing of multibody forces!
@@ -1557,7 +1560,6 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
         
         if(numPairs > 0)
         {
-            #pragma omp parallel for schedule(dynamic)
             for(int h=0; h<numPairs; ++h)
             {
                 const btBroadphasePair& pair = pairArray[h];
@@ -1565,15 +1567,21 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
                 if (!colPair)
                     continue;
                     
-                btCollisionObject* co1 = static_cast<btCollisionObject*>(colPair->m_pProxy0->m_clientObject);
-                btCollisionObject* co2 = static_cast<btCollisionObject*>(colPair->m_pProxy1->m_clientObject);
+                btCollisionObject* candidate1 = (btCollisionObject*)colPair->m_pProxy0->m_clientObject;
+                btCollisionObject* candidate2 = (btCollisionObject*)colPair->m_pProxy1->m_clientObject;
+                btCollisionObject* co = candidate1 == simManager->atmosphere->getGhost() ? candidate2 : candidate1;
                 
-                if(co1 == simManager->atmosphere_->getGhost())
-                    simManager->atmosphere_->ApplyFluidForces(world, co2, recompute);
-                else if(co2 == simManager->ocean_->getGhost())
-                    simManager->atmosphere_->ApplyFluidForces(world, co1, recompute);
+                if (threads != nullptr)
+                    threads->enqueue([](SimulationManager* sim, btDynamicsWorld* world, btCollisionObject* co, bool recompute){
+                        sim->atmosphere->ApplyFluidForces(world, co, recompute); 
+                    }, simManager, world, co, recompute);
+                else
+                    simManager->atmosphere->ApplyFluidForces(world, co, recompute);
             }
         }
+
+        if (threads != nullptr)
+            threads->waitAll();
     }
     
     //Hydrodynamic forces
@@ -1587,7 +1595,6 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
         
         if(numPairs > 0)
         {
-            #pragma omp parallel for schedule(dynamic)
             for(int h=0; h<numPairs; ++h)
             {
                 const btBroadphasePair& pair = pairArray[h];
@@ -1595,18 +1602,24 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
                 if (!colPair)
                     continue;
                     
-                btCollisionObject* co1 = static_cast<btCollisionObject*>(colPair->m_pProxy0->m_clientObject);
-                btCollisionObject* co2 = static_cast<btCollisionObject*>(colPair->m_pProxy1->m_clientObject);
+                btCollisionObject* candidate1 = (btCollisionObject*)colPair->m_pProxy0->m_clientObject;
+                btCollisionObject* candidate2 = (btCollisionObject*)colPair->m_pProxy1->m_clientObject;
+                btCollisionObject* co = candidate1 == simManager->ocean->getGhost() ? candidate2 : candidate1;
                 
-                if(co1 == simManager->ocean_->getGhost())
-                    simManager->ocean_->ApplyFluidForces(world, co2, recompute);
-                else if(co2 == simManager->ocean_->getGhost())
-                    simManager->ocean_->ApplyFluidForces(world, co1, recompute);
+                if (threads != nullptr)
+                    threads->enqueue([](SimulationManager* sim, btDynamicsWorld* world, btCollisionObject* co, bool recompute){
+                        sim->ocean->ApplyFluidForces(world, co, recompute); 
+                    }, simManager, world, co, recompute);
+                else
+                    simManager->ocean->ApplyFluidForces(world, co, recompute);
             }
         }
         
-        simManager->perfMon_.HydrodynamicsFinished();
-        if(recompute) SDL_UnlockMutex(simManager->simHydroMutex_);
+        if (threads != nullptr)
+            threads->waitAll();
+
+        simManager->perfMon.HydrodynamicsFinished();
+        if(recompute) SDL_UnlockMutex(simManager->simHydroMutex);
     }
 }
 

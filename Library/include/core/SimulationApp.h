@@ -27,6 +27,7 @@
 
 #include "StonefishCommon.h"
 #include "core/Console.h"
+#include "utils/ThreadPool.hpp"
 
 //Console output aliases
 #define cInfo(format, ...)     sf::SimulationApp::getApp()->getConsole()->Print(sf::MessageType::INFO, format, ##__VA_ARGS__)
@@ -80,6 +81,12 @@ namespace sf
 
         //! A method that performs a single simulation step and necessary updates.
         virtual void StepSimulation();
+
+        //! A method setting the maximum allowed parallel threads for physcis computation.
+        /*!
+         \param n number of threads
+         */
+        void setMaxPhysicsThreads(unsigned int n);
         
         //! A method returning simulation state.
         SimulationState getState() const;
@@ -91,13 +98,19 @@ namespace sf
         double getPhysicsTime();
           
         //! A method returning the path to the directory containing simulation data.
-        std::string getDataPath();
+        const std::string& getDataPath() const;
         
         //! A method returning the name of the application.
-        std::string getName();
+        const std::string& getName() const;
         
         //! A method returning a pointer to the console associated with the application.
         Console* getConsole();
+
+        //! A method returning the maximum allowed parallel threads for physics computation.
+        unsigned int getMaxPhysicsThreads() const;
+
+        //! A method returning the physics thread pool.
+        ThreadPool* getPhysicsThreadPool();
 
         //! A method informing if the application is graphical.
         virtual bool hasGraphics() = 0;
@@ -120,6 +133,8 @@ namespace sf
         bool autostep_;
         Scalar timeStep_;
         SimulationState state_;
+        unsigned int maxPhysicsThreads_;
+        std::unique_ptr<ThreadPool> physicsThreadPool_;
 
     private:
         std::unique_ptr<SimulationManager> simManager_;

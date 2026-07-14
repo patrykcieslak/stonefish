@@ -79,6 +79,7 @@ The solver parameters that can be set through the XML definitions, with their co
 - ``<erp2 value="(0.0,1.0]"/>`` error correction factor (Baumgarte) for contact contraints
 - ``<global_damping value="[0.0,1.0]"/>`` damping factor used globally
 - ``<sleeping_thresholds linear="[0.0,+inf)" angular="[0.0,+inf)"/>`` magnitude of linear and angular velocities below which the bodies are considered immobile
+- ``<multithreading max_physics_threads="[1,+inf)">`` maximum number of threads to use when computing fluid dynamics (should not exceed number of physical CPU cores)
 
 Using the code
 ==============

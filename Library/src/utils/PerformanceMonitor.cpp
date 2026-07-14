@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 02/09/2022.
-//  Copyright (c) 2022 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2022-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "utils/PerformanceMonitor.h"

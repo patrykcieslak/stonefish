@@ -604,9 +604,14 @@ bool ScenarioParser::ParseSolver(XMLElement* element)
     sm_->setSolverParams(erp, stopErp, erp2, globalDamping, globalFriction, linSleep, angSleep);
     
     unsigned int presc;
-    if((item = element->FirstChildElement("fluid_dynamics")) != nullptr
+    if ((item = element->FirstChildElement("fluid_dynamics")) != nullptr
         && item->QueryAttribute("prescaler", &presc) == XML_SUCCESS)
             sm_->setFluidDynamicsPrescaler(presc);
+
+    unsigned int maxPhysicsThreads;
+    if ((item = element->FirstChildElement("multithreading")) != nullptr
+        && item->QueryAttribute("max_physics_threads", &maxPhysicsThreads) == XML_SUCCESS)
+            SimulationApp::getApp()->setMaxPhysicsThreads(maxPhysicsThreads);
 
     return true;
 }

@@ -21,8 +21,10 @@
 //
 //  Created by Patryk Cieslak on 11/28/12.
 //  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
+#pragma once
 #pragma once
 
 #include <cstdint>
@@ -33,13 +35,18 @@
 #include <ctime>
 #include <chrono>
 
-#ifdef __linux__
+#if defined(__linux__)
     #include <unistd.h>
-#elif __APPLE__
+    #include <fstream>
+    #include <string>
+    #include <set>
+#elif defined(__APPLE__)
     #include <unistd.h>
+    #include <sys/sysctl.h>
     #include <Carbon/Carbon.h>
-#else //WINDOWS
+#elif defined(_WIN32)
     #include <windows.h>
+    #include <vector>
 #endif
 
 #include "core/GraphicalSimulationApp.h"
@@ -47,7 +54,67 @@
 
 namespace sf
 {
+
+inline unsigned int GetPhysicalCores() 
+{
+#if defined(_WIN32)
+    // Windows: Use GetLogicalProcessorInformation
+    DWORD length = 0;
+    GetLogicalProcessorInformation(nullptr, &length);
+    std::vector<SYSTEM_LOGICAL_PROCESSOR_INFORMATION> buffer(length / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION));
     
+    if (GetLogicalProcessorInformation(buffer.data(), &length)) {
+        unsigned int cores = 0;
+        for (const auto& info : buffer) 
+        {
+            if (info.Relationship == RelationProcessorCore) 
+                cores++;
+        }
+        return cores > 0 ? cores : 1;
+    }
+#elif defined(__APPLE__)
+    // macOS: Use sysctlbyname
+    int cores = 0;
+    size_t size = sizeof(cores);
+    if (sysctlbyname("hw.physicalcpu", &cores, &size, nullptr, 0) == 0) 
+    {
+        return cores;
+    }
+#elif defined(__linux__)
+    // Linux: Read /proc/cpuinfo and count unique core IDs per physical ID
+    std::ifstream file("/proc/cpuinfo");
+    if (file.is_open()) 
+    {
+        std::string line;
+        std::set<std::string> uniqueCores;
+        std::string currentPhysId = "0";
+        std::string currentCoreId = "";
+
+        while (std::getline(file, line)) 
+        {
+            if (line.rfind("physical id", 0) == 0) 
+            {
+                currentPhysId = line.substr(line.find(':') + 1);
+            } 
+            else if (line.rfind("core id", 0) == 0) 
+            {
+                currentCoreId = line.substr(line.find(':') + 1);
+                // Pair them up to handle multi-socket machines correctly
+                uniqueCores.insert(currentPhysId + "_" + currentCoreId);
+            }
+        }
+        if (!uniqueCores.empty()) 
+        {
+            return uniqueCores.size();
+        }
+    }
+#endif
+
+    // Fallback if OS-specific queries fail
+    unsigned int logical = std::thread::hardware_concurrency();
+    return logical > 0 ? logical : 1; 
+}
+
 inline int64_t GetTimeInMicroseconds()
 {
     std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
@@ -181,3 +248,4 @@ inline float grandom(float mean, float stdDeviation, long *seed)
 }
 
 }
+
