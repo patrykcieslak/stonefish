@@ -1308,9 +1308,6 @@ bool SimulationManager::CustomMaterialCombinerCallback(btManifoldPoint& cp,	cons
     if (cp.m_userPersistentData != 0)
         delete static_cast<ContactInfo*>(cp.m_userPersistentData);
     cp.m_userPersistentData = (void*)cInfo;
-    if (cp.m_userPersistentData != 0)
-        delete static_cast<ContactInfo*>(cp.m_userPersistentData);
-    cp.m_userPersistentData = (void*)cInfo;
     
     //Damping angular velocity around contact normal (reduce spinning)
     //calculate relative angular velocity
@@ -1569,14 +1566,14 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
                     
                 btCollisionObject* candidate1 = (btCollisionObject*)colPair->m_pProxy0->m_clientObject;
                 btCollisionObject* candidate2 = (btCollisionObject*)colPair->m_pProxy1->m_clientObject;
-                btCollisionObject* co = candidate1 == simManager->atmosphere->getGhost() ? candidate2 : candidate1;
+                btCollisionObject* co = candidate1 == simManager->atmosphere_->getGhost() ? candidate2 : candidate1;
                 
                 if (threads != nullptr)
                     threads->enqueue([](SimulationManager* sim, btDynamicsWorld* world, btCollisionObject* co, bool recompute){
-                        sim->atmosphere->ApplyFluidForces(world, co, recompute); 
+                        sim->atmosphere_->ApplyFluidForces(world, co, recompute); 
                     }, simManager, world, co, recompute);
                 else
-                    simManager->atmosphere->ApplyFluidForces(world, co, recompute);
+                    simManager->atmosphere_->ApplyFluidForces(world, co, recompute);
             }
         }
 
@@ -1604,22 +1601,22 @@ void SimulationManager::SimulationTickCallback(btDynamicsWorld* world, Scalar ti
                     
                 btCollisionObject* candidate1 = (btCollisionObject*)colPair->m_pProxy0->m_clientObject;
                 btCollisionObject* candidate2 = (btCollisionObject*)colPair->m_pProxy1->m_clientObject;
-                btCollisionObject* co = candidate1 == simManager->ocean->getGhost() ? candidate2 : candidate1;
+                btCollisionObject* co = candidate1 == simManager->ocean_->getGhost() ? candidate2 : candidate1;
                 
                 if (threads != nullptr)
                     threads->enqueue([](SimulationManager* sim, btDynamicsWorld* world, btCollisionObject* co, bool recompute){
-                        sim->ocean->ApplyFluidForces(world, co, recompute); 
+                        sim->ocean_->ApplyFluidForces(world, co, recompute); 
                     }, simManager, world, co, recompute);
                 else
-                    simManager->ocean->ApplyFluidForces(world, co, recompute);
+                    simManager->ocean_->ApplyFluidForces(world, co, recompute);
             }
         }
         
         if (threads != nullptr)
             threads->waitAll();
 
-        simManager->perfMon.HydrodynamicsFinished();
-        if(recompute) SDL_UnlockMutex(simManager->simHydroMutex);
+        simManager->perfMon_.HydrodynamicsFinished();
+        if(recompute) SDL_UnlockMutex(simManager->simHydroMutex_);
     }
 }
 

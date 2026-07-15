@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/05/2019.
-//  Copyright (c) 2019-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "FlyingTestManager.h"
@@ -58,39 +58,31 @@ void FlyingTestManager::BuildScenario()
     //Create environment
     getAtmosphere()->SetSunPosition(0.0, 60.0);
     
-    sf::Plane* floor = new sf::Plane("Floor", 10000, "Ground", "grid");
-    AddStaticEntity(floor, sf::Transform::getIdentity());
+    AddStaticEntity(std::make_unique<sf::Plane>("Floor", 10000, "Ground", "grid"), sf::Transform::getIdentity());
 
     sf::PhysicsSettings phy;
     phy.mode = sf::PhysicsMode::AERODYNAMIC;
     phy.collisions = true;
+    AddSolidEntity(std::make_unique<sf::Box>("Leaf", phy, sf::Vector3(5,3,0.0001), sf::I4(), "Fiberglass","white"), sf::Transform(sf::Quaternion(0,0.3,0), sf::Vector3(10,0,-10)));
+    
+    std::unique_ptr<sf::Compound> fuselage = std::make_unique<sf::Compound>("Fuselage", phy, std::make_unique<sf::Box>("Arm1", phy, sf::Vector3(1.0,0.01,0.01), sf::I4(), "Fiberglass", "white"), sf::I4());
+    fuselage->AddExternalPart(std::make_unique<sf::Box>("Arm2", phy, sf::Vector3(0.01,1.0,0.01), sf::I4(), "Fiberglass", "white"), sf::I4());
 
-    sf::Box* leaf = new sf::Box("Leaf", phy, sf::Vector3(5,3,0.0001), sf::I4(), "Fiberglass","white");
-    AddSolidEntity(leaf, sf::Transform(sf::Quaternion(0,0.3,0), sf::Vector3(10,0,-10)));
-    
-    std::shared_ptr<sf::Polyhedron> propeller = std::make_shared<sf::Polyhedron>("Propeller1", phy, sf::GetDataPath() + "propeller_air.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "propeller");
-    
-    sf::Propeller* prop1 = new sf::Propeller("Prop1", propeller, 0.2, 0.1, 0.01, 10000, true);
-    sf::Propeller* prop2 = new sf::Propeller("Prop2", propeller, 0.2, 0.1, 0.01, 10000, true);
-    sf::Propeller* prop3 = new sf::Propeller("Prop3", propeller, 0.2, 0.1, 0.01, 10000, false);
-    sf::Propeller* prop4 = new sf::Propeller("Prop4", propeller, 0.2, 0.1, 0.01, 10000, false);
-    
-    sf::Box* arm1 = new sf::Box("Arm1", phy, sf::Vector3(1.0,0.01,0.01), sf::I4(), "Fiberglass", "white");
-    sf::Box* arm2 = new sf::Box("Arm2", phy, sf::Vector3(0.01,1.0,0.01), sf::I4(), "Fiberglass", "white");
-    sf::Compound* fuselage = new sf::Compound("Fuselage", phy, arm1, sf::I4());
-    fuselage->AddExternalPart(arm2, sf::I4());
-    
-    sf::FeatherstoneRobot* quadCopter = new sf::FeatherstoneRobot("Quadcopter");
-    quadCopter->DefineLinks(fuselage);
+    std::unique_ptr<sf::FeatherstoneRobot> quadCopter = std::make_unique<sf::FeatherstoneRobot>("Quadcopter");
+    quadCopter->DefineLinks(std::move(fuselage));
     quadCopter->BuildKinematicStructure();
-    quadCopter->AddLinkActuator(prop1, "Fuselage", sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0.5,0.0,-0.02)));
-    quadCopter->AddLinkActuator(prop2, "Fuselage", sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(-0.5,0.0,-0.02)));
-    quadCopter->AddLinkActuator(prop3, "Fuselage", sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0.0,0.5,-0.02)));
-    quadCopter->AddLinkActuator(prop4, "Fuselage", sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0.0,-0.5,-0.02)));
-    AddRobot(quadCopter, sf::Transform(sf::IQ(), sf::Vector3(0,0,-0.02)));
+    quadCopter->AddLinkActuator(std::make_unique<sf::Propeller>("Propeller1", std::make_unique<sf::Polyhedron>("Prop1", phy, sf::GetDataPath() + "propeller_air.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "propeller"), 
+        0.2, 0.1, 0.01, 10000, true), "Fuselage", sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0.5,0.0,-0.02)));
+    quadCopter->AddLinkActuator(std::make_unique<sf::Propeller>("Propeller2", std::make_unique<sf::Polyhedron>("Prop2", phy, sf::GetDataPath() + "propeller_air.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "propeller"), 
+        0.2, 0.1, 0.01, 10000, true), "Fuselage", sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(-0.5,0.0,-0.02)));
+    quadCopter->AddLinkActuator(std::make_unique<sf::Propeller>("Propeller3", std::make_unique<sf::Polyhedron>("Prop3", phy, sf::GetDataPath() + "propeller_air.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "propeller"), 
+        0.2, 0.1, 0.01, 10000, false), "Fuselage", sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0.0,0.5,-0.02)));
+    quadCopter->AddLinkActuator(std::make_unique<sf::Propeller>("Propeller4", std::make_unique<sf::Polyhedron>("Prop4", phy, sf::GetDataPath() + "propeller_air.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "propeller"), 
+        0.2, 0.1, 0.01, 10000, false), "Fuselage", sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0.0,-0.5,-0.02)));
     
-    prop1->setSetpoint(0.5);
-    prop2->setSetpoint(0.5);
-    prop3->setSetpoint(-0.5);
-    prop4->setSetpoint(-0.5);
+    sf::Robot* robot = AddRobot(std::move(quadCopter), sf::Transform(sf::IQ(), sf::Vector3(0,0,-0.02)));
+    static_cast<sf::Propeller*>(robot->getActuator("Propeller1"))->setSetpoint(0.5);
+    static_cast<sf::Propeller*>(robot->getActuator("Propeller2"))->setSetpoint(0.5);
+    static_cast<sf::Propeller*>(robot->getActuator("Propeller3"))->setSetpoint(-0.5);
+    static_cast<sf::Propeller*>(robot->getActuator("Propeller4"))->setSetpoint(-0.5);
 }

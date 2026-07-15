@@ -20,7 +20,7 @@
 //  LearningTest
 //
 //  Created by Patryk Cieslak on 20/05/2025.
-//  Copyright (c) 2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2025-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include <core/GraphicalSimulationApp.h>
@@ -93,8 +93,7 @@ int main(int argc, const char * argv[])
     // Create the simulation manager and application
     // Here you define the sampling frequency of the simulation;
     // higher frequency means more accurate simulation but taking more time to compute...
-    LearningTestManager* simulationManager = new LearningTestManager(1000.0);
-    sf::GraphicalSimulationApp app("LearningTest", std::string(DATA_DIR_PATH), s, h, simulationManager);
+    sf::GraphicalSimulationApp app("LearningTest", std::string(DATA_DIR_PATH), s, h, std::make_unique<LearningTestManager>(1000.0));
     
     // Start the learning thread
     LearningThreadData data {app};

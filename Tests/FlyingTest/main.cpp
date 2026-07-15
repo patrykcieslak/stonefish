@@ -20,7 +20,7 @@
 //  FlyingTest
 //
 //  Created by Patryk Cieslak on 06/05/2019.
-//  Copyright (c) 2019-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include <core/GraphicalSimulationApp.h>
@@ -46,8 +46,7 @@ int main(int argc, const char * argv[])
     h.showActuators = false;
     h.showForces = false;
     
-    FlyingTestManager* simulationManager = new FlyingTestManager(200.0);
-    sf::GraphicalSimulationApp app("FlyingTest", std::string(DATA_DIR_PATH), s, h, simulationManager);
+    sf::GraphicalSimulationApp app("FlyingTest", std::string(DATA_DIR_PATH), s, h, std::make_unique<FlyingTestManager>(200.0));
     app.Run();
     
     return 0;

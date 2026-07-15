@@ -557,6 +557,9 @@ void GraphicalSimulationApp::LoopInternal()
         }
     }
 
+    if (state_ == SimulationState::FINISHED) // Break the internal loop to avoid accessing destroyed resources
+        return;
+
     if(joystick_ != nullptr)
     {
         for(int i=0; i<SDL_JoystickNumAxes(joystick_); i++)

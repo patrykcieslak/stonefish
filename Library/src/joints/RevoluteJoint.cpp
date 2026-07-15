@@ -45,11 +45,11 @@ RevoluteJoint::RevoluteJoint(const std::string& uniqueName, SolidEntity* solidA,
     
     std::unique_ptr<btHingeConstraint> hinge = std::make_unique<btHingeConstraint>(*bodyA, *bodyB, pivotInA_, pivotInB, axisInA_, axisInB, true);
     hinge->setLimit(Scalar(1), Scalar(-1)); //no limit (min > max)
-    constraint_ = std::move(hinge);
-
+    angleOffset_ = hinge->getHingeAngle();
     sigDamping_ = Scalar(0);
     velDamping_ = Scalar(0);
-    angleOffset_ = hinge->getHingeAngle();
+    constraint_ = std::move(hinge);
+    
     cInfo("Created revolute joint '%s'. Offset: %lf rad.", uniqueName.c_str(), angleOffset_);
     setIC(Scalar(0));
 }
@@ -63,11 +63,11 @@ RevoluteJoint::RevoluteJoint(const std::string& uniqueName, SolidEntity* solid, 
     
     std::unique_ptr<btHingeConstraint> hinge = std::make_unique<btHingeConstraint>(*body, pivotInA_, axisInA_, true);
     hinge->setLimit(Scalar(1), Scalar(-1)); //no limit (min > max)
-    constraint_ = std::move(hinge);
-    
+    angleOffset_ = hinge->getHingeAngle();
     sigDamping_ = Scalar(0);
     velDamping_ = Scalar(0);
-    angleOffset_ = hinge->getHingeAngle();
+    constraint_ = std::move(hinge);
+    
     cInfo("Created revolute joint '%s'. Offset: %lf rad.", uniqueName.c_str(), angleOffset_);
     setIC(Scalar(0));
 }

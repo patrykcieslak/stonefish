@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/03/2014.
-//  Copyright (c) 2014-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "JointsTestManager.h"
@@ -70,8 +70,7 @@ void JointsTestManager::BuildScenario()
     static_cast<sf::GraphicalSimulationApp*>(sf::SimulationApp::getApp())->getTrackball()->MoveCenter(glm::vec3(1.f,3.f,0.f));
     getNED()->Init(-10.0, -10.0, 0.0);
     
-    std::unique_ptr<sf::Plane> floor = std::make_unique<sf::Plane>("Floor", 1000.f, "Steel", "grid");
-    AddStaticEntity(std::move(floor), sf::I4());
+    AddStaticEntity(std::make_unique<sf::Plane>("Floor", 1000.f, "Steel", "grid"), sf::I4());
     
     sf::PhysicsSettings phy;
     phy.mode = sf::PhysicsMode::SURFACE;
@@ -165,20 +164,19 @@ void JointsTestManager::BuildScenario()
     
     robot->BuildKinematicStructure();
 
-    sf::Servo* srv1 = new sf::Servo("Servo1", 1.0, 1.0, 1000.0);
+    std::unique_ptr<sf::Servo> srv1 = std::make_unique<sf::Servo>("Servo1", 1.0, 1.0, 1000.0);
     srv1->setControlMode(sf::ServoControlMode::POSITION);
-    robot->AddJointActuator(srv1, "joint1");
+    robot->AddJointActuator(std::move(srv1), "joint1");
 
-    sf::Servo* srv2 = new sf::Servo("Servo2", 1.0, 1.0, 1000.0);
+    std::unique_ptr<sf::Servo> srv2 = std::make_unique<sf::Servo>("Servo2", 1.0, 1.0, 1000.0);
     srv2->setControlMode(sf::ServoControlMode::POSITION);
-    robot->AddJointActuator(srv2, "joint2");
+    robot->AddJointActuator(std::move(srv2), "joint2");
 
-    sf::Servo* srv3 = new sf::Servo("Servo3", 1.0, 1.0, 1000.0);
+    std::unique_ptr<sf::Servo> srv3 = std::make_unique<sf::Servo>("Servo3", 1.0, 1.0, 1000.0);
     srv3->setControlMode(sf::ServoControlMode::POSITION);
-    robot->AddJointActuator(srv3, "joint3");
+    robot->AddJointActuator(std::move(srv3), "joint3");
 
-    sf::SuctionCup* suction = new sf::SuctionCup("Suction");
-    robot->AddLinkActuator(suction, "Arm3", sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.0)));
+    robot->AddLinkActuator(std::make_unique<sf::SuctionCup>("Suction"), "Arm3", sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.0)));
 
     AddRobot(std::move(robot), sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,-0.75)));
 

@@ -20,7 +20,7 @@
 //  UnderwaterTest
 //
 //  Created by Patryk Cieslak on 02/03/2014.
-//  Copyright(c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "UnderwaterTestApp.h"
@@ -51,9 +51,9 @@ int main(int argc, const char * argv[])
     h.showActuators = false;
     h.showForces = false;
     
-    UnderwaterTestManager simulationManager(200.0);
-    simulationManager.setRealtimeFactor(1.0);
-    UnderwaterTestApp app(std::string(DATA_DIR_PATH), s, h, &simulationManager);
+    std::unique_ptr<UnderwaterTestManager> simulationManager = std::make_unique<UnderwaterTestManager>(200.0);
+    simulationManager->setRealtimeFactor(1.0);
+    UnderwaterTestApp app(std::string(DATA_DIR_PATH), s, h, std::move(simulationManager));
     app.Run();
     
     return 0;

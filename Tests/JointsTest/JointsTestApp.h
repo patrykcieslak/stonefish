@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 01/02/2023.
-//  Copyright (c) 2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2023-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish__JointsTestApp__
-#define __Stonefish__JointsTestApp__
+#pragma once
 
 #include <core/GraphicalSimulationApp.h>
 #include "JointsTestManager.h"
@@ -32,11 +31,9 @@
 class JointsTestApp : public sf::GraphicalSimulationApp
 {
 public:
-    JointsTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings h, JointsTestManager* sim);
+    JointsTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings h, std::unique_ptr<JointsTestManager> sim);
     
     void DoHUD();
    
 private:
 };
-
-#endif

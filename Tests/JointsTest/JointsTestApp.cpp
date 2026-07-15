@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 01/02/2023.
-//  Copyright (c) 2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2023-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "JointsTestApp.h"
@@ -31,8 +31,8 @@
 #include <core/Console.h>
 #include <graphics/IMGUI.h>
 
-JointsTestApp::JointsTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings h, JointsTestManager* sim)
-    : GraphicalSimulationApp("Joints Test", dataDirPath, s, h, sim)
+JointsTestApp::JointsTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings h, std::unique_ptr<JointsTestManager> sim)
+    : GraphicalSimulationApp("Joints Test", dataDirPath, s, h, std::move(sim))
 {
 }
 

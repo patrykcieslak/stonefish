@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 03/03/2014.
-//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "UnderwaterTestApp.h"
@@ -38,8 +38,8 @@
 #include <comms/USBL.h>
 #include <core/Console.h>
 
-UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings h, UnderwaterTestManager* sim)
-    : GraphicalSimulationApp("UnderwaterTest", dataDirPath, s, h, sim), surge_(0), yaw_(0)
+UnderwaterTestApp::UnderwaterTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings h, std::unique_ptr<UnderwaterTestManager> sim)
+    : GraphicalSimulationApp("UnderwaterTest", dataDirPath, s, h, std::move(sim)), surge_(0), yaw_(0)
 {
 }
 

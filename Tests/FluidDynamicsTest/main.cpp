@@ -20,7 +20,7 @@
 //  FluidDynamicsTest
 //
 //  Created by Patryk Cieslak on 01/07/2024.
-//  Copyright(c) 2024-2025 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include <core/GraphicalSimulationApp.h>
@@ -51,9 +51,9 @@ int main(int argc, const char * argv[])
     h.showActuators = false;
     h.showForces = false;
     
-    FluidDynamicsTestManager simulationManager(1000.0);
-    simulationManager.setRealtimeFactor(1.0);
-    sf::GraphicalSimulationApp app("FluidDynamicsTest", std::string(DATA_DIR_PATH), s, h, &simulationManager);
+    std::unique_ptr<FluidDynamicsTestManager> simulationManager = std::make_unique<FluidDynamicsTestManager>(1000.0);
+    simulationManager->setRealtimeFactor(1.0);
+    sf::GraphicalSimulationApp app("FluidDynamicsTest", std::string(DATA_DIR_PATH), s, h, std::move(simulationManager));
     app.Run();
     
     return 0;

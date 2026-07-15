@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 01/07/2024.
-//  Copyright(c) 2024-2025 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "FluidDynamicsTestManager.h"
@@ -90,74 +90,71 @@ void FluidDynamicsTestManager::BuildScenario()
 
     //Sphere
     sf::Scalar sphereRadius = 0.5;
-    sf::Sphere* sphere = new sf::Sphere("Sphere", phy, sphereRadius, sf::I4(), "Light", "Yellow");
-    AddSolidEntity(sphere, sf::Transform(sf::IQ(), sf::Vector3(0, 0, 0)));
+    AddSolidEntity(std::make_unique<sf::Sphere>("Sphere", phy, sphereRadius, sf::I4(), "Light", "Yellow"), sf::Transform(sf::IQ(), sf::Vector3(0, 0, 0)));
 
     //Box
     sf::Vector3 boxDims(1.0, 0.5, 0.2);
-    sf::Box* box = new sf::Box("Box", phy, boxDims, sf::I4(), "Light", "Yellow");
-    AddSolidEntity(box, sf::Transform(sf::IQ(), sf::Vector3(2, 0, 0)));
+    AddSolidEntity(std::make_unique<sf::Box>("Box", phy, boxDims, sf::I4(), "Light", "Yellow"), sf::Transform(sf::IQ(), sf::Vector3(2, 0, 0)));
 
     //Compound
     //1st part - sphere
-    sf::Sphere* comp1 = new sf::Sphere("Comp1", phy, sphereRadius, sf::I4(), "Light", "Yellow");
+    std::unique_ptr<sf::Sphere> comp1 = std::make_unique<sf::Sphere>("Comp1", phy, sphereRadius, sf::I4(), "Light", "Yellow");
     //2nd part - box
-    sf::Sphere* comp2 = new sf::Sphere("Comp2", phy, sphereRadius, sf::I4(), "Light", "Yellow");
-    sf::Compound* compound = new sf::Compound("Compound", phy, comp1, sf::Transform(sf::IQ(), sf::Vector3(0, 0, 0)));
-    compound->AddExternalPart(comp2, sf::Transform(sf::IQ(), sf::Vector3(2.0, 0, 0)));
-    AddSolidEntity(compound, sf::Transform(sf::Quaternion(0.0, 0.5, 0.0), sf::Vector3(6, 0, -5)));
+    std::unique_ptr<sf::Sphere> comp2 = std::make_unique<sf::Sphere>("Comp2", phy, sphereRadius, sf::I4(), "Light", "Yellow");
+    std::unique_ptr<sf::Compound> compound = std::make_unique<sf::Compound>("Compound", phy, std::move(comp1), sf::Transform(sf::IQ(), sf::Vector3(0, 0, 0)));
+    compound->AddExternalPart(std::move(comp2), sf::Transform(sf::IQ(), sf::Vector3(2.0, 0, 0)));
+    AddSolidEntity(std::move(compound), sf::Transform(sf::Quaternion(0.0, 0.5, 0.0), sf::Vector3(6, 0, -5)));
 
     //Polyhedron
-    sf::Polyhedron* hull = new sf::Polyhedron("Hull", phy, sf::GetDataPath() + "hull_hydro.obj", sf::Scalar(1), sf::I4(), "Light", "Yellow");
-    AddSolidEntity(hull, sf::Transform(sf::Quaternion(0.0, 0.5, 0.0), sf::Vector3(8, 0, -5)));
-
-    sf::Polyhedron* sphR1M = new sf::Polyhedron("SphereR1M", phy, sf::GetDataPath() + "sphere_R=1.obj", sf::Scalar(1), sf::I4(), "Light", "Yellow");
-    AddSolidEntity(sphR1M, sf::Transform(sf::Quaternion(0.0, 0.5, 0.0), sf::Vector3(11, 0, -5)));
+    AddSolidEntity(std::make_unique<sf::Polyhedron>("Hull", phy, sf::GetDataPath() + "hull_hydro.obj", sf::Scalar(1), sf::I4(), "Light", "Yellow"), 
+        sf::Transform(sf::Quaternion(0.0, 0.5, 0.0), sf::Vector3(8, 0, -5)));
+    AddSolidEntity(std::make_unique<sf::Polyhedron>("SphereR1M", phy, sf::GetDataPath() + "sphere_R=1.obj", sf::Scalar(1), sf::I4(), "Light", "Yellow"),
+        sf::Transform(sf::Quaternion(0.0, 0.5, 0.0), sf::Vector3(11, 0, -5)));
 
     //Featherstone robot
-    sf::Box* link1 = new sf::Box("Link1", phy, boxDims, sf::I4(), "Light", "Yellow");
-    sf::FeatherstoneRobot* robot = new sf::FeatherstoneRobot("Robot", false);
-    robot->DefineLinks(link1);
+    std::unique_ptr<sf::FeatherstoneRobot> robot = std::make_unique<sf::FeatherstoneRobot>("Robot", false);
+    robot->DefineLinks(std::make_unique<sf::Box>("Link1", phy, boxDims, sf::I4(), "Light", "Yellow"));
     robot->BuildKinematicStructure();
-    AddRobot(robot, sf::Transform(sf::IQ(), sf::Vector3(4, 0, 0)));
+    AddRobot(std::move(robot), sf::Transform(sf::IQ(), sf::Vector3(4, 0, 0)));
 
     // Drag testing
     // Single solid entities     
-    sf::Box* hull1 = new sf::Box("Hull1", phy, boxDims, sf::I4(), "Neutral", "Yellow");
-    AddSolidEntity(hull1, sf::Transform(sf::IQ(), sf::Vector3(-7, 0, 1)));
+    sf::SolidEntity* hull1 = AddSolidEntity(std::make_unique<sf::Box>("Hull1", phy, boxDims, sf::I4(), "Neutral", "Yellow"), 
+        sf::Transform(sf::IQ(), sf::Vector3(-7, 0, 1)));
 
-    sf::Box* hull2 = new sf::Box("Hull2", phy, boxDims, sf::I4(), "Neutral", "Yellow");
-    AddSolidEntity(hull2, sf::Transform(sf::Quaternion(M_PI_2, 0, 0), sf::Vector3(-5, 2, 1)));
+    sf::SolidEntity* hull2 = AddSolidEntity(std::make_unique<sf::Box>("Hull2", phy, boxDims, sf::I4(), "Neutral", "Yellow"),
+        sf::Transform(sf::Quaternion(M_PI_2, 0, 0), sf::Vector3(-5, 2, 1)));
 
-    std::shared_ptr<sf::Box> propeller = std::make_shared<sf::Box>("Propeller", phy, sf::Vector3(0.02,0.2,0.05), sf::I4(), "Neutral", "Red");
-    
-    sf::SimpleThruster* thruster1 = new sf::SimpleThruster("Thruster1", propeller, true, false);
+    std::unique_ptr<sf::SimpleThruster> thruster1 = std::make_unique<sf::SimpleThruster>("Thruster1", std::make_unique<sf::Box>("Propeller", phy, sf::Vector3(0.02,0.2,0.05), sf::I4(), "Neutral", "Red"),
+        true, false);
     thruster1->AttachToSolid(hull1, sf::Transform(sf::IQ(), sf::Vector3(-0.6, 0, 0)));
     thruster1->setSetpoint(10.0, 0.0);
-    AddActuator(thruster1);
+    AddActuator(std::move(thruster1));
 
-    sf::SimpleThruster* thruster2 = new sf::SimpleThruster("Thruster2", propeller, true, false);
+    std::unique_ptr<sf::SimpleThruster> thruster2 = std::make_unique<sf::SimpleThruster>("Thruster1", std::make_unique<sf::Box>("Propeller", phy, sf::Vector3(0.02,0.2,0.05), sf::I4(), "Neutral", "Red"),
+        true, false);    
     thruster2->AttachToSolid(hull2, sf::Transform(sf::IQ(), sf::Vector3(-0.6, 0, 0)));
     thruster2->setSetpoint(10.0, 0.0);
-    AddActuator(thruster2);
+    AddActuator(std::move(thruster2));
 
     // Compound solid entity
     for (int i = 0; i < 8; ++i)
     {
-        sf::Box* part1 = new sf::Box("Part1_" + std::to_string(i), phy, boxDims, sf::I4(), "Neutral", "Yellow");
-        sf::Box* part2 = new sf::Box("Part2_" + std::to_string(i), phy, boxDims, sf::I4(), "Neutral", "Yellow");
-        sf::Compound* comp = new sf::Compound("Comp" + std::to_string(i), phy, part1, sf::Transform(sf::IQ(), sf::Vector3(0, 0.5, 0)));
-        comp->AddExternalPart(part2, sf::Transform(sf::IQ(), sf::Vector3(0, -0.5, 0)));
-        AddSolidEntity(comp, sf::Transform(sf::Quaternion(M_PI_4*i, 0.0, 0.0), sf::Vector3(0, 0, 2 + 2*i)));
+        std::unique_ptr<sf::Box> part1 = std::make_unique<sf::Box>("Part1_" + std::to_string(i), phy, boxDims, sf::I4(), "Neutral", "Yellow");
+        std::unique_ptr<sf::Box> part2 = std::make_unique<sf::Box>("Part2_" + std::to_string(i), phy, boxDims, sf::I4(), "Neutral", "Yellow");
+        std::unique_ptr<sf::Compound> comp = std::make_unique<sf::Compound>("Comp" + std::to_string(i), phy, std::move(part1), sf::Transform(sf::IQ(), sf::Vector3(0, 0.5, 0)));
+        comp->AddExternalPart(std::move(part2), sf::Transform(sf::IQ(), sf::Vector3(0, -0.5, 0)));
+        sf::SolidEntity* compound = AddSolidEntity(std::move(comp), sf::Transform(sf::Quaternion(M_PI_4*i, 0.0, 0.0), sf::Vector3(0, 0, 2 + 2*i)));
 
-        sf::Odometry* odometry = new sf::Odometry("Odometry" + std::to_string(i));
-        odometry->AttachToSolid(comp, sf::Transform(sf::IQ(), sf::Vector3(0, 0, 0)));
-        AddSensor(odometry);
+        std::unique_ptr<sf::Odometry> odometry = std::make_unique<sf::Odometry>("Odometry" + std::to_string(i));
+        odometry->AttachToSolid(compound, sf::Transform(sf::IQ(), sf::Vector3(0, 0, 0)));
+        AddSensor(std::move(odometry));
 
-        sf::SimpleThruster* thruster = new sf::SimpleThruster("ThrusterComp" + std::to_string(i), propeller, true, false);
-        thruster->AttachToSolid(comp, sf::Transform(sf::IQ(), sf::Vector3(-0.6, 0, 0)));
+        std::unique_ptr<sf::SimpleThruster> thruster = std::make_unique<sf::SimpleThruster>("ThrusterComp" + std::to_string(i), std::make_unique<sf::Box>("Propeller", phy, sf::Vector3(0.02,0.2,0.05), sf::I4(), "Neutral", "Red"),
+            true, false);
+        thruster->AttachToSolid(compound, sf::Transform(sf::IQ(), sf::Vector3(-0.6, 0, 0)));
         thruster->setSetpoint(20.0, 0.0);
-        AddActuator(thruster);
+        AddActuator(std::move(thruster));
     }
 }
 

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/05/2025.
-//  Copyright (c) 2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2025-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "LearningTestManager.h"
@@ -62,59 +62,37 @@ void LearningTestManager::BuildScenario()
     CreateLook("Yellow", sf::Color::RGB(1.0f, 0.8f, 0.1f), 0.5f, 0.0f);
     
     // Environment
-    sf::Plane* floor = new sf::Plane("Floor", 10000.f, "Ground", "Grid");
-    AddStaticEntity(floor, sf::Transform::getIdentity());
+    AddStaticEntity(std::make_unique<sf::Plane>("Floor", 10000.f, "Ground", "Grid"), sf::Transform::getIdentity());
 
     sf::PhysicsSettings phy;
     phy.mode = sf::PhysicsMode::SURFACE;
     phy.collisions = false;
-
-    // Robot   
+  
 #ifdef USE_FEATHERSTONE_ROBOT
     // Robot utilizing the Featherstone's algorithm (higher accuracy and stability)
-    sf::FeatherstoneRobot* robot = new sf::FeatherstoneRobot("Robot", true);
-    
-    // Mechanical parts
-    sf::Sphere* obj = new sf::Sphere("Base", phy, 0.1, sf::I4(), "Steel", "Black");
-    sf::Box* link1 = new sf::Box("Link1", phy, sf::Vector3(0.12,0.12,0.8), sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.4)), "Steel", "Green");
-    sf::Box* link2 = new sf::Box("Link2", phy, sf::Vector3(0.1,0.1,0.6), sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.3)), "Steel", "Yellow");
-    std::vector<sf::SolidEntity*> links;
-    links.push_back(link1);
-    links.push_back(link2);
-
-    // Kinematic chain
-    robot->DefineLinks(obj, links, false);
-    robot->DefineRevoluteJoint("Joint1", "Base", "Link1", sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.0)), sf::Vector3(0,1,0));
-    robot->DefineRevoluteJoint("Joint2", "Link1", "Link2", sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.8)), sf::Vector3(0,1,0));
+    std::unique_ptr<sf::FeatherstoneRobot> robot = std::make_unique<sf::FeatherstoneRobot>("Robot", true);
 #else    
     // Robot utilizing the general sequential impulse algorithm
-    sf::GeneralRobot* robot = new sf::GeneralRobot("Robot", true);
-
+    std::unique_ptr<sf::GeneralRobot> robot = std::make_unique<sf::GeneralRobot>("Robot", true);
+#endif
     // Mechanical parts
-    sf::Sphere* obj = new sf::Sphere("Base", phy, 0.1, sf::I4(), "Steel", "Black");
-    sf::Box* link1 = new sf::Box("Link1", phy, sf::Vector3(0.12,0.12,0.8), sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.4)), "Steel", "Green");
-    sf::Box* link2 = new sf::Box("Link2", phy, sf::Vector3(0.1,0.1,0.6), sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.3+0.8)), "Steel", "Yellow");    
-    std::vector<sf::SolidEntity*> links;
-    links.push_back(link1);
-    links.push_back(link2);
+    std::vector<std::unique_ptr<sf::SolidEntity>> links;
+    links.push_back(std::make_unique<sf::Box>("Link1", phy, sf::Vector3(0.12,0.12,0.8), sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.4)), "Steel", "Green"));
+    links.push_back(std::make_unique<sf::Box>("Link2", phy, sf::Vector3(0.1,0.1,0.6), sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.3)), "Steel", "Yellow"));
 
     // Kinematic chain
-    robot->DefineLinks(obj, links, false);
+    robot->DefineLinks(std::make_unique<sf::Sphere>("Base", phy, 0.1, sf::I4(), "Steel", "Black"), std::move(links), false);
     robot->DefineRevoluteJoint("Joint1", "Base", "Link1", sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.0)), sf::Vector3(0,1,0));
     robot->DefineRevoluteJoint("Joint2", "Link1", "Link2", sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.8)), sf::Vector3(0,1,0));
-#endif
     robot->BuildKinematicStructure();
 
     // Actuators
-    sf::Motor* motor = new sf::Motor("Motor");
-    robot->AddJointActuator(motor, "Joint2");
+    robot->AddJointActuator(std::make_unique<sf::Motor>("Motor"), "Joint2");
 
     // Sensors
-    sf::RotaryEncoder* enc1 = new sf::RotaryEncoder("Encoder1");
-    sf::RotaryEncoder* enc2 = new sf::RotaryEncoder("Encoder2");
-    robot->AddJointSensor(enc1, "Joint1");
-    robot->AddJointSensor(enc2, "Joint2");
+    robot->AddJointSensor(std::make_unique<sf::RotaryEncoder>("Encoder1"), "Joint1");
+    robot->AddJointSensor(std::make_unique<sf::RotaryEncoder>("Encoder2"), "Joint2");
     
     // Add to simulation
-    AddRobot(robot, sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,-2.0)));
+    AddRobot(std::move(robot), sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,-2.0)));
 }
