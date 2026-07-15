@@ -116,7 +116,7 @@ void UnderwaterTestManager::BuildScenario()
     getOcean()->setWaterType(0.2);
     getOcean()->AddVelocityField(std::make_unique<sf::Jet>(sf::Vector3(0,0,1.0), sf::VY(), 0.3, 5.0));
     getOcean()->AddVelocityField(std::make_unique<sf::Uniform>(sf::Vector3(1.0,0.0,0.0)));
-    getOcean()->EnableCurrents();
+    getOcean()->EnableVelocityFields();
     getAtmosphere()->SetSunPosition(0.0, 60.0);
     getNED()->Init(41.77737, 3.03376, 0.0);
     
