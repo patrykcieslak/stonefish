@@ -263,7 +263,7 @@ void SimulationManager::EnableAtmosphere()
     
     if(SimulationApp::getApp()->hasGraphics())
     {
-        atmosphere_->InitGraphics(((GraphicalSimulationApp*)SimulationApp::getApp())->getRenderSettings());
+        atmosphere_->InitGraphics(static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getRenderSettings());
         atmosphere_->setRenderable(true);
     }
 }
@@ -902,9 +902,9 @@ void SimulationManager::RestartScenario()
     if(SimulationApp::getApp()->hasGraphics())
     {    
         if(isOceanEnabled())
-            ocean_->getOpenGLOcean()->AllocateParticles(((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getView(0));
+            ocean_->getOpenGLOcean()->AllocateParticles(static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->getView(0));
 
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->Finalize();
+        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->Finalize();
     }
 
     simulationFresh_ = true;
@@ -1109,13 +1109,13 @@ void SimulationManager::SimulationStepCompleted(Scalar timeStep)
 void SimulationManager::UpdateDrawingQueue()
 {
     //Build new drawing queue
-    OpenGLPipeline* glPipeline = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline();
+    OpenGLPipeline* glPipeline = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline();
  
     //Solids, manipulators, systems....
     for(size_t i=0; i<entities_.size(); ++i)
         glPipeline->AddToDrawingQueue(entities_[i]->Render());
 
-    std::pair<Entity*, int> selected = ((GraphicalSimulationApp*)SimulationApp::getApp())->getSelectedEntity();
+    std::pair<Entity*, int> selected = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getSelectedEntity();
     if(selected.first != nullptr)
     {
         if(selected.first->getType() == EntityType::SOLID && ((SolidEntity*)selected.first)->getSolidType() == SolidType::COMPOUND)
@@ -1201,7 +1201,7 @@ std::string SimulationManager::CreateLook(const std::string& name, Color color, 
     const std::string& albedoTexturePath, const std::string& normalTexturePath, const std::string& temperatureTexturePath, const std::pair<float, float>& temperatureRange)
 {
     if(SimulationApp::getApp()->hasGraphics())
-        return ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->CreatePhysicalLook(name, color.rgb, roughness, metalness, reflectivity, 
+        return static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->CreatePhysicalLook(name, color.rgb, roughness, metalness, reflectivity, 
             albedoTexturePath, normalTexturePath, temperatureTexturePath, glm::vec2(temperatureRange.first, temperatureRange.second));
     else
         return "";

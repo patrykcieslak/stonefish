@@ -104,15 +104,18 @@ namespace sf
         Scalar GetDepth(const Vector3& point);
         GLfloat GetDepth(const glm::vec3& point);
         
-        //! A method to enable all defined currents.
-        void EnableCurrents();
+        //! A method to enable all defined velocity fields.
+        void EnableVelocityFields();
         
-        //! A method to disable all defined currents.
-        void DisableCurrents();
+        //! A method to disable all defined velocity fields.
+        void DisableVelocityFields();
 
-        //! A method updating the currents data in the OpenGL ocean.
-        void UpdateCurrentsData();
+        //! A method updating the velocity field data in the OpenGL ocean.
+        void UpdateVelocityFieldsData();
         
+        //! A method that removes all defined velocity fields.
+        void ClearVelocityFields();
+
         //! A method used to setup the properties of the water.
         /*!
          \param jerlov the type of water according to Jerlov (I-9C) <0,1>
@@ -161,14 +164,14 @@ namespace sf
         
     private:
         Fluid liquid_;
-        std::vector<std::unique_ptr<VelocityField>> currents_;
+        std::vector<std::unique_ptr<VelocityField>> velocityFields_;
         std::unique_ptr<OpenGLOcean> glOcean_;
         OceanCurrentsUBO glOceanCurrentsUBOData_;
         Scalar depth_;
         Scalar waterType_;
         Scalar salinity_;
         Scalar oceanState_;
-        bool currentsEnabled_;
+        bool velocityFieldsEnabled_;
         Renderable wavesDebug_;
     };
 }

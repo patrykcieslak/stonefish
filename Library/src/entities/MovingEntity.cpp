@@ -38,7 +38,7 @@ MovingEntity::MovingEntity(const std::string& uniqueName, const std::string& mat
 {
     mat_ = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(material);
     if(SimulationApp::getApp()->hasGraphics())
-        lookId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+        lookId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
     else
         lookId_ = -1;
     graObjectId_ = -1;

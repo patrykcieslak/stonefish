@@ -40,7 +40,7 @@ Joint::Joint(const std::string& uniqueName, bool collideLinkedEntities)
     jSolidB_ = nullptr;
 }
 
-Joint::~Joint(void)
+Joint::~Joint()
 {
     if(SimulationApp::getApp() != nullptr)
         SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name_);

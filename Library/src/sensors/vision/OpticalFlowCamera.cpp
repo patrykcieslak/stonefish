@@ -97,7 +97,7 @@ void OpticalFlowCamera::InitGraphics(bool& seesParticles)
     glCamera_->UpdateTransform();
     InternalUpdate(0);
 
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glCamera));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glCamera));
 
     unsigned int w, h;
     getResolution(w, h);

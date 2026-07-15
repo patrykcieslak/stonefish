@@ -247,7 +247,7 @@ ViewType OpenGLDepthCamera::getType() const
 
 void OpenGLDepthCamera::ComputeOutput(std::vector<Renderable>& objects)
 {
-    OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
+    OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
     content->SetCurrentView(this);
     content->SetDrawingMode(DrawingMode::SHADOW);
     OpenGLState::BindFramebuffer(renderFBO_);
@@ -274,7 +274,7 @@ void OpenGLDepthCamera::LinearizeDepth()
     depthCameraOutputShader[0]->SetUniform("rangeInfo", glm::vec4(range_.x, range_.y, range_.x*range_.y, range_.x-range_.y));
     depthCameraOutputShader[0]->SetUniform("noiseSeed", glm::vec3(randDist_(randGen_), randDist_(randGen_), randDist_(randGen_)));
     depthCameraOutputShader[0]->SetUniform("noiseStddev", noiseDepth_);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
     OpenGLState::BindFramebuffer(0);
@@ -297,7 +297,7 @@ void OpenGLDepthCamera::Depth2LinearRanges()
     depthCameraOutputShader[1]->SetUniform("projInfo", projInfo);
     depthCameraOutputShader[1]->SetUniform("rangeInfo", glm::vec4(range_.x, range_.y, range_.x*range_.y, range_.x-range_.y));
     depthCameraOutputShader[1]->SetUniform("texDepth", TEX_POSTPROCESS1);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
     OpenGLState::BindFramebuffer(0);
@@ -318,7 +318,7 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO, bool updated)
         if(usesRanges_) Depth2LinearRanges();
         else LinearizeDepth();
         
-        int windowHeight = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowHeight();
+        int windowHeight = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowHeight();
         
         //Bind depth texture
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, linearDepthTex_);
@@ -328,7 +328,7 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO, bool updated)
         depthVisualizeShader->Use();
         depthVisualizeShader->SetUniform("texLinearDepth", TEX_POSTPROCESS1);
         depthVisualizeShader->SetUniform("range", range_);
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
         OpenGLState::BindFramebuffer(0);
         OpenGLState::UseProgram(0);
         //Unbind textures

@@ -144,7 +144,7 @@ void SSS::InitGraphics(bool& seesParticles)
     glSSS_->UpdateTransform();
     InternalUpdate(0);
 
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glSSS));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glSSS));
 
     unsigned int w, h;
     getDisplayResolution(w, h);

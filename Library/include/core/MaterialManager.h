@@ -94,7 +94,7 @@ namespace sf
     {
     public:
         //! A constructor.
-        MaterialManager();
+        MaterialManager() = default;
         
         //! A destructor.
         ~MaterialManager();

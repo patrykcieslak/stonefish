@@ -228,11 +228,11 @@ void IMGUI::GenerateBackground()
 {
     OpenGLState::BindFramebuffer(translucentFBO_);
     OpenGLState::Viewport(0, 0, windowW_/4, windowH_/4);
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getScreenTexture());
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getScreenTexture());
     downsampleShader_->Use();
     downsampleShader_->SetUniform("source", TEX_BASE);
     downsampleShader_->SetUniform("srcViewport", glm::vec2((GLfloat)windowW_, (GLfloat)windowH_));
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     
     gaussianShader_->Use();
     gaussianShader_->SetUniform("source", TEX_BASE);
@@ -241,12 +241,12 @@ void IMGUI::GenerateBackground()
         glDrawBuffer(GL_COLOR_ATTACHMENT1);
         OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, translucentTexture_[0]);
         gaussianShader_->SetUniform("texelOffset", glm::vec2(4.f/(GLfloat)windowW_, 0.f));
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
         
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
         OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, translucentTexture_[1]);
         gaussianShader_->SetUniform("texelOffset", glm::vec2(0.f, 4.f/(GLfloat)windowH_));
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     }
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_BASE);
@@ -264,7 +264,7 @@ void IMGUI::Begin()
     
     glScissor(0, 0, windowW_, windowH_);
     OpenGLState::Viewport(0, 0, windowW_, windowH_);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetViewportSize(windowW_, windowH_);
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->SetViewportSize(windowW_, windowH_);
     OpenGLState::BindVertexArray(guiVAO_);
 }
 
@@ -275,7 +275,7 @@ void IMGUI::End()
     //draw logo on top
     GLfloat logoSize = 64.f;
     GLfloat logoMargin = 10.f;
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(windowW_ - logoSize - logoMargin, logoMargin, logoSize, logoSize, logoTexture_, glm::vec4(1.f,1.f,1.f,0.2f));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(windowW_ - logoSize - logoMargin, logoMargin, logoSize, logoSize, logoTexture_, glm::vec4(1.f,1.f,1.f,0.2f));
    
     OpenGLState::EnableDepthTest();
     OpenGLState::EnableCullFace();

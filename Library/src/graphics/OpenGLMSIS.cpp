@@ -337,7 +337,7 @@ void OpenGLMSIS::setSonar(MSIS* s)
 
 void OpenGLMSIS::ComputeOutput(std::vector<Renderable>& objects)
 {  
-    OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
+    OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
     content->SetDrawingMode(DrawingMode::RAW);
     
     //Generate sonar input
@@ -450,9 +450,9 @@ void OpenGLMSIS::DrawLDR(GLuint destinationFBO, bool updated)
     //Draw on screen
     if(display)
     {
-        OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
-        int windowHeight = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowHeight();
-        int windowWidth = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowWidth();
+        OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
+        int windowHeight = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowHeight();
+        int windowWidth = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowWidth();
         OpenGLState::BindFramebuffer(destinationFBO);    
         content->SetViewportSize(windowWidth, windowHeight);
         OpenGLState::Viewport(0, 0, windowWidth, windowHeight);

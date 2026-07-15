@@ -231,7 +231,7 @@ namespace sf
         int windowH_;
         RenderSettings rSettings_;
         HelperSettings hSettings_;
-        GLuint timeQuery_[2];
+        std::array<GLuint, 2> timeQuery_;
         GLint timeQueryPingpong_;
         
         static int RenderLoadingScreen(void* data);

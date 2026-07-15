@@ -145,7 +145,7 @@ void FLS::InitGraphics(bool& seesParticles)
     glFLS_->UpdateTransform();
     InternalUpdate(0);
 
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glFLS));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glFLS));
 
     unsigned int w, h;
     getDisplayResolution(w, h);

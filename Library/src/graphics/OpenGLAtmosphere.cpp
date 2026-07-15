@@ -348,7 +348,7 @@ void OpenGLAtmosphere::DrawSkyAndSun(const OpenGLView* view)
     skySunShaders_[0]->SetUniform("invView", invViewMatrix);
     skySunShaders_[0]->SetUniform("whitePoint", sunSkyUBOData_.whitePoint);
     skySunShaders_[0]->SetUniform("cosSunSize", (GLfloat)cosf(0.00935f/2.f));
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
 }
 
@@ -377,7 +377,7 @@ void OpenGLAtmosphere::DrawSkyAndSunTemperature(const OpenGLView* view)
     skySunShaders_[1]->SetUniform("skyEmissivity", sunSkyUBOData_.skyEmissivity);
     skySunShaders_[1]->SetUniform("airTemperature", airTemperature_);
 
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
 }
 
@@ -419,8 +419,8 @@ void OpenGLAtmosphere::BakeShadowmaps(OpenGLPipeline* pipe, OpenGLView* view)
         glm::mat4 cp = BuildCropProjMatrix(sunShadowFrustum_[i]);
         sunShadowCPM_[i] =  cp * sunModelView_;
 
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetProjectionMatrix(cp);
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetViewMatrix(sunModelView_);
+        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->SetProjectionMatrix(cp);
+        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->SetViewMatrix(sunModelView_);
         //Draw current depth map
         glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, sunShadowmapArray_, 0, i);
         glClear(GL_DEPTH_BUFFER_BIT);
@@ -625,7 +625,7 @@ void OpenGLAtmosphere::ShowSunShadowmaps(GLfloat x, GLfloat y, GLfloat scale)
     for(unsigned int i = 0; i < sunShadowmapSplits_; ++i) {
         OpenGLState::Viewport(x + sunShadowmapSize_ * scale * i, y, sunShadowmapSize_ * scale, sunShadowmapSize_ * scale);
         sunShadowmapShader_->SetUniform("shadowmapLayer", (GLfloat)i);
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     }
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_SUN_SHADOW);

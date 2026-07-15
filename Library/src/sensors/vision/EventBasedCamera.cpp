@@ -93,7 +93,7 @@ void EventBasedCamera::InitGraphics(bool& seesParticles)
     glCamera_->UpdateTransform();
     InternalUpdate(0);
 
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glCamera));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glCamera));
 }
 
 void EventBasedCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)

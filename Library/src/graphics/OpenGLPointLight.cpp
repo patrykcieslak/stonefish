@@ -39,7 +39,7 @@ OpenGLPointLight::OpenGLPointLight(glm::vec3 position, GLfloat radius, glm::vec3
 {
     colorLi_ = glm::vec4(color, (GLfloat)(lum/(4.f*M_PI)));
 	std::unique_ptr<Mesh> m = OpenGLContent::BuildSphere(getSourceRadius());
-	sourceObject_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(m.get());
+	sourceObject_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(m.get());
 }
 
 LightType OpenGLPointLight::getType() const

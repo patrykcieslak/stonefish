@@ -288,9 +288,9 @@ void OpenGLEventBasedCamera::DrawLDR(GLuint destinationFBO, bool updated)
         OpenGLCamera::DrawLDR(displayFBO_, updated);
 
         // Overlay event information
-        OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
-        int windowHeight = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowHeight();
-        int windowWidth = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowWidth();
+        OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
+        int windowHeight = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowHeight();
+        int windowWidth = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowWidth();
         
         glm::vec4 rect((GLfloat)dispX, (GLfloat)dispY, viewportWidth_*dispScale, viewportHeight_*dispScale);
         rect.y = windowHeight-rect.y-rect.w;

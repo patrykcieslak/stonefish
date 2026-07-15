@@ -192,7 +192,7 @@ void MSIS::InitGraphics(bool& seesParticles)
     glMSIS_->UpdateTransform();
     InternalUpdate(0);
 
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glMSIS));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glMSIS));
 
     unsigned int w, h;
     getDisplayResolution(w, h);

@@ -67,7 +67,7 @@ Scalar Motor::getAngle() const
 {
     if(j_ != nullptr && j_->getType() == JointType::REVOLUTE)
     {
-        return ((RevoluteJoint*)j_)->getAngle();
+        return static_cast<RevoluteJoint*>(j_)->getAngle();
     }
     else if(fe_ != nullptr)
     {
@@ -88,7 +88,7 @@ Scalar Motor::getAngularVelocity() const
 {
     if(j_ != nullptr && j_->getType() == JointType::REVOLUTE)
     {
-        return ((RevoluteJoint*)j_)->getAngularVelocity();
+        return static_cast<RevoluteJoint*>(j_)->getAngularVelocity();
     }
     else if(fe_ != nullptr)
     {
@@ -110,7 +110,7 @@ void Motor::Update(Scalar dt)
     Actuator::Update(dt);
 
     if(j_ != nullptr && j_->getType() == JointType::REVOLUTE)
-        ((RevoluteJoint*)j_)->ApplyTorque(torque_);
+        static_cast<RevoluteJoint*>(j_)->ApplyTorque(torque_);
     else if(fe_ != nullptr)
         fe_->DriveJoint(jId_, torque_);
 }

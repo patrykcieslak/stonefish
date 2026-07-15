@@ -186,7 +186,7 @@ void OpenGLTrackball::GlueToMoving(MovingEntity* ent)
     holdingEntity_ = ent;
 
     //Clear ocean quadtree to avoid holes in the ocean rendering because of the sudden jump of camera origin
-    Ocean* ocean = ((GraphicalSimulationApp*)SimulationApp::getApp())->getSimulationManager()->getOcean();
+    Ocean* ocean = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getSimulationManager()->getOcean();
     if(ocean != nullptr && ocean->hasWaves())
         ((OpenGLRealOcean*)ocean->getOpenGLOcean())->ResetSurface(this);
 }
@@ -196,7 +196,7 @@ void OpenGLTrackball::DrawSelection(const std::vector<Renderable>& r, GLuint des
     if(r.size() == 0) //No selection
         return;
 
-    OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
+    OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
     
     //1. Draw flat shape to color and stencil buffer
     OpenGLState::BindFramebuffer(getRenderFBO());

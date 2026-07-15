@@ -84,7 +84,7 @@ CableEntity::CableEntity(const std::string& uniqueName, PhysicsSettings phy, Vec
     displayMode_ = DisplayMode::GRAPHICAL;
     if(SimulationApp::getApp()->hasGraphics())
     {
-        OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
+        OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
         lookId_ = content->getLookId(look);
         uvScale_ = uvScale > 0.f ? uvScale : 1.f;
 

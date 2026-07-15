@@ -168,14 +168,14 @@ void OpenGLPipeline::PerformDrawingQueueCopy(SimulationManager* sim)
 
     //Update vision sensor transforms and copy generated data to ensure consistency
     glMemoryBarrier(GL_PIXEL_BUFFER_BARRIER_BIT);
-    for(unsigned int i=0; i < content_->getViewsCount(); ++i)
+    for(size_t i=0; i < content_->getViewsCount(); ++i)
         content_->getView(i)->UpdateTransform();
     //Update light transforms to ensure consistency
-    for(unsigned int i=0; i < content_->getLightsCount(); ++i)
+    for(size_t i=0; i < content_->getLightsCount(); ++i)
         content_->getLight(i)->UpdateTransform();
     //Update ocean currents for particle systems
     Ocean* ocean = sim->getOcean();
-    if(ocean != NULL) ocean->UpdateCurrentsData();
+    if(ocean != nullptr) ocean->UpdateVelocityFieldsData();
 
     if(!drawingQueue_.empty())
     {
@@ -220,7 +220,7 @@ void OpenGLPipeline::DrawObjects()
 
 void OpenGLPipeline::DrawLights()
 {
-    for(unsigned int i=0; i<content_->getLightsCount(); ++i)
+    for(size_t i=0; i<content_->getLightsCount(); ++i)
         content_->DrawLightSource(i);
 }
     

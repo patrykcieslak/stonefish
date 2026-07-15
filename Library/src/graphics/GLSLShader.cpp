@@ -342,40 +342,40 @@ bool GLSLShader::SetUniform(const std::string& name, glm::mat4 x)
 
 bool GLSLShader::GetUniform(const std::string& name, ParameterType type, GLint& location)
 {
-    for(unsigned int i = 0; i < uniforms_.size(); i++)
-        if(uniforms_[i].name == name)
+    auto it = std::find_if(uniforms_.begin(), uniforms_.end(), [&name](const GLSLUniform& u) { return u.name == name; });
+    if(it != uniforms_.end())
+    {  
+        if (it->type == type)
         {
-            if(uniforms_[i].type == type)
-            {
-                location = uniforms_[i].location;
-                return true;
-            }
-            else
-            {
-#ifdef DEBUG
-                cError("Uniform %s doesn't exist! Mismatched type!", name.c_str());
-#endif
-                return false;
-            }
+            location = it->location;
+            return true;    
         }
-
+        else
+        {
+#ifdef DEBUG
+            cError("Uniform %s doesn't exist! Mismatched type!", name.c_str());
+#endif
+            return false;
+        }
+    }
+    
     //cError("Uniform %s doesn't exist!", name.c_str());
     return false;
 }
 
 bool GLSLShader::GetAttribute(const std::string& name, ParameterType type, GLint& index)
 {
-    for(unsigned int i = 0; i < attributes_.size(); i++)
-        if(attributes_[i].name == name)
+    auto it = std::find_if(attributes_.begin(), attributes_.end(), [&name](const GLSLAttribute& a) { return a.name == name; });
+    if(it != attributes_.end())
+    {  
+        if(it->type == type)
         {
-            if(attributes_[i].type == type)
-            {
-                index = attributes_[i].index;
-                return true;
-            }
-            else
-                return false;
+            index = it->index;
+            return true;
         }
+        else
+            return false;
+    }
     
     return false;
 }

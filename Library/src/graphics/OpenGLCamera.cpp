@@ -50,9 +50,9 @@ OpenGLCamera::OpenGLCamera(GLint x, GLint y, GLint width, GLint height, glm::vec
     antiAliasing_ = false;
     aoFactor_ = 0;
     
-    if(((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getRenderSettings().ao != RenderQuality::DISABLED)
+    if(static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getRenderSettings().ao != RenderQuality::DISABLED)
         aoFactor_ = 1;
-    if(((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getRenderSettings().aa != RenderQuality::DISABLED)
+    if(static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getRenderSettings().aa != RenderQuality::DISABLED)
         antiAliasing_ = true;
     
     //----Geometry rendering----
@@ -381,12 +381,12 @@ bool OpenGLCamera::usingAutoExposure()
 
 void OpenGLCamera::SetProjection()
 {
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetProjectionMatrix(projection_);
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->SetProjectionMatrix(projection_);
 }
 
 void OpenGLCamera::SetViewTransform()
 {
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetViewMatrix(GetViewMatrix());
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->SetViewMatrix(GetViewMatrix());
 }
 
 void OpenGLCamera::SetRenderBuffers(GLuint colorBufferIndex, bool normalBuffer, bool clearBuffers)
@@ -401,34 +401,34 @@ void OpenGLCamera::SetRenderBuffers(GLuint colorBufferIndex, bool normalBuffer, 
 
 void OpenGLCamera::ShowSceneTexture(glm::vec4 rect)
 {
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, renderColorTex_[0]);
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, renderColorTex_[0]);
 }
 
 void OpenGLCamera::ShowLinearDepthTexture(glm::vec4 rect, bool frontFace)
 {
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, frontFace ? linearDepthTex_[0] : linearDepthTex_[1]);
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, frontFace ? linearDepthTex_[0] : linearDepthTex_[1]);
 }
 
 void OpenGLCamera::ShowViewNormalTexture(glm::vec4 rect)
 {
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, renderViewNormalTex_);
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, renderViewNormalTex_);
 }
 
 void OpenGLCamera::ShowDepthStencilTexture(glm::vec4 rect)
 {
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, renderDepthStencilTex_);
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, renderDepthStencilTex_);
 }
 
 void OpenGLCamera::ShowDeinterleavedDepthTexture(glm::vec4 rect, GLuint index)
 {
     if(hasAO() && index < HBAO_RANDOM_ELEMENTS)
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, aoDepthArrayTex_, index);
+        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, aoDepthArrayTex_, index);
 }
 
 void OpenGLCamera::ShowDeinterleavedAOTexture(glm::vec4 rect, GLuint index)
 {
     if(hasAO() && index < HBAO_RANDOM_ELEMENTS)
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, aoResultArrayTex_, index);
+        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, aoResultArrayTex_, index);
 }
 
 void OpenGLCamera::GenerateLinearDepth(bool front)
@@ -442,7 +442,7 @@ void OpenGLCamera::GenerateLinearDepth(bool front)
     shaders["depth_linearize"]->Use();
     shaders["depth_linearize"]->SetUniform("texLogDepth", TEX_POSTPROCESS1);
     shaders["depth_linearize"]->SetUniform("FC", GetLogDepthConstant());
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
     OpenGLState::BindFramebuffer(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
@@ -481,7 +481,7 @@ void OpenGLCamera::DrawAO(GLfloat intensity)
         GLfloat blurSharpness = 40.0f;
        
         GenerateLinearDepth(true);
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BindBaseVertexArray(); //Previous function unbinds vertex array
+        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BindBaseVertexArray(); //Previous function unbinds vertex array
         
         //Deinterleave
         OpenGLState::BindFramebuffer(aoDeinterleaveFBO_);
@@ -611,7 +611,7 @@ void OpenGLCamera::DrawSSR()
     shaders["ssr"]->SetUniform("invViewportSize", glm::vec2(1.f/(GLfloat)viewportWidth_, 1.f/(GLfloat)viewportHeight_));
     shaders["ssr"]->SetUniform("near", near_);
     shaders["ssr"]->SetUniform("far", far_);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS4);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS3);
@@ -625,7 +625,7 @@ void OpenGLCamera::DrawSSR()
     shaders["ssr_blur"]->Use();
     shaders["ssr_blur"]->SetUniform("tex", TEX_POSTPROCESS1);
     shaders["ssr_blur"]->SetUniform("invTexSize", glm::vec2(1.f/(GLfloat)viewportWidth_, 1.f/(GLfloat)viewportHeight_));
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
     OpenGLState::DisableBlend();
@@ -643,7 +643,7 @@ void OpenGLCamera::GenerateBloom()
     GLenum renderBuffs[1];
     renderBuffs[0] = GL_COLOR_ATTACHMENT0;
     glDrawBuffers(1, renderBuffs);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(renderColorTex_[getLastActiveColorBuffer()]);
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(renderColorTex_[getLastActiveColorBuffer()]);
 
     //Blur
     shaders["bloom_blur"]->Use();
@@ -656,14 +656,14 @@ void OpenGLCamera::GenerateBloom()
         glDrawBuffers(1, renderBuffs);
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, quaterPostprocessTex_[0]);
         shaders["bloom_blur"]->SetUniform("texelOffset", glm::vec2(2.f/(GLfloat)viewportWidth_, 0.f));
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
 
         //Vertical blur
         renderBuffs[0] = GL_COLOR_ATTACHMENT0;
         glDrawBuffers(1, renderBuffs);
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, quaterPostprocessTex_[1]);
         shaders["bloom_blur"]->SetUniform("texelOffset", glm::vec2(0.f, 2.f/(GLfloat)viewportHeight_));
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     }
     
     OpenGLState::UseProgram(0);
@@ -679,7 +679,7 @@ void OpenGLCamera::DrawBloom(GLfloat amount)
     OpenGLState::DisableDepthTest();
     OpenGLState::EnableBlend();
     glBlendFunc(GL_ONE, GL_ONE);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(quaterPostprocessTex_[0], glm::vec4(glm::vec3(amount), 0.f));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(quaterPostprocessTex_[0], glm::vec4(glm::vec3(amount), 0.f));
     OpenGLState::DisableBlend();
     OpenGLState::EnableDepthTest();
 }
@@ -687,7 +687,7 @@ void OpenGLCamera::DrawBloom(GLfloat amount)
 void OpenGLCamera::ShowAmbientOcclusion(glm::vec4 rect)
 {
     if(hasAO())
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, getAOTexture());
+        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, getAOTexture());
 }
 
 void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
@@ -735,7 +735,7 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
             shaders["tonemapping2"]->SetUniform("texSource", TEX_POSTPROCESS1);
             shaders["tonemapping2"]->SetUniform("texExposure", TEX_POSTPROCESS2);
             shaders["tonemapping2"]->SetUniform("exposureComp", (GLfloat)powf(2.f,exposureComp_));
-            ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+            static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
             OpenGLState::BindFramebuffer(0);
 
             OpenGLState::UnbindTexture(TEX_POSTPROCESS2);   
@@ -748,7 +748,7 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
             shaders["fxaa"]->Use();
             shaders["fxaa"]->SetUniform("texSource", TEX_POSTPROCESS1);
             shaders["fxaa"]->SetUniform("RCPFrame", glm::vec2(1.f/(GLfloat)viewportWidth_, 1.f/(GLfloat)viewportHeight_));
-            ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+            static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
             OpenGLState::BindFramebuffer(0);
             OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
         }
@@ -761,7 +761,7 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
             shaders["tonemapping2"]->SetUniform("texSource", TEX_POSTPROCESS1);
             shaders["tonemapping2"]->SetUniform("texExposure", TEX_POSTPROCESS2);
             shaders["tonemapping2"]->SetUniform("exposureComp", (GLfloat)powf(2.f,exposureComp_));
-            ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+            static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
             OpenGLState::BindFramebuffer(0);
             OpenGLState::UnbindTexture(TEX_POSTPROCESS2);   
             OpenGLState::UnbindTexture(TEX_POSTPROCESS1);   
@@ -774,7 +774,7 @@ void OpenGLCamera::DrawLDR(GLuint destinationFBO, bool updated)
 		OpenGLState::BindFramebuffer(destinationFBO);
 		OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
-		((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(renderColorTex_[lastActiveRenderColorBuffer_]);
+		static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedSAQ(renderColorTex_[lastActiveRenderColorBuffer_]);
 		OpenGLState::BindFramebuffer(0);
 	}
 }

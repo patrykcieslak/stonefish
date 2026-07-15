@@ -68,7 +68,7 @@ OpenGLSpotLight::OpenGLSpotLight(glm::vec3 position, glm::vec3 direction, GLfloa
         f.vertexID[2] = i + 1;
         m->faces.push_back(f);
     }
-    sourceObject_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(m.get());
+    sourceObject_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(m.get());
     
 	UpdatePosition(position);
     UpdateDirection(direction);
@@ -159,8 +159,8 @@ void OpenGLSpotLight::BakeShadowmap(OpenGLPipeline* pipe)
                    0.5f, 0.5f, 0.5f, 1.f);
     clipSpace_ = bias * (proj * view);
     
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetProjectionMatrix(proj);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetViewMatrix(view);
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->SetProjectionMatrix(proj);
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->SetViewMatrix(view);
     
     OpenGLState::BindFramebuffer(shadowFBO_);
     OpenGLState::Viewport(0, 0, SPOT_LIGHT_SHADOWMAP_SIZE, SPOT_LIGHT_SHADOWMAP_SIZE);

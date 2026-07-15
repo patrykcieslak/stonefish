@@ -178,7 +178,7 @@ void OpenGLRealCamera::DrawLDR(GLuint destinationFBO, bool updated)
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cameraColorTex_[0]);
         shaders["flip"]->Use();
         shaders["flip"]->SetUniform("texSource", TEX_POSTPROCESS1);
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
         OpenGLState::UseProgram(0);
         OpenGLState::BindFramebuffer(0);
 
@@ -200,9 +200,9 @@ void OpenGLRealCamera::DrawLDR(GLuint destinationFBO, bool updated)
     //Draw on screen
     if(display)
     {
-        OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
-        int windowHeight = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowHeight();
-        int windowWidth = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowWidth();
+        OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
+        int windowHeight = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowHeight();
+        int windowWidth = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowWidth();
         OpenGLState::BindFramebuffer(destinationFBO);
         OpenGLState::DisableCullFace();
         OpenGLState::Viewport(0, 0, windowWidth, windowHeight);

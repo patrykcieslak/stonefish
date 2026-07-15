@@ -55,7 +55,7 @@ int FeatherstoneRobot::getJoint(const std::string& jname)
     if(dynamics_ == nullptr)
         cCritical("Robot links not defined!");
     
-    for(unsigned int i=0; i<dynamics_->getNumOfJoints(); ++i)
+    for(size_t i=0; i<dynamics_->getNumOfJoints(); ++i)
         if(dynamics_->getJointName(i) == jname) return i;
     
     return -1;

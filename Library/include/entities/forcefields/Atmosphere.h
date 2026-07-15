@@ -82,6 +82,15 @@ namespace sf
          \param field a pointer to a velocity field object
          */
         void AddVelocityField(std::unique_ptr<VelocityField> field);
+
+        //! A method to enable all defined velocity fields.
+        void EnableVelocityFields();
+        
+        //! A method to disable all defined velocity fields.
+        void DisableVelocityFields();
+
+        //! A method that removes all defined velocity fields.
+        void ClearVelocityFields();
         
         //! A method running the aerodynamics computation.
         /*!
@@ -136,8 +145,9 @@ namespace sf
         
     private:
         Fluid gas_;
-        std::vector<std::unique_ptr<VelocityField>> wind_;
+        std::vector<std::unique_ptr<VelocityField>> velocityFields_;
         std::unique_ptr<OpenGLAtmosphere> glAtmosphere_;
+        bool velocityFieldsEnabled_;
     };
 }
 

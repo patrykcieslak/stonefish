@@ -37,7 +37,7 @@ StaticEntity::StaticEntity(const std::string& uniqueName, const std::string& mat
 {
     mat_ = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(material);
     if(SimulationApp::getApp()->hasGraphics())
-        lookId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+        lookId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
     else
         lookId_ = -1;
     phyObjectId_ = -1;
@@ -117,7 +117,7 @@ void StaticEntity::BuildGraphicalObject()
     if(phyMesh_ == nullptr || !SimulationApp::getApp()->hasGraphics())
         return;
     
-    phyObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh_.get());
+    phyObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh_.get());
 }
 
 void StaticEntity::BuildRigidBody()

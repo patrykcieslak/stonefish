@@ -46,7 +46,7 @@ Contact::Contact(const std::string& uniqueName, Entity* entityA, Entity* entityB
 
 Contact::~Contact()
 {
-    if(SimulationApp::getApp() != NULL)
+    if(SimulationApp::getApp() != nullptr)
         SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name_);
 }
 

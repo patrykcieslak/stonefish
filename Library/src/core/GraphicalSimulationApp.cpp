@@ -198,7 +198,7 @@ void GraphicalSimulationApp::Init()
     SDL_GL_MakeCurrent(window_, glMainContext_);
 
     //Create performance counters
-    glGenQueries(2, timeQuery_);
+    glGenQueries(2, timeQuery_.data());
 
     state_ = SimulationState::STOPPED;
 }
@@ -1032,7 +1032,7 @@ void GraphicalSimulationApp::StepSimulation()
 void GraphicalSimulationApp::CleanUp()
 {
     SimulationApp::CleanUp();
-    glDeleteQueries(2, timeQuery_);
+    glDeleteQueries(2, timeQuery_.data());
 
     if(joystick_ != nullptr)
         SDL_JoystickClose(0);

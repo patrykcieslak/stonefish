@@ -44,8 +44,8 @@ Trigger::Trigger(const std::string& uniqueName, Scalar radius, const Transform& 
     
     if(SimulationApp::getApp()->hasGraphics())
     {
-        objectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh.get());
-        lookId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+        objectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh.get());
+        lookId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
     }
     else
     {
@@ -65,8 +65,8 @@ Trigger::Trigger(const std::string& uniqueName, Scalar radius, Scalar length, co
     
     if(SimulationApp::getApp()->hasGraphics())
     {
-        objectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh.get());
-        lookId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+        objectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh.get());
+        lookId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
     }
     else
     {
@@ -87,8 +87,8 @@ Trigger::Trigger(const std::string& uniqueName, const Vector3& dimensions, const
     
     if(SimulationApp::getApp()->hasGraphics())
     {
-        objectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh.get());
-        lookId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+        objectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh.get());
+        lookId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
     }
     else
     {

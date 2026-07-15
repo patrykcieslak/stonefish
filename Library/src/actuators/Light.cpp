@@ -131,7 +131,7 @@ void Light::InitGraphics()
     glLight_->UpdateTransform();
     glLight_->SwitchOn();
 
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddLight(std::move(light));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->AddLight(std::move(light));
 }
     
 void Light::Update(Scalar dt)

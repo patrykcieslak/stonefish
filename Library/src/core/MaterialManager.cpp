@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/7/13.
-//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/MaterialManager.h"
@@ -29,10 +29,6 @@
 
 namespace sf
 {
-
-MaterialManager::MaterialManager()
-{
-}
 
 MaterialManager::~MaterialManager()
 {
@@ -145,21 +141,11 @@ Friction MaterialManager::GetMaterialsInteraction(const std::string& mat1Name, c
 
 int MaterialManager::getMaterialIndex(const std::string& name)
 {
-    for(unsigned int i=0; i<materials_.size(); ++i)
-        if(materials_[i].name == name)
-            return i;
-    
-    cError("Wrong material name %s!", name.c_str());
-    return -1;
-}
-
-Material MaterialManager::getMaterial(const std::string& name)
-{
-    for(unsigned int i=0; i<materials_.size(); ++i)
-        if(materials_[i].name == name)
-            return materials_[i];
-    
-    return materials_[0];
+    auto it = std::find_if(materials_.begin(), materials_.end(), [&name](const Material& m) { return m.name == name; });
+    if(it != materials_.end())
+        return it - materials_.begin();
+    else
+        return -1;
 }
 
 Material MaterialManager::getMaterial(int index)
@@ -170,13 +156,18 @@ Material MaterialManager::getMaterial(int index)
         return materials_[0];
 }
 
+Material MaterialManager::getMaterial(const std::string& name)
+{
+    return getMaterial(getMaterialIndex(name));
+}
+
 Fluid MaterialManager::getFluid(const std::string& name)
 {
-    for(unsigned int i=0; i<fluids_.size(); ++i)
-        if(fluids_[i].name == name)
-            return fluids_[i];
-    
-    return Fluid();
+    auto it = std::find_if(fluids_.begin(), fluids_.end(), [&name](const Fluid& f) { return f.name == name; });
+    if(it != fluids_.end())
+        return *it;
+    else
+        return Fluid();
 }
 
 Fluid MaterialManager::getFluid(int index)

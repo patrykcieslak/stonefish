@@ -297,7 +297,7 @@ OpenGLOcean::OpenGLOcean(GLfloat size)
     f.vertexID[2] = 6;
     mesh.faces.push_back(f);
     
-    oceanBoxObj_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(&mesh);
+    oceanBoxObj_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(&mesh);
 
     //Ocean currents
     oceanCurrentsUBOData_.numCurrents = 0;
@@ -433,7 +433,7 @@ void OpenGLOcean::InitializeSimulation()
     {
         glFramebufferTexture3D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_3D, oceanTextures_[2], 0, layer);
         oceanShaders_["variance"]->SetUniform("c", (GLfloat)layer);
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     }
     
     OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
@@ -446,7 +446,7 @@ void OpenGLOcean::Simulate(GLfloat dt)
     OpenGLState::DisableDepthTest();
     OpenGLState::DisableCullFace();
     
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BindBaseVertexArray();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BindBaseVertexArray();
     
     //Init -> one triangle -> multiple outputs
     OpenGLState::BindFramebuffer(oceanFBOs_[0]);
@@ -551,9 +551,9 @@ void OpenGLOcean::DrawUnderwaterMask(OpenGLView* view)
     oceanShaders_["mask_back"]->SetUniform("MVP", view->GetProjectionMatrix() * view->GetViewMatrix());
     oceanShaders_["mask_back"]->SetUniform("FC", view->GetLogDepthConstant());
     oceanShaders_["mask_back"]->SetUniform("size", oceanSize_*0.5f);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetDrawingMode(DrawingMode::RAW);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawObject(oceanBoxObj_, -1, glm::mat4(1.f));
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetDrawingMode(DrawingMode::UNDERWATER);
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->SetDrawingMode(DrawingMode::RAW);
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawObject(oceanBoxObj_, -1, glm::mat4(1.f));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->SetDrawingMode(DrawingMode::UNDERWATER);
     OpenGLState::UseProgram(0);
 }
     
@@ -567,9 +567,9 @@ void OpenGLOcean::DrawBackground(OpenGLView* view)
     oceanShaders_["background"]->SetUniform("cWater", getLightAttenuation());
     oceanShaders_["background"]->SetUniform("bWater", getLightScattering());
     glCullFace(GL_FRONT);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetDrawingMode(DrawingMode::RAW);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawObject(oceanBoxObj_, -1, glm::mat4(1.f));
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->SetDrawingMode(DrawingMode::UNDERWATER);
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->SetDrawingMode(DrawingMode::RAW);
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawObject(oceanBoxObj_, -1, glm::mat4(1.f));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->SetDrawingMode(DrawingMode::UNDERWATER);
     glCullFace(GL_BACK);
     OpenGLState::UseProgram(0);
 }
@@ -692,7 +692,7 @@ void OpenGLOcean::DrawVelocityField(OpenGLView* view, GLfloat velocityMax)
     oceanShaders_["vectorfield"]->SetUniform("eyePos", frustum[0]);
     OpenGLState::EnableBlend();
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BindBaseVertexArray();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BindBaseVertexArray();
     glDrawArrays(GL_POINTS, 0, numPoints);
     OpenGLState::BindVertexArray(0);
     OpenGLState::UseProgram(0);
@@ -713,7 +713,7 @@ void OpenGLOcean::ApplySpecialEffects(OpenGLCamera* cam)
     oceanShaders["downsample"]->Use();
     oceanShaders["downsample"]->SetUniform("source", TEX_POSTPROCESS1);
     oceanShaders["downsample"]->SetUniform("srcViewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
 
     //Blur
     oceanShaders["gaussian"]->Use();
@@ -723,12 +723,12 @@ void OpenGLOcean::ApplySpecialEffects(OpenGLCamera* cam)
         glDrawBuffer(GL_COLOR_ATTACHMENT1);
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cam->getQuaterPostprocessTexture(0));
         oceanShaders["gaussian"]->SetUniform("texelOffset", glm::vec2(4.f/(GLfloat)viewport[2], 0.f));
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
         
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cam->getQuaterPostprocessTexture(1));
         oceanShaders["gaussian"]->SetUniform("texelOffset", glm::vec2(0.f, 4.f/(GLfloat)viewport[3]));
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     }
     OpenGLState::UseProgram(0);
     OpenGLState::BindFramebuffer(0);    
@@ -749,7 +749,7 @@ void OpenGLOcean::ApplySpecialEffects(OpenGLCamera* cam)
     oceanShaders["blur"]->SetUniform("texScene", TEX_POSTPROCESS1);
     oceanShaders["blur"]->SetUniform("texBlur", TEX_POSTPROCESS2);
     oceanShaders["blur"]->SetUniform("texLinearDepth", TEX_POSTPROCESS3);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
     
     OpenGLState::UnbindTexture(TEX_POSTPROCESS3);
@@ -795,7 +795,7 @@ void OpenGLOcean::ShowSpectrum(glm::vec2 viewportSize, glm::vec4 rect)
     glBufferData(GL_ARRAY_BUFFER, sizeof(quadData), quadData, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
         
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BindBaseVertexArray();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BindBaseVertexArray();
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, quadBuf);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
@@ -815,16 +815,16 @@ void OpenGLOcean::ShowTexture(int id, glm::vec4 rect)
     {
         case 0:
         case 1:
-            ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, oceanTextures_[id], glm::vec4(1e6f));
+            static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, oceanTextures_[id], glm::vec4(1e6f));
             break;
 
         case 5:
-            ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, oceanTextures_[id]);
+            static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, oceanTextures_[id]);
             break;
             
         case 3:
         case 4:
-            ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, oceanTextures_[id], 0, true);
+            static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, oceanTextures_[id], 0, true);
             break;
             
         case 30:
@@ -835,7 +835,7 @@ void OpenGLOcean::ShowTexture(int id, glm::vec4 rect)
         case 35:
         case 36:
         case 37:
-            //((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, oceanViewTextures[id-30], glm::vec4(1000.f));
+            //static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, oceanViewTextures[id-30], glm::vec4(1000.f));
             break;
     }
     

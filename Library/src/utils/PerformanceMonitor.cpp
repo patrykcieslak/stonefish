@@ -35,9 +35,7 @@ PerformanceMonitor::PerformanceMonitor(size_t averageMaxCount)
     
     simTime_ = 0;
     simFinished_ = true;
-    phyTime_ = std::deque<double>(0);
     phyTimeAvg_ = 0;
-    hydroTime_ = std::deque<double>(0);
     hydroTimeAvg_ = 0;
     updateMtx_ = SDL_CreateMutex();
 }

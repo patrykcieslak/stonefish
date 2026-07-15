@@ -50,7 +50,7 @@ SolidEntity::SolidEntity(const std::string& uniqueName, PhysicsSettings phy, con
     
     //Get Look
     if(SimulationApp::getApp()->hasGraphics())
-        lookId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+        lookId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
     else
         lookId_ = -1;
     
@@ -105,11 +105,11 @@ SolidEntity::SolidEntity(const std::string& uniqueName, PhysicsSettings phy, con
 
 SolidEntity::~SolidEntity()
 {
-    if (collisionShape_ != nullptr && collisionShape_->getShapeType() == COMPOUND_SHAPE_PROXYTYPE)
+    btCompoundShape* cs;
+    if ((cs = dynamic_cast<btCompoundShape*>(collisionShape_.get())) != nullptr)
     {
-        btCompoundShape* shape = static_cast<btCompoundShape*>(collisionShape_.get());
-        for (int i = 0; i < shape->getNumChildShapes(); ++i)
-            delete shape->getChildShape(i);
+        for (int i = 0; i < cs->getNumChildShapes(); ++i)
+            delete cs->getChildShape(i);
     }
 }
 
@@ -1043,7 +1043,7 @@ void SolidEntity::BuildGraphicalObject()
     if (graObjectId_ > -1) // Object already built
         return;
         
-    graObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh_.get());
+    graObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh_.get());
     phyObjectId_ = graObjectId_;
 }
 

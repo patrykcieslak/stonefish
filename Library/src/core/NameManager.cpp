@@ -20,10 +20,12 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/03/2014.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/NameManager.h"
+
+#include <algorithm>
 
 namespace sf
 {
@@ -44,14 +46,12 @@ std::string NameManager::AddName(const std::string& proposedName)
     int number = 1;
     
 checkname:
-    for(unsigned int i = 0; i < names_.size(); i++)
+    auto it = std::find(names_.begin(), names_.end(), goodName);
+    if (it != names_.end())
     {
-        if(goodName == names_[i])
-        {
-            goodName = proposedName + std::to_string(number);
-            number++;
-            goto checkname;
-        }
+        goodName = proposedName + std::to_string(number);
+        ++number;
+        goto checkname;
     }
     
     names_.push_back(goodName);
@@ -60,13 +60,9 @@ checkname:
 
 void NameManager::RemoveName(const std::string& name)
 {
-    std::vector<std::string>::iterator it;
-    for(it = names_.begin(); it < names_.end(); it++)
-        if(*it == name)
-        {
-            names_.erase(it);
-            break;
-        }
+    auto it = std::find(names_.begin(), names_.end(), name);
+    if (it != names_.end())
+        names_.erase(it);
 }
 
 void NameManager::ClearNames()

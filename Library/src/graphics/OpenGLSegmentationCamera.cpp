@@ -252,7 +252,7 @@ ViewType OpenGLSegmentationCamera::getType() const
 
 void OpenGLSegmentationCamera::ComputeOutput(std::vector<Renderable>& objects, Ocean* ocean)
 {
-    OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
+    OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
     content->SetCurrentView(this);
     content->SetDrawingMode(DrawingMode::RAW);
     
@@ -288,7 +288,7 @@ void OpenGLSegmentationCamera::ComputeOutput(std::vector<Renderable>& objects, O
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderSegTex_[0]);
     flipShader->Use();
     flipShader->SetUniform("texSource", TEX_POSTPROCESS1);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
     
     //Color mapped segmentation display
     OpenGLState::BindFramebuffer(displayFBO_);
@@ -318,9 +318,9 @@ void OpenGLSegmentationCamera::DrawLDR(GLuint destinationFBO, bool updated)
     //Draw on screen
     if(display)
     {
-        OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
-        int windowHeight = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowHeight();
-        int windowWidth = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowWidth();
+        OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
+        int windowHeight = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowHeight();
+        int windowWidth = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowWidth();
         OpenGLState::BindFramebuffer(destinationFBO);
         OpenGLState::Viewport(0, 0, windowWidth, windowHeight);
         OpenGLState::DisableCullFace();

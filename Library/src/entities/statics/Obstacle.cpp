@@ -179,6 +179,12 @@ Obstacle::~Obstacle()
         delete [] tva->getIndexedMeshArray()[0].m_triangleIndexBase;
         delete tva;
     }
+    btCompoundShape* cs;
+    if ((cs = dynamic_cast<btCompoundShape*>(collisionShape_.get())) != nullptr)
+    {
+        for (int i = 0; i < cs->getNumChildShapes(); ++i)
+            delete cs->getChildShape(i);
+    }
 }
 
 StaticEntityType Obstacle::getStaticType()
@@ -191,8 +197,8 @@ void Obstacle::BuildGraphicalObject()
     if(graMesh_ == nullptr || !SimulationApp::getApp()->hasGraphics())
         return;
         
-    graObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(graMesh_.get());
-    phyObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh_.get());
+    graObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(graMesh_.get());
+    phyObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh_.get());
 }
 
 std::vector<Renderable> Obstacle::Render()

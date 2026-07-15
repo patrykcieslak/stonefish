@@ -41,6 +41,8 @@ Atmosphere::Atmosphere(const std::string& uniqueName, Fluid g) : ForcefieldEntit
     ghost_->setWorldTransform(Transform(Quaternion::getIdentity(), Vector3(0,0,-size/Scalar(2)))); //Above ocean surface and ground (z=0)
     collisionShape_ = std::make_unique<btBoxShape>(halfExtents);
     ghost_->setCollisionShape(collisionShape_.get());
+
+    velocityFieldsEnabled_ = false;
 }
         
 OpenGLAtmosphere* Atmosphere::getOpenGLAtmosphere()
@@ -100,9 +102,24 @@ void Atmosphere::SetConditions(Scalar temperature, Scalar pressure, Scalar humid
 
 void Atmosphere::AddVelocityField(std::unique_ptr<VelocityField> field)
 {
-    wind_.push_back(std::move(field));
+    velocityFields_.push_back(std::move(field));
 }
-    
+
+void Atmosphere::EnableVelocityFields()
+{
+    velocityFieldsEnabled_ = true;
+}
+
+void Atmosphere::DisableVelocityFields()
+{
+    velocityFieldsEnabled_ = false;
+}
+
+void Atmosphere::ClearVelocityFields()
+{
+    velocityFields_.clear();
+}
+
 void Atmosphere::GetSunPosition(Scalar &azimuthDeg, Scalar &elevationDeg)
 {
     if(glAtmosphere_ == nullptr)
@@ -129,10 +146,17 @@ Vector3 Atmosphere::GetSunDirection() const
 
 Vector3 Atmosphere::GetFluidVelocity(const Vector3& point) const
 {
-    Vector3 fv(0,0,0);
-    for(size_t i=0; i<wind_.size(); ++i)
-        fv += wind_[i]->GetVelocityAtPoint(point);
-    return fv;    
+    if(velocityFieldsEnabled_)
+    {
+        Vector3 fv = V0();
+        for(size_t i=0; i<velocityFields_.size(); ++i)
+        {
+            if(velocityFields_[i]->isEnabled())
+                fv += velocityFields_[i]->GetVelocityAtPoint(point);
+        }
+        return fv;
+    }
+    return V0();
 }
 
 glm::vec3 Atmosphere::GetFluidVelocity(const glm::vec3& point) const

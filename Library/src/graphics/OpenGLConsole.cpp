@@ -166,7 +166,7 @@ void OpenGLConsole::Render(bool overlay)
         texQuadShader_->SetUniform("color",  glm::vec4(0.3f,0.3f,0.3f,1.f));
         texQuadShader_->SetUniform("rect", glm::vec4(0, 0, 1.f, 1.f));
         
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, ((GraphicalSimulationApp*)SimulationApp::getApp())->getGUI()->getTranslucentTexture());
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGUI()->getTranslucentTexture());
         OpenGLState::BindVertexArray(consoleVAO_);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         

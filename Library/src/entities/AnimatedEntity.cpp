@@ -66,7 +66,7 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
     if(SimulationApp::getApp()->hasGraphics())
     { 
         std::unique_ptr<Mesh> phyMesh = OpenGLContent::BuildSphere((GLfloat)sphereRadius);
-        phyObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh.get());
+        phyObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh.get());
         graObjectId_ = phyObjectId_;
     }
 }
@@ -89,7 +89,7 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
     if(SimulationApp::getApp()->hasGraphics())
     { 
         std::unique_ptr<Mesh> phyMesh = OpenGLContent::BuildCylinder((GLfloat)cylinderRadius, (GLfloat)cylinderHeight);
-        phyObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh.get());
+        phyObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh.get());
         graObjectId_ = phyObjectId_;
     }
 }
@@ -111,7 +111,7 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
     if(SimulationApp::getApp()->hasGraphics())
     { 
         std::unique_ptr<Mesh> phyMesh = OpenGLContent::BuildBox(glm::vec3((GLfloat)boxDimensions.getX()/2.f, (GLfloat)boxDimensions.getY()/2.f, (GLfloat)boxDimensions.getZ()/2.f));
-        phyObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh.get());
+        phyObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh.get());
         graObjectId_ = phyObjectId_;
     }
 }
@@ -160,9 +160,9 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
     //Build graphical objects
     if(SimulationApp::getApp()->hasGraphics())
     { 
-        phyObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh.get());
+        phyObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh.get());
         if(graMesh != phyMesh)
-            graObjectId_ = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(graMesh.get());
+            graObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(graMesh.get());
         else
             graObjectId_ = phyObjectId_;
     }

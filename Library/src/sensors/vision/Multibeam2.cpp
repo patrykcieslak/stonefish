@@ -146,7 +146,7 @@ void Multibeam2::InitGraphics(bool& seesParticles)
         );
 
         cameras_[i].cam = camera.get();
-        ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(camera));
+        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(camera));
 
         cameras_[i].cam->setCamera(this, (unsigned int)i);
         cameras_[i].dataOffset = accResX*resY_;

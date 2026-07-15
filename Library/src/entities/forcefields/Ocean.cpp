@@ -51,7 +51,7 @@ Ocean::Ocean(const std::string& uniqueName, Scalar waves, Fluid l) : ForcefieldE
     collisionShape_ = std::make_unique<btBoxShape>(halfExtents);
     ghost_->setCollisionShape(collisionShape_.get());
     
-    currentsEnabled_ = false;
+    velocityFieldsEnabled_ = false;
     liquid_ = l;
     wavesDebug_.type = RenderableType::HYDRO_POINTS;
     wavesDebug_.model = glm::mat4(1.f);
@@ -94,8 +94,8 @@ Fluid Ocean::getLiquid() const
 
 VelocityField* Ocean::getVelocityField(size_t index)
 {
-    if(index < currents_.size())
-        return currents_[index].get();
+    if(index < velocityFields_.size())
+        return velocityFields_[index].get();
     else
         return nullptr;
 }
@@ -123,7 +123,7 @@ void Ocean::SetConditions(Scalar waterTemp)
 
 void Ocean::AddVelocityField(std::unique_ptr<VelocityField> field)
 {
-    currents_.push_back(std::move(field));
+    velocityFields_.push_back(std::move(field));
 }
 
 bool Ocean::IsInsideFluid(const Vector3& point)
@@ -167,13 +167,13 @@ Scalar Ocean::GetPressure(const Vector3& point)
 
 Vector3 Ocean::GetFluidVelocity(const Vector3& point) const
 {
-    if(currentsEnabled_)
+    if(velocityFieldsEnabled_)
     {
         Vector3 fv = V0();
-        for(size_t i=0; i<currents_.size(); ++i)
+        for(size_t i=0; i<velocityFields_.size(); ++i)
         {
-            if(currents_[i]->isEnabled())
-                fv += currents_[i]->GetVelocityAtPoint(point);
+            if(velocityFields_[i]->isEnabled())
+                fv += velocityFields_[i]->GetVelocityAtPoint(point);
         }
         return fv;
     }
@@ -185,20 +185,25 @@ glm::vec3 Ocean::GetFluidVelocity(const glm::vec3& point) const
     return glVectorFromVector(GetFluidVelocity(Vector3(point.x, point.y, point.z)));
 }
 
-void Ocean::EnableCurrents()
+void Ocean::EnableVelocityFields()
 {
-    currentsEnabled_ = true;
+    velocityFieldsEnabled_ = true;
 }
 
-void Ocean::DisableCurrents()
+void Ocean::DisableVelocityFields()
 {
-    currentsEnabled_ = false;
+    velocityFieldsEnabled_ = false;
 }
 
-void Ocean::UpdateCurrentsData()
+void Ocean::UpdateVelocityFieldsData()
 {
     if(glOcean_ != NULL)
         glOcean_->UpdateOceanCurrentsData(glOceanCurrentsUBOData_);
+}
+
+void Ocean::ClearVelocityFields()
+{
+    velocityFields_.clear();
 }
 
 void Ocean::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co, bool recompute)
@@ -275,12 +280,12 @@ std::vector<Renderable> Ocean::Render(const std::vector<std::unique_ptr<Actuator
     glOceanCurrentsUBOData_.gravity = glm::vec3(0.f,0.f,9.81f);
     glOceanCurrentsUBOData_.numCurrents = 0;
 
-    if(currentsEnabled_)
+    if(velocityFieldsEnabled_)
     {
-        for(size_t i=0; i<currents_.size(); ++i)
-            if(currents_[i]->isEnabled())
+        for(size_t i=0; i<velocityFields_.size(); ++i)
+            if(velocityFields_[i]->isEnabled())
             {
-                std::vector<Renderable> citems = currents_[i]->Render(glOceanCurrentsUBOData_.currents[glOceanCurrentsUBOData_.numCurrents]);
+                std::vector<Renderable> citems = velocityFields_[i]->Render(glOceanCurrentsUBOData_.currents[glOceanCurrentsUBOData_.numCurrents]);
                 items.insert(items.end(), citems.begin(), citems.end());
                 ++glOceanCurrentsUBOData_.numCurrents;
             }
