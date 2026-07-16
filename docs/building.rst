@@ -21,8 +21,8 @@ The following steps have to be completed to create a simple graphical simulator:
 3) Create a .cpp file with the ``int main(int argc, char **argv)`` function.
 4) Include the header files: ``#include <Stonefish/core/GraphicalSimulationApp.h>`` and ``#include "MySimulationManager.h"``.
 5) Create and fill two structures of types ``sf::RenderSettings`` and ``sf::HelperSettings``.
-6) Create a new object of class ``MySimulationManager``.
-7) Create a new object of class ``sf::GraphicalSimulationApp``, passing the previous one to the constructor, together with the structures defined before.
+6) Create a new unique_ptr of class ``MySimulationManager`` and allocate a new object of the class.
+7) Create a new object of class ``sf::GraphicalSimulationApp``, moving the previously created pointer to the constructor, together with the structures defined before.
 8) Use method ``void Run()`` from the second object.
 9) Build application and link with libraries.
 10) Run the simulator from the terminal.
@@ -42,8 +42,8 @@ Following the steps above should result in 3 new files: *main.cpp*, *MySimulatio
         sf::RenderSettings s;
         sf::HelperSettings h;
         
-        MySimulationManager manager(500.0);
-        sf::GraphicalSimulationApp app("Simple simulator", "path_to_data", s, h, &manager);
+        std::unique_ptr<MySimulationManager> manager = std::make_unique<MySimulationManager>(500.0);
+        sf::GraphicalSimulationApp app("Simple simulator", "path_to_data", s, h, std::move(manager));
         app.Run();
 
         return 0;
@@ -88,15 +88,13 @@ Following the steps above should result in 3 new files: *main.cpp*, *MySimulatio
         CreateLook("red", sf::Color::RGB(1.f,0.f,0.f), 0.1f, 0.f);
         
         //Create environment
-        sf::Plane* plane = new sf::Plane("Ground", 10000.0, "Steel", "gray");
-        AddStaticEntity(plane, sf::I4());
+        AddStaticEntity(std::make_unique<sf::Plane>("Ground", 10000.0, "Steel", "gray"), sf::I4());
 
         //Create object
         sf::PhysicsSettings phy;
         phy.mode = sf::PhysicsMode::SURFACE;
-    
-        sf::Sphere* sph = new sf::Sphere("Sphere", phy, 0.1, sf::I4(), "Aluminium",  "red");
-        AddSolidEntity(sph, sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,-1.0)));
+        AddSolidEntity(std::make_unique<sf::Sphere>("Sphere", phy, 0.1, sf::I4(), "Aluminium",  "red"), 
+            sf::Transform(sf::IQ(), sf::Vector3(0.0,0.0,-1.0)));
     }
 
 Interacting with the simulator

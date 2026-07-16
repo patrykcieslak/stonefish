@@ -102,7 +102,7 @@ It is possible to override some of the automatically calculated properties of a 
 
 .. code-block:: cpp
 
-    sf::SolidEntity* solid = ...;
+    std::unique_ptr<sf::SolidEntity> solid = ...
     solid->ScalePhysicalPropertiesToArbitraryMass(30.0);
 
 2) Set an arbitrary mass, moments of inertia and location of the CG
@@ -118,7 +118,7 @@ It is possible to override some of the automatically calculated properties of a 
 
 .. code-block:: cpp
 
-    sf::SolidEntity* solid = ...;
+    std::unique_ptr<sf::SolidEntity> solid = ...
     solid->SetArbitraryPhysicalProperties(30.0, sf::Vector3(1.0, 0.5, 0.2), sf::Transform(sf::IQ(), sf::Vector3(0.2, 0.0, 0.0)));
 
 Overriding estimated hydrodynamic coefficients
@@ -135,7 +135,7 @@ It is possible to override some automatically estimated hydrodynamic coeffcients
 
 .. code-block:: cpp
 
-    sf::SolidEntity* solid = ...;
+    std::unique_ptr<sf::SolidEntity> solid = ...
     solid->SetHydrodynamicCoefficients(sf::Vector3(0.2, 0.6, 0.6), sf::Vector3(0.05, 0.08, 0.08));
 
 Parametric solids
@@ -158,8 +158,8 @@ The most efficient dynamic bodies are parametric solids, which include: box, sph
 .. code-block:: cpp
 
     #include <Stonefish/entities/solids/Sphere.h>
-    sf::Sphere* sph = new sf::Sphere("Sphere", phy, 0.5, sf::I4(), "Steel", "Yellow");
-    AddSolidEntity(sph, sf::I4());
+    
+    AddSolidEntity(std::make_unique<sf::Sphere>("Sphere", phy, 0.5, sf::I4(), "Steel", "Yellow"), sf::I4());
 
 1) Cylinder ``type="cylinder"`` - a cylinder with a specified radius and height, with its axis coincident with the local Z axis:  
 
@@ -176,8 +176,8 @@ The most efficient dynamic bodies are parametric solids, which include: box, sph
 .. code-block:: cpp
 
     #include <Stonefish/entities/solids/Cylinder.h>
-    sf::Cylinder* cyl = new sf::Cylinder("Cyl", phy, 1.0, 2.0, sf::I4(), "Steel", "Yellow");
-    AddSolidEntity(cyl, sf::I4());
+
+    AddSolidEntity(std::make_unique<sf::Cylinder>("Cyl", phy, 1.0, 2.0, sf::I4(), "Steel", "Yellow"), sf::I4());
 
 1) Box ``type="box"`` - a box with specified width, height and length:  
 
@@ -194,8 +194,8 @@ The most efficient dynamic bodies are parametric solids, which include: box, sph
 .. code-block:: cpp
 
     #include <Stonefish/entities/solids/Box.h>
-    sf::Box* box = new sf::Box("Box", phy, sf::Vector3(0.5, 1.0, 2.0), sf::Transform(sf::IQ(), sf::Vector3(0.5, 0.0, 0.0)), "Steel", "Yellow");
-    AddSolidEntity(box, sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 2.0)));
+
+    AddSolidEntity(std::make_unique<sf::Box>("Box", phy, sf::Vector3(0.5, 1.0, 2.0), sf::Transform(sf::IQ(), sf::Vector3(0.5, 0.0, 0.0)), "Steel", "Yellow");, sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 2.0)));
 
 1) Torus ``type="torus"`` - a torus with a specified major and minor radius, with its axis coincident with the local Y axis:
 
@@ -212,8 +212,8 @@ The most efficient dynamic bodies are parametric solids, which include: box, sph
 .. code-block:: cpp
 
     #include <Stonefish/entities/solids/Torus.h>
-    sf::Torus* tr = new sf::Torus("Torus", phy, 1.0, 0.1, sf::I4(), "Steel", "Yellow");
-    AddSolidEntity(tr, sf::I4());
+
+    AddSolidEntity(std::make_unique<sf::Torus>("Torus", phy, 1.0, 0.1, sf::I4(), "Steel", "Yellow"), sf::I4());
 
 1) Wing profile ``type="wing"`` - a solid based on an extruded NACA profile (4-digit system), aligned with local Y axis:
 
@@ -230,8 +230,8 @@ The most efficient dynamic bodies are parametric solids, which include: box, sph
 .. code-block:: cpp
 
     #include <Stonefish/entities/solids/Wing.h>
-    sf::Wing* wing = new sf::Wing("Wing", phy, 1.0, 0.5, "4000", 3.0, sf::I4(), "Steel", "Yellow");
-    AddSolidEntity(wing, sf::I4());
+
+    AddSolidEntity(std::make_unique<sf::Wing>("Wing", phy, 1.0, 0.5, "4000", 3.0, sf::I4(), "Steel", "Yellow"), sf::I4());
 
 Arbitrary meshes
 ================
@@ -259,8 +259,9 @@ The ``<origin>`` tag is used to apply local transformation to the geometry, i.e.
 .. code-block:: cpp
 
     #include <Stonefish/entities/solids/Polyhedron.h>
-    sf::Polyhedron* poly = new sf::Polyhedron("Poly", phy, sf::GetDataPath() + "model_vis.obj", 1.0, sf::I4(), sf::GetDataPath() + "model_phy.obj", 1.0, "Steel", "Yellow");
-    AddSolidEntity(poly, sf::I4());
+
+    AddSolidEntity(std::make_unique<sf::Polyhedron>("Poly", phy, sf::GetDataPath() + "model_vis.obj", 1.0, sf::I4(), 
+        sf::GetDataPath() + "model_phy.obj", 1.0, "Steel", "Yellow"), sf::I4());
 
 .. _compound-bodies:
 
@@ -299,8 +300,9 @@ It should be noticed that when defining parts of a compound body the ``<dynamic>
     #include <Stonefish/entities/solids/Sphere.h>
     #include <Stonefish/entities/solids/Box.h>
     #include <Stonefish/entities/solids/Compound.h>
-    sf::Sphere* part1 = new sf::Sphere("Part1", phy, 0.5, sf::I4(), "Steel", "Yellow");
-    sf::Box* part2 = new sf::Box("Part2", phy, sf::Vector3(0.5, 0.1, 0.1), sf::I4(), "Steel", "Yellow");
-    sf::Compound* comp = new sf::Compound("Comp", phy, part1, sf::I4());
-    comp->AddInternalPart(part2, sf::Transform(sf::IQ(), sf::Vector3(0.25, 0.0, 0.0)));
-    AddSolidEntity(comp, sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 5.0)));
+
+    std::unique_ptr<sf::Sphere> part1 = std::make_unique<sf::Sphere>("Part1", phy, 0.5, sf::I4(), "Steel", "Yellow");
+    std::unique_ptr<sf::Box> part2 = std::make_unique<sf::Box>("Part2", phy, sf::Vector3(0.5, 0.1, 0.1), sf::I4(), "Steel", "Yellow");
+    std::unique_ptr<sf::Compound> comp = std::make_unique<sf::Compound>("Comp", phy, std::move(part1), sf::I4());
+    comp->AddInternalPart(std::move(part2), sf::Transform(sf::IQ(), sf::Vector3(0.25, 0.0, 0.0)));
+    AddSolidEntity(std::move(comp), sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 5.0)));

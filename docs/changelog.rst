@@ -7,15 +7,18 @@ The changelog of the library code is presented below. **Breaking changes** were 
 1.6
 ===
 
+.. warning::
+    
+    In this version the code was **deeply refactored** to improve code style and introduce modern C++ techniques: manual memory management was limitted to the minimum to avoid memory leaks, standard library algorithms were used across the code, all class members were renamed with a final underscore, etc. These changes severly affected the API, e.g., the way to instantiate simulation objects.
+  
 - Implemented soft body cables
+- Significantly improved the speed of loading OBJ files
+- Replaced OpenMP parallelization with a proper implementation of a thread pool
 - Added support for glueing dynamic bodies to robot links
 - Added an option to define the output data format for all sonar types
 - Disabled selection of static planes in the 3D view
-- Significantly improved the speed of loading OBJ files
-- Replaced OpenMP parallelization with a proper implementation of a thread pool
-- Fixed rendering freezeing with high physics computation load
-- Fixed segmentation fault on exit, caused by particle systems
-- *Renamed multiple symbols in the library*
+- Fixed memory leaks mainly caused by contact processing
+- Fixed segmentation fault on exit caused by particle systems
 
 1.5
 ===

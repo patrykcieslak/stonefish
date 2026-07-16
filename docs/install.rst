@@ -14,11 +14,6 @@ The following dependencies have to be installed prior to building the library:
 
 -  `OpenGL Mathematics <https://glm.g-truc.net/>`_ (libglm-dev, version >= 0.9.9.0)
 -  `SDL2 <https://www.libsdl.org/>`_ (libsdl2-dev)
-
-.. note::
-    
-    SDL2 library may need a small fix to the CMake configuration file, to avoid build errors. Remove a space after ``-lSDL2`` in ``/usr/lib/x86_64-linux-gnu/cmake/SDL2/sdl2-config.cmake``.
-
 -  `Freetype <https://www.freetype.org>`_ (libfreetype6-dev)
 
 Building

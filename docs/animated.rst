@@ -83,7 +83,9 @@ The same can be achieved using the following code:
 
 .. code-block:: cpp
 
-    sf::BSTrajectory* traj = new sf::BSTrajectory(sf::PlaybackMode::REPEAT);
+    #include <Stonefish/entities/animation/BSTrajectory.h>
+
+    std:unique_ptr<sf::BSTrajectory> traj = std::make_unique<sf::BSTrajectory>(sf::PlaybackMode::REPEAT);
     traj->AddKeyPoint(0.0, sf::Transform(sf::IQ(), sf::Vector3(0.0, 1.0, 2.0)));
     traj->AddKeyPoint(5.0, sf::Transform(sf::Quaternion(1.57, 0.0, 0.0), sf::Vector3(10.0, 1.0, 2.0)));
     traj->AddKeyPoint(20.0, sf::Transform(sf::IQ(), sf::Vector3(10.0, 2.0, 2.0)));
@@ -105,8 +107,9 @@ The same using the code:
 
 .. code-block:: cpp
 
-    sf::AnimatedEntity* anim = new sf::AnimatedEntity("Frame", traj);
-    AddAnimatedEntity(anim);
+    #include <Stonefish/entities/AnimatedEntity.h>
+
+    AddAnimatedEntity(std::make_unique<sf::AnimatedEntity>("Frame", std::move(traj)));
 
 Parametric solids
 =================
@@ -163,10 +166,13 @@ The same can be achieved through the following code:
 
 .. code-block:: cpp
 
-    sf::AnimatedEntity* anim1 = new sf::AnimatedEntity("AnimSphere", traj, 2.0, sf::I4(), "Steel", "Yellow");
-    AddAnimatedEntity(anim1);
-    sf::AnimatedEntity* anim2 = new sf::AnimatedEntity("AnimBox", traj, sf::Vector3(1.0, 0.5, 0.1), sf::Transform(sf::IQ(), sf::Vector3(0.5, 0.0, 0.1)), "Steel", "Yellow", true);
-    AddAnimatedEntity(anim2);
+    #include <Stonefish/entities/AnimatedEntity.h>
+
+    std::unique_ptr<sf::Trajectory> traj1 = ...
+    std::unique_ptr<sf::Trajectory> traj2 = ...
+    AddAnimatedEntity(std::make_unique<sf::AnimatedEntity>("AnimSphere", std::move(traj1), 2.0, sf::I4(), "Steel", "Yellow"));
+    AddAnimatedEntity(std::make_unique<sf::AnimatedEntity>("AnimBox", std::move(traj2), sf::Vector3(1.0, 0.5, 0.1), 
+        sf::Transform(sf::IQ(), sf::Vector3(0.5, 0.0, 0.1)), "Steel", "Yellow", true));
 
 Arbitrary meshes
 ================
@@ -197,8 +203,10 @@ The same definition in the code looks like this:
 
 .. code-block:: cpp
 
-    sf::AnimatedEntity* anim = new sf::AnimatedEntity("AnimMesh", traj, sf::GetDataPath() + "vehicle_vis.obj", 1.0, sf::I4(), sf::GetDataPath() + "vehicle_phy.obj", 1.0, sf::I4(), "Steel", "Yellow");
-    AddAnimatedEntity(anim);
+    #include <Stonefish/entities/AnimatedEntity.h>
+
+    AddAnimatedEntity(std::make_unique<sf::AnimatedEntity>("AnimMesh", std::move(traj), 
+        sf::GetDataPath() + "vehicle_vis.obj", 1.0, sf::I4(), sf::GetDataPath() + "vehicle_phy.obj", 1.0, sf::I4(), "Steel", "Yellow"));
 
 .. note::
 

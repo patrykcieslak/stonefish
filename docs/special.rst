@@ -22,11 +22,12 @@ An example of using a contact recording feature is presented below:
 .. code-block:: cpp
 
     #include <Stonefish/sensors/Contact.h>
+
     sf::SolidEntity* body1 = ...;
     sf::StaticEntity* body2 = ...;
-    sf::Contact* cnt = new sf::Contact("Contact1", body1, body2, 1000);
+    std::unique_ptr<sf::Contact> cnt = std::make_unique<sf::Contact>("Contact1", body1, body2, 1000);
     cnt->setDisplayMask(CONTACT_DISPLAY_PATH_A);
-    AddContact(cnt); 
+    AddContact(std::move(cnt)); 
 
 Soft collision
 ==============
@@ -42,7 +43,7 @@ Collisions of all bodies defined in the simulation scenario are considered rigid
 
 .. code-block:: cpp
 
-    sf::SolidEntity* solid = ...;
+    std::unique_ptr<sf::SolidEntity> solid = ...;
     solid->SetContactProperties(true, 1000.0, 0.5);
 
 Magnetic materials

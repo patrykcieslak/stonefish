@@ -79,12 +79,15 @@ The following lines of code can be used to achieve the same:
 
 .. code-block:: cpp
 
+    #include <Stonefish/entities/forcefields/Uniform.h>
+    #include <Stonefish/entities/forcefields/Jet.h>
+
     getMaterialManager()->CreateFluid("OceanWater", 1031.0, 0.002, 1.33);
     EnableOcean(0.0, getMaterialManager()->getFluid("OceanWater"));
     getOcean()->setWaterType(0.2);
     getOcean()->SetConditions(15.0);
-    getOcean()->AddVelocityField(new sf::Uniform(sf::Vector3(1.0, 0.0, 0.0)));
-    getOcean()->AddVelocityField(new sf::Jet(sf::Vector3(0.0, 0.0, 3.0), sf::Vector3(0.0, 1.0, 0.0), 0.2, 2.0));
+    getOcean()->AddVelocityField(std::make_unique<sf::Uniform>(sf::Vector3(1.0, 0.0, 0.0)));
+    getOcean()->AddVelocityField(std::make_unique<sf::Jet>(sf::Vector3(0.0, 0.0, 3.0), sf::Vector3(0.0, 1.0, 0.0), 0.2, 2.0));
 
 Atmosphere
 ==========
@@ -129,10 +132,13 @@ The following lines of code can be used to achieve the same:
 
 .. code-block:: cpp
 
+    #include <Stonefish/entities/forcefields/Uniform.h>
+    #include <Stonefish/entities/forcefields/Jet.h>
+
     getAtmosphere()->SetupSunPosition(20.0, 50.0);
     getAtmosphere()->SetConditions(20.0, 101300.0, 0.5);
-    getAtmosphere()->AddVelocityField(new sf::Uniform(sf::Vector3(1.0, 0.0, 0.0)));
-    getAtmosphere()->AddVelocityField(new sf::Jet(sf::Vector3(0.0, 0.0, 3.0), sf::Vector3(0.0, 1.0, 0.0), 0.2, 2.0));
+    getAtmosphere()->AddVelocityField(std::make_unique<sf::Uniform>(sf::Vector3(1.0, 0.0, 0.0)));
+    getAtmosphere()->AddVelocityField(std::make_unique<sf::Jet>(sf::Vector3(0.0, 0.0, 3.0), sf::Vector3(0.0, 1.0, 0.0), 0.2, 2.0));
 
 Static bodies
 =============
@@ -185,8 +191,10 @@ The same can be achieved in code:
 
 .. code-block:: cpp
 
-    sf::Plane* floor = new sf::Plane("Floor", 1000.f, "Steel", "Yellow");
-    AddStaticEntity(floor, sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(0.0, 0.0, 1.0));
+    #include <Stonefish/entities/statics/Plane.h>
+
+    AddStaticEntity(std::make_unique<sf::Plane>("Floor", 1000.f, "Steel", "Yellow"),
+        sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(0.0, 0.0, 1.0));
 
 .. note::
 
@@ -261,12 +269,15 @@ The same can be achieved using the following code:
 
 .. code-block:: cpp
 
-    sf::Obstacle* ball = new sf::Obstacle("Ball", 0.5, "Steel", "Yellow");
-    AddStaticEntity(ball, sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(2.0, 0.0, 5.0)));
-    sf::Obstacle* wall = new sf::Obstacle("Wall", sf::Vector3(10.0, 0.2, 5.0), "Steel", "Gray");
-    AddStaticEntity(wall, sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(0.0, 5.0, 2.0)));
-    sf::Obstacle* canyon = new sf::Obstacle("Canyon", sf::GetDataPath() + "canyon_vis.obj", 1.0, sf::I4(), sf::GetDataPath() + "canyon_phy.obj", 1.0, sf::I4(), true, "Rock", "Gray");
-    AddStaticEntity(canyon, sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(0.0, 0.0, 10.0)));
+    #include <Stonefish/entities/statics/Obstacle.h>
+
+    AddStaticEntity(std::make_unique<sf::Obstacle>("Ball", 0.5, "Steel", "Yellow"), 
+        sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(2.0, 0.0, 5.0)));
+    AddStaticEntity(std::make_unique<sf::Obstacle>("Wall", sf::Vector3(10.0, 0.2, 5.0), "Steel", "Gray"), 
+        sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(0.0, 5.0, 2.0)));
+    AddStaticEntity(std::make_unique<sf::Obstacle>("Canyon", sf::GetDataPath() + "canyon_vis.obj", 1.0, sf::I4(), 
+        sf::GetDataPath() + "canyon_phy.obj", 1.0, sf::I4(), true, "Rock", "Gray"), 
+        sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(0.0, 0.0, 10.0)));
 
 .. note::
 
@@ -292,8 +303,10 @@ The following example presents the definition of a heightmap based terrain:
 
 .. code-block:: cpp
 
-    sf::Terrain* bottom = new sf::Terrain("Bottom", sf::GetDataPath() + "terrain.png", 0.1, 0.2, "Rock", "Gray");
-    AddStaticEntity(bottom, sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(0.0, 0.0, 15.0)));
+    #include <Stonefish/entities/statics/Terrain.h>
+
+    AddStaticEntity(std::make_unique<sf::Terrain>("Bottom", sf::GetDataPath() + "terrain.png", 0.1, 0.2, "Rock", "Gray"), 
+        sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(0.0, 0.0, 15.0)));
 
 .. note::
 
