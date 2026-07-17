@@ -79,6 +79,7 @@ void OpenGLSonar::SetupSonar(glm::vec3 _eye, glm::vec3 _dir, glm::vec3 _up)
 
 void OpenGLSonar::UpdateTransform()
 {
+    pendingCaptureTime_ = tempCaptureTime_;
     eye_ = tempEye_;
     dir_ = tempDir_;
     up_ = tempUp_;

@@ -26,6 +26,7 @@
 #include "sensors/vision/Multibeam2.h"
 
 #include "core/GraphicalSimulationApp.h"
+#include "core/SimulationManager.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLDepthCamera.h"
@@ -206,6 +207,7 @@ void Multibeam2::SetupCamera(size_t index, const Vector3& eye, const Vector3& di
     glm::vec3 dir_ = glm::vec3((GLfloat)dir.x(), (GLfloat)dir.y(), (GLfloat)dir.z());
     glm::vec3 up_ = glm::vec3((GLfloat)up.x(), (GLfloat)up.y(), (GLfloat)up.z());
     cameras[index].cam->SetupCamera(eye_, dir_, up_);
+    cameras[index].cam->SetPendingCaptureTime((double)SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true));
 }
     
 void Multibeam2::InstallNewDataHandler(std::function<void(Multibeam2*)> callback)

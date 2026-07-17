@@ -178,6 +178,7 @@ void OpenGLEventBasedCamera::SetupCamera(glm::vec3 _eye, glm::vec3 _dir, glm::ve
 
 void OpenGLEventBasedCamera::UpdateTransform()
 {
+    pendingCaptureTime_ = tempCaptureTime_;
     eye = tempEye;
     dir = tempDir;
     up = tempUp;
@@ -329,6 +330,7 @@ void OpenGLEventBasedCamera::DrawLDR(GLuint destinationFBO, bool updated)
         glGetTexImage(GL_TEXTURE_2D, 0, GL_RG_INTEGER, GL_INT, NULL);
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
         OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
+        captureTime_ = pendingCaptureTime_;
         newData = true;
     }
 }
