@@ -651,7 +651,7 @@ vec4 PointLightContribution(int id, vec3 P, vec3 N, vec3 toEye, vec3 albedo)
 	vec3 toLight = pointLights[id].position - P;                //Vector from point to light
 	float dist = max(pointLights[id].radius, length(toLight));  //Not possible to be closer than the light surface
     toLight /= dist;                                            //Normalize point-light vector
-	float attenuation = 1.0/dist*dist;                          //Inverse square law
+	float attenuation = 1.0/(dist*dist);                        //Inverse square law
 	return vec4(ShadingModel(N, toEye, toLight, pointLights[id].color * attenuation, albedo), dist);
 }
 
@@ -664,7 +664,7 @@ vec4 SpotLightContribution(int id, vec3 P, vec3 N, vec3 toEye, vec3 albedo)
     float NdotL = dot(N, toLight);
 	if(spotEffect > spotLights[id].cone && NdotL > 0.0)                     //In spotlight?
 	{
-		float attenuation = 1.0/distance*distance;                          //Inverse square law
+		float attenuation = 1.0/(distance*distance);                        //Inverse square law
         float edge = smoothstep(1, 1.05, spotEffect/spotLights[id].cone);   //Smooth spot edge
 		return vec4(ShadingModel(N, toEye, toLight, spotLights[id].color * SpotShadow(id, P) * edge * attenuation, albedo), distance);
 	}
