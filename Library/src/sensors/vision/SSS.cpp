@@ -30,8 +30,11 @@
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLSSS.h"
 
+#include <stdexcept>
+
 namespace sf
 {
+
 
 SSS::SSS(std::string uniqueName, unsigned int numOfBins, unsigned int numOfLines, Scalar verticalBeamWidthDeg,
          Scalar horizontalBeamWidthDeg, Scalar verticalTiltDeg, Scalar minRange, Scalar maxRange, ColorMap cm, SonarOutputFormat outputFormat, Scalar frequency)
@@ -46,6 +49,7 @@ SSS::SSS(std::string uniqueName, unsigned int numOfBins, unsigned int numOfLines
     fovV = horizontalBeamWidthDeg <= Scalar(0) ? Scalar(1) : (horizontalBeamWidthDeg > Scalar(90) ? Scalar(90) : horizontalBeamWidthDeg);
     tilt = verticalTiltDeg < Scalar(0) ? Scalar(0) : (verticalTiltDeg > Scalar(90) ? Scalar(90) : verticalTiltDeg);
     cMap = cm;
+    setVerticalBeamPattern({});
     outputFormat_ = outputFormat;
     sonarData = NULL;
     displayData = NULL;
@@ -85,6 +89,20 @@ void SSS::setNoise(float multiplicativeStdDev, float additiveStdDev)
         noise.y = additiveStdDev;
     if(glSSS != nullptr)
         glSSS->setNoise(noise);
+}
+
+void SSS::setVerticalBeamPattern(const BeamPattern& pattern)
+{
+    for(BeamPattern::size_type i = 1; i < pattern.size(); ++i)
+    {
+        if(!(pattern[i - 1].angleDeg < pattern[i].angleDeg))
+        {
+            throw std::runtime_error(
+                "Vertical beam pattern angles must be strictly increasing!");
+        }
+    }
+
+    verticalBeamPattern_ = pattern;
 }
 
 void* SSS::getImageDataPointer(unsigned int index)
@@ -137,7 +155,8 @@ void SSS::InitGraphics(bool& seesParticles)
     seesParticles = false;
 
     glSSS = new OpenGLSSS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),
-                          (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, (GLfloat)tilt, range, outputFormat_);
+                          (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, (GLfloat)tilt,
+                          range, verticalBeamPattern_, outputFormat_);
     glSSS->setNoise(noise);
     glSSS->setSonar(this);
     glSSS->setColorMap(cMap);
