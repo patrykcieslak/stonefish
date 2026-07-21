@@ -27,6 +27,7 @@
 #define __Stonefish_OpenGLSSS__
 
 #include "graphics/OpenGLSonar.h"
+#include "sensors/vision/SSS.h"
 #include <random>
 
 namespace sf
@@ -53,7 +54,8 @@ namespace sf
          */
         OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 forward,
                   GLfloat verticalBeamWidthDeg, GLfloat horizontalBeamWidthDeg, 
-                  GLuint numOfBins, GLuint numOfLines, GLfloat verticalTiltDeg, glm::vec2 range, SonarOutputFormat outputFormat);
+                  GLuint numOfBins, GLuint numOfLines, GLfloat verticalTiltDeg, glm::vec2 range,
+                  const BeamPattern& verticalBeamPattern, SonarOutputFormat outputFormat);
         
         //! A destructor.
         ~OpenGLSSS();
@@ -85,7 +87,24 @@ namespace sf
          \param son a pointer to a sonar sensor
          */
         void setSonar(SSS* s);
-        
+
+        //! Return the linearly interpolated gain at one beam-relative angle.
+        /*!
+         \param pattern the beam pattern
+         \param angleDeg the angle relative to the sonar central axis [deg]
+         \return the gain factor [1]
+         */
+        static GLfloat SampleBeamPattern(const BeamPattern& pattern,
+                                        GLfloat angleDeg);
+
+        //! Build the beam pattern weights and upload them to a 1D texture.
+        /*!
+         \param pattern the beam pattern
+         \param BeamWidthDeg the width of the sonar beam [deg]
+         \return the OpenGL handle of the texture
+         */
+        GLuint CreateBeamPatternTexture(const BeamPattern& pattern, GLfloat BeamWidthDeg);
+            
     protected:
         //SSS specific
         SSS* sonar_;
@@ -96,6 +115,7 @@ namespace sf
         
         //OpenGL
         GLuint outputTex_[3];
+        GLuint verticalBeamPatternTex_;
         GLint pingpong_;
         GLSLShader* sonarOutputShader_[2];
         GLSLShader* sonarShiftShader_;

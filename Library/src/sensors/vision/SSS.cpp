@@ -33,6 +33,53 @@
 namespace sf
 {
 
+// Product of sinc^2(angle/30 deg) and sinc^2(angle/45 deg),
+// sampled every 5 degrees for this demonstration.
+// const BeamPattern DEMO_VERTICAL_BEAM_PATTERN = {
+//     {-45.0, 0.00000000},
+//     {-40.0, 0.00064120},
+//     {-35.0, 0.00128787},
+//     {-30.0, 0.00000000},
+//     {-25.0, 0.01161317},
+//     {-20.0, 0.08505743},
+//     {-15.0, 0.27718152},
+//     {-10.0, 0.57978143},
+//     { -5.0, 0.87545012},
+//     {  0.0, 1.00000000},
+//     {  5.0, 0.87545012},
+//     { 10.0, 0.57978143},
+//     { 15.0, 0.27718152},
+//     { 20.0, 0.08505743},
+//     { 25.0, 0.01161317},
+//     { 30.0, 0.00000000},
+//     { 35.0, 0.00128787},
+//     { 40.0, 0.00064120},
+//     { 45.0, 0.00000000},
+// };
+
+
+const BeamPattern DEMO_VERTICAL_BEAM_PATTERN = {
+    {-45.0, 0.0},
+    {-40.0, 1.0},
+    {-35.0, 0.0},
+    {-30.0, 1.0},
+    {-25.0, 0.0},
+    {-20.0, 1.0},
+    {-15.0, 0.0},
+    {-10.0, 1.0},
+    { -5.0, 0.0},
+    {  0.0, 1.0},
+    {  5.0, 0.0},
+    { 10.0, 1.0},
+    { 15.0, 0.0},
+    { 20.0, 1.0},
+    { 25.0, 0.0},
+    { 30.0, 1.0},
+    { 35.0, 0.0},
+    { 40.0, 1.0},
+    { 45.0, 0.0},
+};
+
 SSS::SSS(std::string uniqueName, unsigned int numOfBins, unsigned int numOfLines, Scalar verticalBeamWidthDeg,
          Scalar horizontalBeamWidthDeg, Scalar verticalTiltDeg, Scalar minRange, Scalar maxRange, ColorMap cm, SonarOutputFormat outputFormat, Scalar frequency)
     : Camera(uniqueName, (numOfBins%2==0 ? numOfBins : numOfBins+1), numOfLines, verticalBeamWidthDeg, frequency)
@@ -46,6 +93,7 @@ SSS::SSS(std::string uniqueName, unsigned int numOfBins, unsigned int numOfLines
     fovV = horizontalBeamWidthDeg <= Scalar(0) ? Scalar(1) : (horizontalBeamWidthDeg > Scalar(90) ? Scalar(90) : horizontalBeamWidthDeg);
     tilt = verticalTiltDeg < Scalar(0) ? Scalar(0) : (verticalTiltDeg > Scalar(90) ? Scalar(90) : verticalTiltDeg);
     cMap = cm;
+    setVerticalBeamPattern(DEMO_VERTICAL_BEAM_PATTERN);
     outputFormat_ = outputFormat;
     sonarData = NULL;
     displayData = NULL;
@@ -85,6 +133,20 @@ void SSS::setNoise(float multiplicativeStdDev, float additiveStdDev)
         noise.y = additiveStdDev;
     if(glSSS != nullptr)
         glSSS->setNoise(noise);
+}
+
+void SSS::setVerticalBeamPattern(const BeamPattern& pattern)
+{
+    for(BeamPattern::size_type i = 1; i < pattern.size(); ++i)
+    {
+        if(!(pattern[i - 1].angleDeg < pattern[i].angleDeg))
+        {
+            throw std::runtime_error(
+                "Vertical beam pattern angles must be strictly increasing!");
+        }
+    }
+
+    verticalBeamPattern_ = pattern;
 }
 
 void* SSS::getImageDataPointer(unsigned int index)
@@ -137,7 +199,8 @@ void SSS::InitGraphics(bool& seesParticles)
     seesParticles = false;
 
     glSSS = new OpenGLSSS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0),
-                          (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, (GLfloat)tilt, range, outputFormat_);
+                          (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, (GLfloat)tilt,
+                          range, verticalBeamPattern_, outputFormat_);
     glSSS->setNoise(noise);
     glSSS->setSonar(this);
     glSSS->setColorMap(cMap);

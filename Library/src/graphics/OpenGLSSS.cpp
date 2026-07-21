@@ -44,7 +44,8 @@ namespace sf
 
 OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 forward,
                      GLfloat verticalBeamWidthDeg, GLfloat horizontalBeamWidthDeg, 
-                     GLuint numOfBins, GLuint numOfLines, GLfloat verticalTiltDeg, glm::vec2 range, SonarOutputFormat outputFormat)
+                     GLuint numOfBins, GLuint numOfLines, GLfloat verticalTiltDeg, glm::vec2 range,
+                     const BeamPattern& verticalBeamPattern, SonarOutputFormat outputFormat)
 : OpenGLSonar(centerPosition, direction, forward, glm::uvec2(numOfBins, numOfLines), range, outputFormat)
 {
     //SSS specs
@@ -54,6 +55,7 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
     fov_.y = glm::radians(horizontalBeamWidthDeg);
     nBeamSamples_.x = glm::min((GLuint)ceilf(verticalBeamWidthDeg * (GLfloat)numOfBins/2.f * SSS_VRES_FACTOR), (GLuint)2048);
     nBeamSamples_.y = glm::min((GLuint)ceilf(horizontalBeamWidthDeg * SSS_HRES_FACTOR), (GLuint)2048);
+    verticalBeamPatternTex_ = CreateBeamPatternTexture(verticalBeamPattern, verticalBeamWidthDeg);
     noise_ = glm::vec2(0.f);
     UpdateTransform();
     
@@ -199,12 +201,14 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
     sonarOutputShader_[1]->AddUniform("gain", ParameterType::FLOAT);
     sonarOutputShader_[1]->AddUniform("vfov", ParameterType::FLOAT);
     sonarOutputShader_[1]->AddUniform("tilt", ParameterType::FLOAT);
+    sonarOutputShader_[1]->AddUniform("verticalBeamPattern", ParameterType::INT);
     sonarOutputShader_[1]->Use();
     sonarOutputShader_[1]->SetUniform("sonarHist", TEX_POSTPROCESS1);
     sonarOutputShader_[1]->SetUniform("sonarOutput", TEX_POSTPROCESS2);
     sonarOutputShader_[1]->SetUniform("gain", gain_);
     sonarOutputShader_[1]->SetUniform("vfov", fov_.x);
     sonarOutputShader_[1]->SetUniform("tilt", tilt_);
+    sonarOutputShader_[1]->SetUniform("verticalBeamPattern", TEX_POSTPROCESS3);
     OpenGLState::UseProgram(0);  
 
     switch (outputFormat)
@@ -231,12 +235,98 @@ OpenGLSSS::OpenGLSSS(glm::vec3 centerPosition, glm::vec3 direction, glm::vec3 fo
     OpenGLState::UseProgram(0);
 }
 
+GLfloat OpenGLSSS::SampleBeamPattern( const BeamPattern& pattern, GLfloat angleDeg)
+{
+    if(pattern.empty())
+        return 0.f;
+
+    const Scalar queryAngle = static_cast<Scalar>(angleDeg);
+    const auto upper = std::lower_bound(
+        pattern.begin(),
+        pattern.end(),
+        queryAngle,
+        [](const BeamPatternSample& sample, Scalar angle)
+        {
+            return sample.angleDeg < angle;
+        });
+
+    if(upper == pattern.begin())
+        return glm::clamp(
+            static_cast<GLfloat>(pattern.front().gain), 0.f, 1.f);
+
+    if(upper == pattern.end())
+        return glm::clamp(
+            static_cast<GLfloat>(pattern.back().gain), 0.f, 1.f);
+
+    const auto lower = upper - 1;
+    const Scalar angleSpan = upper->angleDeg - lower->angleDeg;
+
+    // Defensive guard: validation should make this unreachable.
+    if(!(angleSpan > Scalar(0)))
+    {
+        return glm::clamp(
+            static_cast<GLfloat>(upper->gain), 0.f, 1.f);
+    }
+
+    const Scalar t = (queryAngle - lower->angleDeg) / angleSpan;
+
+    return glm::clamp(
+        static_cast<GLfloat>(
+            lower->gain + t * (upper->gain - lower->gain)),
+        0.f,
+        1.f);
+}
+
+GLuint OpenGLSSS::CreateBeamPatternTexture(const BeamPattern& pattern, GLfloat BeamWidthDeg)
+{
+    std::vector<GLfloat> weights(nBeamSamples_.x);
+
+    for(GLuint i = 0; i < nBeamSamples_.x; ++i)
+    {
+        GLfloat factor;
+        if(nBeamSamples_.x > 1)
+        {
+            factor = static_cast<GLfloat>(i) / static_cast<GLfloat>(nBeamSamples_.x - 1);
+        }
+        else
+        {
+            // A single sample represents the center of the beam.
+            factor = 0.5f;
+        }
+
+        if(pattern.empty()) // Default to a smoothstep window if no beam pattern is supplied.
+        {
+            // CPU equivalent of the original GLSL window.
+            weights[i] = glm::smoothstep(0.0f, 0.2f, factor)
+                * (1.0f - glm::smoothstep(0.8f, 1.0f, factor));
+        }
+        else // Sample the user-supplied beam pattern.
+        {
+            const GLfloat emitAngleDeg =
+                (factor - 0.5f) * BeamWidthDeg;
+
+            weights[i] = SampleBeamPattern(pattern, emitAngleDeg);
+        }
+    }
+
+    return OpenGLContent::GenerateTexture(
+        GL_TEXTURE_1D,
+        glm::uvec3(nBeamSamples_.x, 1, 1),
+        GL_R32F,
+        GL_RED,
+        GL_FLOAT,
+        weights.data(),
+        FilteringMode::NEAREST,
+        false);
+}
+
 OpenGLSSS::~OpenGLSSS()
 {
     delete sonarOutputShader_[0];
     delete sonarOutputShader_[1];
     delete sonarShiftShader_;
     glDeleteTextures(3, outputTex_);
+    glDeleteTextures(1, &verticalBeamPatternTex_);
 }
 
 void OpenGLSSS::UpdateTransform()
@@ -432,12 +522,14 @@ void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
     
     //Postprocess sonar output
     glBindImageTexture(TEX_POSTPROCESS1, outputTex_[0], 0, GL_TRUE, 0, GL_READ_ONLY, GL_RG32F);
+    OpenGLState::BindTexture(TEX_POSTPROCESS3, GL_TEXTURE_1D, verticalBeamPatternTex_);
     sonarOutputShader_[1]->Use();
     sonarOutputShader_[1]->SetUniform("noiseSeed", glm::vec3(randDist_(randGen_), randDist_(randGen_), randDist_(randGen_)));
     sonarOutputShader_[1]->SetUniform("noiseStddev", noise_); // Multiplicative, additive (0.01f, 0.02f)
     sonarOutputShader_[1]->SetUniform("gain", gain_);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     glDispatchCompute((GLuint)ceilf(viewportWidth/2.f/64.f), 2, 1);
+    OpenGLState::UnbindTexture(TEX_POSTPROCESS3);
     
     OpenGLState::BindFramebuffer(displayFBO_);
     OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
