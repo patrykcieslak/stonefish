@@ -277,7 +277,7 @@ GLfloat OpenGLSSS::SampleBeamPattern( const BeamPattern& pattern, GLfloat angleD
         1.f);
 }
 
-GLuint OpenGLSSS::CreateBeamPatternTexture(const BeamPattern& pattern, GLfloat BeamWidthDeg)
+GLuint OpenGLSSS::CreateBeamPatternTexture(const BeamPattern& pattern, GLfloat beamWidthDeg)
 {
     std::vector<GLfloat> weights(nBeamSamples_.x);
 
@@ -303,7 +303,7 @@ GLuint OpenGLSSS::CreateBeamPatternTexture(const BeamPattern& pattern, GLfloat B
         else // Sample the user-supplied beam pattern.
         {
             const GLfloat emitAngleDeg =
-                (factor - 0.5f) * BeamWidthDeg;
+                (factor - 0.5f) * beamWidthDeg;
 
             weights[i] = SampleBeamPattern(pattern, emitAngleDeg);
         }

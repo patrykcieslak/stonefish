@@ -92,6 +92,7 @@
 #include "utils/SystemUtil.hpp"
 #include "tinyexpr.h"
 #include <sstream>
+#include <cmath>
 
 namespace sf
 {
@@ -4431,6 +4432,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
         Scalar rangeMax(10.0);
         Scalar gain(1.0);
         ColorMap cMap = ColorMap::GREEN_BLUE;
+        BeamPattern verticalBeamPattern;
 
         if((item = element->FirstChildElement("specs")) == nullptr 
             || item->QueryAttribute("bins", &nBins) != XML_SUCCESS
@@ -4476,9 +4478,62 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
         }
         if((item = element->FirstChildElement("display")) != nullptr)
             ParseColorMap(item, cMap);
-        
+            
+        // Optional vertical beam pattern
+        if((item = element->FirstChildElement("vertical_beam_pattern")) != nullptr)
+        {
+            XMLElement* sample = item->FirstChildElement("sample");
+            while(sample != nullptr) // loop through all samples in the vertical beam pattern
+            {
+                BeamPatternSample value;
+                if(sample->QueryAttribute("angle", &value.angleDeg) != XML_SUCCESS
+                || sample->QueryAttribute("gain", &value.gain) != XML_SUCCESS
+                || !std::isfinite(static_cast<double>(value.angleDeg))
+                || !std::isfinite(static_cast<double>(value.gain)))
+                {
+                    log.Print(
+                        MessageType::ERROR,
+                        "Sample in vertical beam pattern of sensor '%s' not properly defined!",
+                        sensorName.c_str());
+                    return nullptr;
+                }
+
+                if(value.gain < Scalar(0) || value.gain > Scalar(1))
+                {
+                    log.Print(
+                        MessageType::ERROR,
+                        "Gain in vertical beam pattern of sensor '%s' must be in the range [0, 1]!",
+                        sensorName.c_str());
+                    return nullptr;
+                }
+
+                if(!verticalBeamPattern.empty()
+                && !(verticalBeamPattern.back().angleDeg < value.angleDeg))
+                {
+                    log.Print(
+                        MessageType::ERROR,
+                        "Angles in vertical beam pattern of sensor '%s' must be strictly increasing!",
+                        sensorName.c_str());
+                    return nullptr;
+                }
+
+                verticalBeamPattern.push_back(value);
+                sample = sample->NextSiblingElement("sample");
+            }
+
+            if(verticalBeamPattern.size() < 2)
+            {
+                log.Print(
+                    MessageType::ERROR,
+                    "Vertical beam pattern of sensor '%s' must contain at least two samples!",
+                    sensorName.c_str());
+                return nullptr;
+            }
+        }
+
         SSS* sss = new SSS(sensorName, nBins, nLines, vFov, hFov, tilt, rangeMin, rangeMax, cMap, outFormat, rate);
         sss->setGain(gain);
+        sss->setVerticalBeamPattern(verticalBeamPattern);
 
         //Optional noise definition
         if((item = element->FirstChildElement("noise")) != nullptr)    
@@ -4499,6 +4554,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             sss->setNoise(0.01f, 0.02f); //Default values that look realistic
             log.Print(MessageType::WARNING, "Noise of sensor '%s' not defined - using defaults.", sensorName.c_str());
         }
+
         sens = sss;
     }
     else if(typeStr == "msis")

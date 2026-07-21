@@ -100,10 +100,10 @@ namespace sf
         //! Build the beam pattern weights and upload them to a 1D texture.
         /*!
          \param pattern the beam pattern
-         \param BeamWidthDeg the width of the sonar beam [deg]
+         \param beamWidthDeg the width of the sonar beam [deg]
          \return the OpenGL handle of the texture
          */
-        GLuint CreateBeamPatternTexture(const BeamPattern& pattern, GLfloat BeamWidthDeg);
+        GLuint CreateBeamPatternTexture(const BeamPattern& pattern, GLfloat beamWidthDeg);
             
     protected:
         //SSS specific
