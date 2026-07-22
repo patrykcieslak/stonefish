@@ -19,8 +19,8 @@
 	</materials>
 
 	<looks>
-		<look name="blue" color="0.0 0.0 1.0" roughness="0.2" metalness="0.5"/>
-		<look name="red" color="1.0 1.0 1.0" roughness="0.1" metalness="0.0"/> 
+		<look name="blue" rgb="0.0 0.0 1.0" roughness="0.2" metalness="0.5"/>
+		<look name="red" rgb="1.0 1.0 1.0" roughness="0.1" metalness="0.0"/> 
 	</looks>
 
 	<static name="Box1" type="box">

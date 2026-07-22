@@ -27,7 +27,10 @@
 
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
+#include "core/DeviceFactory.h"
 #include <algorithm>
+
+#define PARSED_MESHES_COUNT 10
 
 namespace sf 
 {
@@ -66,9 +69,9 @@ VariableBuoyancy::VariableBuoyancy(const std::string& uniqueName, const std::vec
     InterpolateVProps(V_, mass, CG_);
 }    
 
-ActuatorType VariableBuoyancy::getType() const
+LinkActuatorType VariableBuoyancy::getLinkActuatorType() const
 {
-    return ActuatorType::VBS;
+    return LinkActuatorType::VBS;
 }
         
 void VariableBuoyancy::setFlowRate(Scalar rate)
@@ -163,5 +166,60 @@ std::vector<Renderable> VariableBuoyancy::Render()
     return items;
 }
     
+// Statics
+
+ConstructInfo VariableBuoyancy::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoValue value;
+    ConstructInfoNode node;
     
+    // Volume (required)
+    node.optional = false;
+    value.optional = false;
+    value.valueType = ConstructInfoValueType::SCALAR;
+    node.attributes.insert({"initial", value});
+    info.nodes.insert({"volume", node});
+
+    // Mesh1 (required)
+    node.attributes.clear();
+    value.valueType = ConstructInfoValueType::STRING;
+    node.attributes.insert({"filename", value});
+    info.nodes.insert({"mesh1", node});
+
+    // Mesh2 (required)
+    info.nodes.insert({"mesh2", node});
+
+    // Additional meshes (optional)
+    node.optional = true;
+    for (int i=3; i<=PARSED_MESHES_COUNT; ++i)
+        info.nodes.insert({"mesh" + std::to_string(i), node});
+    
+    return info;
+}
+
+std::unique_ptr<VariableBuoyancy> VariableBuoyancy::Construct(const std::string& uniqueName, ConstructInfo& info)
+{
+    // Required
+    Scalar initialVolume = std::get<Scalar>(info.nodes.at("volume").attributes.at("initial").value);
+    std::vector<std::string> meshes;
+    meshes.push_back(std::get<std::string>(info.nodes.at("mesh1").attributes.at("filename").value));
+    meshes.push_back(std::get<std::string>(info.nodes.at("mesh2").attributes.at("filename").value));
+
+    // Optional
+    for (int i=3; i<=PARSED_MESHES_COUNT; ++i)
+    {
+        ConstructInfoValue& value = info.nodes.at("mesh" + std::to_string(i)).attributes.at("filename");
+        if (value.valid)
+            meshes.push_back(std::get<std::string>(value.value));
+        else 
+            break; // The list of meshes cannot have skipped entries
+    }
+
+    // Construct
+    return std::make_unique<VariableBuoyancy>(uniqueName, meshes, initialVolume);
+}
+
+REGISTER_ACTUATOR("vbs", VariableBuoyancy)
+
 }

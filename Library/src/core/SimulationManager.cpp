@@ -1132,8 +1132,11 @@ void SimulationManager::UpdateDrawingQueue()
     for(size_t i=0; i<actuators_.size(); ++i)
     {
         glPipeline->AddToDrawingQueue(actuators_[i]->Render());
-        if(actuators_[i]->getType() == ActuatorType::LIGHT)
-            (static_cast<Light*>(actuators_[i].get()))->UpdateTransform();
+        if (actuators_[i]->getType() == ActuatorType::LINK 
+            && static_cast<LinkActuator*>(actuators_[i].get())->getLinkActuatorType() == LinkActuatorType::LIGHT)
+        {
+                (static_cast<Light*>(actuators_[i].get()))->UpdateTransform();
+        }
     }
     
     //Sensors
@@ -1649,8 +1652,11 @@ void SimulationManager::SimulationPostTickCallback(btDynamicsWorld *world, Scala
 
     //Special treatment of suction cup actuator
     for(size_t i = 0; i < simManager->actuators_.size(); ++i)
-        if(simManager->actuators_[i]->getType() == ActuatorType::SUCTION_CUP)
+        if(simManager->actuators_[i]->getType() == ActuatorType::LINK
+            && static_cast<LinkActuator*>(simManager->actuators_[i].get())->getLinkActuatorType() == LinkActuatorType::SUCTION_CUP)
+        {
             (static_cast<SuctionCup*>(simManager->actuators_[i].get()))->Engage(simManager);
+        }
 
     //Loop through all sensors -> update measurements
     for(size_t i = 0; i < simManager->sensors_.size(); ++i)

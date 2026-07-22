@@ -50,7 +50,11 @@ namespace sf
         std::vector<Renderable> Render();
         
         //! A method used to set the force limits.
-        void setForceLimits(Scalar lower, Scalar upper);
+        /*!
+         \param positive positive force limit [N]
+         \param negative negative force limit (absolute) [N]
+        */
+        void setForceLimits(Scalar positive, Scalar negative);
 
         //! A method setting the new value of the desired force.
         /*!
@@ -61,8 +65,17 @@ namespace sf
         //! A method returning the current setpoint.
         Scalar getForce() const;
 
-        //! A method returning the type of the actuator.
-        ActuatorType getType() const;
+        //! A method returning type of link actuator.
+        LinkActuatorType getLinkActuatorType() const override;
+
+        //! A method returning the construction info for the actuator.
+        static ConstructInfo getConstructInfo();
+
+        //! A method constructing the actuator based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<Push> Construct(const std::string& uniqueName, ConstructInfo& info);
         
     private:
         void WatchdogTimeout() override;

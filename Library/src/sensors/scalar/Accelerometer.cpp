@@ -29,6 +29,7 @@
 #include "sensors/Sample.h"
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
+#include "core/DeviceFactory.h"
 
 namespace sf
 {
@@ -80,4 +81,58 @@ ScalarSensorType Accelerometer::getScalarSensorType() const
     return ScalarSensorType::ACC;
 }
     
+// Statics
+
+ConstructInfo Accelerometer::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoValue value;
+    ConstructInfoNode node;
+    
+    // History
+    value.valueType = ConstructInfoValueType::INT;
+    value.optional = false;
+    node.optional = true;
+    node.attributes.insert({"samples", value});
+    info.nodes.insert({"history", node});
+
+    // Range and noise
+    node.attributes.clear(); // Clear temporary
+
+    value.valueType = ConstructInfoValueType::VECTOR3;
+    value.optional = false;
+    node.optional = true;
+    node.attributes.insert({"linear_acceleration", value});
+    info.nodes.insert({"range", node});
+    info.nodes.insert({"noise", node});
+    
+    return info;
+}
+
+std::unique_ptr<Accelerometer> Accelerometer::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // History (optional)
+    int history = -1;
+    ConstructInfoValue& value = info.nodes.at("history").attributes.at("samples");
+    if (value.valid)
+        history = std::get<int>(value.value);
+    
+    // Create sensor
+    std::unique_ptr<Accelerometer> sensor = std::make_unique<Accelerometer>(uniqueName, frequency, history);    
+
+    // Range (optional)
+    value = info.nodes.at("range").attributes.at("linear_acceleration");
+    if (value.valid)
+        sensor->setRange(std::get<Vector3>(value.value));
+
+    // Noise (optional)
+    value = info.nodes.at("noise").attributes.at("linear_acceleration");
+    if (value.valid)
+        sensor->setNoise(std::get<Vector3>(value.value));
+
+    return sensor;
+}
+
+REGISTER_SENSOR("accelerometer", Accelerometer)
+
 }

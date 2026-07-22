@@ -105,8 +105,8 @@ namespace sf
 		//! A method returning actuator frame in the world frame.
 		Transform getActuatorFrame() const;
 		
-        //! A method returning the type of the actuator.
-        ActuatorType getType() const;
+        //! A method returning type of link actuator.
+        LinkActuatorType getLinkActuatorType() const override;
         
     private:
         void InitGraphics();

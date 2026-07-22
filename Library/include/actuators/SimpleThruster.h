@@ -58,7 +58,11 @@ namespace sf
         void setSetpoint(Scalar thrust, Scalar torque);
 
         //! A method used to set the thrust limits.
-        void setThrustLimits(Scalar lower, Scalar upper);
+        /*!
+         \param positive positive thrust limit [N]
+         \param negative negative thrust limit (absolute) [N]
+        */
+        void setThrustLimits(Scalar positive, Scalar negative);
 
         //! A method returning the requested setpoint.
         Scalar getThrustSetpoint() const;
@@ -72,8 +76,17 @@ namespace sf
         //! A method returning the angular position of the propeller (for visualization only) [rad]
         Scalar getAngle() const;
 
-        //! A method returning the type of the actuator.
-        ActuatorType getType() const;
+        //! A method returning type of link actuator.
+        LinkActuatorType getLinkActuatorType() const override;
+
+        //! A method returning the construction info for the actuator.
+        static ConstructInfo getConstructInfo();
+
+        //! A method constructing the actuator based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<SimpleThruster> Construct(const std::string& uniqueName, ConstructInfo& info);
         
     private:
         void WatchdogTimeout() override;

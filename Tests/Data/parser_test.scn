@@ -1,0 +1,131 @@
+<?xml version="1.0"?>
+<scenario>
+	<environment>
+		<ned latitude="20.0" longitude="50.0"/>
+		<ocean />
+		<atmosphere>
+			<sun azimuth="20.0" elevation="30.0"/>
+		</atmosphere>
+	</environment>
+
+	<materials>
+		<material name="concrete" density="800.0" restitution="0.7"/>
+		<material name="steel" density="7980.0" restitution="0.9"/>
+		<friction_table>
+			<friction material1="concrete" material2="concrete" static="0.9" dynamic="0.8"/>
+			<friction material1="steel" material2="steel" static="0.5" dynamic="0.2"/>
+			<friction material1="concrete" material2="steel" static="0.7" dynamic="0.5"/>
+		</friction_table>
+	</materials>
+
+	<looks>
+		<look name="blue" rgb="0.0 0.0 1.0" roughness="0.2" metalness="0.5"/>
+		<look name="red" rgb="1.0 0.0 0.0" roughness="0.1" metalness="0.0"/>
+	</looks>
+
+	<robot name="Robot1" fixed="true" self_collisions="false" algorithm="featherstone">
+		<base_link name="L1" type="cylinder" physics="submerged" buoyant="true">
+			<dimensions radius="0.5" height="0.2"/>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<material name="concrete"/>
+			<look name="blue"/>
+		</base_link>
+
+		<link name="L2" type="cylinder" physics="submerged" buoyant="true">
+			<dimensions radius="0.3" height="0.2" thickness="0.01"/>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<material name="concrete"/>
+			<look name="blue"/>
+		</link>
+		
+		<joint name="J1" type="revolute">
+			<parent name="L1"/>
+			<child name="L2"/>
+			<origin xyz="0 2.0 0" rpy="0 0 0"/>
+			<axis xyz="0 1 0"/>
+			<limits min="-1.0" max="1.0"/>
+		</joint>
+
+		<sensor name="Accelerometer" type="accelerometer" rate="10">
+			<link name="L1"/>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<noise linear_acceleration="0.01 0.01 0.01"/>
+		</sensor>
+
+		<actuator name="Servo" type="servo">
+			<joint name="J1"/>
+			<controller position_gain="1.0" velocity_gain="0.1" max_torque="1000.0" max_velocity="2.0"/>
+			<initial position="0.5"/>
+		</actuator>
+
+		<actuator name="Propeller" type="propeller">
+			<link name="L2"/>
+			<origin xyz="0 0 0.5" rpy="0 0 0"/>
+			<specs thrust_coeff="1.0" thrust_coeff_backward="0.8" torque_coeff="0.1" max_rpm="1000.0" inverted="false"/>
+			<propeller diameter="0.2" right="true">
+				<mesh filename="propeller.obj" scale="1.0"/>
+				<material name="steel"/>
+				<look name="red"/>
+			</propeller> 
+		</actuator>
+
+		<actuator name="Push" type="push">
+			<link name="L2"/>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+			<specs inverted="false"/>
+			<limits max_positive_force="100.0" max_negative_force="20.0"/>
+		</actuator>
+
+		<actuator name="Rudder" type="rudder">
+			<link name="L2"/>
+			<origin xyz="1.0 0 0" rpy="0 0 0"/>
+			<specs drag_coeff="0.1" lift_coeff="0.3" area="1.0" max_angle="0.3" stall_angle="0.5" max_angular_rate="0.1" inverted="false"/>
+			<visual>
+				<mesh filename="cone.obj" scale="1.0"/>
+				<material name="steel"/>
+				<look name="red"/>
+				<origin xyz="2.0 0 0" rpy="0 0 0"/>
+			</visual>
+		</actuator>
+
+		<actuator name="SimpleThruster" type="simple_thruster">
+			<link name="L2"/>
+			<origin xyz="0 0 1.0" rpy="0 0 0"/>
+			<specs inverted="false"/>
+			<propeller right="true">
+				<mesh filename="propeller.obj" scale="1.0"/>
+				<material name="steel"/>
+				<look name="red"/>
+			</propeller>
+			<limits max_positive_thrust="100.0" max_negative_thrust="90.0"/>
+		</actuator>
+
+		<actuator name="SuctionCup" type="suction_cup">
+			<link name="L2"/>
+			<origin xyz="0 0 0" rpy="0 0 0"/>
+		</actuator>
+
+		<actuator name="Thruster" type="thruster">
+			<link name="L2"/>
+			<origin rpy="0 0 0" xyz="0 0 3"/>
+			<specs max_setpoint="100.0" inverted_setpoint="false" normalized_setpoint="true"/>
+			<propeller diameter="0.2" right="true">
+				<mesh filename="propeller.obj" scale="1.0" />
+				<material name="concrete" />
+				<look name="red" />
+			</propeller>
+			<rotor_dynamics type="mechanical_pi">
+				<rotor_inertia value="0.05"/>
+				<kp value="1.0"/>
+				<ki value="0.5"/>
+				<ilimit value="2.0"/>
+			</rotor_dynamics>
+			<thrust_model type="fluid_dynamics">
+				<thrust_coeff forward="0.48" reverse="0.48"/>
+				<torque_coeff value="0.05"/>
+			</thrust_model>
+		</actuator>
+
+		<world_transform xyz="5.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+	</robot>
+</scenario>

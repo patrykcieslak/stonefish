@@ -285,7 +285,7 @@ LinkActuator* FeatherstoneRobot::AddLinkActuator(std::unique_ptr<LinkActuator> a
         cCritical("Link '%s' doesn't exist. Actuator '%s' cannot be attached!", actuatedLinkName.c_str(), a->getName().c_str());
         return nullptr;
     }
-    if(a->getType() == ActuatorType::SUCTION_CUP) // Special case
+    if(a->getLinkActuatorType() == LinkActuatorType::SUCTION_CUP) // Special case
     {
         static_cast<SuctionCup*>(a.get())->AttachToLink(getDynamics(), linkId);
     }

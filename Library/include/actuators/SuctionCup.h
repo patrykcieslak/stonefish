@@ -72,8 +72,17 @@ namespace sf
         //!
         bool getPump() const;
 
-        //! A method returning the type of the actuator.
-        ActuatorType getType() const;
+        //! A method returning type of link actuator.
+        LinkActuatorType getLinkActuatorType() const override;
+
+        //! A method returning the construction info for the actuator.
+        static ConstructInfo getConstructInfo();
+
+        //! A method constructing the actuator based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<SuctionCup> Construct(const std::string& uniqueName, ConstructInfo& info);
         
     private:
         bool pump_;

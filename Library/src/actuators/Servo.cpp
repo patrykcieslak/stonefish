@@ -26,6 +26,7 @@
 #include "actuators/Servo.h"
 
 #include "core/SimulationApp.h"
+#include "core/DeviceFactory.h"
 #include "entities/FeatherstoneEntity.h"
 #include "joints/Joint.h"
 #include "joints/RevoluteJoint.h"
@@ -44,10 +45,10 @@ Servo::Servo(const std::string& uniqueName, Scalar positionGain, Scalar velocity
     mode_ = ServoControlMode::VELOCITY;
 }
 
-ActuatorType Servo::getType() const
+JointActuatorType Servo::getJointActuatorType() const
 {
-    return ActuatorType::SERVO;
-}    
+    return JointActuatorType::SERVO;
+}
 
 void Servo::setControlMode(ServoControlMode m)
 {
@@ -286,5 +287,63 @@ void Servo::WatchdogTimeout()
     if(mode_ == ServoControlMode::VELOCITY)
         setDesiredVelocity(Scalar(0));
 }
+
+// Statics
+
+ConstructInfo Servo::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoValue value;
+    ConstructInfoNode node;
+    
+    // Controller
+    value.valueType = ConstructInfoValueType::SCALAR;
+    value.optional = false;
+    node.optional = false;
+    node.attributes.insert({"position_gain", value});
+    node.attributes.insert({"velocity_gain", value});
+    node.attributes.insert({"max_torque", value});
+    value.optional = true;
+    node.attributes.insert({"max_velocity", value});
+    info.nodes.insert({"controller", node});
+
+    // Initial position
+    value.optional = false;
+    node.optional = true;
+    node.attributes.clear();
+    node.attributes.insert({"position", value});
+    info.nodes.insert({"initial", node});
+
+    return info;
+}
+
+std::unique_ptr<Servo> Servo::Construct(const std::string& uniqueName, ConstructInfo& info)
+{
+    // Required
+    Scalar kp = std::get<Scalar>(info.nodes.at("controller").attributes.at("position_gain").value);
+    Scalar kv = std::get<Scalar>(info.nodes.at("controller").attributes.at("velocity_gain").value);
+    Scalar maxTorque = std::get<Scalar>(info.nodes.at("controller").attributes.at("max_torque").value);
+    
+    // Optional
+    Scalar maxVelocity(-1.);
+    ConstructInfoValue& value = info.nodes.at("controller").attributes.at("max_velocity");
+    if (value.valid)
+        maxVelocity = std::get<Scalar>(value.value);
+
+    Scalar initialPosition(0.);
+    value = info.nodes.at("initial").attributes.at("position");
+    if (value.valid)
+        initialPosition = std::get<Scalar>(value.value);
+
+    // Construct servo
+    std::unique_ptr<Servo> actuator = std::make_unique<Servo>(uniqueName, kp, kv, maxTorque);
+    actuator->setControlMode(ServoControlMode::POSITION);
+    actuator->setDesiredPosition(initialPosition);
+    actuator->setMaxVelocity(maxVelocity);
+
+    return actuator;
+}
+
+REGISTER_ACTUATOR("servo", Servo)
 
 }

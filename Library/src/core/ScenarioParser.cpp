@@ -24,6 +24,7 @@
 //
 
 #include "core/ScenarioParser.h"
+#include "core/DeviceFactory.h"
 #include "core/SimulationManager.h"
 #include "core/NED.h"
 #include "core/FeatherstoneRobot.h"
@@ -2411,8 +2412,7 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
     switch(act->getType())
     {
         //Joint actuators
-        case ActuatorType::MOTOR:
-        case ActuatorType::SERVO:
+        case ActuatorType::JOINT:
         {
             const char* jointName = nullptr;
             
@@ -2427,13 +2427,7 @@ bool ScenarioParser::ParseActuator(XMLElement* element, Robot* robot)
             break;
 
         //Link actuators
-        case ActuatorType::PUSH:
-        case ActuatorType::SIMPLE_THRUSTER:
-        case ActuatorType::THRUSTER:
-        case ActuatorType::PROPELLER:
-        case ActuatorType::RUDDER:
-        case ActuatorType::VBS:
-        case ActuatorType::SUCTION_CUP:
+        case ActuatorType::LINK:
         {
             const char* linkName = nullptr;
             Transform origin; 
@@ -2624,585 +2618,17 @@ std::unique_ptr<Actuator> ScenarioParser::ParseActuator(XMLElement* element, con
     std::string typeStr(type);
  
     //---- Specific ----
-    XMLElement* item;
-    if(typeStr == "motor")
+    const ActuatorFactoryEntry* factory = ActuatorFactory::Instance().Find(typeStr);
+    if (factory == nullptr)
     {
-        return std::make_unique<Motor>(actuatorName);
+        log.Print(MessageType::ERROR, "Actuator type '%s' not supported!", typeStr.c_str());
+        return nullptr;
     }
-    else if(typeStr == "servo")
-    {
-        Scalar kp, kv, maxTau;
-        if((item = element->FirstChildElement("controller")) == nullptr 
-            || item->QueryAttribute("position_gain", &kp) != XML_SUCCESS 
-            || item->QueryAttribute("velocity_gain", &kv) != XML_SUCCESS
-            || item->QueryAttribute("max_torque", &maxTau) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Controller definition for actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
-        }
-        Scalar maxVel(-1); // No limit
-        item->QueryAttribute("max_velocity", &maxVel); // Optional
 
-        Scalar initialPos(0);
-        if((item = element->FirstChildElement("initial")) != nullptr)
-            item->QueryAttribute("position", &initialPos);
+    ConstructInfo info = factory->getConstructInfo();
 
-        std::unique_ptr<Servo> srv = std::make_unique<Servo>(actuatorName, kp, kv, maxTau);
-        srv->setControlMode(ServoControlMode::POSITION);
-        srv->setDesiredPosition(initialPos);
-        srv->setMaxVelocity(maxVel);
-        return srv;
-    }
-    else if(typeStr == "push")
-    {
-        if((item = element->FirstChildElement("specs")) != nullptr)
-        {
-            bool inverted = false;
-            item->QueryAttribute("inverted", &inverted);
-            
-            std::unique_ptr<Push> push = std::make_unique<Push>(actuatorName, inverted);
-
-            double lower, upper;
-            if(item->QueryAttribute("lower_limit", &lower) == XML_SUCCESS 
-                && item->QueryAttribute("upper_limit", &upper) == XML_SUCCESS)
-            {
-                push->setForceLimits(lower, upper);
-            }
-            
-            return push;
-        }
-        else
-        {
-            return std::make_unique<Push>(actuatorName, false);
-        }
-    }
-    else if (typeStr == "thruster")
-    {
-        const char* propFile = nullptr;
-        const char* mat = nullptr;
-        const char* look = nullptr;
-        Scalar propScale;
-        Scalar diameter;
-        bool rightHand;
-
-        if ((item = element->FirstChildElement("propeller")) == nullptr 
-            || item->QueryAttribute("right", &rightHand) != XML_SUCCESS
-            || item->QueryAttribute("diameter", &diameter) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Propeller definition of actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
-        }
-        XMLElement *item2;
-        if ((item2 = item->FirstChildElement("mesh")) == nullptr ||
-            item2->QueryStringAttribute("filename", &propFile) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Propeller mesh path of actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
-        }
-        if (item2->QueryAttribute("scale", &propScale) != XML_SUCCESS)
-            propScale = Scalar(1);
-        if ((item2 = item->FirstChildElement("material")) == nullptr ||
-            item2->QueryStringAttribute("name", &mat) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Propeller material of actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
-        }
-        std::string lookStr = "";
-        if ((item2 = item->FirstChildElement("look")) != nullptr)
-        {
-            item2->QueryStringAttribute("name", &look);
-            lookStr = std::string(look);
-        }
-
-        PhysicsSettings phy;
-        phy.collisions = false;
-        phy.buoyancy = false;
-        phy.mode = PhysicsMode::SUBMERGED;
-        std::unique_ptr<Polyhedron> propeller = std::make_unique<Polyhedron>(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), 
-            propScale, I4(), std::string(mat), lookStr, -1, GeometryApproxType::CYLINDER);
-
-        Scalar maxSetpoint;
-        bool inverted = false;
-        bool normalized = false;
-
-        if ((item = element->FirstChildElement("specs")) != nullptr)
-        {
-            if (item->QueryAttribute("max_setpoint", &maxSetpoint) != XML_SUCCESS)
-            {
-                log.Print(MessageType::ERROR, "Max setpoint value of actuator '%s' missing!", actuatorName.c_str());
-                return nullptr;
-            }
-            item->QueryAttribute("inverted_setpoint", &inverted);
-            item->QueryAttribute("normalized_setpoint", &normalized);
-        }
-        else 
-        {
-            log.Print(MessageType::ERROR, "Specs of actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
-        }
-
-        if ((item = element->FirstChildElement("rotor_dynamics")) == nullptr)
-        {
-            log.Print(MessageType::ERROR, "Rotor dynamics of actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
-        }
-
-        // Rotor model
-        std::unique_ptr<RotorDynamics> rotorModel {};
-
-        const char* rotorDynType = nullptr;
-        std::string rotorDynTypeStr = "";
-
-        if (item->QueryStringAttribute("type", &rotorDynType) == XML_SUCCESS)
-        {
-            rotorDynTypeStr = std::string(rotorDynType);
-        }
-        else
-        {
-            log.Print(MessageType::ERROR, "Rotor dynamics type for actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
-        }
-
-        if (rotorDynTypeStr == "zero_order")
-        {
-            rotorModel = std::make_unique<ZeroOrder>();
-        }
-        else if (rotorDynTypeStr == "first_order")
-        {
-            Scalar timeConstant;
-            if ((item2 = item->FirstChildElement("time_constant")) != nullptr 
-                 && item2->QueryAttribute("value", &timeConstant) == XML_SUCCESS)
-            {
-                rotorModel = std::make_unique<FirstOrder>(timeConstant);
-            }
-            else
-            {
-                log.Print(MessageType::ERROR, "Time constant of First Order rotor dynamics model of actuator '%s' missing!",
-                    actuatorName.c_str());
-                return nullptr;
-            }
-        }
-        else if (rotorDynTypeStr == "yoerger")
-        {
-            Scalar alpha, beta;
-            if ((item2 = item->FirstChildElement("alpha")) != nullptr && //
-                 item2->QueryAttribute("value", &alpha) == XML_SUCCESS && //
-                 (item2 = item->FirstChildElement("beta")) != nullptr && //
-                 item2->QueryAttribute("value", &beta) == XML_SUCCESS)
-            {
-                rotorModel = std::make_unique<Yoerger>(alpha, beta);
-            }
-            else
-            {
-                log.Print(MessageType::ERROR, "Alpha or Beta of Yoerger rotor dynamics model in actuator '%s' missing!",
-                        actuatorName.c_str());
-                return nullptr;
-            }
-        }
-        // Bessa modoel
-        else if (rotorDynTypeStr == "bessa")
-        {
-            Scalar jmsp, kv1, kv2, kt, rm;
-
-            if ((item2 = item->FirstChildElement("jmsp")) != nullptr 
-                && item2->QueryAttribute("value", &jmsp)== XML_SUCCESS
-                && (item2 = item->FirstChildElement("kv1")) != nullptr
-                && item2->QueryAttribute("value", &kv1)== XML_SUCCESS
-                && (item2 = item->FirstChildElement("kv2")) != nullptr
-                && item2->QueryAttribute("value", &kv2)== XML_SUCCESS
-                && (item2 = item->FirstChildElement("kt")) != nullptr
-                && item2->QueryAttribute("value", &kt)== XML_SUCCESS
-                && (item2 = item->FirstChildElement("rm")) != nullptr
-                && item2->QueryAttribute("value", &rm)== XML_SUCCESS)
-            {
-                rotorModel = std::make_unique<Bessa>(jmsp, kv1, kv2, kt, rm);
-            }
-            else
-            {
-                log.Print(MessageType::ERROR, "Bessa rotor dynamics model parameters in actuator '%s' missing!", actuatorName.c_str());
-                return nullptr;
-            }
-        }
-        // Mechanical model with PI controller
-        else if (rotorDynTypeStr == "mechanical_pi")
-        {
-            Scalar J = propeller->getInertia().getX() + propeller->getAddedInertia().getX();
-            if((item2 = item->FirstChildElement("rotor_inertia")) != nullptr)
-            {
-                item2->QueryAttribute("value", &J);
-            }
-            else
-            {
-                log.Print(MessageType::INFO, "Actuator '%s': using calculated rotor inertia = %1.5lf and added inertia = %1.5lf.", 
-                    actuatorName.c_str(), propeller->getInertia().getX(), propeller->getAddedInertia().getX());
-            }
-
-            Scalar kp, ki, iLim; // PI settings
-            if ((item2 = item->FirstChildElement("kp")) != nullptr 
-                && item2->QueryAttribute("value", &kp) == XML_SUCCESS
-                && (item2 = item->FirstChildElement("ki")) != nullptr
-                && item2->QueryAttribute("value", &ki) == XML_SUCCESS
-                && (item2 = item->FirstChildElement("ilimit")) != nullptr
-                && item2->QueryAttribute("value", &iLim) == XML_SUCCESS)
-            {
-                rotorModel = std::make_unique<MechanicalPI>(J, kp, ki, iLim);
-            }
-            else
-            {
-                log.Print(MessageType::ERROR, "Mechanical rotor dynamics model parameters in actuator '%s' missing!", actuatorName.c_str());
-                return nullptr;
-            }
-        }
-        else
-        {
-            log.Print(MessageType::ERROR, "Unknown rotor dynamics model type in actuator '%s'!", actuatorName.c_str());
-            return nullptr;
-        }
-
-        // Thrust Model
-        std::unique_ptr<ThrustModel> thrustModel;
-
-        if ((item = element->FirstChildElement("thrust_model")) == nullptr)
-        {
-            log.Print(MessageType::ERROR, "Thrust model of actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
-        }
-
-        const char* thrustModelType = nullptr;
-        std::string thrustModelTypeStr = "";
-
-        if (item->QueryStringAttribute("type", &thrustModelType) == XML_SUCCESS)
-        {
-            thrustModelTypeStr = std::string(thrustModelType);
-        }
-        else
-        {
-            log.Print(MessageType::ERROR, "Thrust model type of actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
-        }
-
-        // Quadratic
-        if (thrustModelTypeStr == "quadratic")
-        {
-            Scalar kt;
-            // Get params
-            if ((item2 = item->FirstChildElement("thrust_coeff")) != nullptr
-                && item2->QueryAttribute("value", &kt) == XML_SUCCESS)
-            {
-                thrustModel = std::make_unique<QuadraticThrust>(kt);
-            }
-            else
-            { 
-                log.Print(MessageType::ERROR, "Quadratic thrust model rotor_constant of actuator '%s' missing!",
-                        actuatorName.c_str());
-                return nullptr;
-            }
-
-        }
-        // Deadband
-        else if (thrustModelTypeStr == "deadband")
-        {
-            Scalar ktn, ktp, dl, du;
-            // get params
-            if ((item2 = item->FirstChildElement("thrust_coeff")) != nullptr 
-                 && item2->QueryAttribute("reverse", &ktn) == XML_SUCCESS 
-                 && item2->QueryAttribute("forward", &ktp) == XML_SUCCESS
-                 && (item2 = item->FirstChildElement("deadband")) != nullptr
-                 && item2->QueryAttribute("lower", &dl) == XML_SUCCESS
-                 && item2->QueryAttribute("upper", &du) == XML_SUCCESS)
-            {
-                thrustModel = std::make_unique<DeadbandThrust>(ktn, ktp, dl, du);
-            }
-            else
-            {    
-                log.Print(MessageType::ERROR, "Deadband thrust model parameters in actuator '%s' missing!",
-                    actuatorName.c_str());
-                return nullptr;
-            }
-
-        }
-        // Linear Interpolation
-        else if (thrustModelTypeStr == "linear_interpolation")
-        {
-            std::vector<Scalar> input, output;
-            // get params
-            const char* cinput;
-            const char* coutput;
-            if ((item2 = item->FirstChildElement("input")) != nullptr
-                && item2->QueryStringAttribute("value", &cinput) == XML_SUCCESS
-                && (item2 = item->FirstChildElement("output")) != nullptr
-                && item2->QueryStringAttribute("value", &coutput) == XML_SUCCESS)
-            {
-                
-                // Lambda function to convert a space-separated string to a vector of Scalars
-                // @TODO: Add as standard in the library?
-                auto stringToVector = [](const std::string& str) -> std::vector<Scalar> 
-                {
-                    std::vector<Scalar> result;
-                    std::stringstream ss(str);
-                    Scalar temp;
-                    while (ss >> temp)
-                    {
-                        result.push_back(temp);
-                    }
-                    return result;
-                };
-
-                input = stringToVector(std::string(cinput));
-                output = stringToVector(std::string(coutput));
-                
-                thrustModel = std::make_unique<InterpolatedThrust>(input, output);
-            }
-            else
-            {
-                log.Print(MessageType::ERROR, "Linear interpolation of actuator '%s' missing!", actuatorName.c_str());
-                return nullptr;
-            }
-        }
-        // Fluid dynamics based model
-        else if (thrustModelTypeStr == "fluid_dynamics")
-        {
-            Scalar ktp, ktn, kq;
-            if ((item2 = item->FirstChildElement("thrust_coeff")) != nullptr
-                && item2->QueryAttribute("forward", &ktp) == XML_SUCCESS
-                && item2->QueryAttribute("reverse", &ktn) == XML_SUCCESS
-                && (item2 = item->FirstChildElement("torque_coeff")) != nullptr
-                && item2->QueryAttribute("value", &kq) == XML_SUCCESS)
-            {
-                thrustModel = std::make_unique<FDThrust>(diameter, ktp, ktn, kq, rightHand, sm_->getOcean()->getLiquid().density);
-            }
-            else
-            {
-                log.Print(MessageType::ERROR, "Fluid dynamics model parameters in actuator '%s' missing!", actuatorName.c_str());
-                return nullptr;
-            }
-        }
-        else
-        {
-            log.Print(MessageType::ERROR, "Unknown thrust model type in actuator '%s'!", actuatorName.c_str());
-            return nullptr;
-        }
-
-        return std::make_unique<Thruster>(actuatorName, std::move(propeller), std::move(rotorModel), std::move(thrustModel), 
-            diameter, rightHand, maxSetpoint, inverted, normalized);
-    }
-    else if(typeStr == "simple_thruster")
-    {
-        const char* propFile = nullptr;
-        const char* mat = nullptr;
-        const char* look = nullptr;
-        Scalar propScale;
-        bool rightHand;
-        
-        if((item = element->FirstChildElement("propeller")) == nullptr || item->QueryAttribute("right", &rightHand) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Propeller definition of actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
-        }
-        XMLElement* item2;
-        if((item2 = item->FirstChildElement("mesh")) == nullptr || item2->QueryStringAttribute("filename", &propFile) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Propeller mesh path of actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
-        }
-        if(item2->QueryAttribute("scale", &propScale) != XML_SUCCESS)
-            propScale = Scalar(1);
-        if((item2 = item->FirstChildElement("material")) == nullptr || item2->QueryStringAttribute("name", &mat) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Propeller material of actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
-        }
-        std::string lookStr = "";
-        if((item2 = item->FirstChildElement("look")) != nullptr)
-        {
-            item2->QueryStringAttribute("name", &look);
-            lookStr = std::string(look);
-        }
-
-        PhysicsSettings phy;
-        phy.collisions = false;
-        phy.buoyancy = false;
-        
-        phy.mode = PhysicsMode::SUBMERGED;
-        std::unique_ptr<Polyhedron> propeller = std::make_unique<Polyhedron>(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), lookStr);
-        
-        if((item = element->FirstChildElement("specs")) != nullptr)
-        {
-            bool inverted = false;
-            item->QueryAttribute("inverted", &inverted); //Optional
-
-            std::unique_ptr<SimpleThruster> th = std::make_unique<SimpleThruster>(actuatorName, std::move(propeller), rightHand, inverted);
-
-            Scalar lower, upper;
-            if(item->QueryAttribute("lower_thrust_limit", &lower) == XML_SUCCESS 
-                && item->QueryAttribute("upper_thrust_limit", &upper) == XML_SUCCESS)
-            {
-                th->setThrustLimits(lower, upper);
-            }
-            return th;
-        }
-        else
-        {
-            return std::make_unique<SimpleThruster>(actuatorName, std::move(propeller), rightHand);
-        }
-    }
-    else if(typeStr == "propeller")
-    {
-        const char* propFile = nullptr;
-        const char* mat = nullptr;
-        const char* look = nullptr;
-        Scalar diameter, cThrust, cTorque, maxRpm, propScale, cThrustBack;
-        bool rightHand;
-        bool inverted = false;
-        
-        if((item = element->FirstChildElement("specs")) == nullptr 
-            || item->QueryAttribute("thrust_coeff", &cThrust) != XML_SUCCESS 
-            || item->QueryAttribute("torque_coeff", &cTorque) != XML_SUCCESS
-            || item->QueryAttribute("max_rpm", &maxRpm) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Specs of actuator '%s' not properly defined!", actuatorName.c_str());
-            return nullptr;
-        }
-        cThrustBack = cThrust;
-        item->QueryAttribute("thrust_coeff_backward", &cThrustBack); //Optional
-        item->QueryAttribute("inverted", &inverted); //Optional
-        if((item = element->FirstChildElement("propeller")) == nullptr || item->QueryAttribute("diameter", &diameter) != XML_SUCCESS || item->QueryAttribute("right", &rightHand) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Propeller definition of actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
-        }
-        XMLElement* item2;
-        if((item2 = item->FirstChildElement("mesh")) == nullptr || item2->QueryStringAttribute("filename", &propFile) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Propeller mesh path of actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
-        }
-        if(item2->QueryAttribute("scale", &propScale) != XML_SUCCESS)
-            propScale = Scalar(1);
-        if((item2 = item->FirstChildElement("material")) == nullptr || item2->QueryStringAttribute("name", &mat) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Propeller material of actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
-        }
-        std::string lookStr = "";
-        if((item2 = item->FirstChildElement("look")) != nullptr)
-        {
-            item2->QueryStringAttribute("name", &look);
-            lookStr = std::string(look);
-        }
-
-        PhysicsSettings phy;
-        phy.collisions = false;
-        phy.buoyancy = false;
-        phy.mode = PhysicsMode::AERODYNAMIC;
-        std::unique_ptr<Polyhedron> propeller = std::make_unique<Polyhedron>(actuatorName + "/Propeller", phy, GetFullPath(std::string(propFile)), propScale, I4(), std::string(mat), lookStr);
-        
-        return std::make_unique<Propeller>(actuatorName, std::move(propeller), diameter, cThrust, cTorque, maxRpm, rightHand, inverted);
-    }
-    else if(typeStr == "rudder")
-    {
-        const char* rudderFile = nullptr;
-        const char* mat = nullptr;
-        const char* look = nullptr;
-
-        Scalar area, dragCoeff, liftCoeff, maxAngle, rudderScale;
-        Scalar stallAngle = Scalar(0.25*M_PI);
-        Scalar maxAngularRate = Scalar(0);
-        bool inverted = false;
-        
-        if((item = element->FirstChildElement("specs")) == nullptr 
-            || item->QueryAttribute("drag_coeff", &dragCoeff) != XML_SUCCESS
-            || item->QueryAttribute("lift_coeff", &liftCoeff) != XML_SUCCESS
-            || item->QueryAttribute("max_angle", &maxAngle) != XML_SUCCESS
-            || item->QueryAttribute("area", &area) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Specs of actuator '%s' not properly defined!", actuatorName.c_str());
-            return nullptr;
-        }
-        item->QueryAttribute("inverted", &inverted); //Optional
-        item->QueryAttribute("stall_angle", &stallAngle); //Optional
-        item->QueryAttribute("max_angular_rate", &maxAngularRate); //Optional
-
-        if((item = element->FirstChildElement("visual")) == nullptr)
-        {
-            log.Print(MessageType::ERROR, "Visual definition of actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
-        }
-        XMLElement* item2;
-        if((item2 = item->FirstChildElement("mesh")) == nullptr || item2->QueryStringAttribute("filename", &rudderFile) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Visual mesh path of actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
-        }
-        if(item2->QueryAttribute("scale", &rudderScale) != XML_SUCCESS)
-            rudderScale = Scalar(1);
-        if((item2 = item->FirstChildElement("material")) == nullptr || item2->QueryStringAttribute("name", &mat) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Visual material of actuator '%s' missing!", actuatorName.c_str());
-            return nullptr;
-        }
-        std::string lookStr = "";
-        if((item2 = item->FirstChildElement("look")) != nullptr)
-        {
-            item2->QueryStringAttribute("name", &look);
-            lookStr = std::string(look);
-        }
-
-        Transform graOrigin = I4();
-        if((item2 = item->FirstChildElement("origin")) != nullptr && !ParseTransform(item2, graOrigin))
-        {
-            log.Print(MessageType::ERROR, "Visual origin of actuator '%s' is not properly defined!", actuatorName.c_str());
-            return nullptr;
-        }
-
-        PhysicsSettings phy;
-        phy.mode = PhysicsMode::SUBMERGED;
-        phy.collisions = false;
-        phy.buoyancy = false;
-
-        std::unique_ptr<Polyhedron> rudder = std::make_unique<Polyhedron>(actuatorName + "/Rudder", phy, GetFullPath(std::string(rudderFile)), rudderScale, graOrigin, std::string(mat), lookStr);
-        
-        return std::make_unique<Rudder>(actuatorName, std::move(rudder), area, liftCoeff, dragCoeff, stallAngle, maxAngle, inverted, maxAngularRate);
-    }
-    else if(typeStr == "vbs")
-    {
-        Scalar initialV;
-        std::vector<std::string> vMeshes;
-        if((item = element->FirstChildElement("volume")) == nullptr || item->QueryAttribute("initial", &initialV) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Volume of actuator '%s' not properly defined!", actuatorName.c_str());
-            return nullptr;
-        }
-        XMLElement* item2;
-        const char* meshFile;
-        if((item2 = item->FirstChildElement("mesh")) == nullptr || item2->QueryStringAttribute("filename", &meshFile) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Volume mesh of actuator '%s' not properly defined!", actuatorName.c_str());
-            return nullptr;
-        }
-        vMeshes.push_back(GetFullPath(std::string(meshFile)));
-        while((item2 = item2->NextSiblingElement("mesh")) != nullptr)
-        {
-            const char* meshFile2;
-            if(item2->QueryStringAttribute("filename", &meshFile2) != XML_SUCCESS)
-            {
-                log.Print(MessageType::ERROR, "Volume mesh of actuator '%s' not properly defined!", actuatorName.c_str());
-                return nullptr;
-            }
-            vMeshes.push_back(GetFullPath(std::string(meshFile2)));
-        }
-        if(vMeshes.size() < 2)
-        {
-            log.Print(MessageType::ERROR, "Actuator '%s' requires definition of at least two volumes!", actuatorName.c_str());
-            return nullptr;
-        }
-        
-        return std::make_unique<VariableBuoyancy>(actuatorName, vMeshes, initialV);
-    }
-    else if(typeStr == "suction_cup")
-    {
-        return std::make_unique<SuctionCup>(actuatorName);
-    }
+    if (ParseConstructInfo(element, info))
+        return factory->construct(actuatorName, info);
     else
         return nullptr;
 }
@@ -3235,1310 +2661,1103 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
     std::string typeStr(type);
 
     //---- Specific ----
-    if(typeStr == "accelerometer")
-    {
-        int history;
-        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
-            history = -1;
-            
-        std::unique_ptr<Accelerometer> acc = std::make_unique<Accelerometer>(sensorName, rate, history);
-        
-        //Optional range definition
-        if((item = element->FirstChildElement("range")) != nullptr)    
-        {
-            const char* accel = nullptr;
-            Vector3 laxyz;
-            Scalar la;
-
-            if(item->QueryStringAttribute("linear_acceleration", &accel) == XML_SUCCESS  
-               && ParseVector(accel, laxyz))
-            {
-                acc->setRange(laxyz);    
-            }
-            else if(item->QueryAttribute("linear_acceleration", &la) == XML_SUCCESS)
-            {
-                acc->setRange(Vector3(la, la, la));
-            }
-            else
-            {
-                log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-            }     
-        }
-        //Optional noise definition
-        if((item = element->FirstChildElement("noise")) != nullptr)    
-        {
-            const char* accel = nullptr;
-            Vector3 laxyz;
-            Scalar la;
-
-            if(item->QueryStringAttribute("linear_acceleration", &accel) == XML_SUCCESS  
-               && ParseVector(accel, laxyz))
-            {
-                acc->setNoise(laxyz);
-            }
-            else if(item->QueryAttribute("linear_acceleration", &la) == XML_SUCCESS)
-            {
-                acc->setNoise(Vector3(la, la, la));   
-            }
-            else 
-            {
-                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-            }
-        }
-        sens = std::move(acc);
-    }
-    else if(typeStr == "gyro")
-    {
-        int history;
-        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
-            history = -1;
-            
-        std::unique_ptr<Gyroscope> gyro = std::make_unique<Gyroscope>(sensorName, rate, history);
-        
-        //Optional range definition
-        if((item = element->FirstChildElement("range")) != nullptr)    
-        {
-            Scalar av;
-            Vector3 avxyz;
-            const char* velocity = nullptr;
-            
-            if(item->QueryStringAttribute("angular_velocity", &velocity) == XML_SUCCESS 
-               && ParseVector(velocity, avxyz))
-            {
-                gyro->setRange(avxyz);
-            }
-            else if(item->QueryAttribute("angular_velocity", &av) == XML_SUCCESS)
-            {
-                gyro->setRange(Vector3(av, av, av));
-            }
-            else
-            {
-                log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-            }
-        }
-        //Optional noise definition
-        if((item = element->FirstChildElement("noise")) != nullptr)    
-        {
-            Scalar av;
-            Vector3 avxyz = V0();
-            const char* velocity = nullptr;
-            Scalar b;
-            Vector3 bxyz = V0();
-            const char* bias = nullptr;
-            int c = 0;
-
-            if(item->QueryStringAttribute("angular_velocity", &velocity) == XML_SUCCESS && ParseVector(velocity, avxyz))
-            {
-                ++c;
-            }
-            else if(item->QueryAttribute("angular_velocity", &av) == XML_SUCCESS)
-            {
-                avxyz = Vector3(av, av, av);
-                ++c;
-            }
-            
-            if(item->QueryStringAttribute("bias", &bias) == XML_SUCCESS && ParseVector(bias, bxyz))
-            {
-                ++c;
-            }
-            else if(item->QueryAttribute("bias", &b) == XML_SUCCESS)
-            {
-                bxyz = Vector3(b, b, b);
-                ++c;
-            }
-
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-            else
-                gyro->setNoise(avxyz, bxyz);
-        }
-        sens = std::move(gyro);
-    }
-    else if(typeStr == "imu")
-    {
-        int history;
-        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
-            history = -1;
-            
-        std::unique_ptr<IMU> imu = std::make_unique<IMU>(sensorName, rate, history);
-        
-        //Optional range definition
-        if((item = element->FirstChildElement("range")) != nullptr)    
-        {
-            const char* velocity = nullptr;
-            Vector3 avxyz = VMAX();
-            Scalar av;
-            const char* acc = nullptr;
-            Vector3 laxyz = VMAX();
-            Scalar la;
-            int c = 0;
-            
-            if(item->QueryStringAttribute("angular_velocity", &velocity) == XML_SUCCESS  
-               && ParseVector(velocity, avxyz))
-            {
-                ++c;
-            }
-            else if(item->QueryAttribute("angular_velocity", &av) == XML_SUCCESS)
-            {
-                avxyz = Vector3(av, av, av);
-                ++c;
-            }
-            
-            if(item->QueryStringAttribute("linear_acceleration", &acc) == XML_SUCCESS  
-               && ParseVector(acc, laxyz))
-            {
-                ++c;
-            }
-            else if(item->QueryAttribute("linear_acceleration", &la) == XML_SUCCESS)
-            {
-                laxyz = Vector3(la, la, la);
-                ++c;
-            }
-            
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-            else
-                imu->setRange(avxyz, laxyz);
-        }
-        //Optional noise definition
-        if((item = element->FirstChildElement("noise")) != nullptr)    
-        {
-            const char* angle = nullptr;
-            const char* velocity = nullptr;
-            const char* acc = nullptr;
-            Vector3 axyz = V0();
-            Vector3 avxyz = V0();
-            Vector3 laxyz = V0();
-            Scalar a;
-            Scalar av;
-            Scalar la;
-            Scalar yawDrift = Scalar(0);
-            int c = 0;
-
-            if(item->QueryAttribute("yaw_drift", &yawDrift) == XML_SUCCESS)
-                ++c;
-
-            if(item->QueryStringAttribute("angle", &angle) == XML_SUCCESS 
-               && ParseVector(angle, axyz))
-            {
-                ++c;
-            }
-            else if(item->QueryAttribute("angle", &a) == XML_SUCCESS)
-            {
-                axyz = Vector3(a, a, a);
-                ++c;
-            }
-
-            if(item->QueryStringAttribute("angular_velocity", &velocity) == XML_SUCCESS 
-               && ParseVector(velocity, avxyz))
-            {
-                ++c;
-            }
-            else if(item->QueryAttribute("angular_velocity", &av) == XML_SUCCESS)
-            {
-                avxyz = Vector3(av, av, av);
-                ++c;
-            }
-
-            if(item->QueryStringAttribute("linear_acceleration", &acc) == XML_SUCCESS 
-               && ParseVector(acc, laxyz))
-            {
-                ++c;
-            }
-            else if(item->QueryAttribute("linear_acceleration", &la) == XML_SUCCESS)
-            {
-                laxyz = Vector3(la, la, la);
-                ++c;
-            }
-            
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-            else
-                imu->setNoise(axyz, avxyz, yawDrift, laxyz);
-        }
-        sens = std::move(imu);
-    }
-    else if(typeStr == "dvl")
-    {
-        int history;
-        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
-            history = -1;
-        
-        Scalar beamAngle = 30.0;
-        bool beamPosZ = false;
-        if((item = element->FirstChildElement("specs")) != nullptr)
-        {
-            item->QueryAttribute("beam_angle", &beamAngle);
-            item->QueryAttribute("beam_positive_z", &beamPosZ);
-        }
-
-        std::unique_ptr<DVL> dvl = std::make_unique<DVL>(sensorName, beamAngle, beamPosZ, rate, history);
-
-        //Optional range definition        
-        if((item = element->FirstChildElement("range")) != nullptr)    
-        {
-            const char* velocity = nullptr;
-            Vector3 vxyz = VMAX();
-            Scalar v;
-            Scalar altMin(0);
-            Scalar altMax(BT_LARGE_FLOAT);
-            int c = 0;
-            
-            if(item->QueryStringAttribute("velocity", &velocity) == XML_SUCCESS  
-               && ParseVector(velocity, vxyz))
-            {
-                ++c;
-            }
-            else if(item->QueryAttribute("velocity", &v) == XML_SUCCESS)
-            {
-                vxyz = Vector3(v, v, v);
-                ++c;
-            }
-            
-            if(item->QueryAttribute("altitude_min", &altMin) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("altitude_max", &altMax) == XML_SUCCESS)
-                ++c;
-            
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-            else
-                dvl->setRange(vxyz, altMin, altMax);
-        }
-        //Optional water mass measurmeent definition
-        if((item = element->FirstChildElement("water_layer")) != nullptr)
-        {
-            Scalar minSize(0);
-            Scalar boundaryNear(0);
-            Scalar boundaryFar(0);
-            item->QueryAttribute("minimum_layer_size", &minSize);
-            item->QueryAttribute("boundary_near", &boundaryNear);
-            item->QueryAttribute("boundary_far", &boundaryFar);
-            dvl->setWaterLayer(minSize, boundaryNear, boundaryFar);
-        }
-
-        //Optional range definition
-        if((item = element->FirstChildElement("noise")) != nullptr)    
-        {
-            Scalar v(0);
-            Scalar vp(0);
-            Scalar wv(0);
-            Scalar wvp(0);
-            Scalar altitude(0);
-            int c = 0;
-
-            if(item->QueryAttribute("velocity", &v) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("velocity_percent", &vp) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("altitude", &altitude) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("water_velocity", &wv) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("water_velocity_percent", &wvp) == XML_SUCCESS)
-                ++c;
-            
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-            else
-                dvl->setNoise(vp, v, altitude, wvp, wv);
-        }
-        sens = std::move(dvl);
-    }
-    else if(typeStr == "gps")
-    {
-        int history;
-        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
-            history = -1;
-            
-        std::unique_ptr<GPS> gps = std::make_unique<GPS>(sensorName, rate, history);
-        
-        //Optional noise definition
-        if((item = element->FirstChildElement("noise")) != nullptr)    
-        {
-            Scalar ned;
-            if(item->QueryAttribute("ned_position", &ned) == XML_SUCCESS)
-                gps->setNoise(ned);
-            else
-                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-        }
-        sens = std::move(gps);
-    }
-    else if(typeStr == "pressure")
-    {
-        int history;
-        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
-            history = -1;
-            
-        std::unique_ptr<Pressure> press = std::make_unique<Pressure>(sensorName, rate, history);
-        
-        //Optional range definition
-        if((item = element->FirstChildElement("range")) != nullptr)    
-        {
-            Scalar pressure;
-            if(item->QueryAttribute("pressure", &pressure) == XML_SUCCESS)
-                press->setRange(pressure);
-            else
-                log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-        }
-        //Optional noise definition
-        if((item = element->FirstChildElement("noise")) != nullptr)    
-        {
-            Scalar pressure;
-            if(item->QueryAttribute("pressure", &pressure) == XML_SUCCESS)
-                press->setNoise(pressure);
-            else
-                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-        }
-        sens = std::move(press);
-    }
-    else if(typeStr == "odometry")
-    {
-        int history;
-        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
-            history = -1;
-            
-        std::unique_ptr<Odometry> odom = std::make_unique<Odometry>(sensorName, rate, history);
-        
-        //Optional noise definition
-        if((item = element->FirstChildElement("noise")) != nullptr)    
-        {
-            Scalar p(0);
-            Scalar v(0);
-            Scalar angle(0);
-            Scalar av(0);
-            int c = 0;
-        
-            if(item->QueryAttribute("position", &p) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("velocity", &v) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("angle", &angle) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("angular_velocity", &av) == XML_SUCCESS)
-                ++c;
-
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-            else
-                odom->setNoise(p, v, angle, av);
-        }
-        sens = std::move(odom);
-    }
-    else if(typeStr == "ins")
-    {
-        int history;
-        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
-            history = -1;
-
-        std::unique_ptr<INS> ins = std::make_unique<INS>(sensorName, rate, history);
-
-        //Connect with external sensors
-        if((item = element->FirstChildElement("external_sensors")) != nullptr)
-        {
-            const char* dvl = "";
-            const char* press = "";
-            const char* gps = "";
-            std::string prefix = "";
-            if(namePrefix != "")
-                prefix = namePrefix + "/";
-    
-            if(item->QueryStringAttribute("dvl", &dvl) == XML_SUCCESS)
-                ins->ConnectDVL(prefix + std::string(dvl));
-            if(item->QueryStringAttribute("pressure", &press) == XML_SUCCESS)
-                ins->ConnectPressure(prefix + std::string(press));
-            if(item->QueryStringAttribute("gps", &gps) == XML_SUCCESS)
-                ins->ConnectGPS(prefix + std::string(gps));
-        }
-
-        //Optional output frame definition
-        Transform Tout;
-        if((item = element->FirstChildElement("output_frame")) != nullptr 
-            && ParseTransform(item, Tout))
-        {        
-            ins->setOutputFrame(Tout);
-        }
-
-        //Optional range definition
-        if((item = element->FirstChildElement("range")) != nullptr)    
-        {
-            const char* velocity = nullptr;
-            Vector3 avxyz = VMAX();
-            Scalar av;
-            const char* acc = nullptr;
-            Vector3 laxyz = VMAX();
-            Scalar la;
-            int c = 0;
-            
-            if(item->QueryStringAttribute("angular_velocity", &velocity) == XML_SUCCESS  
-               && ParseVector(velocity, avxyz))
-            {
-                ++c;
-            }
-            else if(item->QueryAttribute("angular_velocity", &av) == XML_SUCCESS)
-            {
-                avxyz = Vector3(av, av, av);
-                ++c;
-            }
-            
-            if(item->QueryStringAttribute("linear_acceleration", &acc) == XML_SUCCESS  
-               && ParseVector(acc, laxyz))
-            {
-                ++c;
-            }
-            else if(item->QueryAttribute("linear_acceleration", &la) == XML_SUCCESS)
-            {
-                laxyz = Vector3(la, la, la);
-                ++c;
-            }
-            
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-            else
-                ins->setRange(avxyz, laxyz);
-        }
-        //Optional noise definition
-        if((item = element->FirstChildElement("noise")) != nullptr)    
-        {
-            const char* velocity = nullptr;
-            const char* acc = nullptr;
-            Vector3 avxyz = V0();
-            Vector3 laxyz = V0();
-            Scalar av;
-            Scalar la;
-            int c = 0;
-
-            if(item->QueryStringAttribute("angular_velocity", &velocity) == XML_SUCCESS 
-               && ParseVector(velocity, avxyz))
-            {
-                ++c;
-            }
-            else if(item->QueryAttribute("angular_velocity", &av) == XML_SUCCESS)
-            {
-                avxyz = Vector3(av, av, av);
-                ++c;
-            }
-
-            if(item->QueryStringAttribute("linear_acceleration", &acc) == XML_SUCCESS 
-               && ParseVector(acc, laxyz))
-            {
-                ++c;
-            }
-            else if(item->QueryAttribute("linear_acceleration", &la) == XML_SUCCESS)
-            {
-                laxyz = Vector3(la, la, la);
-                ++c;
-            }
-            
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-            else
-                ins->setNoise(avxyz, laxyz);
-        }
-        sens = std::move(ins);
-    }
-    else if(typeStr == "compass")
-    {
-        int history;
-        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
-            history = -1;
-            
-        std::unique_ptr<Compass> compass = std::make_unique<Compass>(sensorName, rate, history);
-        
-        //Optional noise definition
-        if((item = element->FirstChildElement("noise")) != nullptr)    
-        {
-            Scalar heading;
-            if(item->QueryAttribute("heading", &heading) == XML_SUCCESS)
-                compass->setNoise(heading);
-            else
-                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-        }
-        sens = std::move(compass);
-    }
-    else if(typeStr == "profiler")
-    {
-        int history;
-        Scalar fov;
-        int steps;
-        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
-            history = -1;
-        if((item = element->FirstChildElement("specs")) == nullptr || item->QueryAttribute("fov", &fov) != XML_SUCCESS || item->QueryAttribute("steps", &steps) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Specs of sensor '%s' not properly defined!", sensorName.c_str());
-            return nullptr;
-        }
-            
-        std::unique_ptr<Profiler> prof = std::make_unique<Profiler>(sensorName, fov, steps, rate, history);
-        
-        //Optional range definition
-        if((item = element->FirstChildElement("range")) != nullptr)    
-        {
-            Scalar distMin(0);
-            Scalar distMax(BT_LARGE_FLOAT);
-            int c = 0;
-            
-            if(item->QueryAttribute("distance_min", &distMin) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("distance_max", &distMax) == XML_SUCCESS)
-                ++c;
-            
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-            else
-                prof->setRange(distMin, distMax);
-        }
-        //Optional noise definition
-        if((item = element->FirstChildElement("noise")) != nullptr)    
-        {
-            Scalar distance;
-            if(item->QueryAttribute("distance", &distance) == XML_SUCCESS)
-                prof->setNoise(distance);
-            else
-                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-        }
-        sens = std::move(prof);
-    }
-    else if(typeStr == "multibeam" || typeStr == "multibeam1d")
-    {
-        int history;
-        Scalar fov;
-        int steps;
-        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
-            history = -1;
-        if((item = element->FirstChildElement("specs")) == nullptr || item->QueryAttribute("fov", &fov) != XML_SUCCESS || item->QueryAttribute("steps", &steps) != XML_SUCCESS)
-            return nullptr;
-            
-        std::unique_ptr<Multibeam> mult = std::make_unique<Multibeam>(sensorName, fov, steps, rate, history);
-        
-        //Optional range definition
-        if((item = element->FirstChildElement("range")) != nullptr)    
-        {
-            Scalar distMin(0);
-            Scalar distMax(BT_LARGE_FLOAT);
-            int c = 0;
-
-            if(item->QueryAttribute("distance_min", &distMin) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("distance_max", &distMax) == XML_SUCCESS)
-                ++c;
-            
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-            else
-                mult->setRange(distMin, distMax);
-        }
-        //Optional noise definition
-        if((item = element->FirstChildElement("noise")) != nullptr)    
-        {
-            Scalar distance;
-            if(item->QueryAttribute("distance", &distance) == XML_SUCCESS)
-                mult->setNoise(distance);
-            else
-                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-        }
-        sens = std::move(mult);
-    }
-    else if(typeStr == "torque")
-    {
-        int history;
-        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
-            history = -1;
-            
-        std::unique_ptr<Torque> torque = std::make_unique<Torque>(sensorName, rate, history);
-        
-        //Optional range definition
-        if((item = element->FirstChildElement("range")) != nullptr)    
-        {
-            Scalar tau;
-            if(item->QueryAttribute("torque", &tau) == XML_SUCCESS)
-                torque->setRange(tau);
-            else
-                log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-        }
-        //Optional noise definition
-        if((item = element->FirstChildElement("noise")) != nullptr)    
-        {
-            Scalar tau;
-            if(item->QueryAttribute("torque", &tau) == XML_SUCCESS)
-                torque->setNoise(tau);
-            else
-                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-        }
-        sens = std::move(torque);
-    }
-    else if(typeStr == "forcetorque")
-    {
-        Transform origin;
-        int history;
-        if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
-            return nullptr;
-        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
-            history = -1;
-            
-        std::unique_ptr<ForceTorque> ft = std::make_unique<ForceTorque>(sensorName, origin, rate, history);
-        
-        //Optional range definition
-        if((item = element->FirstChildElement("range")) != nullptr)    
-        {
-            const char* force = nullptr;
-            const char* torque = nullptr;
-            Vector3 f = VMAX();
-            Vector3 t = VMAX();
-            int c = 0;
-
-            if(item->QueryStringAttribute("force", &force) == XML_SUCCESS && ParseVector(force, f))
-                ++c;
-            if(item->QueryStringAttribute("torque", &torque) != XML_SUCCESS && ParseVector(torque, t))
-                ++c;
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-            else
-                ft->setRange(f, t);
-        }
-        //Optional noise definition
-        if((item = element->FirstChildElement("noise")) != nullptr)    
-        {
-            Scalar f(0);
-            Scalar t(0);
-            int c = 0;
-            if(item->QueryAttribute("force", &f) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("torque", &t) == XML_SUCCESS)
-                ++c;
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-            else
-                ft->setNoise(f, t);
-        }
-        sens = std::move(ft);
-    }
-    else if(typeStr == "encoder")
-    {
-        int history;
-        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
-            history = -1;
-            
-        std::unique_ptr<RotaryEncoder> enc = std::make_unique<RotaryEncoder>(sensorName, rate, history);
-        sens = std::move(enc);
-    }
-    else if(typeStr == "camera")
-    {
-        if(!isGraphicalSim())
-        {
-            log.Print(MessageType::ERROR, "Cameras not supported in console mode!");
-            return nullptr;
-        }
-
-        int resX, resY;
-        Scalar hFov;
-        if((item = element->FirstChildElement("specs")) == nullptr 
-            || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
-            || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
-            || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Specs of camera '%s' not properly defined!", sensorName.c_str());
-            return nullptr;
-        }
-
-        std::unique_ptr<ColorCamera> cam;
-        
-        //Optional parameters
-        if((item = element->FirstChildElement("rendering")) != nullptr) 
-        {
-            Scalar minDist(STD_NEAR_PLANE_DISTANCE);
-            Scalar maxDist(STD_FAR_PLANE_DISTANCE);
-            int c = 0;
-
-            if(item->QueryAttribute("minimum_distance", &minDist) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("maximum_distance", &maxDist) == XML_SUCCESS)
-                ++c;
-
-            if(c == 0)
-            {
-                log.Print(MessageType::WARNING, "Rendering options of camera '%s' not properly defined - using defaults.", sensorName.c_str());
-                cam = std::make_unique<ColorCamera>(sensorName, resX, resY, hFov, rate);
-            }
-            else
-                cam = std::make_unique<ColorCamera>(sensorName, resX, resY, hFov, rate, minDist, maxDist);
-        }
-        else
-            cam = std::make_unique<ColorCamera>(sensorName, resX, resY, hFov, rate);
-        sens = std::move(cam);
-    }
-    else if(typeStr == "depthcamera")
-    {
-        if(!isGraphicalSim())
-        {
-            log.Print(MessageType::ERROR, "Depth cameras not supported in console mode!");
-            return nullptr;
-        }
-
-        int resX, resY;
-        Scalar hFov;
-        Scalar depthMin, depthMax;
-        if((item = element->FirstChildElement("specs")) == nullptr 
-            || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
-            || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
-            || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS
-            || item->QueryAttribute("depth_min", &depthMin) != XML_SUCCESS
-            || item->QueryAttribute("depth_max", &depthMax) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Specs of depth camera '%s' not properly defined!", sensorName.c_str());
-            return nullptr;
-        }
-        
-        std::unique_ptr<DepthCamera> dcam = std::make_unique<DepthCamera>(sensorName, resX, resY, hFov, depthMin, depthMax, rate);
-
-        //Optional noise definition
-        if((item = element->FirstChildElement("noise")) != nullptr)    
-        {
-            float depth;
-            if(item->QueryAttribute("depth", &depth) == XML_SUCCESS)
-                dcam->setNoise(depth);
-            else
-                log.Print(MessageType::WARNING, "Noise of depth camera '%s' not properly defined - using defaults.", sensorName.c_str());
-        }
-        sens = std::move(dcam);
-    }
-    else if(typeStr == "thermalcamera")
-    {
-        if(!isGraphicalSim())
-        {
-            log.Print(MessageType::ERROR, "Thermal cameras not supported in console mode!");
-            return nullptr;
-        }
-
-        int resX, resY;
-        Scalar hFov;
-        Scalar tempMin, tempMax;
-        if((item = element->FirstChildElement("specs")) == nullptr 
-            || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
-            || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
-            || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS
-            || item->QueryAttribute("temperature_min", &tempMin) != XML_SUCCESS
-            || item->QueryAttribute("temperature_max", &tempMax) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Specs of thermal camera '%s' not properly defined!", sensorName.c_str());
-            return nullptr;
-        }
-
-        std::unique_ptr<ThermalCamera> tcam;
-        
-        //Optional parameters
-        if((item = element->FirstChildElement("rendering")) != nullptr) 
-        {
-            Scalar minDist(STD_NEAR_PLANE_DISTANCE);
-            Scalar maxDist(STD_FAR_PLANE_DISTANCE);
-            int c = 0;
-
-            if(item->QueryAttribute("minimum_distance", &minDist) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("maximum_distance", &maxDist) == XML_SUCCESS)
-                ++c;
-
-            if(c == 0)
-            {
-                log.Print(MessageType::WARNING, "Rendering options of thermal camera '%s' not properly defined - using defaults.", sensorName.c_str());
-                tcam = std::make_unique<ThermalCamera>(sensorName, resX, resY, hFov, tempMin, tempMax, rate);
-            }
-            else
-                tcam = std::make_unique<ThermalCamera>(sensorName, resX, resY, hFov, tempMin, tempMax, rate, minDist, maxDist);
-        }
-        else
-            tcam = std::make_unique<ThermalCamera>(sensorName, resX, resY, hFov, tempMin, tempMax, rate);
-
-        //Optional noise definition
-        if((item = element->FirstChildElement("noise")) != nullptr)    
-        {
-            float temperature;
-            if(item->QueryAttribute("temperature", &temperature) == XML_SUCCESS)
-                tcam->setNoise(temperature);
-            else
-                log.Print(MessageType::WARNING, "Noise of thermal camera '%s' not properly defined - using defaults.", sensorName.c_str());
-        }
-
-        //Optional display settings
-        if((item = element->FirstChildElement("display")) != nullptr)
-        {
-            ColorMap cMap = ColorMap::JET;
-            ParseColorMap(item, cMap);
-
-            //Initial values are equal to measurement range
-            item->QueryAttribute("temperature_min", &tempMin);
-            item->QueryAttribute("temperature_max", &tempMax);
-            
-            tcam->setDisplaySettings(cMap, tempMin, tempMax);
-        }
-        sens = std::move(tcam);   
-    }
-    else if(typeStr == "opticalflow")
-    {
-        if(!isGraphicalSim())
-        {
-            log.Print(MessageType::ERROR, "Optical flow cameras not supported in console mode!");
-            return nullptr;
-        }
-
-        int resX, resY;
-        Scalar hFov;
-        if((item = element->FirstChildElement("specs")) == nullptr 
-            || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
-            || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
-            || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Specs of optical flow camera '%s' not properly defined!", sensorName.c_str());
-            return nullptr;
-        }
-
-        std::unique_ptr<OpticalFlowCamera> ofcam;
-
-        //Optional parameters
-        if((item = element->FirstChildElement("rendering")) != nullptr) 
-        {
-            Scalar minDist(STD_NEAR_PLANE_DISTANCE);
-            Scalar maxDist(STD_FAR_PLANE_DISTANCE);
-            int c = 0;
-
-            if(item->QueryAttribute("minimum_distance", &minDist) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("maximum_distance", &maxDist) == XML_SUCCESS)
-                ++c;
-
-            if(c == 0)
-            {
-                log.Print(MessageType::WARNING, "Rendering options of optical flow camera '%s' not properly defined - using defaults.", sensorName.c_str());
-                ofcam = std::make_unique<OpticalFlowCamera>(sensorName, resX, resY, hFov, rate);
-            }
-            else
-                ofcam = std::make_unique<OpticalFlowCamera>(sensorName, resX, resY, hFov, rate, minDist, maxDist);
-        }
-        else
-            ofcam = std::make_unique<OpticalFlowCamera>(sensorName, resX, resY, hFov, rate);
-
-        //Optional noise definition
-        if((item = element->FirstChildElement("noise")) != nullptr)    
-        {
-            Scalar velX(0);
-            Scalar velY(0);
-            item->QueryAttribute("velocity_x", &velX);
-            item->QueryAttribute("velocity_y", &velX);
-            ofcam->setNoise(velX, velY);
-        }
-
-        //Optional display settings
-        if((item = element->FirstChildElement("display")) != nullptr)
-        {
-            GLfloat maxV;
-            if(item->QueryAttribute("velocity_max", &maxV) == XML_SUCCESS)
-                ofcam->setDisplaySettings(maxV);
-        }
-        sens = std::move(ofcam);
-    }
-    else if(typeStr == "segmentation")
-    {
-        if(!isGraphicalSim())
-        {
-            log.Print(MessageType::ERROR, "Segmentation cameras not supported in console mode!");
-            return nullptr;
-        }
-
-        int resX, resY;
-        Scalar hFov;
-        if((item = element->FirstChildElement("specs")) == nullptr 
-            || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
-            || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
-            || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Specs of segmentation camera '%s' not properly defined!", sensorName.c_str());
-            return nullptr;
-        }
-
-        std::unique_ptr<SegmentationCamera> scam;
-
-        //Optional parameters
-        if((item = element->FirstChildElement("rendering")) != nullptr) 
-        {
-            Scalar minDist(STD_NEAR_PLANE_DISTANCE);
-            Scalar maxDist(STD_FAR_PLANE_DISTANCE);
-            int c = 0;
-
-            if(item->QueryAttribute("minimum_distance", &minDist) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("maximum_distance", &maxDist) == XML_SUCCESS)
-                ++c;
-
-            if(c == 0)
-            {
-                log.Print(MessageType::WARNING, "Rendering options of segmentation camera '%s' not properly defined - using defaults.", sensorName.c_str());
-                scam = std::make_unique<SegmentationCamera>(sensorName, resX, resY, hFov, rate);
-            }
-            else
-                scam = std::make_unique<SegmentationCamera>(sensorName, resX, resY, hFov, rate, minDist, maxDist);
-        }
-        else
-            scam = std::make_unique<SegmentationCamera>(sensorName, resX, resY, hFov, rate);
-
-        sens = std::move(scam);
-    }
-    else if(typeStr == "ebc" || typeStr == "eventbasedcamera")
-    {
-        if(!isGraphicalSim())
-        {
-            log.Print(MessageType::ERROR, "Event-based cameras not supported in console mode!");
-            return nullptr;
-        }
-
-        int resX, resY;
-        Scalar hFov;
-        float Cp, Cm;
-        uint32_t Tref;
-
-        if((item = element->FirstChildElement("specs")) == nullptr 
-            || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
-            || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
-            || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS
-            || item->QueryAttribute("contrast_threshold_pos", &Cp) != XML_SUCCESS
-            || item->QueryAttribute("contrast_threshold_neg", &Cm) != XML_SUCCESS
-            || item->QueryAttribute("refractory_period_ns", &Tref) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Specs of event-based camera '%s' not properly defined!", sensorName.c_str());
-            return nullptr;
-        }
-
-        std::unique_ptr<EventBasedCamera> ebc;
-
-        //Optional parameters
-        if((item = element->FirstChildElement("rendering")) != nullptr) 
-        {
-            Scalar minDist(STD_NEAR_PLANE_DISTANCE);
-            Scalar maxDist(STD_FAR_PLANE_DISTANCE);
-            int c = 0;
-
-            if(item->QueryAttribute("minimum_distance", &minDist) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("maximum_distance", &maxDist) == XML_SUCCESS)
-                ++c;
-
-            if(c == 0)
-            {
-                log.Print(MessageType::WARNING, "Rendering options of event-based camera '%s' not properly defined - using defaults.", sensorName.c_str());
-                ebc = std::make_unique<EventBasedCamera>(sensorName, resX, resY, hFov, Cp, Cm, Tref, rate);
-            }
-            else
-                ebc = std::make_unique<EventBasedCamera>(sensorName, resX, resY, hFov, Cp, Cm, Tref, rate, minDist, maxDist);
-        }
-        else
-            ebc = std::make_unique<EventBasedCamera>(sensorName, resX, resY, hFov, Cp, Cm, Tref, rate);
-
-        //Optional noise definition
-        if((item = element->FirstChildElement("noise")) != nullptr)    
-        {
-            Scalar sigmaCp(0);
-            Scalar sigmaCm(0);
-            int c = 0;
-            if(item->QueryAttribute("contrast_threshold_pos", &sigmaCp) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("contrast_threshold_neg", &sigmaCm) == XML_SUCCESS)
-                ++c;
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Noise of event-based camera '%s' not properly defined - using defaults.", sensorName.c_str());
-            else
-                ebc->setNoise(sigmaCp, sigmaCm);
-        }
-        sens = std::move(ebc);
-    }
-    else if(typeStr == "multibeam2d")
-    {
-        if(!isGraphicalSim())
-        {
-            log.Print(MessageType::ERROR, "Multibeam 2D not supported in console mode!");
-            return nullptr;
-        }
-
-        int resX, resY;
-        Scalar hFov, vFov;
-        Scalar rangeMin, rangeMax;
-        if((item = element->FirstChildElement("specs")) == nullptr 
-            || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
-            || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
-            || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS
-            || item->QueryAttribute("vertical_fov", &vFov) != XML_SUCCESS
-            || item->QueryAttribute("range_min", &rangeMin) != XML_SUCCESS
-            || item->QueryAttribute("range_max", &rangeMax) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Specs of sensor '%s' not properly defined!", sensorName.c_str());
-            return nullptr;
-        }
-
-        std::unique_ptr<Multibeam2> mb = std::make_unique<Multibeam2>(sensorName, resX, resY, hFov, vFov, rangeMin, rangeMax, rate);
-        sens = std::move(mb);
-    }
-    else if(typeStr == "fls")
-    {
-        if(!isGraphicalSim())
-        {
-            log.Print(MessageType::ERROR, "FLS not supported in console mode!");
-            return nullptr;
-        }
-
-        Scalar hFov, vFov;
-        int nBeams, nBins;
-        Scalar rangeMin(0.5);
-        Scalar rangeMax(10.0);
-        Scalar gain(1.0);
-        ColorMap cMap = ColorMap::GREEN_BLUE;
-        
-        if((item = element->FirstChildElement("specs")) == nullptr 
-            || item->QueryAttribute("beams", &nBeams) != XML_SUCCESS 
-            || item->QueryAttribute("bins", &nBins) != XML_SUCCESS
-            || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS
-            || item->QueryAttribute("vertical_fov", &vFov) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Specs of sensor '%s' not properly defined!", sensorName.c_str());
-            return nullptr;
-        }
-        //Optional output format
-        SonarOutputFormat outFormat {SonarOutputFormat::U8};
-        const char* outFormatStr = nullptr;
-        item->QueryStringAttribute("output_format", &outFormatStr);
-        if (outFormatStr != nullptr)
-        {
-            std::string ofs(outFormatStr);
-            if (ofs == "uint8")
-                outFormat = SonarOutputFormat::U8;
-            else if (ofs == "uint16")
-                outFormat = SonarOutputFormat::U16;
-            else if (ofs == "uint32")
-                outFormat = SonarOutputFormat::U32;
-            else if(ofs == "float32")
-                outFormat = SonarOutputFormat::F32;
-            else
-                log.Print(MessageType::WARNING, "Output format of sensor '%s' not recognized - using default (uint8).", sensorName.c_str());
-        }
-
-        //Optional settings
-        if((item = element->FirstChildElement("settings")) != nullptr)
-        {
-            int c = 0;
-            if(item->QueryAttribute("range_min", &rangeMin) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("range_max", &rangeMax) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("gain", &gain) == XML_SUCCESS)
-                ++c;
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Settings of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-        }
-        if((item = element->FirstChildElement("display")) != nullptr)
-            ParseColorMap(item, cMap);
-        
-        std::unique_ptr<FLS> fls = std::make_unique<FLS>(sensorName, nBeams, nBins, hFov, vFov, rangeMin, rangeMax, cMap, outFormat, rate);
-        fls->setGain(gain);
-
-        //Optional noise definition
-        if((item = element->FirstChildElement("noise")) != nullptr)    
-        {
-            float mul = 0.025f;
-            float add = 0.035f;
-            int c = 0;
-            if(item->QueryAttribute("multiplicative", &mul) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("additive", &add) == XML_SUCCESS)
-                ++c;
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-            fls->setNoise(mul, add);
-        }
-        else
-        {
-            fls->setNoise(0.025f, 0.035f); //Default values that look realistic
-            log.Print(MessageType::WARNING, "Noise of sensor '%s' not defined - using defaults.", sensorName.c_str());
-        }
-        sens = std::move(fls);
-    }
-    else if(typeStr == "sss")
-    {
-        if(!isGraphicalSim())
-        {
-            log.Print(MessageType::ERROR, "SSS not supported in console mode!");
-            return nullptr;
-        }
-
-        Scalar hFov, vFov;
-        int nLines, nBins;
-        Scalar tilt;
-        Scalar rangeMin(0.5);
-        Scalar rangeMax(10.0);
-        Scalar gain(1.0);
-        ColorMap cMap = ColorMap::GREEN_BLUE;
-
-        if((item = element->FirstChildElement("specs")) == nullptr 
-            || item->QueryAttribute("bins", &nBins) != XML_SUCCESS
-            || item->QueryAttribute("lines", &nLines) != XML_SUCCESS
-            || item->QueryAttribute("horizontal_beam_width", &hFov) != XML_SUCCESS
-            || item->QueryAttribute("vertical_beam_width", &vFov) != XML_SUCCESS
-            || item->QueryAttribute("vertical_tilt", &tilt) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Specs of sensor '%s' not properly defined!", sensorName.c_str());
-            return nullptr;
-        }
-        //Optional output format
-        SonarOutputFormat outFormat {SonarOutputFormat::U8};
-        const char* outFormatStr = nullptr;
-        item->QueryStringAttribute("output_format", &outFormatStr);
-        if (outFormatStr != nullptr)
-        {
-            std::string ofs(outFormatStr);
-            if (ofs == "uint8")
-                outFormat = SonarOutputFormat::U8;
-            else if (ofs == "uint16")
-                outFormat = SonarOutputFormat::U16;
-            else if (ofs == "uint32")
-                outFormat = SonarOutputFormat::U32;
-            else if(ofs == "float32")
-                outFormat = SonarOutputFormat::F32;
-            else
-                log.Print(MessageType::WARNING, "Output format of sensor '%s' not recognized - using default (uint8).", sensorName.c_str());
-        }
-
-        //Optional settings
-        if((item = element->FirstChildElement("settings")) != nullptr)
-        {
-            int c = 0;
-            if(item->QueryAttribute("range_min", &rangeMin) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("range_max", &rangeMax) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("gain", &gain) == XML_SUCCESS)
-                ++c;
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Settings of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-        }
-        if((item = element->FirstChildElement("display")) != nullptr)
-            ParseColorMap(item, cMap);
-        
-        std::unique_ptr<SSS> sss = std::make_unique<SSS>(sensorName, nBins, nLines, vFov, hFov, tilt, rangeMin, rangeMax, cMap, outFormat, rate);
-        sss->setGain(gain);
-
-        //Optional noise definition
-        if((item = element->FirstChildElement("noise")) != nullptr)    
-        {
-            float mul = 0.01f;
-            float add = 0.02f;
-            int c = 0;
-            if(item->QueryAttribute("multiplicative", &mul) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("additive", &add) == XML_SUCCESS)
-                ++c;
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-            sss->setNoise(mul, add);
-        }
-        else
-        {
-            sss->setNoise(0.01f, 0.02f); //Default values that look realistic
-            log.Print(MessageType::WARNING, "Noise of sensor '%s' not defined - using defaults.", sensorName.c_str());
-        }
-        sens = std::move(sss);
-    }
-    else if(typeStr == "msis")
-    {
-        if(!isGraphicalSim())
-        {
-            log.Print(MessageType::ERROR, "MSIS not supported in console mode!");
-            return nullptr;
-        }
-
-        Scalar stepAngle;
-        int nBins;
-        Scalar hFov, vFov;
-        Scalar rotMin(-180);
-        Scalar rotMax(180);
-        Scalar rangeMin(0.5);
-        Scalar rangeMax(10.0);
-        Scalar gain(1.0);
-        ColorMap cMap = ColorMap::GREEN_BLUE;
-        
-        if((item = element->FirstChildElement("specs")) == nullptr 
-            || item->QueryAttribute("step", &stepAngle) != XML_SUCCESS
-            || item->QueryAttribute("bins", &nBins) != XML_SUCCESS
-            || item->QueryAttribute("horizontal_beam_width", &hFov) != XML_SUCCESS
-            || item->QueryAttribute("vertical_beam_width", &vFov) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Specs of sensor '%s' not properly defined!", sensorName.c_str());
-            return nullptr;
-        }
-        //Optional output format
-        SonarOutputFormat outFormat {SonarOutputFormat::U8};
-        const char* outFormatStr = nullptr;
-        item->QueryStringAttribute("output_format", &outFormatStr);
-        if (outFormatStr != nullptr)
-        {
-            std::string ofs(outFormatStr);
-            if (ofs == "uint8")
-                outFormat = SonarOutputFormat::U8;
-            else if (ofs == "uint16")
-                outFormat = SonarOutputFormat::U16;
-            else if (ofs == "uint32")
-                outFormat = SonarOutputFormat::U32;
-            else if(ofs == "float32")
-                outFormat = SonarOutputFormat::F32;
-            else
-                log.Print(MessageType::WARNING, "Output format of sensor '%s' not recognized - using default (uint8).", sensorName.c_str());
-        }
-
-        //Optional settings
-        if((item = element->FirstChildElement("settings")) != nullptr)
-        {
-            int c = 0;
-            if(item->QueryAttribute("range_min", &rangeMin) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("range_max", &rangeMax) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("rotation_min", &rotMin) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("rotation_max", &rotMax) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("gain", &gain) == XML_SUCCESS)
-                ++c;
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Settings of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-        }
-        if((item = element->FirstChildElement("display")) != nullptr)
-            ParseColorMap(item, cMap);
-        
-        std::unique_ptr<MSIS> msis = std::make_unique<MSIS>(sensorName, stepAngle, nBins, hFov, vFov, rotMin, rotMax, rangeMin, rangeMax, cMap, outFormat, rate);
-        msis->setGain(gain);
-
-        //Optional noise definition
-        if((item = element->FirstChildElement("noise")) != nullptr)    
-        {
-            float mul = 0.02f;
-            float add = 0.04f;
-            int c = 0;
-            if(item->QueryAttribute("multiplicative", &mul) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("additive", &add) == XML_SUCCESS)
-                ++c;
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
-            msis->setNoise(mul, add);
-        }
-        else
-        {
-            msis->setNoise(0.02f, 0.04f); //Default values that look realistic
-            log.Print(MessageType::WARNING, "Noise of sensor '%s' not defined - using defaults.", sensorName.c_str());
-        }
-        sens = std::move(msis);
-    }
-    else
+    const SensorFactoryEntry* factory = SensorFactory::Instance().Find(typeStr);
+    if (factory == nullptr)
     {
         log.Print(MessageType::ERROR, "Sensor type '%s' not supported!", typeStr.c_str());
         return nullptr;
     }
 
+    ConstructInfo info = factory->getConstructInfo();
+
+    if (ParseConstructInfo(element, info))
+        sens = factory->construct(sensorName, rate, info);
+    else
+        return nullptr;
+
+    {
+    
+    // else if(typeStr == "dvl")
+    // {
+    //     int history;
+    //     if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+    //         history = -1;
+        
+    //     Scalar beamAngle = 30.0;
+    //     bool beamPosZ = false;
+    //     if((item = element->FirstChildElement("specs")) != nullptr)
+    //     {
+    //         item->QueryAttribute("beam_angle", &beamAngle);
+    //         item->QueryAttribute("beam_positive_z", &beamPosZ);
+    //     }
+
+    //     std::unique_ptr<DVL> dvl = std::make_unique<DVL>(sensorName, beamAngle, beamPosZ, rate, history);
+
+    //     //Optional range definition        
+    //     if((item = element->FirstChildElement("range")) != nullptr)    
+    //     {
+    //         const char* velocity = nullptr;
+    //         Vector3 vxyz = VMAX();
+    //         Scalar v;
+    //         Scalar altMin(0);
+    //         Scalar altMax(BT_LARGE_FLOAT);
+    //         int c = 0;
+            
+    //         if(item->QueryStringAttribute("velocity", &velocity) == XML_SUCCESS  
+    //            && ParseVector(velocity, vxyz))
+    //         {
+    //             ++c;
+    //         }
+    //         else if(item->QueryAttribute("velocity", &v) == XML_SUCCESS)
+    //         {
+    //             vxyz = Vector3(v, v, v);
+    //             ++c;
+    //         }
+            
+    //         if(item->QueryAttribute("altitude_min", &altMin) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("altitude_max", &altMax) == XML_SUCCESS)
+    //             ++c;
+            
+    //         if(c == 0)
+    //             log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //         else
+    //             dvl->setRange(vxyz, altMin, altMax);
+    //     }
+    //     //Optional water mass measurmeent definition
+    //     if((item = element->FirstChildElement("water_layer")) != nullptr)
+    //     {
+    //         Scalar minSize(0);
+    //         Scalar boundaryNear(0);
+    //         Scalar boundaryFar(0);
+    //         item->QueryAttribute("minimum_layer_size", &minSize);
+    //         item->QueryAttribute("boundary_near", &boundaryNear);
+    //         item->QueryAttribute("boundary_far", &boundaryFar);
+    //         dvl->setWaterLayer(minSize, boundaryNear, boundaryFar);
+    //     }
+
+    //     //Optional range definition
+    //     if((item = element->FirstChildElement("noise")) != nullptr)    
+    //     {
+    //         Scalar v(0);
+    //         Scalar vp(0);
+    //         Scalar wv(0);
+    //         Scalar wvp(0);
+    //         Scalar altitude(0);
+    //         int c = 0;
+
+    //         if(item->QueryAttribute("velocity", &v) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("velocity_percent", &vp) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("altitude", &altitude) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("water_velocity", &wv) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("water_velocity_percent", &wvp) == XML_SUCCESS)
+    //             ++c;
+            
+    //         if(c == 0)
+    //             log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //         else
+    //             dvl->setNoise(vp, v, altitude, wvp, wv);
+    //     }
+    //     sens = std::move(dvl);
+    // }
+    // else if(typeStr == "gps")
+    // {
+    //     int history;
+    //     if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+    //         history = -1;
+            
+    //     std::unique_ptr<GPS> gps = std::make_unique<GPS>(sensorName, rate, history);
+        
+    //     //Optional noise definition
+    //     if((item = element->FirstChildElement("noise")) != nullptr)    
+    //     {
+    //         Scalar ned;
+    //         if(item->QueryAttribute("ned_position", &ned) == XML_SUCCESS)
+    //             gps->setNoise(ned);
+    //         else
+    //             log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //     }
+    //     sens = std::move(gps);
+    // }
+    // else if(typeStr == "pressure")
+    // {
+    //     int history;
+    //     if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+    //         history = -1;
+            
+    //     std::unique_ptr<Pressure> press = std::make_unique<Pressure>(sensorName, rate, history);
+        
+    //     //Optional range definition
+    //     if((item = element->FirstChildElement("range")) != nullptr)    
+    //     {
+    //         Scalar pressure;
+    //         if(item->QueryAttribute("pressure", &pressure) == XML_SUCCESS)
+    //             press->setRange(pressure);
+    //         else
+    //             log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //     }
+    //     //Optional noise definition
+    //     if((item = element->FirstChildElement("noise")) != nullptr)    
+    //     {
+    //         Scalar pressure;
+    //         if(item->QueryAttribute("pressure", &pressure) == XML_SUCCESS)
+    //             press->setNoise(pressure);
+    //         else
+    //             log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //     }
+    //     sens = std::move(press);
+    // }
+    // else if(typeStr == "odometry")
+    // {
+    //     int history;
+    //     if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+    //         history = -1;
+            
+    //     std::unique_ptr<Odometry> odom = std::make_unique<Odometry>(sensorName, rate, history);
+        
+    //     //Optional noise definition
+    //     if((item = element->FirstChildElement("noise")) != nullptr)    
+    //     {
+    //         Scalar p(0);
+    //         Scalar v(0);
+    //         Scalar angle(0);
+    //         Scalar av(0);
+    //         int c = 0;
+        
+    //         if(item->QueryAttribute("position", &p) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("velocity", &v) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("angle", &angle) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("angular_velocity", &av) == XML_SUCCESS)
+    //             ++c;
+
+    //         if(c == 0)
+    //             log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //         else
+    //             odom->setNoise(p, v, angle, av);
+    //     }
+    //     sens = std::move(odom);
+    // }
+    // else if(typeStr == "ins")
+    // {
+    //     int history;
+    //     if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+    //         history = -1;
+
+    //     std::unique_ptr<INS> ins = std::make_unique<INS>(sensorName, rate, history);
+
+    //     //Connect with external sensors
+    //     if((item = element->FirstChildElement("external_sensors")) != nullptr)
+    //     {
+    //         const char* dvl = "";
+    //         const char* press = "";
+    //         const char* gps = "";
+    //         std::string prefix = "";
+    //         if(namePrefix != "")
+    //             prefix = namePrefix + "/";
+    
+    //         if(item->QueryStringAttribute("dvl", &dvl) == XML_SUCCESS)
+    //             ins->ConnectDVL(prefix + std::string(dvl));
+    //         if(item->QueryStringAttribute("pressure", &press) == XML_SUCCESS)
+    //             ins->ConnectPressure(prefix + std::string(press));
+    //         if(item->QueryStringAttribute("gps", &gps) == XML_SUCCESS)
+    //             ins->ConnectGPS(prefix + std::string(gps));
+    //     }
+
+    //     //Optional output frame definition
+    //     Transform Tout;
+    //     if((item = element->FirstChildElement("output_frame")) != nullptr 
+    //         && ParseTransform(item, Tout))
+    //     {        
+    //         ins->setOutputFrame(Tout);
+    //     }
+
+    //     //Optional range definition
+    //     if((item = element->FirstChildElement("range")) != nullptr)    
+    //     {
+    //         const char* velocity = nullptr;
+    //         Vector3 avxyz = VMAX();
+    //         Scalar av;
+    //         const char* acc = nullptr;
+    //         Vector3 laxyz = VMAX();
+    //         Scalar la;
+    //         int c = 0;
+            
+    //         if(item->QueryStringAttribute("angular_velocity", &velocity) == XML_SUCCESS  
+    //            && ParseVector(velocity, avxyz))
+    //         {
+    //             ++c;
+    //         }
+    //         else if(item->QueryAttribute("angular_velocity", &av) == XML_SUCCESS)
+    //         {
+    //             avxyz = Vector3(av, av, av);
+    //             ++c;
+    //         }
+            
+    //         if(item->QueryStringAttribute("linear_acceleration", &acc) == XML_SUCCESS  
+    //            && ParseVector(acc, laxyz))
+    //         {
+    //             ++c;
+    //         }
+    //         else if(item->QueryAttribute("linear_acceleration", &la) == XML_SUCCESS)
+    //         {
+    //             laxyz = Vector3(la, la, la);
+    //             ++c;
+    //         }
+            
+    //         if(c == 0)
+    //             log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //         else
+    //             ins->setRange(avxyz, laxyz);
+    //     }
+    //     //Optional noise definition
+    //     if((item = element->FirstChildElement("noise")) != nullptr)    
+    //     {
+    //         const char* velocity = nullptr;
+    //         const char* acc = nullptr;
+    //         Vector3 avxyz = V0();
+    //         Vector3 laxyz = V0();
+    //         Scalar av;
+    //         Scalar la;
+    //         int c = 0;
+
+    //         if(item->QueryStringAttribute("angular_velocity", &velocity) == XML_SUCCESS 
+    //            && ParseVector(velocity, avxyz))
+    //         {
+    //             ++c;
+    //         }
+    //         else if(item->QueryAttribute("angular_velocity", &av) == XML_SUCCESS)
+    //         {
+    //             avxyz = Vector3(av, av, av);
+    //             ++c;
+    //         }
+
+    //         if(item->QueryStringAttribute("linear_acceleration", &acc) == XML_SUCCESS 
+    //            && ParseVector(acc, laxyz))
+    //         {
+    //             ++c;
+    //         }
+    //         else if(item->QueryAttribute("linear_acceleration", &la) == XML_SUCCESS)
+    //         {
+    //             laxyz = Vector3(la, la, la);
+    //             ++c;
+    //         }
+            
+    //         if(c == 0)
+    //             log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //         else
+    //             ins->setNoise(avxyz, laxyz);
+    //     }
+    //     sens = std::move(ins);
+    // }
+    // else if(typeStr == "compass")
+    // {
+    //     int history;
+    //     if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+    //         history = -1;
+            
+    //     std::unique_ptr<Compass> compass = std::make_unique<Compass>(sensorName, rate, history);
+        
+    //     //Optional noise definition
+    //     if((item = element->FirstChildElement("noise")) != nullptr)    
+    //     {
+    //         Scalar heading;
+    //         if(item->QueryAttribute("heading", &heading) == XML_SUCCESS)
+    //             compass->setNoise(heading);
+    //         else
+    //             log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //     }
+    //     sens = std::move(compass);
+    // }
+    // else if(typeStr == "profiler")
+    // {
+    //     int history;
+    //     Scalar fov;
+    //     int steps;
+    //     if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+    //         history = -1;
+    //     if((item = element->FirstChildElement("specs")) == nullptr || item->QueryAttribute("fov", &fov) != XML_SUCCESS || item->QueryAttribute("steps", &steps) != XML_SUCCESS)
+    //     {
+    //         log.Print(MessageType::ERROR, "Specs of sensor '%s' not properly defined!", sensorName.c_str());
+    //         return nullptr;
+    //     }
+            
+    //     std::unique_ptr<Profiler> prof = std::make_unique<Profiler>(sensorName, fov, steps, rate, history);
+        
+    //     //Optional range definition
+    //     if((item = element->FirstChildElement("range")) != nullptr)    
+    //     {
+    //         Scalar distMin(0);
+    //         Scalar distMax(BT_LARGE_FLOAT);
+    //         int c = 0;
+            
+    //         if(item->QueryAttribute("distance_min", &distMin) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("distance_max", &distMax) == XML_SUCCESS)
+    //             ++c;
+            
+    //         if(c == 0)
+    //             log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //         else
+    //             prof->setRange(distMin, distMax);
+    //     }
+    //     //Optional noise definition
+    //     if((item = element->FirstChildElement("noise")) != nullptr)    
+    //     {
+    //         Scalar distance;
+    //         if(item->QueryAttribute("distance", &distance) == XML_SUCCESS)
+    //             prof->setNoise(distance);
+    //         else
+    //             log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //     }
+    //     sens = std::move(prof);
+    // }
+    // else if(typeStr == "multibeam" || typeStr == "multibeam1d")
+    // {
+    //     int history;
+    //     Scalar fov;
+    //     int steps;
+    //     if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+    //         history = -1;
+    //     if((item = element->FirstChildElement("specs")) == nullptr || item->QueryAttribute("fov", &fov) != XML_SUCCESS || item->QueryAttribute("steps", &steps) != XML_SUCCESS)
+    //         return nullptr;
+            
+    //     std::unique_ptr<Multibeam> mult = std::make_unique<Multibeam>(sensorName, fov, steps, rate, history);
+        
+    //     //Optional range definition
+    //     if((item = element->FirstChildElement("range")) != nullptr)    
+    //     {
+    //         Scalar distMin(0);
+    //         Scalar distMax(BT_LARGE_FLOAT);
+    //         int c = 0;
+
+    //         if(item->QueryAttribute("distance_min", &distMin) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("distance_max", &distMax) == XML_SUCCESS)
+    //             ++c;
+            
+    //         if(c == 0)
+    //             log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //         else
+    //             mult->setRange(distMin, distMax);
+    //     }
+    //     //Optional noise definition
+    //     if((item = element->FirstChildElement("noise")) != nullptr)    
+    //     {
+    //         Scalar distance;
+    //         if(item->QueryAttribute("distance", &distance) == XML_SUCCESS)
+    //             mult->setNoise(distance);
+    //         else
+    //             log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //     }
+    //     sens = std::move(mult);
+    // }
+    // else if(typeStr == "torque")
+    // {
+    //     int history;
+    //     if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+    //         history = -1;
+            
+    //     std::unique_ptr<Torque> torque = std::make_unique<Torque>(sensorName, rate, history);
+        
+    //     //Optional range definition
+    //     if((item = element->FirstChildElement("range")) != nullptr)    
+    //     {
+    //         Scalar tau;
+    //         if(item->QueryAttribute("torque", &tau) == XML_SUCCESS)
+    //             torque->setRange(tau);
+    //         else
+    //             log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //     }
+    //     //Optional noise definition
+    //     if((item = element->FirstChildElement("noise")) != nullptr)    
+    //     {
+    //         Scalar tau;
+    //         if(item->QueryAttribute("torque", &tau) == XML_SUCCESS)
+    //             torque->setNoise(tau);
+    //         else
+    //             log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //     }
+    //     sens = std::move(torque);
+    // }
+    // else if(typeStr == "forcetorque")
+    // {
+    //     Transform origin;
+    //     int history;
+    //     if((item = element->FirstChildElement("origin")) == nullptr || !ParseTransform(item, origin))
+    //         return nullptr;
+    //     if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+    //         history = -1;
+            
+    //     std::unique_ptr<ForceTorque> ft = std::make_unique<ForceTorque>(sensorName, origin, rate, history);
+        
+    //     //Optional range definition
+    //     if((item = element->FirstChildElement("range")) != nullptr)    
+    //     {
+    //         const char* force = nullptr;
+    //         const char* torque = nullptr;
+    //         Vector3 f = VMAX();
+    //         Vector3 t = VMAX();
+    //         int c = 0;
+
+    //         if(item->QueryStringAttribute("force", &force) == XML_SUCCESS && ParseVector(force, f))
+    //             ++c;
+    //         if(item->QueryStringAttribute("torque", &torque) != XML_SUCCESS && ParseVector(torque, t))
+    //             ++c;
+    //         if(c == 0)
+    //             log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //         else
+    //             ft->setRange(f, t);
+    //     }
+    //     //Optional noise definition
+    //     if((item = element->FirstChildElement("noise")) != nullptr)    
+    //     {
+    //         Scalar f(0);
+    //         Scalar t(0);
+    //         int c = 0;
+    //         if(item->QueryAttribute("force", &f) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("torque", &t) == XML_SUCCESS)
+    //             ++c;
+    //         if(c == 0)
+    //             log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //         else
+    //             ft->setNoise(f, t);
+    //     }
+    //     sens = std::move(ft);
+    // }
+    // else if(typeStr == "encoder")
+    // {
+    //     int history;
+    //     if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+    //         history = -1;
+            
+    //     std::unique_ptr<RotaryEncoder> enc = std::make_unique<RotaryEncoder>(sensorName, rate, history);
+    //     sens = std::move(enc);
+    // }
+    // else if(typeStr == "camera")
+    // {
+    //     if(!isGraphicalSim())
+    //     {
+    //         log.Print(MessageType::ERROR, "Cameras not supported in console mode!");
+    //         return nullptr;
+    //     }
+
+    //     int resX, resY;
+    //     Scalar hFov;
+    //     if((item = element->FirstChildElement("specs")) == nullptr 
+    //         || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
+    //         || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
+    //         || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS)
+    //     {
+    //         log.Print(MessageType::ERROR, "Specs of camera '%s' not properly defined!", sensorName.c_str());
+    //         return nullptr;
+    //     }
+
+    //     std::unique_ptr<ColorCamera> cam;
+        
+    //     //Optional parameters
+    //     if((item = element->FirstChildElement("rendering")) != nullptr) 
+    //     {
+    //         Scalar minDist(STD_NEAR_PLANE_DISTANCE);
+    //         Scalar maxDist(STD_FAR_PLANE_DISTANCE);
+    //         int c = 0;
+
+    //         if(item->QueryAttribute("minimum_distance", &minDist) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("maximum_distance", &maxDist) == XML_SUCCESS)
+    //             ++c;
+
+    //         if(c == 0)
+    //         {
+    //             log.Print(MessageType::WARNING, "Rendering options of camera '%s' not properly defined - using defaults.", sensorName.c_str());
+    //             cam = std::make_unique<ColorCamera>(sensorName, resX, resY, hFov, rate);
+    //         }
+    //         else
+    //             cam = std::make_unique<ColorCamera>(sensorName, resX, resY, hFov, rate, minDist, maxDist);
+    //     }
+    //     else
+    //         cam = std::make_unique<ColorCamera>(sensorName, resX, resY, hFov, rate);
+    //     sens = std::move(cam);
+    // }
+    // else if(typeStr == "depthcamera")
+    // {
+    //     if(!isGraphicalSim())
+    //     {
+    //         log.Print(MessageType::ERROR, "Depth cameras not supported in console mode!");
+    //         return nullptr;
+    //     }
+
+    //     int resX, resY;
+    //     Scalar hFov;
+    //     Scalar depthMin, depthMax;
+    //     if((item = element->FirstChildElement("specs")) == nullptr 
+    //         || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
+    //         || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
+    //         || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS
+    //         || item->QueryAttribute("depth_min", &depthMin) != XML_SUCCESS
+    //         || item->QueryAttribute("depth_max", &depthMax) != XML_SUCCESS)
+    //     {
+    //         log.Print(MessageType::ERROR, "Specs of depth camera '%s' not properly defined!", sensorName.c_str());
+    //         return nullptr;
+    //     }
+        
+    //     std::unique_ptr<DepthCamera> dcam = std::make_unique<DepthCamera>(sensorName, resX, resY, hFov, depthMin, depthMax, rate);
+
+    //     //Optional noise definition
+    //     if((item = element->FirstChildElement("noise")) != nullptr)    
+    //     {
+    //         float depth;
+    //         if(item->QueryAttribute("depth", &depth) == XML_SUCCESS)
+    //             dcam->setNoise(depth);
+    //         else
+    //             log.Print(MessageType::WARNING, "Noise of depth camera '%s' not properly defined - using defaults.", sensorName.c_str());
+    //     }
+    //     sens = std::move(dcam);
+    // }
+    // else if(typeStr == "thermalcamera")
+    // {
+    //     if(!isGraphicalSim())
+    //     {
+    //         log.Print(MessageType::ERROR, "Thermal cameras not supported in console mode!");
+    //         return nullptr;
+    //     }
+
+    //     int resX, resY;
+    //     Scalar hFov;
+    //     Scalar tempMin, tempMax;
+    //     if((item = element->FirstChildElement("specs")) == nullptr 
+    //         || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
+    //         || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
+    //         || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS
+    //         || item->QueryAttribute("temperature_min", &tempMin) != XML_SUCCESS
+    //         || item->QueryAttribute("temperature_max", &tempMax) != XML_SUCCESS)
+    //     {
+    //         log.Print(MessageType::ERROR, "Specs of thermal camera '%s' not properly defined!", sensorName.c_str());
+    //         return nullptr;
+    //     }
+
+    //     std::unique_ptr<ThermalCamera> tcam;
+        
+    //     //Optional parameters
+    //     if((item = element->FirstChildElement("rendering")) != nullptr) 
+    //     {
+    //         Scalar minDist(STD_NEAR_PLANE_DISTANCE);
+    //         Scalar maxDist(STD_FAR_PLANE_DISTANCE);
+    //         int c = 0;
+
+    //         if(item->QueryAttribute("minimum_distance", &minDist) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("maximum_distance", &maxDist) == XML_SUCCESS)
+    //             ++c;
+
+    //         if(c == 0)
+    //         {
+    //             log.Print(MessageType::WARNING, "Rendering options of thermal camera '%s' not properly defined - using defaults.", sensorName.c_str());
+    //             tcam = std::make_unique<ThermalCamera>(sensorName, resX, resY, hFov, tempMin, tempMax, rate);
+    //         }
+    //         else
+    //             tcam = std::make_unique<ThermalCamera>(sensorName, resX, resY, hFov, tempMin, tempMax, rate, minDist, maxDist);
+    //     }
+    //     else
+    //         tcam = std::make_unique<ThermalCamera>(sensorName, resX, resY, hFov, tempMin, tempMax, rate);
+
+    //     //Optional noise definition
+    //     if((item = element->FirstChildElement("noise")) != nullptr)    
+    //     {
+    //         float temperature;
+    //         if(item->QueryAttribute("temperature", &temperature) == XML_SUCCESS)
+    //             tcam->setNoise(temperature);
+    //         else
+    //             log.Print(MessageType::WARNING, "Noise of thermal camera '%s' not properly defined - using defaults.", sensorName.c_str());
+    //     }
+
+    //     //Optional display settings
+    //     if((item = element->FirstChildElement("display")) != nullptr)
+    //     {
+    //         ColorMap cMap = ColorMap::JET;
+    //         ParseColorMap(item, cMap);
+
+    //         //Initial values are equal to measurement range
+    //         item->QueryAttribute("temperature_min", &tempMin);
+    //         item->QueryAttribute("temperature_max", &tempMax);
+            
+    //         tcam->setDisplaySettings(cMap, tempMin, tempMax);
+    //     }
+    //     sens = std::move(tcam);   
+    // }
+    // else if(typeStr == "opticalflow")
+    // {
+    //     if(!isGraphicalSim())
+    //     {
+    //         log.Print(MessageType::ERROR, "Optical flow cameras not supported in console mode!");
+    //         return nullptr;
+    //     }
+
+    //     int resX, resY;
+    //     Scalar hFov;
+    //     if((item = element->FirstChildElement("specs")) == nullptr 
+    //         || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
+    //         || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
+    //         || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS)
+    //     {
+    //         log.Print(MessageType::ERROR, "Specs of optical flow camera '%s' not properly defined!", sensorName.c_str());
+    //         return nullptr;
+    //     }
+
+    //     std::unique_ptr<OpticalFlowCamera> ofcam;
+
+    //     //Optional parameters
+    //     if((item = element->FirstChildElement("rendering")) != nullptr) 
+    //     {
+    //         Scalar minDist(STD_NEAR_PLANE_DISTANCE);
+    //         Scalar maxDist(STD_FAR_PLANE_DISTANCE);
+    //         int c = 0;
+
+    //         if(item->QueryAttribute("minimum_distance", &minDist) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("maximum_distance", &maxDist) == XML_SUCCESS)
+    //             ++c;
+
+    //         if(c == 0)
+    //         {
+    //             log.Print(MessageType::WARNING, "Rendering options of optical flow camera '%s' not properly defined - using defaults.", sensorName.c_str());
+    //             ofcam = std::make_unique<OpticalFlowCamera>(sensorName, resX, resY, hFov, rate);
+    //         }
+    //         else
+    //             ofcam = std::make_unique<OpticalFlowCamera>(sensorName, resX, resY, hFov, rate, minDist, maxDist);
+    //     }
+    //     else
+    //         ofcam = std::make_unique<OpticalFlowCamera>(sensorName, resX, resY, hFov, rate);
+
+    //     //Optional noise definition
+    //     if((item = element->FirstChildElement("noise")) != nullptr)    
+    //     {
+    //         Scalar velX(0);
+    //         Scalar velY(0);
+    //         item->QueryAttribute("velocity_x", &velX);
+    //         item->QueryAttribute("velocity_y", &velX);
+    //         ofcam->setNoise(velX, velY);
+    //     }
+
+    //     //Optional display settings
+    //     if((item = element->FirstChildElement("display")) != nullptr)
+    //     {
+    //         GLfloat maxV;
+    //         if(item->QueryAttribute("velocity_max", &maxV) == XML_SUCCESS)
+    //             ofcam->setDisplaySettings(maxV);
+    //     }
+    //     sens = std::move(ofcam);
+    // }
+    // else if(typeStr == "segmentation")
+    // {
+    //     if(!isGraphicalSim())
+    //     {
+    //         log.Print(MessageType::ERROR, "Segmentation cameras not supported in console mode!");
+    //         return nullptr;
+    //     }
+
+    //     int resX, resY;
+    //     Scalar hFov;
+    //     if((item = element->FirstChildElement("specs")) == nullptr 
+    //         || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
+    //         || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
+    //         || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS)
+    //     {
+    //         log.Print(MessageType::ERROR, "Specs of segmentation camera '%s' not properly defined!", sensorName.c_str());
+    //         return nullptr;
+    //     }
+
+    //     std::unique_ptr<SegmentationCamera> scam;
+
+    //     //Optional parameters
+    //     if((item = element->FirstChildElement("rendering")) != nullptr) 
+    //     {
+    //         Scalar minDist(STD_NEAR_PLANE_DISTANCE);
+    //         Scalar maxDist(STD_FAR_PLANE_DISTANCE);
+    //         int c = 0;
+
+    //         if(item->QueryAttribute("minimum_distance", &minDist) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("maximum_distance", &maxDist) == XML_SUCCESS)
+    //             ++c;
+
+    //         if(c == 0)
+    //         {
+    //             log.Print(MessageType::WARNING, "Rendering options of segmentation camera '%s' not properly defined - using defaults.", sensorName.c_str());
+    //             scam = std::make_unique<SegmentationCamera>(sensorName, resX, resY, hFov, rate);
+    //         }
+    //         else
+    //             scam = std::make_unique<SegmentationCamera>(sensorName, resX, resY, hFov, rate, minDist, maxDist);
+    //     }
+    //     else
+    //         scam = std::make_unique<SegmentationCamera>(sensorName, resX, resY, hFov, rate);
+
+    //     sens = std::move(scam);
+    // }
+    // else if(typeStr == "ebc" || typeStr == "eventbasedcamera")
+    // {
+    //     if(!isGraphicalSim())
+    //     {
+    //         log.Print(MessageType::ERROR, "Event-based cameras not supported in console mode!");
+    //         return nullptr;
+    //     }
+
+    //     int resX, resY;
+    //     Scalar hFov;
+    //     float Cp, Cm;
+    //     uint32_t Tref;
+
+    //     if((item = element->FirstChildElement("specs")) == nullptr 
+    //         || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
+    //         || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
+    //         || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS
+    //         || item->QueryAttribute("contrast_threshold_pos", &Cp) != XML_SUCCESS
+    //         || item->QueryAttribute("contrast_threshold_neg", &Cm) != XML_SUCCESS
+    //         || item->QueryAttribute("refractory_period_ns", &Tref) != XML_SUCCESS)
+    //     {
+    //         log.Print(MessageType::ERROR, "Specs of event-based camera '%s' not properly defined!", sensorName.c_str());
+    //         return nullptr;
+    //     }
+
+    //     std::unique_ptr<EventBasedCamera> ebc;
+
+    //     //Optional parameters
+    //     if((item = element->FirstChildElement("rendering")) != nullptr) 
+    //     {
+    //         Scalar minDist(STD_NEAR_PLANE_DISTANCE);
+    //         Scalar maxDist(STD_FAR_PLANE_DISTANCE);
+    //         int c = 0;
+
+    //         if(item->QueryAttribute("minimum_distance", &minDist) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("maximum_distance", &maxDist) == XML_SUCCESS)
+    //             ++c;
+
+    //         if(c == 0)
+    //         {
+    //             log.Print(MessageType::WARNING, "Rendering options of event-based camera '%s' not properly defined - using defaults.", sensorName.c_str());
+    //             ebc = std::make_unique<EventBasedCamera>(sensorName, resX, resY, hFov, Cp, Cm, Tref, rate);
+    //         }
+    //         else
+    //             ebc = std::make_unique<EventBasedCamera>(sensorName, resX, resY, hFov, Cp, Cm, Tref, rate, minDist, maxDist);
+    //     }
+    //     else
+    //         ebc = std::make_unique<EventBasedCamera>(sensorName, resX, resY, hFov, Cp, Cm, Tref, rate);
+
+    //     //Optional noise definition
+    //     if((item = element->FirstChildElement("noise")) != nullptr)    
+    //     {
+    //         Scalar sigmaCp(0);
+    //         Scalar sigmaCm(0);
+    //         int c = 0;
+    //         if(item->QueryAttribute("contrast_threshold_pos", &sigmaCp) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("contrast_threshold_neg", &sigmaCm) == XML_SUCCESS)
+    //             ++c;
+    //         if(c == 0)
+    //             log.Print(MessageType::WARNING, "Noise of event-based camera '%s' not properly defined - using defaults.", sensorName.c_str());
+    //         else
+    //             ebc->setNoise(sigmaCp, sigmaCm);
+    //     }
+    //     sens = std::move(ebc);
+    // }
+    // else if(typeStr == "multibeam2d")
+    // {
+    //     if(!isGraphicalSim())
+    //     {
+    //         log.Print(MessageType::ERROR, "Multibeam 2D not supported in console mode!");
+    //         return nullptr;
+    //     }
+
+    //     int resX, resY;
+    //     Scalar hFov, vFov;
+    //     Scalar rangeMin, rangeMax;
+    //     if((item = element->FirstChildElement("specs")) == nullptr 
+    //         || item->QueryAttribute("resolution_x", &resX) != XML_SUCCESS 
+    //         || item->QueryAttribute("resolution_y", &resY) != XML_SUCCESS
+    //         || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS
+    //         || item->QueryAttribute("vertical_fov", &vFov) != XML_SUCCESS
+    //         || item->QueryAttribute("range_min", &rangeMin) != XML_SUCCESS
+    //         || item->QueryAttribute("range_max", &rangeMax) != XML_SUCCESS)
+    //     {
+    //         log.Print(MessageType::ERROR, "Specs of sensor '%s' not properly defined!", sensorName.c_str());
+    //         return nullptr;
+    //     }
+
+    //     std::unique_ptr<Multibeam2> mb = std::make_unique<Multibeam2>(sensorName, resX, resY, hFov, vFov, rangeMin, rangeMax, rate);
+    //     sens = std::move(mb);
+    // }
+    // else if(typeStr == "fls")
+    // {
+    //     if(!isGraphicalSim())
+    //     {
+    //         log.Print(MessageType::ERROR, "FLS not supported in console mode!");
+    //         return nullptr;
+    //     }
+
+    //     Scalar hFov, vFov;
+    //     int nBeams, nBins;
+    //     Scalar rangeMin(0.5);
+    //     Scalar rangeMax(10.0);
+    //     Scalar gain(1.0);
+    //     ColorMap cMap = ColorMap::GREEN_BLUE;
+        
+    //     if((item = element->FirstChildElement("specs")) == nullptr 
+    //         || item->QueryAttribute("beams", &nBeams) != XML_SUCCESS 
+    //         || item->QueryAttribute("bins", &nBins) != XML_SUCCESS
+    //         || item->QueryAttribute("horizontal_fov", &hFov) != XML_SUCCESS
+    //         || item->QueryAttribute("vertical_fov", &vFov) != XML_SUCCESS)
+    //     {
+    //         log.Print(MessageType::ERROR, "Specs of sensor '%s' not properly defined!", sensorName.c_str());
+    //         return nullptr;
+    //     }
+    //     //Optional output format
+    //     SonarOutputFormat outFormat {SonarOutputFormat::U8};
+    //     const char* outFormatStr = nullptr;
+    //     item->QueryStringAttribute("output_format", &outFormatStr);
+    //     if (outFormatStr != nullptr)
+    //     {
+    //         std::string ofs(outFormatStr);
+    //         if (ofs == "uint8")
+    //             outFormat = SonarOutputFormat::U8;
+    //         else if (ofs == "uint16")
+    //             outFormat = SonarOutputFormat::U16;
+    //         else if (ofs == "uint32")
+    //             outFormat = SonarOutputFormat::U32;
+    //         else if(ofs == "float32")
+    //             outFormat = SonarOutputFormat::F32;
+    //         else
+    //             log.Print(MessageType::WARNING, "Output format of sensor '%s' not recognized - using default (uint8).", sensorName.c_str());
+    //     }
+
+    //     //Optional settings
+    //     if((item = element->FirstChildElement("settings")) != nullptr)
+    //     {
+    //         int c = 0;
+    //         if(item->QueryAttribute("range_min", &rangeMin) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("range_max", &rangeMax) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("gain", &gain) == XML_SUCCESS)
+    //             ++c;
+    //         if(c == 0)
+    //             log.Print(MessageType::WARNING, "Settings of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //     }
+    //     if((item = element->FirstChildElement("display")) != nullptr)
+    //         ParseColorMap(item, cMap);
+        
+    //     std::unique_ptr<FLS> fls = std::make_unique<FLS>(sensorName, nBeams, nBins, hFov, vFov, rangeMin, rangeMax, cMap, outFormat, rate);
+    //     fls->setGain(gain);
+
+    //     //Optional noise definition
+    //     if((item = element->FirstChildElement("noise")) != nullptr)    
+    //     {
+    //         float mul = 0.025f;
+    //         float add = 0.035f;
+    //         int c = 0;
+    //         if(item->QueryAttribute("multiplicative", &mul) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("additive", &add) == XML_SUCCESS)
+    //             ++c;
+    //         if(c == 0)
+    //             log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //         fls->setNoise(mul, add);
+    //     }
+    //     else
+    //     {
+    //         fls->setNoise(0.025f, 0.035f); //Default values that look realistic
+    //         log.Print(MessageType::WARNING, "Noise of sensor '%s' not defined - using defaults.", sensorName.c_str());
+    //     }
+    //     sens = std::move(fls);
+    // }
+    // else if(typeStr == "sss")
+    // {
+    //     if(!isGraphicalSim())
+    //     {
+    //         log.Print(MessageType::ERROR, "SSS not supported in console mode!");
+    //         return nullptr;
+    //     }
+
+    //     Scalar hFov, vFov;
+    //     int nLines, nBins;
+    //     Scalar tilt;
+    //     Scalar rangeMin(0.5);
+    //     Scalar rangeMax(10.0);
+    //     Scalar gain(1.0);
+    //     ColorMap cMap = ColorMap::GREEN_BLUE;
+
+    //     if((item = element->FirstChildElement("specs")) == nullptr 
+    //         || item->QueryAttribute("bins", &nBins) != XML_SUCCESS
+    //         || item->QueryAttribute("lines", &nLines) != XML_SUCCESS
+    //         || item->QueryAttribute("horizontal_beam_width", &hFov) != XML_SUCCESS
+    //         || item->QueryAttribute("vertical_beam_width", &vFov) != XML_SUCCESS
+    //         || item->QueryAttribute("vertical_tilt", &tilt) != XML_SUCCESS)
+    //     {
+    //         log.Print(MessageType::ERROR, "Specs of sensor '%s' not properly defined!", sensorName.c_str());
+    //         return nullptr;
+    //     }
+    //     //Optional output format
+    //     SonarOutputFormat outFormat {SonarOutputFormat::U8};
+    //     const char* outFormatStr = nullptr;
+    //     item->QueryStringAttribute("output_format", &outFormatStr);
+    //     if (outFormatStr != nullptr)
+    //     {
+    //         std::string ofs(outFormatStr);
+    //         if (ofs == "uint8")
+    //             outFormat = SonarOutputFormat::U8;
+    //         else if (ofs == "uint16")
+    //             outFormat = SonarOutputFormat::U16;
+    //         else if (ofs == "uint32")
+    //             outFormat = SonarOutputFormat::U32;
+    //         else if(ofs == "float32")
+    //             outFormat = SonarOutputFormat::F32;
+    //         else
+    //             log.Print(MessageType::WARNING, "Output format of sensor '%s' not recognized - using default (uint8).", sensorName.c_str());
+    //     }
+
+    //     //Optional settings
+    //     if((item = element->FirstChildElement("settings")) != nullptr)
+    //     {
+    //         int c = 0;
+    //         if(item->QueryAttribute("range_min", &rangeMin) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("range_max", &rangeMax) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("gain", &gain) == XML_SUCCESS)
+    //             ++c;
+    //         if(c == 0)
+    //             log.Print(MessageType::WARNING, "Settings of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //     }
+    //     if((item = element->FirstChildElement("display")) != nullptr)
+    //         ParseColorMap(item, cMap);
+        
+    //     std::unique_ptr<SSS> sss = std::make_unique<SSS>(sensorName, nBins, nLines, vFov, hFov, tilt, rangeMin, rangeMax, cMap, outFormat, rate);
+    //     sss->setGain(gain);
+
+    //     //Optional noise definition
+    //     if((item = element->FirstChildElement("noise")) != nullptr)    
+    //     {
+    //         float mul = 0.01f;
+    //         float add = 0.02f;
+    //         int c = 0;
+    //         if(item->QueryAttribute("multiplicative", &mul) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("additive", &add) == XML_SUCCESS)
+    //             ++c;
+    //         if(c == 0)
+    //             log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //         sss->setNoise(mul, add);
+    //     }
+    //     else
+    //     {
+    //         sss->setNoise(0.01f, 0.02f); //Default values that look realistic
+    //         log.Print(MessageType::WARNING, "Noise of sensor '%s' not defined - using defaults.", sensorName.c_str());
+    //     }
+    //     sens = std::move(sss);
+    // }
+    // else if(typeStr == "msis")
+    // {
+    //     if(!isGraphicalSim())
+    //     {
+    //         log.Print(MessageType::ERROR, "MSIS not supported in console mode!");
+    //         return nullptr;
+    //     }
+
+    //     Scalar stepAngle;
+    //     int nBins;
+    //     Scalar hFov, vFov;
+    //     Scalar rotMin(-180);
+    //     Scalar rotMax(180);
+    //     Scalar rangeMin(0.5);
+    //     Scalar rangeMax(10.0);
+    //     Scalar gain(1.0);
+    //     ColorMap cMap = ColorMap::GREEN_BLUE;
+        
+    //     if((item = element->FirstChildElement("specs")) == nullptr 
+    //         || item->QueryAttribute("step", &stepAngle) != XML_SUCCESS
+    //         || item->QueryAttribute("bins", &nBins) != XML_SUCCESS
+    //         || item->QueryAttribute("horizontal_beam_width", &hFov) != XML_SUCCESS
+    //         || item->QueryAttribute("vertical_beam_width", &vFov) != XML_SUCCESS)
+    //     {
+    //         log.Print(MessageType::ERROR, "Specs of sensor '%s' not properly defined!", sensorName.c_str());
+    //         return nullptr;
+    //     }
+    //     //Optional output format
+    //     SonarOutputFormat outFormat {SonarOutputFormat::U8};
+    //     const char* outFormatStr = nullptr;
+    //     item->QueryStringAttribute("output_format", &outFormatStr);
+    //     if (outFormatStr != nullptr)
+    //     {
+    //         std::string ofs(outFormatStr);
+    //         if (ofs == "uint8")
+    //             outFormat = SonarOutputFormat::U8;
+    //         else if (ofs == "uint16")
+    //             outFormat = SonarOutputFormat::U16;
+    //         else if (ofs == "uint32")
+    //             outFormat = SonarOutputFormat::U32;
+    //         else if(ofs == "float32")
+    //             outFormat = SonarOutputFormat::F32;
+    //         else
+    //             log.Print(MessageType::WARNING, "Output format of sensor '%s' not recognized - using default (uint8).", sensorName.c_str());
+    //     }
+
+    //     //Optional settings
+    //     if((item = element->FirstChildElement("settings")) != nullptr)
+    //     {
+    //         int c = 0;
+    //         if(item->QueryAttribute("range_min", &rangeMin) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("range_max", &rangeMax) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("rotation_min", &rotMin) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("rotation_max", &rotMax) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("gain", &gain) == XML_SUCCESS)
+    //             ++c;
+    //         if(c == 0)
+    //             log.Print(MessageType::WARNING, "Settings of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //     }
+    //     if((item = element->FirstChildElement("display")) != nullptr)
+    //         ParseColorMap(item, cMap);
+        
+    //     std::unique_ptr<MSIS> msis = std::make_unique<MSIS>(sensorName, stepAngle, nBins, hFov, vFov, rotMin, rotMax, rangeMin, rangeMax, cMap, outFormat, rate);
+    //     msis->setGain(gain);
+
+    //     //Optional noise definition
+    //     if((item = element->FirstChildElement("noise")) != nullptr)    
+    //     {
+    //         float mul = 0.02f;
+    //         float add = 0.04f;
+    //         int c = 0;
+    //         if(item->QueryAttribute("multiplicative", &mul) == XML_SUCCESS)
+    //             ++c;
+    //         if(item->QueryAttribute("additive", &add) == XML_SUCCESS)
+    //             ++c;
+    //         if(c == 0)
+    //             log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+    //         msis->setNoise(mul, add);
+    //     }
+    //     else
+    //     {
+    //         msis->setNoise(0.02f, 0.04f); //Default values that look realistic
+    //         log.Print(MessageType::WARNING, "Noise of sensor '%s' not defined - using defaults.", sensorName.c_str());
+    //     }
+    //     sens = std::move(msis);
+    // }
+    // else
+    // {
+    //     log.Print(MessageType::ERROR, "Sensor type '%s' not supported!", typeStr.c_str());
+    //     return nullptr;
+    // }
+    }
     //---- Visuals ----
     const char* visFile = nullptr;
     if((item = element->FirstChildElement("visual")) != nullptr && item->QueryStringAttribute("filename", &visFile) == XML_SUCCESS)
@@ -4562,7 +3781,7 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
     return sens;
 }
 
- std::unique_ptr<Light> ScenarioParser::ParseLight(XMLElement* element, const std::string& namePrefix)
+std::unique_ptr<Light> ScenarioParser::ParseLight(XMLElement* element, const std::string& namePrefix)
 {
     if(!isGraphicalSim())
     {
@@ -5071,14 +4290,6 @@ FixedJoint* ScenarioParser::ParseGlue(XMLElement* element)
         return nullptr;
 }
 
-std::string ScenarioParser::GetFullPath(const std::string& path)
-{
-    if(path.at(0) == '/' || path.at(0) == '~') //Absolute path?
-        return path;
-    else
-        return GetDataPath() + path;
-}
-
 //Private
 bool ScenarioParser::CopyNode(XMLNode* destParent, const XMLNode* src)
 {
@@ -5193,6 +4404,146 @@ bool ScenarioParser::ParseColorMap(XMLElement* element, ColorMap& cm)
         log.Print(MessageType::ERROR, "Color map definition not found!");
         return false;
     }
+}
+
+bool ScenarioParser::ParseConstructInfo(XMLElement* element, ConstructInfo& info)
+{
+    std::function<bool(XMLElement*, const std::string&, ConstructInfoNode&)> parseNode = 
+    [&](XMLElement* e, const std::string& name, ConstructInfoNode& node) 
+    {
+        XMLElement* item = e->FirstChildElement(name.c_str());
+        if (item != nullptr)
+        {
+            // Parse all attributes
+            for (auto& attribute : node.attributes)
+            {
+                switch(attribute.second.valueType)
+                {
+                    case ConstructInfoValueType::BOOL:
+                    {
+                        bool flag;
+                        if (item->QueryBoolAttribute(attribute.first.c_str(), &flag) == XML_SUCCESS)
+                        {
+                            attribute.second.value = flag;
+                            attribute.second.valid = true;
+                        }
+                        else if (!attribute.second.optional) // && !XML_SUCCESS
+                        {
+                            log.Print(MessageType::ERROR, "Required attribute '%s' of element '%s' not defined or wrong type!",
+                                attribute.first.c_str(), name.c_str());
+                            return false;
+                        }
+                    }
+                        break;
+
+                    case ConstructInfoValueType::INT:
+                    {
+                        int number;
+                        if (item->QueryIntAttribute(attribute.first.c_str(), &number) == XML_SUCCESS)
+                        {
+                            attribute.second.value = number;
+                            attribute.second.valid = true;
+                        }
+                        else if (!attribute.second.optional) // && !XML_SUCCESS
+                        {
+                            log.Print(MessageType::ERROR, "Required attribute '%s' of element '%s' not defined or wrong type!",
+                                attribute.first.c_str(), name.c_str());
+                            return false;
+                        }
+                    }
+                        break;
+
+                    case ConstructInfoValueType::SCALAR:
+                    {
+                        Scalar number;
+                        if (item->QueryDoubleAttribute(attribute.first.c_str(), &number) == XML_SUCCESS)
+                        {
+                            attribute.second.value = number;
+                            attribute.second.valid = true;
+                        }
+                        else if (!attribute.second.optional) // && !XML_SUCCESS
+                        {
+                            log.Print(MessageType::ERROR, "Required attribute '%s' of element '%s' not defined or wrong type!",
+                                attribute.first.c_str(), name.c_str());
+                            return false;
+                        }
+                    }
+                        break;
+
+                    case ConstructInfoValueType::VECTOR3:
+                    {
+                        Vector3 v;
+                        const char* vstr = nullptr;
+
+                        if (item->QueryStringAttribute(attribute.first.c_str(), &vstr) == XML_SUCCESS && ParseVector(vstr, v))
+                        {
+                            attribute.second.value = v;
+                            attribute.second.valid = true;
+                        }
+                        else if (!attribute.second.optional) // && !XML_SUCCESS
+                        {
+                            log.Print(MessageType::ERROR, "Required attribute '%s' of element '%s' not defined or wrong type!",
+                                attribute.first.c_str(), name.c_str());
+                            return false;
+                        }
+                    }
+                        break;
+
+                    case ConstructInfoValueType::TRANSFORM:
+                    {
+                        Transform T;
+                        
+                        if (ParseTransform(item, T))
+                        {
+                            attribute.second.value = T;
+                            attribute.second.valid = true;
+                        }
+                        else if (!attribute.second.optional) // && !XML_SUCCESS
+                        {
+                            log.Print(MessageType::ERROR, "Required transform '%s' not defined or wrong format!", name.c_str());
+                            return false;
+                        }
+                    }
+                        break;
+                    
+                    case ConstructInfoValueType::STRING:
+                    {
+                        const char* str = nullptr;
+                        if (item->QueryStringAttribute(attribute.first.c_str(), &str) == XML_SUCCESS)
+                        {
+                            attribute.second.value = std::string(str);
+                            attribute.second.valid = true;
+                        }
+                        else if (!attribute.second.optional) // && !XML_SUCCESS
+                        {
+                            log.Print(MessageType::ERROR, "Required attribute '%s' of element '%s' not defined or wrong type!",
+                                attribute.first.c_str(), name.c_str());
+                            return false;
+                        }
+                    }
+                        break;
+                } 
+            }
+        
+            // Parse child nodes
+            for (auto& child : node.childNodes)
+                parseNode(item, child.first, child.second);
+        }
+        else if (!node.optional) // && item == nullptr
+        {
+            log.Print(MessageType::ERROR, "Required element '%s' not defined!", name.c_str());
+            return false;
+        }
+      
+        return true;
+    };
+
+    for (auto& node : info.nodes)
+    {
+        parseNode(element, node.first, node.second);    
+    }
+
+    return true;
 }
 
 bool ScenarioParser::isGraphicalSim()

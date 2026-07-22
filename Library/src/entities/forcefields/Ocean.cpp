@@ -292,7 +292,8 @@ std::vector<Renderable> Ocean::Render(const std::vector<std::unique_ptr<Actuator
     }
     
     for(size_t i=0; i<act.size(); ++i)
-        if(act[i]->getType() == ActuatorType::THRUSTER)
+        if (act[i]->getType() == ActuatorType::LINK 
+            && static_cast<LinkActuator*>(act[i].get())->getLinkActuatorType() == LinkActuatorType::THRUSTER)
         {
             Thruster* th = static_cast<Thruster*>(act[i].get());
             Transform thFrame = th->getActuatorFrame();

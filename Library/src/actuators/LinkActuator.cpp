@@ -49,6 +49,11 @@ Transform LinkActuator::getActuatorFrame() const
         return o2a_;
 }
 
+ActuatorType LinkActuator::getType() const
+{
+    return ActuatorType::LINK;
+}
+
 void LinkActuator::AttachToSolid(SolidEntity* body, const Transform& origin)
 {
     if(body != nullptr)

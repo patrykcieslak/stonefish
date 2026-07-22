@@ -27,6 +27,7 @@
 
 #include "StonefishCommon.h"
 #include "core/Console.h"
+#include "core/ConstructInfo.h"
 #include "tinyxml2.h"
 #include <map>
 
@@ -275,13 +276,6 @@ namespace sf
          \return pointer to the fixed joint
         */
         virtual FixedJoint* ParseGlue(XMLElement* element);
-        
-        //! A method to get the full file path depending on the format of the passed string.
-        /*!
-         \param path a file path candidate
-         \return full file path
-         */
-        std::string GetFullPath(const std::string& path);
 
         //! A method informing if the simulation is working in graphical mode.
         bool isGraphicalSim();
@@ -292,6 +286,7 @@ namespace sf
         bool ParseTransform(XMLElement* element, Transform& T);
         bool ParseColor(XMLElement* element, Color& c);
         bool ParseColorMap(XMLElement* element, ColorMap& cm);
+        bool ParseConstructInfo(XMLElement* element, ConstructInfo& info);
     
         XMLDocument doc_;
         SimulationManager* sm_;

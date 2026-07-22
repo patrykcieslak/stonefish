@@ -27,13 +27,14 @@
 
 #include "StonefishCommon.h"
 #include "entities/Entity.h"
+#include "core/ConstructInfo.h"
 
 namespace sf
 {
     struct Renderable;
     
-    //! An enum designating a type of the actuator.
-    enum class ActuatorType {MOTOR, SERVO, PROPELLER, THRUSTER, VBS, LIGHT, RUDDER, SUCTION_CUP, PUSH, SIMPLE_THRUSTER};
+    //! An enum defining types of sensors.
+    enum class ActuatorType {JOINT, LINK};
     
     //! An abstract class representing any actuator.
     class Actuator
@@ -69,11 +70,11 @@ namespace sf
         */
         void setWatchdog(Scalar timeout);
 
-        //! A method returning the type of the actuator.
-        virtual ActuatorType getType() const = 0;
-
         //! A method returning the name of the actuator.
         const std::string& getName() const;
+
+        //! A method returning the type of the actuator.
+        virtual ActuatorType getType() const = 0;
     
     protected:
         virtual void WatchdogTimeout();

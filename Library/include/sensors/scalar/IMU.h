@@ -69,6 +69,15 @@ namespace sf
         //! A method returning the type of the scalar sensor.
         ScalarSensorType getScalarSensorType() const override;
 
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo getConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<IMU> Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info);
+
         private:
             Scalar yawDriftRate_;
             Scalar accumulatedYawDrift_;

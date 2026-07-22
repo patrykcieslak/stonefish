@@ -27,6 +27,7 @@
 
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
+#include "core/DeviceFactory.h"
 
 namespace sf
 {
@@ -35,26 +36,23 @@ Push::Push(const std::string& uniqueName, bool inverted) : LinkActuator(uniqueNa
 {
     setpoint_ = Scalar(0);
     inv_ = inverted;
-    setForceLimits(1, -1); // No limits
+    setForceLimits(BT_LARGE_FLOAT, BT_LARGE_FLOAT); // No limits
 }
 
-ActuatorType Push::getType() const
+LinkActuatorType Push::getLinkActuatorType() const
 {
-    return ActuatorType::PUSH;
+    return LinkActuatorType::PUSH;
 }
 
-void Push::setForceLimits(Scalar lower, Scalar upper)
+void Push::setForceLimits(Scalar positive, Scalar negative)
 {
-    limits_.first = lower;
-    limits_.second = upper;
+    limits_.first = btClamped(positive, Scalar(0), Scalar(BT_LARGE_FLOAT));
+    limits_.second = btClamped(btFabs(negative), Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
 
 void Push::setForce(Scalar f)
 {
-    if(limits_.second > limits_.first) // Limitted
-        setpoint_ = f < limits_.first ? limits_.first : (f > limits_.second ? limits_.second : f);
-    else
-        setpoint_ = f;
+    setpoint_ = btClamped(f, -limits_.second, limits_.first);
     ResetWatchdog();
 }
 
@@ -107,5 +105,56 @@ void Push::WatchdogTimeout()
 {
     setForce(Scalar(0));
 }
+
+// Statics
+
+ConstructInfo Push::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoValue value;
+    ConstructInfoNode node;
+    
+    // Specs
+    value.valueType = ConstructInfoValueType::BOOL;
+    value.optional = true;
+    node.optional = true;
+    node.attributes.insert({"inverted", value});
+    info.nodes.insert({"specs", node});
+
+    // Limits
+    value.valueType = ConstructInfoValueType::SCALAR;
+    value.optional = true;
+    node.optional = true;
+    node.attributes.clear();
+    node.attributes.insert({"max_positive_force", value});
+    node.attributes.insert({"max_negative_force", value});
+    info.nodes.insert({"limits", node});
+
+    return info;
+}
+
+std::unique_ptr<Push> Push::Construct(const std::string& uniqueName, ConstructInfo& info)
+{
+    bool inverted = false;
+    ConstructInfoValue& value = info.nodes.at("specs").attributes.at("inverted");
+    if (value.valid)
+        inverted = std::get<bool>(value.value);
+
+    Scalar maxPositiveForce (BT_LARGE_FLOAT);
+    Scalar maxNegativeForce (BT_LARGE_FLOAT);
+    value = info.nodes.at("limits").attributes.at("max_positive_force");
+    if (value.valid)
+        maxPositiveForce = std::get<Scalar>(value.value);
+    value = info.nodes.at("limits").attributes.at("max_negative_force");
+    if (value.valid)
+        maxNegativeForce = std::get<Scalar>(value.value);
+
+    std::unique_ptr<Push> actuator = std::make_unique<Push>(uniqueName, inverted);
+    actuator->setForceLimits(maxPositiveForce, maxNegativeForce);
+
+    return actuator;
+}
+
+REGISTER_ACTUATOR("push", Push)
     
 }

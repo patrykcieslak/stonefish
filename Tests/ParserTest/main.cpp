@@ -1,0 +1,54 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+//
+//  main.cpp
+//  ParserTest
+//
+//  Created by Patryk Cieslak on 20/07/2026.
+//  Copyright (c) 2026 Patryk Cieslak. All rights reserved.
+//
+
+#include <core/GraphicalSimulationApp.h>
+#include "ParserTestManager.h"
+
+int main(int argc, const char * argv[])
+{
+    sf::RenderSettings s;
+    s.windowW = 1200;
+    s.windowH = 900;
+    s.aa = sf::RenderQuality::HIGH;
+    s.shadows = sf::RenderQuality::HIGH;
+    s.ao = sf::RenderQuality::HIGH;
+    s.atmosphere = sf::RenderQuality::HIGH;
+    s.ocean = sf::RenderQuality::DISABLED;
+    s.verticalSync = true;
+    
+    sf::HelperSettings h;
+    h.showFluidDynamics = false;
+    h.showCoordSys = false;
+    h.showBulletDebugInfo = true;
+    h.showSensors = false;
+    h.showActuators = false;
+    h.showForces = false;
+        
+    sf::GraphicalSimulationApp app("ParserTest", std::string(DATA_DIR_PATH), s, h, std::make_unique<ParserTestManager>(100.0));
+    app.Run(true);
+    
+    return 0;
+}
+

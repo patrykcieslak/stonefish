@@ -25,10 +25,14 @@
 
 #include "actuators/DCMotor.h"
 
+#include "core/DeviceFactory.h"
+#include "joints/RevoluteJoint.h"
+#include "entities/FeatherstoneEntity.h"
+
 namespace sf
 {
 
-DCMotor::DCMotor(const std::string& uniqueName, Scalar motorR, Scalar motorL, Scalar motorKe, Scalar motorKt, Scalar friction) : Motor(uniqueName)
+DCMotor::DCMotor(const std::string& uniqueName, Scalar motorR, Scalar motorL, Scalar motorKe, Scalar motorKt, Scalar friction) : JointActuator(uniqueName)
 {
     //Params
     R_ = motorR;
@@ -44,6 +48,13 @@ DCMotor::DCMotor(const std::string& uniqueName, Scalar motorR, Scalar motorL, Sc
     I_ = Scalar(0.);
     V_ = Scalar(0.);
     lastVoverL_ = Scalar(0.);
+    torque_ = Scalar(0.);
+    setVoltageLimit(-1); // No limit
+}
+
+JointActuatorType DCMotor::getJointActuatorType() const
+{
+    return JointActuatorType::DCMOTOR;
 }
 
 Scalar DCMotor::getKe() const
@@ -71,9 +82,18 @@ Scalar DCMotor::getGearRatio() const
     return gearRatio_;
 }
 
-void DCMotor::setCommand(Scalar volt)
+void DCMotor::setVoltage(Scalar v)
 {
-    V_ = volt;
+    if(limit_ > Scalar(0)) // Limitted
+        V_ = v < -limit_ ? -limit_ : (v > limit_ ? limit_ : v);
+    else
+        V_ = v;
+    ResetWatchdog();
+}
+
+void DCMotor::setVoltageLimit(Scalar v)
+{
+    limit_ = v;
 }
 
 Scalar DCMotor::getVoltage() const
@@ -93,18 +113,50 @@ Scalar DCMotor::getCurrent() const
 
 Scalar DCMotor::getAngle() const
 {
-    Scalar angle = Motor::getAngle();
-    return angle * gearRatio_;
+    if(j_ != nullptr && j_->getType() == JointType::REVOLUTE)
+    {
+        return static_cast<RevoluteJoint*>(j_)->getAngle() * gearRatio_;
+    }
+    else if(fe_ != nullptr)
+    {
+        Scalar angle;
+        btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
+        fe_->getJointPosition(jId_, angle, jt);
+        
+        if(jt == btMultibodyLink::eRevolute)
+            return angle * gearRatio_;
+        else
+            return Scalar(0);
+    }
+    else
+        return Scalar(0);
 }
 
 Scalar DCMotor::getAngularVelocity() const
 {
-    Scalar angularV = Motor::getAngularVelocity();
-    return angularV * gearRatio_;
+    if(j_ != nullptr && j_->getType() == JointType::REVOLUTE)
+    {
+        return static_cast<RevoluteJoint*>(j_)->getAngularVelocity() * gearRatio_;
+    }
+    else if(fe_ != nullptr)
+    {
+        Scalar angularV;
+        btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
+        fe_->getJointVelocity(jId_, angularV, jt);
+        
+        if(jt == btMultibodyLink::eRevolute)
+            return angularV * gearRatio_;
+        else
+            return Scalar(0);
+    }
+    else
+        return Scalar(0);
 }
 
 void DCMotor::Update(Scalar dt)
 {
+    Actuator::Update(dt);
+
     //Get joint angular velocity in radians
     Scalar aVelocity = getAngularVelocity();
     
@@ -120,8 +172,11 @@ void DCMotor::Update(Scalar dt)
 	//I += Scalar(0.5) * (VoverL + lastVoverL) * dt; //Integration (mid-point)
     //lastVoverL = VoverL;
     
-	//Drive the joint
-    Motor::Update(dt);
+	//Drive the joint    
+    if(j_ != nullptr && j_->getType() == JointType::REVOLUTE)
+        static_cast<RevoluteJoint*>(j_)->ApplyTorque(torque_);
+    else if(fe_ != nullptr)
+        fe_->DriveJoint(jId_, torque_);
 }
 
 void DCMotor::SetupGearbox(bool enable, Scalar ratio, Scalar efficiency)
@@ -130,5 +185,63 @@ void DCMotor::SetupGearbox(bool enable, Scalar ratio, Scalar efficiency)
     gearRatio_ = ratio > 0.0 ? ratio : 1.0;
     gearEff_ = efficiency > 0.0 ? (efficiency <= 1.0 ? efficiency : 1.0) : 1.0;
 }
+
+void DCMotor::WatchdogTimeout()
+{
+    setVoltage(Scalar(0.));
+}
+
+// Statics
+
+ConstructInfo DCMotor::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoValue value;
+    ConstructInfoNode node;
+    
+    // Specs
+    value.valueType = ConstructInfoValueType::SCALAR;
+    value.optional = false;
+    node.optional = false;
+    node.attributes.insert({"R", value});
+    node.attributes.insert({"L", value});
+    node.attributes.insert({"ke", value});
+    node.attributes.insert({"kt", value});
+    node.attributes.insert({"b", value});
+    info.nodes.insert({"specs", node});
+
+    // Limits
+    value.optional = false;
+    node.optional = true;
+    node.attributes.clear();
+    node.attributes.insert({"max_voltage", value});
+    info.nodes.insert({"limits", node});
+
+    return info;
+}
+
+std::unique_ptr<DCMotor> DCMotor::Construct(const std::string& uniqueName, ConstructInfo& info)
+{
+    // Required
+    Scalar R = std::get<Scalar>(info.nodes.at("specs").attributes.at("R").value);
+    Scalar L = std::get<Scalar>(info.nodes.at("specs").attributes.at("L").value);
+    Scalar ke = std::get<Scalar>(info.nodes.at("specs").attributes.at("ke").value);
+    Scalar kt = std::get<Scalar>(info.nodes.at("specs").attributes.at("kt").value);
+    Scalar b = std::get<Scalar>(info.nodes.at("specs").attributes.at("b").value);
+
+    // Optional
+    Scalar maxVoltage(-1.);
+    ConstructInfoValue& value = info.nodes.at("limits").attributes.at("max_voltage");
+    if (value.valid)
+        maxVoltage = std::get<Scalar>(value.value);
+
+    // Construct
+    std::unique_ptr<DCMotor> actuator = std::make_unique<DCMotor>(uniqueName, R, L, ke, kt, b);
+    actuator->setVoltageLimit(maxVoltage);
+
+    return actuator;
+}
+
+REGISTER_ACTUATOR("dc_motor", DCMotor)
 
 }

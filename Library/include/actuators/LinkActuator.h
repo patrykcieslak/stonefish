@@ -29,6 +29,9 @@
 
 namespace sf
 {
+    //! An enum designating a type of the link actuator.
+    enum class LinkActuatorType {PROPELLER, THRUSTER, VBS, LIGHT, RUDDER, SUCTION_CUP, PUSH, SIMPLE_THRUSTER, PLUGIN};
+    
     class SolidEntity;
     
     //! An abstract class representing an actuator that can be attached to a rigid body.
@@ -62,7 +65,13 @@ namespace sf
         
         //! A method returning actuator frame in the world frame.
         virtual Transform getActuatorFrame() const;
-       
+
+        //! A method returning the type of the actuator.
+        ActuatorType getType() const override;
+
+        //! A method returning type of link actuator.
+        virtual LinkActuatorType getLinkActuatorType() const = 0;
+
     protected:
         SolidEntity* attach_;
         Transform o2a_;

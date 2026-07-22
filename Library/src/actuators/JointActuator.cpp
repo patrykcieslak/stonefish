@@ -62,5 +62,10 @@ void JointActuator::AttachToJoint(Joint* joint)
     if(joint != nullptr)
         j_ = joint;
 }
+
+ActuatorType JointActuator::getType() const
+{
+    return ActuatorType::JOINT;
+}
     
 }

@@ -29,6 +29,9 @@
 
 namespace sf
 {
+    //! An enum designating a type of joint actuator.
+    enum class JointActuatorType {MOTOR, DCMOTOR, SERVO, PLUGIN};
+
     class FeatherstoneEntity;
     class Joint;
     
@@ -60,6 +63,12 @@ namespace sf
         
         //! A method returning the name of the joint that the actuator is driving.
         const std::string& getJointName() const;
+
+        //! A method returning the type of the actuator.
+        ActuatorType getType() const override;
+
+        //! A method returning type of joint actuator.
+        virtual JointActuatorType getJointActuatorType() const = 0;
         
     protected:
         FeatherstoneEntity* fe_;

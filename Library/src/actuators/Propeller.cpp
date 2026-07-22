@@ -27,45 +27,45 @@
 
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
+#include "core/DeviceFactory.h"
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLContent.h"
 #include "entities/SolidEntity.h"
+#include "entities/solids/Polyhedron.h"
+#include "utils/SystemUtil.hpp"
 
 namespace sf
 {
 
 Propeller::Propeller(const std::string& uniqueName, std::unique_ptr<SolidEntity> propeller, Scalar diameter, 
-    Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand, bool inverted) : LinkActuator(uniqueName)
+    const std::pair<Scalar, Scalar>& thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand, bool inverted) : LinkActuator(uniqueName),
+    propeller_(std::move(propeller)), D_(diameter), kT0_(thrustCoeff), kQ0_(torqueCoeff), RH_(rightHand), inv_(inverted)
 {
-    D_ = diameter;
-    kT0_ = thrustCoeff;
-    kQ0_ = torqueCoeff;
-    kp_ = Scalar(8.0);
-    ki_ = Scalar(3.0);
-    iLim_ = Scalar(2.0);
-    RH_ = rightHand;
-    inv_ = inverted;
-    omegaLim_ = maxRPM/Scalar(60) * Scalar(2) * M_PI; //In rad/s
+    propeller_->BuildGraphicalObject();
 
+    // State
     theta_ = Scalar(0);
     omega_ = Scalar(0);
     thrust_ = Scalar(0);
     torque_ = Scalar(0);
-    setpoint_ = Scalar(0);
     iError_ = Scalar(0);
     
-    propeller_ = std::move(propeller);
-    propeller_->BuildGraphicalObject();
+    // Controller
+    setpoint_ = Scalar(0);
+    kp_ = Scalar(8.0);
+    ki_ = Scalar(3.0);
+    iLim_ = Scalar(2.0);
+    omegaLim_ = maxRPM/Scalar(60) * Scalar(2) * M_PI; //In rad/s
 }
 
-ActuatorType Propeller::getType() const
+LinkActuatorType Propeller::getLinkActuatorType() const
 {
-    return ActuatorType::PROPELLER;
+    return LinkActuatorType::PROPELLER;
 }
 
 void Propeller::setSetpoint(Scalar s)
 {
-    if(inv_) s *= Scalar(-1);
+    if (inv_) s *= Scalar(-1);
     setpoint_ = s < Scalar(-1) ? Scalar(-1) : (s > Scalar(1) ? Scalar(1) : s);
     ResetWatchdog();
 }
@@ -121,6 +121,10 @@ void Propeller::Update(Scalar dt)
         
         if(atm->IsInsideFluid(propTrans.getOrigin()))
         {
+            //Get proper thrust coefficient
+            bool backward = (RH_ && omega_ < Scalar(0)) || (!RH_ && omega_ > Scalar(0));
+            Scalar kT = backward ? kT0_.second : kT0_.first;
+
             //Calculate thrust
             //Thrust coefficient depends on advance ratio J = u/(n*D), kT0 -> J=0
             //The lower the p/D the more linear the dependence of Kt on J
@@ -128,7 +132,7 @@ void Propeller::Update(Scalar dt)
             Scalar u = -propTrans.getBasis().getColumn(0).dot(atm->GetFluidVelocity(propTrans.getOrigin()) - velocity); //Incoming air velocity
             Scalar alpha(-0.095/0.8);
             //kT(J) = kT0 + alpha * J --> approximated with linear function
-            thrust_ = (RH_ ? Scalar(1) : Scalar(-1)) * atm->getGas().density * D_*D_*D_ * btFabs(n) * (D_*kT0_*n + alpha*u);
+            thrust_ = (RH_ ? Scalar(1) : Scalar(-1)) * atm->getGas().density * D_*D_*D_ * btFabs(n) * (D_*kT*n + alpha*u);
             torque_ = -kQ0_ * atm->getGas().density * btFabs(n)*n * D_*D_*D_*D_*D_; //Torque is the loading of propeller due to drag
             
             //Apply forces and torques
@@ -176,5 +180,99 @@ void Propeller::WatchdogTimeout()
 {
     setSetpoint(Scalar(0));
 }
+
+// Statics
+
+ConstructInfo Propeller::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoValue value;
+    ConstructInfoNode node;
+    
+    // Specs
+    value.valueType = ConstructInfoValueType::SCALAR;
+    value.optional = false;
+    node.optional = false;
+    node.attributes.insert({"thrust_coeff", value});
+    node.attributes.insert({"torque_coeff", value});
+    node.attributes.insert({"max_rpm", value});
+    value.optional = true;
+    node.attributes.insert({"thrust_coeff_backward", value});
+    value.valueType = ConstructInfoValueType::BOOL;
+    node.attributes.insert({"inverted", value});
+    info.nodes.insert({"specs", node});
+
+    // Propeller mesh
+    node.attributes.clear();
+    value.optional = false;
+    node.optional = false;
+    value.valueType = ConstructInfoValueType::SCALAR;
+    node.attributes.insert({"diameter", value});
+    value.valueType = ConstructInfoValueType::BOOL;
+    node.attributes.insert({"right", value});
+
+    ConstructInfoNode childNode;
+    childNode.optional = false;
+    value.optional = false;
+    value.valueType = ConstructInfoValueType::STRING;
+    childNode.attributes.insert({"filename", value});
+    value.optional = true;
+    value.valueType = ConstructInfoValueType::SCALAR;
+    childNode.attributes.insert({"scale", value});
+    node.childNodes.insert({"mesh", childNode});
+
+    childNode.attributes.clear();
+    childNode.optional = false;
+    value.optional = false;
+    value.valueType = ConstructInfoValueType::STRING;
+    childNode.attributes.insert({"name", value});
+    node.childNodes.insert({"material", childNode});
+    node.childNodes.insert({"look", childNode});
+
+    info.nodes.insert({"propeller", node});
+
+    return info;
+}
+
+std::unique_ptr<Propeller> Propeller::Construct(const std::string& uniqueName, ConstructInfo& info)
+{
+    // Required
+    std::pair<Scalar, Scalar> thrustCoeff;
+    thrustCoeff.first = thrustCoeff.second = std::get<Scalar>(info.nodes.at("specs").attributes.at("thrust_coeff").value);
+    Scalar torqueCoeff = std::get<Scalar>(info.nodes.at("specs").attributes.at("torque_coeff").value);
+    Scalar maxRpm = std::get<Scalar>(info.nodes.at("specs").attributes.at("max_rpm").value);
+
+    // Optional
+    bool inverted = false;
+    ConstructInfoValue& value = info.nodes.at("specs").attributes.at("thrust_coeff_backward");
+    if (value.valid)
+        thrustCoeff.second = std::get<Scalar>(value.value);
+    value = info.nodes.at("specs").attributes.at("inverted");
+    if (value.valid)
+        inverted = std::get<bool>(value.value);
+
+    // Required (propeller mesh)
+    Scalar diameter = std::get<Scalar>(info.nodes.at("propeller").attributes.at("diameter").value);
+    bool right = std::get<bool>(info.nodes.at("propeller").attributes.at("right").value);
+    std::string meshFilename = std::get<std::string>(info.nodes.at("propeller").childNodes.at("mesh").attributes.at("filename").value);
+    value = info.nodes.at("propeller").childNodes.at("mesh").attributes.at("scale");
+    Scalar meshScale(1.);
+    if (value.valid)
+        meshScale = std::get<Scalar>(value.value);
+    std::string materialName = std::get<std::string>(info.nodes.at("propeller").childNodes.at("material").attributes.at("name").value);
+    std::string lookName = std::get<std::string>(info.nodes.at("propeller").childNodes.at("look").attributes.at("name").value);
+
+    // Construct
+    PhysicsSettings phy;
+    phy.collisions = false;
+    phy.buoyancy = false;
+    phy.mode = PhysicsMode::AERODYNAMIC;
+    std::unique_ptr<Polyhedron> mesh = std::make_unique<Polyhedron>(uniqueName + "/Propeller", phy, GetFullPath(meshFilename), 
+        meshScale, I4(), materialName, lookName, Scalar(-1.), GeometryApproxType::CYLINDER);
+        
+    return std::make_unique<Propeller>(uniqueName, std::move(mesh), diameter, thrustCoeff, torqueCoeff, maxRpm, right, inverted);
+}
+
+REGISTER_ACTUATOR("propeller", Propeller)
 
 }

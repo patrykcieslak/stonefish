@@ -38,13 +38,14 @@ namespace sf
          \param uniqueName a name for the thruster
          \param propeller a pointer to a rigid body representing the propeller
          \param diameter the diameter of the propeller [m]
-         \param thrustCoeff the thrust coefficient
+         \param thrustCoeff the thrust coefficient (forward and backward)
          \param torqueCoeff the torque coefficient
          \param maxRPM the maximum rotational speed of the motor [rpm]
          \param rightHand a flag to indicate if the propeller is right hand (clockwise rotation)
          \param inverted a flag to indicate if the setpoint is inverted (positive value results in backward force)
         */
-        Propeller(const std::string& uniqueName, std::unique_ptr<SolidEntity> propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand, bool inverted = false);
+        Propeller(const std::string& uniqueName, std::unique_ptr<SolidEntity> propeller, Scalar diameter, 
+            const std::pair<Scalar, Scalar>& thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand, bool inverted = false);
         
         //! A method used to update the internal state of the thruster.
         /*!
@@ -76,15 +77,24 @@ namespace sf
         //! A method returning the angular velocity of the propeller [rad/s]
         Scalar getOmega() const;
         
-        //! A method returning the type of the actuator.
-        ActuatorType getType() const;
+        //! A method returning type of link actuator.
+        LinkActuatorType getLinkActuatorType() const override;
+
+        //! A method returning the construction info for the actuator.
+        static ConstructInfo getConstructInfo();
+
+        //! A method constructing the actuator based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<Propeller> Construct(const std::string& uniqueName, ConstructInfo& info);
         
     private:
         void WatchdogTimeout() override;
 
         //Params
         Scalar D_;
-        Scalar kT0_;
+        std::pair<Scalar, Scalar> kT0_;
         Scalar kQ0_;
         Scalar kp_;
         Scalar ki_;

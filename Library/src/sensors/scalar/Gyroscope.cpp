@@ -25,6 +25,7 @@
 
 #include "sensors/scalar/Gyroscope.h"
 
+#include "core/DeviceFactory.h"
 #include "entities/MovingEntity.h"
 #include "sensors/Sample.h"
 
@@ -76,5 +77,74 @@ ScalarSensorType Gyroscope::getScalarSensorType() const
 {
     return ScalarSensorType::GYRO;
 }
+
+// Statics
+
+ConstructInfo Gyroscope::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoValue value;
+    ConstructInfoNode node;
+    
+    // History
+    value.valueType = ConstructInfoValueType::INT;
+    value.optional = false;
+    node.optional = true;
+    node.attributes.insert({"samples", value});
+    info.nodes.insert({"history", node});
+
+    // Range
+    node.attributes.clear(); // Clear temporary
+
+    value.valueType = ConstructInfoValueType::VECTOR3;
+    value.optional = false;
+    node.optional = true;
+    node.attributes.insert({"angular_velocity", value});
+    info.nodes.insert({"range", node});
+
+    // Noise
+    node.attributes.clear();
+
+    value.valueType = ConstructInfoValueType::VECTOR3;
+    value.optional = true;
+    node.optional = true;
+    node.attributes.insert({"angular_velocity", value});
+    node.attributes.insert({"bias", value});
+    info.nodes.insert({"noise", node});
+    
+    return info;
+}
+
+std::unique_ptr<Gyroscope> Gyroscope::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // History (optional)
+    int history = -1;
+    ConstructInfoValue& value = info.nodes.at("history").attributes.at("samples");
+    if (value.valid)
+        history = std::get<int>(value.value);
+    
+    // Create sensor
+    std::unique_ptr<Gyroscope> sensor = std::make_unique<Gyroscope>(uniqueName, frequency, history);    
+
+    // Range (optional)
+    value = info.nodes.at("range").attributes.at("angular_velocity");
+    if (value.valid)
+        sensor->setRange(std::get<Vector3>(value.value));
+
+    // Noise (optional)
+    Vector3 noise = V0();
+    Vector3 bias = V0();
+    value = info.nodes.at("noise").attributes.at("angular_veloicty");
+    if (value.valid)
+        noise = std::get<Vector3>(value.value);
+    value = info.nodes.at("noise").attributes.at("bias");
+    if (value.valid)
+        bias = std::get<Vector3>(value.value);
+    sensor->setNoise(noise, bias);
+
+    return sensor;
+}
+
+REGISTER_SENSOR("gyroscope", Gyroscope)
 
 }

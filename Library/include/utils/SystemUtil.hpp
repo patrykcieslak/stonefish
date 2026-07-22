@@ -144,6 +144,14 @@ inline std::string GetDataPath()
     return SimulationApp::getApp()->getDataPath();
 }
 
+inline std::string GetFullPath(const std::string& path)
+{
+    if(path.at(0) == '/' || path.at(0) == '~') //Absolute path?
+        return path;
+    else
+        return GetDataPath() + path;
+}
+
 inline const char* GetDataPathPrefix(const char* directory)
 {
     static char dataPathPrefix[PATH_MAX];

@@ -29,6 +29,7 @@
 #include "sensors/Sample.h"
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
+#include "core/DeviceFactory.h"
 
 namespace sf
 {
@@ -118,5 +119,95 @@ ScalarSensorType IMU::getScalarSensorType() const
 {
     return ScalarSensorType::IMU;
 }
+
+// Statics
+
+ConstructInfo IMU::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoValue value;
+    ConstructInfoNode node;
+    
+    // History
+    value.valueType = ConstructInfoValueType::INT;
+    value.optional = false;
+    node.optional = true;
+    node.attributes.insert({"samples", value});
+    info.nodes.insert({"history", node});
+
+    // Range
+    node.attributes.clear(); // Clear temporary
+
+    value.valueType = ConstructInfoValueType::VECTOR3;
+    value.optional = true;
+    node.optional = true;
+    node.attributes.insert({"angular_velocity", value});
+    node.attributes.insert({"linear_acceleration", value});
+    info.nodes.insert({"range", node});
+
+    // Noise
+    node.attributes.clear();
+
+    value.optional = true;
+    node.optional = true;
+    value.valueType = ConstructInfoValueType::SCALAR;
+    node.attributes.insert({"yaw_drift", value});
+    value.valueType = ConstructInfoValueType::VECTOR3;    
+    node.attributes.insert({"angle", value});
+    value.valueType = ConstructInfoValueType::VECTOR3;    
+    node.attributes.insert({"angular_velocity", value});
+    value.valueType = ConstructInfoValueType::VECTOR3;    
+    node.attributes.insert({"linear_acceleration", value});
+    info.nodes.insert({"noise", node});
+    
+    return info;
+}
+
+std::unique_ptr<IMU> IMU::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // History (optional)
+    int history = -1;
+    ConstructInfoValue& value = info.nodes.at("history").attributes.at("samples");
+    if (value.valid)
+        history = std::get<int>(value.value);
+    
+    // Create sensor
+    std::unique_ptr<IMU> sensor = std::make_unique<IMU>(uniqueName, frequency, history);    
+
+    // Range (optional)
+    Vector3 angularVelocity = VMAX();
+    Vector3 linearAcceleration = VMAX();
+    value = info.nodes.at("range").attributes.at("angular_velocity");
+    if (value.valid)
+        angularVelocity = std::get<Vector3>(value.value);
+    value = info.nodes.at("range").attributes.at("linear_acceleration");
+    if (value.valid)
+        linearAcceleration = std::get<Vector3>(value.value);
+    sensor->setRange(angularVelocity, linearAcceleration);
+
+    // Noise (optional)
+    Vector3 angle = V0();
+    angularVelocity = V0();
+    linearAcceleration = V0();
+    Scalar yawDrift(0);
+
+    value = info.nodes.at("noise").attributes.at("yaw_drift");
+    if (value.valid)
+        yawDrift = std::get<Scalar>(value.value);
+    value = info.nodes.at("noise").attributes.at("angle");
+    if (value.valid)
+        angle = std::get<Vector3>(value.value);
+    value = info.nodes.at("noise").attributes.at("angular_veloicty");
+    if (value.valid)
+        angularVelocity = std::get<Vector3>(value.value);
+    value = info.nodes.at("noise").attributes.at("linear_acceleration");
+    if (value.valid)
+        linearAcceleration = std::get<Vector3>(value.value);
+    sensor->setNoise(angle, angularVelocity, yawDrift, linearAcceleration);
+
+    return sensor;
+}
+
+REGISTER_SENSOR("imu", IMU);
 
 }

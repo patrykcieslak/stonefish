@@ -297,9 +297,10 @@ namespace sf
     public:
         //! A constructor.
         /*!
-          \param kt thrust coefficient
+          \param ktp forward thrust coefficient
+          \param ktn reverse thrust coefficient
         */
-        QuadraticThrust(Scalar kt) : kt_(kt)
+        QuadraticThrust(Scalar ktp, Scalar ktn) : ktp_(ktp), ktn_(ktn)
         {
         }
 
@@ -310,7 +311,8 @@ namespace sf
         */
         std::pair<Scalar, Scalar> Update(Scalar input) override
         {
-            Scalar thrust = kt_ * input * btFabs(input);
+            Scalar kt = input < Scalar(0) ? ktn_ : ktp_;
+            Scalar thrust = kt * input * btFabs(input);
             return std::make_pair(thrust, Scalar(0));
         }
 
@@ -321,7 +323,8 @@ namespace sf
         }
     
     protected:
-        Scalar kt_;
+        Scalar ktp_;
+        Scalar ktn_;
     };
 
     //! A class representing a dead band model.
@@ -330,12 +333,12 @@ namespace sf
     public:
         //! A constructor.
         /*!
-          \param ktn negative thrust coefficient
           \param ktp positive thrust coefficient
+          \param ktn negative thrust coefficient
           \param dl lower limit of the deadband
           \param du upper limit of the deadband
         */
-        DeadbandThrust(Scalar ktn, Scalar ktp, Scalar dl, Scalar du) : ktn_(ktn), ktp_(ktp), dl_(dl), du_(du)
+        DeadbandThrust(Scalar ktp, Scalar ktn, Scalar dl, Scalar du) : ktp_(ktp), ktn_(ktn), dl_(dl), du_(du)
         {
         }
 
@@ -441,14 +444,14 @@ namespace sf
     public:
         //! A constructor.
         /*!
-          \param D diameter of the propeller [m]
           \param ktp positive thrust coefficient
           \param ktn negative thrust coefficient
           \param kq torque coefficient
+          \param D diameter of the propeller [m]
           \param RH flag informing if the propeller is right-handed
         */
-        FDThrust(Scalar D, Scalar ktp, Scalar ktn, Scalar kq, bool RH, Scalar rho)
-            : D_(D), ktp_(ktp), ktn_(ktn), kq_(kq), RH_(RH), rho_(rho)
+        FDThrust(Scalar ktp, Scalar ktn, Scalar kq, Scalar D, bool RH, Scalar rho)
+            : ktp_(ktp), ktn_(ktn), kq_(kq), D_(D), RH_(RH), rho_(rho)
         {
             // TODO: Find a better way of defining alpha and beta
             alpha_ = -ktp;

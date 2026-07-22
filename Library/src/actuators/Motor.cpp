@@ -25,6 +25,7 @@
 
 #include "actuators/Motor.h"
 
+#include "core/DeviceFactory.h"
 #include "joints/RevoluteJoint.h"
 #include "entities/FeatherstoneEntity.h"
 
@@ -34,25 +35,23 @@ namespace sf
 Motor::Motor(const std::string& uniqueName) : JointActuator(uniqueName)
 {
     torque_ = Scalar(0);
-    setTorqueLimits(1, -1); // No limits
+    setTorqueLimit(-1); // No limit
 }
 
-ActuatorType Motor::getType() const
+JointActuatorType Motor::getJointActuatorType() const
 {
-    return ActuatorType::MOTOR;
+    return JointActuatorType::MOTOR;
 }
 
-void Motor::setTorqueLimits(Scalar lower, Scalar upper)
+void Motor::setTorqueLimit(Scalar tau)
 {
-    limits_.first = lower;
-    limits_.second = upper;
+    limit_ = tau;
 }
 
-void Motor::setCommand(Scalar tau)
+void Motor::setTorque(Scalar tau)
 {
-    torque_ = tau;
-    if(limits_.second > limits_.first) // Limitted
-        torque_ = tau < limits_.first ? limits_.first : (tau > limits_.second ? limits_.second : tau);
+    if(limit_ > Scalar(0)) // Limitted
+        torque_ = tau < -limit_ ? -limit_ : (tau > limit_ ? limit_ : tau);
     else
         torque_ = tau;
     ResetWatchdog();
@@ -117,7 +116,42 @@ void Motor::Update(Scalar dt)
 
 void Motor::WatchdogTimeout()
 {
-    setCommand(Scalar(0));
+    setTorque(Scalar(0));
 }
+
+// Statics
+
+ConstructInfo Motor::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoValue value;
+    ConstructInfoNode node;
+    
+    // Limits
+    value.valueType = ConstructInfoValueType::SCALAR;
+    value.optional = false;
+    node.optional = true;
+    node.attributes.insert({"max_torque", value});
+    info.nodes.insert({"limits", node});
+
+    return info;
+}
+
+std::unique_ptr<Motor> Motor::Construct(const std::string& uniqueName, ConstructInfo& info)
+{
+    // Optional
+    Scalar maxTorque(-1.);
+    ConstructInfoValue& value = info.nodes.at("limits").attributes.at("max_torque");
+    if (value.valid)
+        maxTorque = std::get<Scalar>(value.value);
+
+    // Construct
+    std::unique_ptr<Motor> actuator = std::make_unique<Motor>(uniqueName);
+    actuator->setTorqueLimit(maxTorque);
+
+    return actuator;
+}
+
+REGISTER_ACTUATOR("motor", Motor)
 
 }

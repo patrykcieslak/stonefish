@@ -31,7 +31,7 @@ namespace sf
 {
     //! An enum defining types of vision sensors.
     enum class VisionSensorType {COLOR_CAMERA, DEPTH_CAMERA, THERMAL_CAMERA, EVENT_BASED_CAMERA, 
-                                    OPTICAL_FLOW_CAMERA, SEGMENTATION_CAMERA, MULTIBEAM2, FLS, SSS, MSIS};
+        OPTICAL_FLOW_CAMERA, SEGMENTATION_CAMERA, MULTIBEAM2, FLS, SSS, MSIS, PLUGIN};
     
     class Entity;
     class StaticEntity;

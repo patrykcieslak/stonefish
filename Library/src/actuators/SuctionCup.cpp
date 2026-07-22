@@ -26,6 +26,7 @@
 #include "actuators/SuctionCup.h"
 
 #include "core/SimulationManager.h"
+#include "core/DeviceFactory.h"
 #include "entities/FeatherstoneEntity.h"
 #include "joints/SpringJoint.h"
 #include "joints/SphericalJoint.h"
@@ -41,9 +42,9 @@ SuctionCup::SuctionCup(const std::string& uniqueName) : LinkActuator(uniqueName)
     attachLinkId_ = 0;
 }
 
-ActuatorType SuctionCup::getType() const
+LinkActuatorType SuctionCup::getLinkActuatorType() const
 {
-    return ActuatorType::SUCTION_CUP;
+    return LinkActuatorType::SUCTION_CUP;
 }
 
 void SuctionCup::setPump(bool enabled)
@@ -138,5 +139,19 @@ void SuctionCup::Engage(SimulationManager* sm)
         joint_ = nullptr;
     }
 }
-    
+
+// Statics
+
+ConstructInfo SuctionCup::getConstructInfo()
+{
+    return ConstructInfo();
+}
+
+std::unique_ptr<SuctionCup> SuctionCup::Construct(const std::string& uniqueName, ConstructInfo& info)
+{
+    return std::make_unique<SuctionCup>(uniqueName);
+}
+
+REGISTER_ACTUATOR("suction_cup", SuctionCup)
+
 }

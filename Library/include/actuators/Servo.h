@@ -109,8 +109,17 @@ namespace sf
         //! A method returning the effort of the servo motor (force or torque).
         Scalar getEffort() const;
         
-        //! A method returning the type of the actuator.
-        ActuatorType getType() const;
+        //! A method returning type of joint actuator.
+        JointActuatorType getJointActuatorType() const override;
+
+        //! A method returning the construction info for the actuator.
+        static ConstructInfo getConstructInfo();
+
+        //! A method constructing the actuator based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<Servo> Construct(const std::string& uniqueName, ConstructInfo& info);
         
     private:
         void WatchdogTimeout() override;

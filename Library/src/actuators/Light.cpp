@@ -53,9 +53,9 @@ Light::Light(const std::string& uniqueName, Scalar radius, Scalar coneAngleDeg, 
     coneAngle_ = coneAngleDeg > Scalar(0) ? coneAngleDeg : Scalar(45);
 }
     
-ActuatorType Light::getType() const
+LinkActuatorType Light::getLinkActuatorType() const
 {
-    return ActuatorType::LIGHT;
+    return LinkActuatorType::LIGHT;
 }
 
 Transform Light::getActuatorFrame() const

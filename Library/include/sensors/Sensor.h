@@ -28,6 +28,7 @@
 #include <random>
 #include <SDL2/SDL_mutex.h>
 #include "StonefishCommon.h"
+#include "core/ConstructInfo.h"
 
 namespace sf
 {

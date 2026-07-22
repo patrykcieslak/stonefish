@@ -27,9 +27,12 @@
 
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
+#include "core/DeviceFactory.h"
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLContent.h"
 #include "entities/SolidEntity.h"
+#include "entities/solids/Polyhedron.h"
+#include "utils/SystemUtil.hpp"
 
 namespace sf
 {
@@ -51,9 +54,9 @@ Rudder::Rudder(const std::string& uniqueName, std::unique_ptr<SolidEntity> rudde
     rudder_->BuildGraphicalObject();
 }
 
-ActuatorType Rudder::getType() const
+LinkActuatorType Rudder::getLinkActuatorType() const
 {
-    return ActuatorType::RUDDER;
+    return LinkActuatorType::RUDDER;
 }
 
 void Rudder::setSetpoint(Scalar s)
@@ -197,5 +200,104 @@ std::vector<Renderable> Rudder::Render()
     
     return items;
 }
+
+// Statics
+
+ConstructInfo Rudder::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoValue value;
+    ConstructInfoNode node;
+    
+    // Specs
+    value.valueType = ConstructInfoValueType::SCALAR;
+    value.optional = false;
+    node.optional = false;
+    node.attributes.insert({"drag_coeff", value});
+    node.attributes.insert({"lift_coeff", value});
+    node.attributes.insert({"area", value});
+    node.attributes.insert({"max_angle", value});
+    value.optional = true;
+    node.attributes.insert({"stall_angle", value});
+    node.attributes.insert({"max_angular_rate", value});
+    value.valueType = ConstructInfoValueType::BOOL;
+    node.attributes.insert({"inverted", value});
+    info.nodes.insert({"specs", node});
+
+    // Visual
+    node.attributes.clear();
+    node.optional = false;
+
+    ConstructInfoNode childNode;
+    childNode.optional = false;
+    value.optional = false;
+    value.valueType = ConstructInfoValueType::STRING;
+    childNode.attributes.insert({"filename", value});
+    value.optional = true;
+    value.valueType = ConstructInfoValueType::SCALAR;
+    childNode.attributes.insert({"scale", value});
+    node.childNodes.insert({"mesh", childNode});
+
+    childNode.attributes.clear();
+    value.optional = false;
+    value.valueType = ConstructInfoValueType::STRING;
+    childNode.attributes.insert({"name", value});
+    node.childNodes.insert({"material", childNode});
+    node.childNodes.insert({"look", childNode});
+    
+    childNode.attributes.clear();
+    value.optional = false;
+    value.valueType = ConstructInfoValueType::TRANSFORM;
+    childNode.attributes.insert({"T", value});
+    node.childNodes.insert({"origin", childNode});
+
+    info.nodes.insert({"visual", node});
+
+    return info;
+}
+
+std::unique_ptr<Rudder> Rudder::Construct(const std::string& uniqueName, ConstructInfo& info)
+{
+    // Required
+    Scalar dragCoeff = std::get<Scalar>(info.nodes.at("specs").attributes.at("drag_coeff").value);
+    Scalar liftCoeff = std::get<Scalar>(info.nodes.at("specs").attributes.at("lift_coeff").value);
+    Scalar area = std::get<Scalar>(info.nodes.at("specs").attributes.at("area").value);
+    Scalar maxAngle = std::get<Scalar>(info.nodes.at("specs").attributes.at("max_angle").value);
+
+    // Optional
+    Scalar stallAngle = Scalar(M_PI_4);
+    Scalar maxAngularRate = Scalar(0.);
+    bool inverted = false;
+
+    ConstructInfoValue& value = info.nodes.at("specs").attributes.at("stall_angle");
+    if (value.valid)
+        stallAngle = std::get<Scalar>(value.value);
+    value = info.nodes.at("specs").attributes.at("max_angular_rate");
+    if (value.valid)
+        maxAngularRate = std::get<Scalar>(value.value);    
+    value = info.nodes.at("specs").attributes.at("inverted");
+    if (value.valid)
+        inverted = std::get<bool>(value.value);
+
+    // Required (visual)
+    std::string meshFilename = std::get<std::string>(info.nodes.at("visual").childNodes.at("mesh").attributes.at("filename").value);
+    Scalar meshScale = std::get<Scalar>(info.nodes.at("visual").childNodes.at("mesh").attributes.at("scale").value);
+    std::string materialName = std::get<std::string>(info.nodes.at("visual").childNodes.at("material").attributes.at("name").value);
+    std::string lookName = std::get<std::string>(info.nodes.at("visual").childNodes.at("look").attributes.at("name").value);
+    Transform meshOrigin = std::get<Transform>(info.nodes.at("visual").childNodes.at("origin").attributes.at("T").value);
+
+    // Construct
+    PhysicsSettings phy;
+    phy.mode = PhysicsMode::SUBMERGED;
+    phy.collisions = false;
+    phy.buoyancy = false;
+
+    std::unique_ptr<Polyhedron> rudder = std::make_unique<Polyhedron>(uniqueName + "/Rudder", phy, GetFullPath(std::string(meshFilename)), 
+        meshScale, meshOrigin, materialName, lookName);
+        
+    return std::make_unique<Rudder>(uniqueName, std::move(rudder), area, liftCoeff, dragCoeff, stallAngle, maxAngle, inverted, maxAngularRate);
+}
+
+REGISTER_ACTUATOR("rudder", Rudder)
     
 }
