@@ -125,39 +125,27 @@ ScalarSensorType IMU::getScalarSensorType() const
 ConstructInfo IMU::getConstructInfo()
 {
     ConstructInfo info;
-    ConstructInfoValue value;
     ConstructInfoNode node;
     
     // History
-    value.valueType = ConstructInfoValueType::INT;
-    value.optional = false;
     node.optional = true;
-    node.attributes.insert({"samples", value});
+    node.attributes.insert({"samples", {ConstructInfoValueType::INT, false}});
     info.nodes.insert({"history", node});
 
     // Range
     node.attributes.clear(); // Clear temporary
-
-    value.valueType = ConstructInfoValueType::VECTOR3;
-    value.optional = true;
     node.optional = true;
-    node.attributes.insert({"angular_velocity", value});
-    node.attributes.insert({"linear_acceleration", value});
+    node.attributes.insert({"angular_velocity", {ConstructInfoValueType::VECTOR3, true}});
+    node.attributes.insert({"linear_acceleration", {ConstructInfoValueType::VECTOR3, true}});
     info.nodes.insert({"range", node});
 
     // Noise
     node.attributes.clear();
-
-    value.optional = true;
     node.optional = true;
-    value.valueType = ConstructInfoValueType::SCALAR;
-    node.attributes.insert({"yaw_drift", value});
-    value.valueType = ConstructInfoValueType::VECTOR3;    
-    node.attributes.insert({"angle", value});
-    value.valueType = ConstructInfoValueType::VECTOR3;    
-    node.attributes.insert({"angular_velocity", value});
-    value.valueType = ConstructInfoValueType::VECTOR3;    
-    node.attributes.insert({"linear_acceleration", value});
+    node.attributes.insert({"yaw_drift", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"angle", {ConstructInfoValueType::VECTOR3, true}});
+    node.attributes.insert({"angular_velocity", {ConstructInfoValueType::VECTOR3, true}});  
+    node.attributes.insert({"linear_acceleration", {ConstructInfoValueType::VECTOR3, true}});
     info.nodes.insert({"noise", node});
     
     return info;

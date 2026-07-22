@@ -86,23 +86,17 @@ ScalarSensorType Accelerometer::getScalarSensorType() const
 ConstructInfo Accelerometer::getConstructInfo()
 {
     ConstructInfo info;
-    ConstructInfoValue value;
     ConstructInfoNode node;
     
     // History
-    value.valueType = ConstructInfoValueType::INT;
-    value.optional = false;
     node.optional = true;
-    node.attributes.insert({"samples", value});
+    node.attributes.insert({"samples", {ConstructInfoValueType::INT, false}});
     info.nodes.insert({"history", node});
 
     // Range and noise
     node.attributes.clear(); // Clear temporary
-
-    value.valueType = ConstructInfoValueType::VECTOR3;
-    value.optional = false;
     node.optional = true;
-    node.attributes.insert({"linear_acceleration", value});
+    node.attributes.insert({"linear_acceleration", {ConstructInfoValueType::VECTOR3, false}});
     info.nodes.insert({"range", node});
     info.nodes.insert({"noise", node});
     

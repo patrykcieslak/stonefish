@@ -26,6 +26,7 @@
 #include "sensors/vision/ThermalCamera.h"
 
 #include "core/GraphicalSimulationApp.h"
+#include "core/DeviceFactory.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLThermalCamera.h"
@@ -34,9 +35,9 @@ namespace sf
 {
 
 ThermalCamera::ThermalCamera(const std::string& uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar minTemp, Scalar maxTemp,
-    Scalar frequency, Scalar minDistance, Scalar maxDistance) : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
+    Scalar frequency, Scalar near, Scalar far) : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
 {
-    depthRange_ = glm::vec2((GLfloat)minDistance, (GLfloat)maxDistance);
+    depthRange_ = glm::vec2((GLfloat)near, (GLfloat)far);
     noiseStdDev_ = 0.f;
     measurementRange_ = glm::vec2((GLfloat)minTemp, (GLfloat)maxTemp);
     displayRange_ = measurementRange_;
@@ -157,5 +158,96 @@ void ThermalCamera::InternalUpdate(Scalar dt)
 {
     glCamera_->Update();
 }
+
+// Static
+
+ConstructInfo ThermalCamera::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+
+    // Specs
+    node.optional = false;
+    node.attributes.insert({"resolution_x", {ConstructInfoValueType::INT, false}});
+    node.attributes.insert({"resolution_y", {ConstructInfoValueType::INT, false}});
+    node.attributes.insert({"horizontal_fov", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"temperature_min", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"temperature_max", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"specs", node});
+
+    // Rendering
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"minimum_distance", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"maximum_distance", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"rendering", node});
+
+    // Noise
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"temperature", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"noise", node});
+
+    // Display
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"colormap", {ConstructInfoValueType::COLORMAP, true}});
+    node.attributes.insert({"temperature_min", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"temperature_max", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"display", node});
+
+    return info;
+}
+
+std::unique_ptr<ThermalCamera> ThermalCamera::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // Specs
+    int resolutionX = std::get<int>(info.nodes.at("specs").attributes.at("resolution_x").value);
+    int resolutionY = std::get<int>(info.nodes.at("specs").attributes.at("resolution_y").value);
+    Scalar hFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("horizontal_fov").value);
+    Scalar temperatureMin = std::get<Scalar>(info.nodes.at("specs").attributes.at("temperature_min").value);
+    Scalar temperatureMax = std::get<Scalar>(info.nodes.at("specs").attributes.at("temperature_max").value);
+    
+    // Rendering (optional)
+    Scalar near (STD_NEAR_PLANE_DISTANCE);
+    Scalar far (STD_FAR_PLANE_DISTANCE);
+
+    ConstructInfoValue& value = info.nodes.at("rendering").attributes.at("near");
+    if (value.valid)
+        near = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("rendering").attributes.at("far");
+    if (value.valid)
+        far = std::get<Scalar>(value.value);
+
+    std::unique_ptr<ThermalCamera> sensor = std::make_unique<ThermalCamera>(uniqueName, resolutionX, resolutionY,
+        hFov, temperatureMin, temperatureMax, frequency, near, far);
+
+    // Noise
+    value = info.nodes.at("noise").attributes.at("temperature");
+    if (value.valid)
+        sensor->setNoise(std::get<Scalar>(value.value));
+
+    // Display
+    ColorMap cMap (ColorMap::JET);
+
+    value = info.nodes.at("display").attributes.at("colormap");
+    if (value.valid)
+        cMap = std::get<ColorMap>(value.value);
+
+    value = info.nodes.at("display").attributes.at("temperature_min");
+    if (value.valid)
+        temperatureMin = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("display").attributes.at("temperature_max");
+    if (value.valid)
+        temperatureMax = std::get<Scalar>(value.value);
+
+    sensor->setDisplaySettings(cMap, temperatureMin, temperatureMax);
+
+    return sensor;
+}
+
+REGISTER_SENSOR("thermal_camera", ThermalCamera)
 
 }

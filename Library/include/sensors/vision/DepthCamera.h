@@ -97,6 +97,15 @@ namespace sf
 
         //! A method returning a pointer to the underlaying OpenGLView object.
         OpenGLView* getOpenGLView() const override;
+
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo getConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<DepthCamera> Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info);
         
     private:
         void InitGraphics(bool& seesParticles);

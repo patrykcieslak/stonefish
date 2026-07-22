@@ -71,6 +71,15 @@ namespace sf
         //! A method returning the angleRangeDeg parameter
         Scalar getAngleRange() const;
         
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo getConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<Multibeam> Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info);
+
     private:
         Scalar angRange_;
         unsigned int angSteps_;

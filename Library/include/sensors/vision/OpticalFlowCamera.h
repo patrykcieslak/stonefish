@@ -44,11 +44,11 @@ namespace sf
          \param resolutionY the vertical resolution[pix]
          \param hFOVDeg the horizontal field of view [deg]
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
-         \param minDistance the minimum drawing distance [m]
-         \param maxDistance the maximum drawing distance [m]
+         \param near the minimum drawing distance [m]
+         \param far the maximum drawing distance [m]
          */
         OpticalFlowCamera(const std::string& uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency = Scalar(-1), 
-            Scalar minDistance = Scalar(STD_NEAR_PLANE_DISTANCE), Scalar maxDistance = Scalar(STD_FAR_PLANE_DISTANCE)); //Rendering options
+            Scalar near = Scalar(STD_NEAR_PLANE_DISTANCE), Scalar far = Scalar(STD_FAR_PLANE_DISTANCE)); //Rendering options
         
         //! A method performing internal sensor state update.
         /*!
@@ -104,6 +104,15 @@ namespace sf
 
         //! A method returning a pointer to the underlaying OpenGLView object.
         OpenGLView* getOpenGLView() const override;
+
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo getConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<OpticalFlowCamera> Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info);
         
     private:
         void InitGraphics(bool& seesParticles);

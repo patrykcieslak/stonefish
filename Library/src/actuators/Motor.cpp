@@ -124,14 +124,11 @@ void Motor::WatchdogTimeout()
 ConstructInfo Motor::getConstructInfo()
 {
     ConstructInfo info;
-    ConstructInfoValue value;
     ConstructInfoNode node;
     
     // Limits
-    value.valueType = ConstructInfoValueType::SCALAR;
-    value.optional = false;
     node.optional = true;
-    node.attributes.insert({"max_torque", value});
+    node.attributes.insert({"max_torque", {ConstructInfoValueType::SCALAR, false}});
     info.nodes.insert({"limits", node});
 
     return info;

@@ -26,6 +26,7 @@
 #include "sensors/vision/SSS.h"
 
 #include "core/GraphicalSimulationApp.h"
+#include "core/DeviceFactory.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLSSS.h"
@@ -34,7 +35,7 @@ namespace sf
 {
 
 SSS::SSS(const std::string& uniqueName, unsigned int numOfBins, unsigned int numOfLines, Scalar verticalBeamWidthDeg,
-         Scalar horizontalBeamWidthDeg, Scalar verticalTiltDeg, Scalar minRange, Scalar maxRange, ColorMap cm, SonarOutputFormat outputFormat, Scalar frequency)
+         Scalar horizontalBeamWidthDeg, Scalar verticalTiltDeg, Scalar minRange, Scalar maxRange, SonarOutputFormat outputFormat, Scalar frequency)
     : Camera(uniqueName, (numOfBins%2==0 ? numOfBins : numOfBins+1), numOfLines, verticalBeamWidthDeg, frequency)
 {
     range_.x = 0.f;
@@ -45,7 +46,7 @@ SSS::SSS(const std::string& uniqueName, unsigned int numOfBins, unsigned int num
     gain_ = Scalar(1);
     fovV_ = horizontalBeamWidthDeg <= Scalar(0) ? Scalar(1) : (horizontalBeamWidthDeg > Scalar(90) ? Scalar(90) : horizontalBeamWidthDeg);
     tilt_ = verticalTiltDeg < Scalar(0) ? Scalar(0) : (verticalTiltDeg > Scalar(90) ? Scalar(90) : verticalTiltDeg);
-    cMap_ = cm;
+    cMap_ = ColorMap::GREEN_BLUE;
     outputFormat_ = outputFormat;
     sonarData_ = nullptr;
     newDataCallback_ = nullptr;
@@ -78,6 +79,11 @@ void SSS::setNoise(float multiplicativeStdDev, float additiveStdDev)
         noise_.y = additiveStdDev;
     if(glSSS_ != nullptr)
         glSSS_->setNoise(noise_);
+}
+
+void SSS::setDisplaySettings(ColorMap cm)
+{
+    cMap_ = cm;
 }
 
 void* SSS::getImageDataPointer(unsigned int index)
@@ -285,5 +291,105 @@ std::vector<Renderable> SSS::Render()
     }
     return items;
 }
+
+// Statics
+
+ConstructInfo SSS::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+
+    // Specs
+    node.optional = false;
+    node.attributes.insert({"bins", {ConstructInfoValueType::INT, false}});
+    node.attributes.insert({"lines", {ConstructInfoValueType::INT, false}});
+    node.attributes.insert({"horizontal_beam_width", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"vertical_beam_width", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"vertical_tilt", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"output_format", {ConstructInfoValueType::STRING, true}});
+    info.nodes.insert({"specs", node});
+
+    // Settings
+    node.attributes.clear();
+    node.optional = false;
+    node.attributes.insert({"range_min", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"range_max", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"gain", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"settings", node});
+
+    // Noise
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"multiplicative", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"additive", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"noise", node});
+
+    // Display
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"colormap", {ConstructInfoValueType::COLORMAP, true}});
+    info.nodes.insert({"display", node});
+
+    return info;
+}
+
+std::unique_ptr<SSS> SSS::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // Specs
+    int bins = std::get<int>(info.nodes.at("specs").attributes.at("bins").value);
+    int lines = std::get<int>(info.nodes.at("specs").attributes.at("lines").value);
+    Scalar hFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("horizontal_beam_width").value);
+    Scalar vFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("vertical_beam_width").value);
+    Scalar tilt = std::get<Scalar>(info.nodes.at("specs").attributes.at("vertical_tilt").value);
+    
+    SonarOutputFormat outputFormat {SonarOutputFormat::U8};
+    ConstructInfoValue& value = info.nodes.at("specs").attributes.at("output_format");
+    if (value.valid)
+    {
+        std::string of = std::get<std::string>(value.value);
+        if (of == "uint8")
+            outputFormat = SonarOutputFormat::U8;
+        else if (of == "uint16")
+            outputFormat = SonarOutputFormat::U16;
+        else if (of == "uint32")
+            outputFormat = SonarOutputFormat::U32;
+        else if(of == "float32")
+            outputFormat = SonarOutputFormat::F32;
+    }
+
+    // Settings
+    Scalar rangeMin = std::get<Scalar>(info.nodes.at("settings").attributes.at("range_min").value);
+    Scalar rangeMax = std::get<Scalar>(info.nodes.at("settings").attributes.at("range_max").value);
+    Scalar gain {1.};
+    value = info.nodes.at("settings").attributes.at("gain");
+    if (value.valid)
+        gain = std::get<Scalar>(value.value);
+
+    // Construct
+    std::unique_ptr<SSS> sensor = std::make_unique<SSS>(uniqueName, bins, lines, hFov, vFov, tilt, rangeMin, rangeMax, outputFormat, frequency);
+
+    // Noise
+    Scalar multiplicative {0.01};
+    Scalar additive {0.02};
+    
+    value = info.nodes.at("noise").attributes.at("multiplicative");
+    if (value.valid)
+        multiplicative = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("noise").attributes.at("additive");
+    if (value.valid)
+        additive = std::get<Scalar>(value.value);
+
+    sensor->setNoise(multiplicative, additive);
+
+    // Display
+    value = info.nodes.at("display").attributes.at("colormap");
+    if (value.valid)
+        sensor->setDisplaySettings(std::get<ColorMap>(value.value));
+
+    return sensor;
+}
+
+REGISTER_SENSOR("sss", SSS)
 
 }

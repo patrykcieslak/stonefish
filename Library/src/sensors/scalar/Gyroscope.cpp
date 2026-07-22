@@ -83,33 +83,24 @@ ScalarSensorType Gyroscope::getScalarSensorType() const
 ConstructInfo Gyroscope::getConstructInfo()
 {
     ConstructInfo info;
-    ConstructInfoValue value;
     ConstructInfoNode node;
     
     // History
-    value.valueType = ConstructInfoValueType::INT;
-    value.optional = false;
     node.optional = true;
-    node.attributes.insert({"samples", value});
+    node.attributes.insert({"samples", {ConstructInfoValueType::INT, false}});
     info.nodes.insert({"history", node});
 
     // Range
     node.attributes.clear(); // Clear temporary
-
-    value.valueType = ConstructInfoValueType::VECTOR3;
-    value.optional = false;
     node.optional = true;
-    node.attributes.insert({"angular_velocity", value});
+    node.attributes.insert({"angular_velocity", {ConstructInfoValueType::VECTOR3, false}});
     info.nodes.insert({"range", node});
 
     // Noise
     node.attributes.clear();
-
-    value.valueType = ConstructInfoValueType::VECTOR3;
-    value.optional = true;
     node.optional = true;
-    node.attributes.insert({"angular_velocity", value});
-    node.attributes.insert({"bias", value});
+    node.attributes.insert({"angular_velocity", {ConstructInfoValueType::VECTOR3, true}});
+    node.attributes.insert({"bias", {ConstructInfoValueType::VECTOR3, true}});
     info.nodes.insert({"noise", node});
     
     return info;

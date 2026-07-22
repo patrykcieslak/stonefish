@@ -28,6 +28,7 @@
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
 #include "core/NED.h"
+#include "core/DeviceFactory.h"
 #include "entities/forcefields/Ocean.h"
 #include "sensors/Sample.h"
 
@@ -91,5 +92,47 @@ ScalarSensorType GPS::getScalarSensorType() const
 {
     return ScalarSensorType::GPS;
 }
+
+// Statics
+
+ConstructInfo GPS::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+    
+    // History
+    node.optional = true;
+    node.attributes.insert({"samples", {ConstructInfoValueType::INT, false}});
+    info.nodes.insert({"history", node});
+
+    // Noise
+    node.attributes.clear(); // Clear temporary
+    node.optional = true;
+    node.attributes.insert({"ned_position", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"noise", node});
+    
+    return info;
+}
+
+std::unique_ptr<GPS> GPS::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // History (optional)
+    int history = -1;
+    ConstructInfoValue& value = info.nodes.at("history").attributes.at("samples");
+    if (value.valid)
+        history = std::get<int>(value.value);
+    
+    // Create sensor
+    std::unique_ptr<GPS> sensor = std::make_unique<GPS>(uniqueName, frequency, history);    
+
+    // Noise (optional)
+    value = info.nodes.at("noise").attributes.at("ned_position");
+    if (value.valid)
+        sensor->setNoise(std::get<Scalar>(value.value));
+
+    return sensor;
+}
+
+REGISTER_SENSOR("gps", GPS)
 
 }

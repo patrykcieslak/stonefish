@@ -16,16 +16,17 @@
 */
 
 //
-//  Multibeam2.cpp
+//  Lidar.cpp
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 21/01/2019.
 //  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
-#include "sensors/vision/Multibeam2.h"
+#include "sensors/vision/Lidar.h"
 
 #include "core/GraphicalSimulationApp.h"
+#include "core/DeviceFactory.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLDepthCamera.h"
@@ -33,7 +34,7 @@
 namespace sf
 {
 
-Multibeam2::Multibeam2(const std::string& uniqueName, unsigned int horizontalRes, unsigned int verticalRes, Scalar horizontalFOVDeg, Scalar verticalFOVDeg,
+Lidar::Lidar(const std::string& uniqueName, unsigned int horizontalRes, unsigned int verticalRes, Scalar horizontalFOVDeg, Scalar verticalFOVDeg,
                        Scalar minRange, Scalar maxRange, Scalar frequency) : Camera(uniqueName, horizontalRes, verticalRes, horizontalFOVDeg, frequency)
 {
     fovV_ = verticalFOVDeg > Scalar(0) ? verticalFOVDeg : Scalar(90);
@@ -45,7 +46,7 @@ Multibeam2::Multibeam2(const std::string& uniqueName, unsigned int horizontalRes
     rangeData_.resize(resX_*resY_); // Buffer for storing final data
 }
     
-void* Multibeam2::getImageDataPointer(unsigned int index)
+void* Lidar::getImageDataPointer(unsigned int index)
 {
     if(cameras_.size() > index)
         return &imageData_[cameras_[index].dataOffset];
@@ -53,27 +54,27 @@ void* Multibeam2::getImageDataPointer(unsigned int index)
         return nullptr;
 }
     
-float* Multibeam2::getRangeDataPointer()
+float* Lidar::getRangeDataPointer()
 {
     return rangeData_.data();
 }
     
-glm::vec2 Multibeam2::getRangeLimits() const
+glm::vec2 Lidar::getRangeLimits() const
 {
     return range_;
 }
 
-Scalar Multibeam2::getVerticalFOV() const
+Scalar Lidar::getVerticalFOV() const
 {
     return fovV_;
 }
 
-VisionSensorType Multibeam2::getVisionSensorType() const
+VisionSensorType Lidar::getVisionSensorType() const
 {
     return VisionSensorType::MULTIBEAM2;
 }
 
-OpenGLView* Multibeam2::getOpenGLView() const
+OpenGLView* Lidar::getOpenGLView() const
 {
     if(cameras_.size() > 0)
         return cameras_[0].cam;
@@ -81,11 +82,11 @@ OpenGLView* Multibeam2::getOpenGLView() const
         return nullptr;
 }
     
-void Multibeam2::InitGraphics(bool& seesParticles)
+void Lidar::InitGraphics(bool& seesParticles)
 {
     seesParticles = false;
 
-    if(fovH_ <= Scalar(MULTIBEAM_MAX_SINGLE_FOV))
+    if(fovH_ <= Scalar(LIDAR_MAX_SINGLE_FOV))
     {
         CamData cd;
         cd.cam = nullptr;
@@ -97,7 +98,7 @@ void Multibeam2::InitGraphics(bool& seesParticles)
     else
     {
         //Find number of cameras needed not to exceed max FOV for a single camera
-        int nCam = (int)ceil(fovH_/Scalar(MULTIBEAM_MAX_SINGLE_FOV));
+        int nCam = (int)ceil(fovH_/Scalar(LIDAR_MAX_SINGLE_FOV));
         Scalar fovH1 = fovH_/Scalar(nCam);
         
         //Check if resolution in X can be divided evenly for this number of cameras
@@ -163,13 +164,13 @@ void Multibeam2::InitGraphics(bool& seesParticles)
     }
 }
 
-void Multibeam2::InternalUpdate(Scalar dt)
+void Lidar::InternalUpdate(Scalar dt)
 {
     for(size_t i=0; i<cameras_.size(); ++i)
         cameras_[i].cam->Update();
 }
     
-void Multibeam2::UpdateTransform()
+void Lidar::UpdateTransform()
 {
     Transform mbTransform = getSensorFrame();
     Vector3 eyePosition = mbTransform.getOrigin(); //O
@@ -190,11 +191,11 @@ void Multibeam2::UpdateTransform()
     }
 }
 
-void Multibeam2::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
+void Lidar::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
 {
 }
     
-void Multibeam2::SetupCamera(size_t index, const Vector3& eye, const Vector3& dir, const Vector3& up)
+void Lidar::SetupCamera(size_t index, const Vector3& eye, const Vector3& dir, const Vector3& up)
 {
     glm::vec3 eye_ = glm::vec3((GLfloat)eye.x(), (GLfloat)eye.y(), (GLfloat)eye.z());
     glm::vec3 dir_ = glm::vec3((GLfloat)dir.x(), (GLfloat)dir.y(), (GLfloat)dir.z());
@@ -202,12 +203,12 @@ void Multibeam2::SetupCamera(size_t index, const Vector3& eye, const Vector3& di
     cameras_[index].cam->SetupCamera(eye_, dir_, up_);
 }
     
-void Multibeam2::InstallNewDataHandler(std::function<void(Multibeam2*)> callback)
+void Lidar::InstallNewDataHandler(std::function<void(Lidar*)> callback)
 {
     newDataCallback_ = callback;
 }
     
-void Multibeam2::NewDataReady(void* data, unsigned int index)
+void Lidar::NewDataReady(void* data, unsigned int index)
 {
     if(index >= cameras_.size())
         return;
@@ -240,7 +241,7 @@ void Multibeam2::NewDataReady(void* data, unsigned int index)
     }
 }
     
-std::vector<Renderable> Multibeam2::Render()
+std::vector<Renderable> Lidar::Render()
 {
     std::vector<Renderable> items = Sensor::Render();
     if(isRenderable())
@@ -300,5 +301,40 @@ std::vector<Renderable> Multibeam2::Render()
     }
     return items;
 }
+
+// Statics
+
+ConstructInfo Lidar::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+
+    // Specs
+    node.optional = false;
+    node.attributes.insert({"resolution_x", {ConstructInfoValueType::INT, false}});
+    node.attributes.insert({"resolution_y", {ConstructInfoValueType::INT, false}});
+    node.attributes.insert({"horizontal_fov", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"vertical_fov", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"range_min", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"range_max", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"specs", node});
+
+    return info;
+}
+
+std::unique_ptr<Lidar> Lidar::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // Specs
+    int resolutionX = std::get<int>(info.nodes.at("specs").attributes.at("resolution_x").value);
+    int resolutionY = std::get<int>(info.nodes.at("specs").attributes.at("resolution_y").value);
+    Scalar hFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("horizontal_fov").value);
+    Scalar vFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("vertical_fov").value);
+    Scalar rangeMin = std::get<Scalar>(info.nodes.at("specs").attributes.at("range_min").value);
+    Scalar rangeMax = std::get<Scalar>(info.nodes.at("specs").attributes.at("range_max").value);
+
+    return std::make_unique<Lidar>(uniqueName, resolutionX, resolutionY, hFov, vFov, rangeMin, rangeMax, frequency);
+}
+
+REGISTER_SENSOR("lidar", Lidar)
     
 }

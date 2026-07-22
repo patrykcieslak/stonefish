@@ -25,6 +25,7 @@
 
 #include "sensors/scalar/ForceTorque.h"
 
+#include "core/DeviceFactory.h"
 #include "entities/SolidEntity.h"
 #include "entities/FeatherstoneEntity.h"
 #include "sensors/Sample.h"
@@ -140,5 +141,86 @@ ScalarSensorType ForceTorque::getScalarSensorType() const
 {
     return ScalarSensorType::FT;
 }
+
+// Statics
+
+ConstructInfo ForceTorque::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+    
+    // History
+    node.optional = true;
+    node.attributes.insert({"samples", {ConstructInfoValueType::INT, false}});
+    info.nodes.insert({"history", node});
+
+    // Origin
+    node.attributes.clear();
+    node.optional = false;
+    node.attributes.insert({"T", {ConstructInfoValueType::TRANSFORM, false}});
+    info.nodes.insert({"origin", node});
+
+    // Range
+    node.attributes.clear(); // Clear temporary
+    node.optional = true;
+    node.attributes.insert({"force", {ConstructInfoValueType::VECTOR3, true}});
+    node.attributes.insert({"torque", {ConstructInfoValueType::VECTOR3, true}});
+    info.nodes.insert({"range", node});
+
+    // Noise
+    node.attributes.clear(); // Clear temporary
+    node.optional = true;
+    node.attributes.insert({"force", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"torque", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"noise", node});
+
+    return info;
+}
+
+std::unique_ptr<ForceTorque> ForceTorque::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // History (optional)
+    int history = -1;
+    ConstructInfoValue& value = info.nodes.at("history").attributes.at("samples");
+    if (value.valid)
+        history = std::get<int>(value.value);
+    
+    // Origin (required)
+    Transform origin = std::get<Transform>(info.nodes.at("origin").attributes.at("T").value);
+    
+    // Create sensor
+    std::unique_ptr<ForceTorque> sensor = std::make_unique<ForceTorque>(uniqueName, origin, frequency, history);    
+
+    // Range (optional)
+    Vector3 forceMax = VMAX();
+    Vector3 torqueMax = VMAX();
+    value = info.nodes.at("range").attributes.at("force");
+    if (value.valid)
+        forceMax = std::get<Vector3>(value.value);
+
+    value = info.nodes.at("range").attributes.at("torque");
+    if (value.valid)
+        torqueMax = std::get<Vector3>(value.value);
+
+    sensor->setRange(forceMax, torqueMax);
+    
+    // Noise (optional)
+    Scalar force (0.);
+    Scalar torque (0.);
+    
+    value = info.nodes.at("noise").attributes.at("force");
+    if (value.valid)
+        force = std::get<Scalar>(value.value);
+    
+    value = info.nodes.at("noise").attributes.at("torque");
+    if (value.valid)
+        torque = std::get<Scalar>(value.value);
+
+    sensor->setNoise(force, torque);
+
+    return sensor;
+}
+
+REGISTER_SENSOR("force_torque", ForceTorque)
 
 }

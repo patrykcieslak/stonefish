@@ -16,7 +16,7 @@
 */
 
 //
-//  Multibeam2.h
+//  Lidar.h
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 21/01/2019.
@@ -29,7 +29,7 @@
 #include "sensors/vision/Camera.h"
 #include "graphics/OpenGLDataStructs.h"
 
-#define MULTIBEAM_MAX_SINGLE_FOV 30.0
+#define LIDAR_MAX_SINGLE_FOV 30.0
 
 namespace sf
 {
@@ -45,7 +45,7 @@ namespace sf
     };
     
     //! A class representing a multibeam sonar (simulated with a number of depth cameras).
-    class Multibeam2 : public Camera
+    class Lidar : public Camera
     {
     public:
         //! A constructor.
@@ -59,7 +59,7 @@ namespace sf
          \param maxRange the maximum measured range [m]
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          */
-        Multibeam2(const std::string& uniqueName, unsigned int horizontalRes, unsigned int verticalRes, Scalar horizontalFOVDeg, Scalar verticalFOVDeg,
+        Lidar(const std::string& uniqueName, unsigned int horizontalRes, unsigned int verticalRes, Scalar horizontalFOVDeg, Scalar verticalFOVDeg,
                     Scalar minRange, Scalar maxRange, Scalar frequency = Scalar(-1));
         
         //! A method performing internal sensor state update.
@@ -98,7 +98,7 @@ namespace sf
         /*!
          \param callback a function to be called
          */
-        void InstallNewDataHandler(std::function<void(Multibeam2*)> callback);
+        void InstallNewDataHandler(std::function<void(Lidar*)> callback);
         
         //! A method implementing the rendering of the multibeam dummy.
         std::vector<Renderable> Render();
@@ -125,6 +125,15 @@ namespace sf
         //! A method returning a pointer to the underlaying OpenGLView object.
         OpenGLView* getOpenGLView() const override;
         
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo getConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<Lidar> Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info);
+        
     private:
         void InitGraphics(bool& seesParticles);
         
@@ -133,11 +142,7 @@ namespace sf
         std::vector<GLfloat> rangeData_;
         Scalar fovV_;
         glm::vec2 range_;
-        std::function<void(Multibeam2*)> newDataCallback_;
+        std::function<void(Lidar*)> newDataCallback_;
         int dataCounter_;
     };
-
-
-
-
 }

@@ -171,20 +171,16 @@ std::vector<Renderable> VariableBuoyancy::Render()
 ConstructInfo VariableBuoyancy::getConstructInfo()
 {
     ConstructInfo info;
-    ConstructInfoValue value;
     ConstructInfoNode node;
     
     // Volume (required)
     node.optional = false;
-    value.optional = false;
-    value.valueType = ConstructInfoValueType::SCALAR;
-    node.attributes.insert({"initial", value});
+    node.attributes.insert({"initial", {ConstructInfoValueType::SCALAR, false}});
     info.nodes.insert({"volume", node});
 
     // Mesh1 (required)
     node.attributes.clear();
-    value.valueType = ConstructInfoValueType::STRING;
-    node.attributes.insert({"filename", value});
+    node.attributes.insert({"filename", {ConstructInfoValueType::STRING, false}});
     info.nodes.insert({"mesh1", node});
 
     // Mesh2 (required)

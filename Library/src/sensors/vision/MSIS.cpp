@@ -26,6 +26,7 @@
 #include "sensors/vision/MSIS.h"
 
 #include "core/GraphicalSimulationApp.h"
+#include "core/DeviceFactory.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLMSIS.h"
@@ -34,7 +35,7 @@ namespace sf
 {
 
 MSIS::MSIS(const std::string& uniqueName, Scalar stepAngleDeg, unsigned int numOfBins, Scalar horizontalBeamWidthDeg, Scalar verticalBeamWidthDeg,
-           Scalar minRotationDeg, Scalar maxRotationDeg, Scalar minRange, Scalar maxRange, ColorMap cm, SonarOutputFormat outputFormat, Scalar frequency)
+           Scalar minRotationDeg, Scalar maxRotationDeg, Scalar minRange, Scalar maxRange, SonarOutputFormat outputFormat, Scalar frequency)
     : Camera(uniqueName, (unsigned int)ceil(Scalar(360)/stepAngleDeg), numOfBins, horizontalBeamWidthDeg, frequency)
 {
     range_.x = 0.f;
@@ -47,7 +48,7 @@ MSIS::MSIS(const std::string& uniqueName, Scalar stepAngleDeg, unsigned int numO
     setRangeMin(minRange);
     setGain(1);
     fovV_ = verticalBeamWidthDeg <= Scalar(0) ? Scalar(20) : (verticalBeamWidthDeg > Scalar(179) ? Scalar(179) : verticalBeamWidthDeg);
-    cMap_ = cm;
+    cMap_ = ColorMap::GREEN_BLUE;
     outputFormat_ = outputFormat;
     sonarData_ = nullptr;
     newDataCallback_ = nullptr;
@@ -104,6 +105,11 @@ void MSIS::setNoise(float multiplicativeStdDev, float additiveStdDev)
         noise_.y = additiveStdDev;
     if(glMSIS_ != nullptr)
         glMSIS_->setNoise(noise_);
+}
+
+void MSIS::setDisplaySettings(ColorMap cm)
+{
+    cMap_ = cm;
 }
 
 void* MSIS::getImageDataPointer(unsigned int index)
@@ -358,5 +364,108 @@ std::vector<Renderable> MSIS::Render()
     }
     return items;
 }
+
+// Statics
+
+ConstructInfo MSIS::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+
+    // Specs
+    node.optional = false;
+    node.attributes.insert({"bins", {ConstructInfoValueType::INT, false}});
+    node.attributes.insert({"step", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"horizontal_beam_width", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"vertical_beam_width", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"output_format", {ConstructInfoValueType::STRING, true}});
+    info.nodes.insert({"specs", node});
+
+    // Settings
+    node.attributes.clear();
+    node.optional = false;
+    node.attributes.insert({"range_min", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"range_max", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"rotation_min", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"rotation_max", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"gain", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"settings", node});
+
+    // Noise
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"multiplicative", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"additive", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"noise", node});
+
+    // Display
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"colormap", {ConstructInfoValueType::COLORMAP, true}});
+    info.nodes.insert({"display", node});
+
+    return info;
+}
+
+std::unique_ptr<MSIS> MSIS::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // Specs
+    int bins = std::get<int>(info.nodes.at("specs").attributes.at("bins").value);
+    Scalar step = std::get<Scalar>(info.nodes.at("specs").attributes.at("step").value);
+    Scalar hFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("horizontal_beam_width").value);
+    Scalar vFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("vertical_beam_width").value);
+    
+    SonarOutputFormat outputFormat {SonarOutputFormat::U8};
+    ConstructInfoValue& value = info.nodes.at("specs").attributes.at("output_format");
+    if (value.valid)
+    {
+        std::string of = std::get<std::string>(value.value);
+        if (of == "uint8")
+            outputFormat = SonarOutputFormat::U8;
+        else if (of == "uint16")
+            outputFormat = SonarOutputFormat::U16;
+        else if (of == "uint32")
+            outputFormat = SonarOutputFormat::U32;
+        else if(of == "float32")
+            outputFormat = SonarOutputFormat::F32;
+    }
+
+    // Settings
+    Scalar rangeMin = std::get<Scalar>(info.nodes.at("settings").attributes.at("range_min").value);
+    Scalar rangeMax = std::get<Scalar>(info.nodes.at("settings").attributes.at("range_max").value);
+    Scalar rotationMin = std::get<Scalar>(info.nodes.at("settings").attributes.at("rotation_min").value);
+    Scalar rotationMax = std::get<Scalar>(info.nodes.at("settings").attributes.at("rotation_max").value);
+    Scalar gain {1.};
+    value = info.nodes.at("settings").attributes.at("gain");
+    if (value.valid)
+        gain = std::get<Scalar>(value.value);
+
+    // Construct
+    std::unique_ptr<MSIS> sensor = std::make_unique<MSIS>(uniqueName, step, bins, hFov, vFov, rotationMin, rotationMax, 
+        rangeMin, rangeMax, outputFormat, frequency);
+
+    // Noise
+    Scalar multiplicative {0.025};
+    Scalar additive {0.035};
+    
+    value = info.nodes.at("noise").attributes.at("multiplicative");
+    if (value.valid)
+        multiplicative = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("noise").attributes.at("additive");
+    if (value.valid)
+        additive = std::get<Scalar>(value.value);
+
+    sensor->setNoise(multiplicative, additive);
+
+    // Display
+    value = info.nodes.at("display").attributes.at("colormap");
+    if (value.valid)
+        sensor->setDisplaySettings(std::get<ColorMap>(value.value));
+
+    return sensor;
+}
+
+REGISTER_SENSOR("msis", MSIS)
 
 }

@@ -26,6 +26,7 @@
 #include "sensors/vision/FLS.h"
 
 #include "core/GraphicalSimulationApp.h"
+#include "core/DeviceFactory.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLFLS.h"
@@ -34,7 +35,7 @@ namespace sf
 {
 
 FLS::FLS(const std::string& uniqueName, unsigned int numOfBeams, unsigned int numOfBins, Scalar horizontalFOVDeg, 
-    Scalar verticalFOVDeg, Scalar minRange, Scalar maxRange, ColorMap cm, SonarOutputFormat outputFormat, Scalar frequency)
+    Scalar verticalFOVDeg, Scalar minRange, Scalar maxRange, SonarOutputFormat outputFormat, Scalar frequency)
     : Camera(uniqueName, numOfBeams, numOfBins, horizontalFOVDeg, frequency)
 {
     range_.x = 0.f;
@@ -44,7 +45,7 @@ FLS::FLS(const std::string& uniqueName, unsigned int numOfBeams, unsigned int nu
     setRangeMin(minRange);
     gain_ = Scalar(1);
     fovV_ = verticalFOVDeg <= Scalar(0) ? Scalar(20) : (verticalFOVDeg > Scalar(179) ? Scalar(179) : verticalFOVDeg);
-    cMap_ = cm;
+    cMap_ = ColorMap::GREEN_BLUE;
     outputFormat_ = outputFormat;
     sonarData_ = nullptr;
     newDataCallback_ = nullptr;
@@ -77,6 +78,11 @@ void FLS::setNoise(float multiplicativeStdDev, float additiveStdDev)
         noise_.y = additiveStdDev;
     if(glFLS_ != nullptr)
         glFLS_->setNoise(noise_);
+}
+
+void FLS::setDisplaySettings(ColorMap cm)
+{
+    cMap_ = cm;
 }
 
 void* FLS::getImageDataPointer(unsigned int index)
@@ -275,5 +281,103 @@ std::vector<Renderable> FLS::Render()
     }
     return items;
 }
+
+// Statics
+
+ConstructInfo FLS::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+
+    // Specs
+    node.optional = false;
+    node.attributes.insert({"beams", {ConstructInfoValueType::INT, false}});
+    node.attributes.insert({"bins", {ConstructInfoValueType::INT, false}});
+    node.attributes.insert({"horizontal_fov", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"vertical_fov", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"output_format", {ConstructInfoValueType::STRING, true}});
+    info.nodes.insert({"specs", node});
+
+    // Settings
+    node.attributes.clear();
+    node.optional = false;
+    node.attributes.insert({"range_min", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"range_max", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"gain", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"settings", node});
+
+    // Noise
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"multiplicative", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"additive", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"noise", node});
+
+    // Display
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"colormap", {ConstructInfoValueType::COLORMAP, true}});
+    info.nodes.insert({"display", node});
+
+    return info;
+}
+
+std::unique_ptr<FLS> FLS::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // Specs
+    int beams = std::get<int>(info.nodes.at("specs").attributes.at("beams").value);
+    int bins = std::get<int>(info.nodes.at("specs").attributes.at("bins").value);
+    Scalar hFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("horizontal_fov").value);
+    Scalar vFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("vertical_fov").value);
+    
+    SonarOutputFormat outputFormat {SonarOutputFormat::U8};
+    ConstructInfoValue& value = info.nodes.at("specs").attributes.at("output_format");
+    if (value.valid)
+    {
+        std::string of = std::get<std::string>(value.value);
+        if (of == "uint8")
+            outputFormat = SonarOutputFormat::U8;
+        else if (of == "uint16")
+            outputFormat = SonarOutputFormat::U16;
+        else if (of == "uint32")
+            outputFormat = SonarOutputFormat::U32;
+        else if(of == "float32")
+            outputFormat = SonarOutputFormat::F32;
+    }
+
+    // Settings
+    Scalar rangeMin = std::get<Scalar>(info.nodes.at("settings").attributes.at("range_min").value);
+    Scalar rangeMax = std::get<Scalar>(info.nodes.at("settings").attributes.at("range_max").value);
+    Scalar gain {1.};
+    value = info.nodes.at("settings").attributes.at("gain");
+    if (value.valid)
+        gain = std::get<Scalar>(value.value);
+
+    // Construct
+    std::unique_ptr<FLS> sensor = std::make_unique<FLS>(uniqueName, beams, bins, hFov, vFov, rangeMin, rangeMax, outputFormat, frequency);
+
+    // Noise
+    Scalar multiplicative {0.025};
+    Scalar additive {0.035};
+    
+    value = info.nodes.at("noise").attributes.at("multiplicative");
+    if (value.valid)
+        multiplicative = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("noise").attributes.at("additive");
+    if (value.valid)
+        additive = std::get<Scalar>(value.value);
+
+    sensor->setNoise(multiplicative, additive);
+
+    // Display
+    value = info.nodes.at("display").attributes.at("colormap");
+    if (value.valid)
+        sensor->setDisplaySettings(std::get<ColorMap>(value.value));
+
+    return sensor;
+}
+
+REGISTER_SENSOR("fls", FLS)
 
 }

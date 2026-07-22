@@ -25,6 +25,7 @@
 
 #include "sensors/scalar/RotaryEncoder.h"
 
+#include "core/DeviceFactory.h"
 #include "sensors/Sample.h"
 #include "joints/RevoluteJoint.h"
 #include "utils/UnitSystem.h"
@@ -155,5 +156,36 @@ ScalarSensorType RotaryEncoder::getScalarSensorType() const
 {
     return ScalarSensorType::ENCODER;
 }
+
+// Statics
+
+ConstructInfo RotaryEncoder::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+    
+    // History
+    node.optional = true;
+    node.attributes.insert({"samples", {ConstructInfoValueType::INT, false}});
+    info.nodes.insert({"history", node});
+
+    return info;
+}
+
+std::unique_ptr<RotaryEncoder> RotaryEncoder::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // History (optional)
+    int history = -1;
+    ConstructInfoValue& value = info.nodes.at("history").attributes.at("samples");
+    if (value.valid)
+        history = std::get<int>(value.value);
+    
+    // Create sensor
+    std::unique_ptr<RotaryEncoder> sensor = std::make_unique<RotaryEncoder>(uniqueName, frequency, history);   
+
+    return sensor;
+}
+
+REGISTER_SENSOR("encoder", RotaryEncoder)
 
 }

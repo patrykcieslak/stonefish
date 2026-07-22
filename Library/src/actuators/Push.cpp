@@ -111,23 +111,18 @@ void Push::WatchdogTimeout()
 ConstructInfo Push::getConstructInfo()
 {
     ConstructInfo info;
-    ConstructInfoValue value;
     ConstructInfoNode node;
     
     // Specs
-    value.valueType = ConstructInfoValueType::BOOL;
-    value.optional = true;
     node.optional = true;
-    node.attributes.insert({"inverted", value});
+    node.attributes.insert({"inverted", {ConstructInfoValueType::BOOL, true}});
     info.nodes.insert({"specs", node});
 
     // Limits
-    value.valueType = ConstructInfoValueType::SCALAR;
-    value.optional = true;
     node.optional = true;
     node.attributes.clear();
-    node.attributes.insert({"max_positive_force", value});
-    node.attributes.insert({"max_negative_force", value});
+    node.attributes.insert({"max_positive_force", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"max_negative_force", {ConstructInfoValueType::SCALAR, true}});
     info.nodes.insert({"limits", node});
 
     return info;

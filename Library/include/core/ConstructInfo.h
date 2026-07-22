@@ -26,18 +26,19 @@
 #pragma once
 
 #include "StonefishCommon.h"
+#include "graphics/OpenGLDataStructs.h"
 #include <unordered_map>
 #include <variant>
 
 namespace sf
 {
 
-enum class ConstructInfoValueType {BOOL, INT, SCALAR, VECTOR3, TRANSFORM, STRING};
+enum class ConstructInfoValueType {BOOL, INT, SCALAR, VECTOR3, TRANSFORM, STRING, COLORMAP};
 
 struct ConstructInfoValue
 {
     ConstructInfoValueType valueType;
-    std::variant<bool, int, Scalar, Vector3, Transform, std::string> value;  
+    std::variant<bool, int, Scalar, Vector3, Transform, std::string, ColorMap> value;  
     bool optional;
     bool valid;
 

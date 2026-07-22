@@ -206,22 +206,17 @@ std::vector<Renderable> Rudder::Render()
 ConstructInfo Rudder::getConstructInfo()
 {
     ConstructInfo info;
-    ConstructInfoValue value;
     ConstructInfoNode node;
     
     // Specs
-    value.valueType = ConstructInfoValueType::SCALAR;
-    value.optional = false;
     node.optional = false;
-    node.attributes.insert({"drag_coeff", value});
-    node.attributes.insert({"lift_coeff", value});
-    node.attributes.insert({"area", value});
-    node.attributes.insert({"max_angle", value});
-    value.optional = true;
-    node.attributes.insert({"stall_angle", value});
-    node.attributes.insert({"max_angular_rate", value});
-    value.valueType = ConstructInfoValueType::BOOL;
-    node.attributes.insert({"inverted", value});
+    node.attributes.insert({"drag_coeff", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"lift_coeff", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"area", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"max_angle", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"stall_angle", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"max_angular_rate", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"inverted", {ConstructInfoValueType::BOOL, true}});
     info.nodes.insert({"specs", node});
 
     // Visual
@@ -230,25 +225,17 @@ ConstructInfo Rudder::getConstructInfo()
 
     ConstructInfoNode childNode;
     childNode.optional = false;
-    value.optional = false;
-    value.valueType = ConstructInfoValueType::STRING;
-    childNode.attributes.insert({"filename", value});
-    value.optional = true;
-    value.valueType = ConstructInfoValueType::SCALAR;
-    childNode.attributes.insert({"scale", value});
+    childNode.attributes.insert({"filename", {ConstructInfoValueType::STRING, false}});
+    childNode.attributes.insert({"scale", {ConstructInfoValueType::SCALAR, true}});
     node.childNodes.insert({"mesh", childNode});
 
     childNode.attributes.clear();
-    value.optional = false;
-    value.valueType = ConstructInfoValueType::STRING;
-    childNode.attributes.insert({"name", value});
+    childNode.attributes.insert({"name", {ConstructInfoValueType::STRING, false}});
     node.childNodes.insert({"material", childNode});
     node.childNodes.insert({"look", childNode});
     
     childNode.attributes.clear();
-    value.optional = false;
-    value.valueType = ConstructInfoValueType::TRANSFORM;
-    childNode.attributes.insert({"T", value});
+    childNode.attributes.insert({"T", {ConstructInfoValueType::TRANSFORM, false}});
     node.childNodes.insert({"origin", childNode});
 
     info.nodes.insert({"visual", node});

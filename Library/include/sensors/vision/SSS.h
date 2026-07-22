@@ -47,12 +47,11 @@ namespace sf
          \param verticalTiltDeg the angle between the horizon and the transducer axis [deg]
          \param minRange the minimum measured range [m]
          \param maxRange the maximum measured range [m]
-         \param cm the color map used to display sonar data
          \param outputFormat the format of the sonar output data
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated based on maximum range)
          */
         SSS(const std::string& uniqueName, unsigned int numOfBins, unsigned int numOfLines, Scalar verticalBeamWidthDeg,
-            Scalar horizontalBeamWidthDeg, Scalar verticalTiltDeg, Scalar minRange, Scalar maxRange, ColorMap cm, 
+            Scalar horizontalBeamWidthDeg, Scalar verticalTiltDeg, Scalar minRange, Scalar maxRange,
             SonarOutputFormat outputFormat = SonarOutputFormat::U8, Scalar frequency = Scalar(-1));
         
         //! A method performing internal sensor state update.
@@ -109,6 +108,12 @@ namespace sf
          */
         void setNoise(float multiplicativeStdDev, float additiveStdDev);
 
+        //! A method used to set the display settings of the sensor.
+        /*!
+         \param cm the color map used to display the image
+         */
+        void setDisplaySettings(ColorMap cm);
+
         //! A method returning the minimum range of the sonar.
         Scalar getRangeMin() const;
         
@@ -143,6 +148,15 @@ namespace sf
         
         //! A method returning a pointer to the underlaying OpenGLView object.
         OpenGLView* getOpenGLView() const override;
+
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo getConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<SSS> Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info);
         
     private:
         void InitGraphics(bool& seesParticles);

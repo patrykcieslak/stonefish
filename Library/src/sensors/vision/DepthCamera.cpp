@@ -26,6 +26,7 @@
 #include "sensors/vision/DepthCamera.h"
 
 #include "core/GraphicalSimulationApp.h"
+#include "core/DeviceFactory.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLDepthCamera.h"
@@ -123,5 +124,51 @@ void DepthCamera::InternalUpdate(Scalar dt)
 {
     glCamera_->Update();
 }
+
+// Statics
+
+ConstructInfo DepthCamera::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+
+    // Specs
+    node.optional = false;
+    node.attributes.insert({"resolution_x", {ConstructInfoValueType::INT, false}});
+    node.attributes.insert({"resolution_y", {ConstructInfoValueType::INT, false}});
+    node.attributes.insert({"horizontal_fov", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"depth_min", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"depth_max", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"specs", node});
+
+    // Noise
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"depth", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"noise", node});
+
+    return info;
+}
+
+std::unique_ptr<DepthCamera> DepthCamera::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // Specs
+    int resolutionX = std::get<int>(info.nodes.at("specs").attributes.at("resolution_x").value);
+    int resolutionY = std::get<int>(info.nodes.at("specs").attributes.at("resolution_y").value);
+    Scalar hFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("horizontal_fov").value);
+    Scalar depthMin = std::get<Scalar>(info.nodes.at("specs").attributes.at("depth_min").value);
+    Scalar depthMax = std::get<Scalar>(info.nodes.at("specs").attributes.at("depth_max").value);
+
+    std::unique_ptr<DepthCamera> sensor = std::make_unique<DepthCamera>(uniqueName, resolutionX, resolutionY, hFov, depthMin, depthMax, frequency);
+
+    // Noise
+    ConstructInfoValue& value = info.nodes.at("noise").attributes.at("depth");
+    if (value.valid)
+        sensor->setNoise(std::get<Scalar>(value.value));
+
+    return sensor;
+}
+
+REGISTER_SENSOR("depth_camera", DepthCamera)
 
 }

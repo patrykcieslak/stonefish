@@ -25,6 +25,7 @@
 
 #include "sensors/scalar/Torque.h"
 
+#include "core/DeviceFactory.h"
 #include "entities/FeatherstoneEntity.h"
 #include "joints/Joint.h"
 #include "sensors/Sample.h"
@@ -65,5 +66,53 @@ ScalarSensorType Torque::getScalarSensorType() const
 {
     return ScalarSensorType::TORQUE;
 }
+
+// Statics
+
+ConstructInfo Torque::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+    
+    // History
+    node.optional = true;
+    node.attributes.insert({"samples", {ConstructInfoValueType::INT, false}});
+    info.nodes.insert({"history", node});
+
+    // Range and noise
+    node.attributes.clear(); // Clear temporary
+    node.optional = true;
+    node.attributes.insert({"torque", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"range", node});
+    info.nodes.insert({"noise", node});
+    
+    return info;
+}
+
+std::unique_ptr<Torque> Torque::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // History (optional)
+    int history = -1;
+    ConstructInfoValue& value = info.nodes.at("history").attributes.at("samples");
+    if (value.valid)
+        history = std::get<int>(value.value);
+    
+    // Create sensor
+    std::unique_ptr<Torque> sensor = std::make_unique<Torque>(uniqueName, frequency, history);    
+
+    // Range (optional)
+    value = info.nodes.at("range").attributes.at("torque");
+    if (value.valid)
+        sensor->setRange(std::get<Scalar>(value.value));
+
+    // Noise (optional)
+    value = info.nodes.at("noise").attributes.at("torque");
+    if (value.valid)
+        sensor->setNoise(std::get<Scalar>(value.value));
+
+    return sensor;
+}
+
+REGISTER_SENSOR("torque", Torque)
 
 }

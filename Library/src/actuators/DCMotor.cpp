@@ -196,25 +196,21 @@ void DCMotor::WatchdogTimeout()
 ConstructInfo DCMotor::getConstructInfo()
 {
     ConstructInfo info;
-    ConstructInfoValue value;
     ConstructInfoNode node;
     
     // Specs
-    value.valueType = ConstructInfoValueType::SCALAR;
-    value.optional = false;
     node.optional = false;
-    node.attributes.insert({"R", value});
-    node.attributes.insert({"L", value});
-    node.attributes.insert({"ke", value});
-    node.attributes.insert({"kt", value});
-    node.attributes.insert({"b", value});
+    node.attributes.insert({"R", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"L", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"ke", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"kt", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"b", {ConstructInfoValueType::SCALAR, false}});
     info.nodes.insert({"specs", node});
 
     // Limits
-    value.optional = false;
     node.optional = true;
     node.attributes.clear();
-    node.attributes.insert({"max_voltage", value});
+    node.attributes.insert({"max_voltage", {ConstructInfoValueType::SCALAR, false}});
     info.nodes.insert({"limits", node});
 
     return info;

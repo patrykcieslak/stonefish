@@ -26,6 +26,7 @@
 #include "sensors/vision/EventBasedCamera.h"
 
 #include "core/GraphicalSimulationApp.h"
+#include "core/DeviceFactory.h"
 #include "graphics/OpenGLEventBasedCamera.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
@@ -34,10 +35,10 @@ namespace sf
 {
 
 EventBasedCamera::EventBasedCamera(const std::string& uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, 
-    float Cp, float Cm, uint32_t Tref, Scalar frequency, Scalar minDistance, Scalar maxDistance) 
+    float Cp, float Cm, uint32_t Tref, Scalar frequency, Scalar near, Scalar far) 
     : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
 {
-    depthRange_ = glm::vec2((GLfloat)minDistance, (GLfloat)maxDistance);
+    depthRange_ = glm::vec2((GLfloat)near, (GLfloat)far);
     C_.x = glm::abs(Cp);
     C_.y = glm::abs(Cm);
     Tr_ = Tref;
@@ -142,5 +143,82 @@ void EventBasedCamera::InternalUpdate(Scalar dt)
 {
     glCamera_->Update();
 }
+
+// Statics
+
+ConstructInfo EventBasedCamera::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+
+    // Specs
+    node.optional = false;
+    node.attributes.insert({"resolution_x", {ConstructInfoValueType::INT, false}});
+    node.attributes.insert({"resolution_y", {ConstructInfoValueType::INT, false}});
+    node.attributes.insert({"horizontal_fov", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"contrast_threshold_pos", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"contrast_threshold_neg", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"refractory_period_ns", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"specs", node});
+
+    // Rendering
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"minimum_distance", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"maximum_distance", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"rendering", node});
+
+    // Noise
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"contrast_threshold_pos", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"contrast_threshold_neg", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"noise", node});
+
+    return info;
+}
+
+std::unique_ptr<EventBasedCamera> EventBasedCamera::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // Specs
+    int resolutionX = std::get<int>(info.nodes.at("specs").attributes.at("resolution_x").value);
+    int resolutionY = std::get<int>(info.nodes.at("specs").attributes.at("resolution_y").value);
+    Scalar hFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("horizontal_fov").value);
+    Scalar Cp = std::get<Scalar>(info.nodes.at("specs").attributes.at("contrast_threshold_pos").value);
+    Scalar Cm = std::get<Scalar>(info.nodes.at("specs").attributes.at("contrast_threshold_neg").value);
+    Scalar Tref = std::get<Scalar>(info.nodes.at("specs").attributes.at("refractory_period_ns").value);
+    
+    // Rendering (optional)
+    Scalar near (STD_NEAR_PLANE_DISTANCE);
+    Scalar far (STD_FAR_PLANE_DISTANCE);
+
+    ConstructInfoValue& value = info.nodes.at("rendering").attributes.at("near");
+    if (value.valid)
+        near = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("rendering").attributes.at("far");
+    if (value.valid)
+        far = std::get<Scalar>(value.value);
+
+    std::unique_ptr<EventBasedCamera> sensor = std::make_unique<EventBasedCamera>(uniqueName, resolutionX, resolutionY,
+        hFov, Cp, Cm, Tref, frequency, near, far);
+
+    // Noise
+    Scalar sigmaCp (0.);
+    Scalar sigmaCm (0.);
+    value = info.nodes.at("noise").attributes.at("contrast_threshold_pos");
+    if (value.valid)
+        sigmaCp = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("noise").attributes.at("contrast_threshold_neg");
+    if (value.valid)
+        sigmaCm = std::get<Scalar>(value.value);
+
+    sensor->setNoise(sigmaCp, sigmaCm);
+
+    return sensor;
+}
+
+REGISTER_SENSOR("event_based_camera", EventBasedCamera)
 
 }

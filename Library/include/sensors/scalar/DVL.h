@@ -59,7 +59,7 @@ namespace sf
         
         //! A method used to set the water mass ping parameters.
         /*!
-         \param minSize the minimum thickness of the water layer [m]
+         \param minThickness the minimum thickness of the water layer [m]
          \param nearBoundary the distance from the sensor to the near layer boundary [m]
          \param farBoundary the distance from the sensor to the far layer boundary [m]
          */
@@ -91,6 +91,15 @@ namespace sf
         
         //! A method returning the type of the scalar sensor.
         ScalarSensorType getScalarSensorType() const override;
+
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo getConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<DVL> Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info);
         
     private:
         Scalar beamAngle_;

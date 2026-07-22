@@ -293,25 +293,20 @@ void Servo::WatchdogTimeout()
 ConstructInfo Servo::getConstructInfo()
 {
     ConstructInfo info;
-    ConstructInfoValue value;
     ConstructInfoNode node;
     
     // Controller
-    value.valueType = ConstructInfoValueType::SCALAR;
-    value.optional = false;
     node.optional = false;
-    node.attributes.insert({"position_gain", value});
-    node.attributes.insert({"velocity_gain", value});
-    node.attributes.insert({"max_torque", value});
-    value.optional = true;
-    node.attributes.insert({"max_velocity", value});
+    node.attributes.insert({"position_gain", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"velocity_gain", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"max_torque", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"max_velocity", {ConstructInfoValueType::SCALAR, true}});
     info.nodes.insert({"controller", node});
 
     // Initial position
-    value.optional = false;
     node.optional = true;
     node.attributes.clear();
-    node.attributes.insert({"position", value});
+    node.attributes.insert({"position", {ConstructInfoValueType::SCALAR, false}});
     info.nodes.insert({"initial", node});
 
     return info;

@@ -25,6 +25,7 @@
 
 #include "sensors/scalar/Odometry.h"
 
+#include "core/DeviceFactory.h"
 #include "entities/MovingEntity.h"
 #include "sensors/Sample.h"
 
@@ -90,5 +91,68 @@ ScalarSensorType Odometry::getScalarSensorType() const
     return ScalarSensorType::ODOM;
 }
 
+// Statics
+
+ConstructInfo Odometry::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+    
+    // History
+    node.optional = true;
+    node.attributes.insert({"samples", {ConstructInfoValueType::INT, false}});
+    info.nodes.insert({"history", node});
+
+    // Noise
+    node.attributes.clear(); // Clear temporary
+    node.optional = true;
+    node.attributes.insert({"position", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"velocity", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"angle", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"angular_velocity", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"noise", node});
+    
+    return info;
+}
+
+std::unique_ptr<Odometry> Odometry::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // History (optional)
+    int history = -1;
+    ConstructInfoValue& value = info.nodes.at("history").attributes.at("samples");
+    if (value.valid)
+        history = std::get<int>(value.value);
+    
+    // Create sensor
+    std::unique_ptr<Odometry> sensor = std::make_unique<Odometry>(uniqueName, frequency, history);    
+
+    // Noise (optional)
+    Scalar position (0.);
+    Scalar velocity (0.);
+    Scalar angle (0.);
+    Scalar angularVelocity (0.);
+
+    value = info.nodes.at("noise").attributes.at("position");
+    if (value.valid)
+        position = std::get<Scalar>(value.value);
+    
+    value = info.nodes.at("noise").attributes.at("velocity");
+    if (value.valid)
+        velocity = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("noise").attributes.at("angle");
+    if (value.valid)
+        angle = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("noise").attributes.at("angular_velocity");
+    if (value.valid)
+        angularVelocity = std::get<Scalar>(value.value);
+
+    sensor->setNoise(position, velocity, angle, angularVelocity);
+
+    return sensor;
+}
+
+REGISTER_SENSOR("odometry", Odometry)
 
 }

@@ -186,46 +186,32 @@ void Propeller::WatchdogTimeout()
 ConstructInfo Propeller::getConstructInfo()
 {
     ConstructInfo info;
-    ConstructInfoValue value;
     ConstructInfoNode node;
     
     // Specs
-    value.valueType = ConstructInfoValueType::SCALAR;
-    value.optional = false;
     node.optional = false;
-    node.attributes.insert({"thrust_coeff", value});
-    node.attributes.insert({"torque_coeff", value});
-    node.attributes.insert({"max_rpm", value});
-    value.optional = true;
-    node.attributes.insert({"thrust_coeff_backward", value});
-    value.valueType = ConstructInfoValueType::BOOL;
-    node.attributes.insert({"inverted", value});
+    node.attributes.insert({"thrust_coeff", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"torque_coeff", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"max_rpm", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"thrust_coeff_reverse", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"inverted", {ConstructInfoValueType::BOOL, true}});
     info.nodes.insert({"specs", node});
 
     // Propeller mesh
     node.attributes.clear();
-    value.optional = false;
     node.optional = false;
-    value.valueType = ConstructInfoValueType::SCALAR;
-    node.attributes.insert({"diameter", value});
-    value.valueType = ConstructInfoValueType::BOOL;
-    node.attributes.insert({"right", value});
+    node.attributes.insert({"diameter", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"right", {ConstructInfoValueType::BOOL, false}});
 
     ConstructInfoNode childNode;
     childNode.optional = false;
-    value.optional = false;
-    value.valueType = ConstructInfoValueType::STRING;
-    childNode.attributes.insert({"filename", value});
-    value.optional = true;
-    value.valueType = ConstructInfoValueType::SCALAR;
-    childNode.attributes.insert({"scale", value});
+    childNode.attributes.insert({"filename", {ConstructInfoValueType::STRING, false}});
+    childNode.attributes.insert({"scale", {ConstructInfoValueType::SCALAR, true}});
     node.childNodes.insert({"mesh", childNode});
 
     childNode.attributes.clear();
     childNode.optional = false;
-    value.optional = false;
-    value.valueType = ConstructInfoValueType::STRING;
-    childNode.attributes.insert({"name", value});
+    childNode.attributes.insert({"name", {ConstructInfoValueType::STRING, false}});
     node.childNodes.insert({"material", childNode});
     node.childNodes.insert({"look", childNode});
 

@@ -176,45 +176,33 @@ void SimpleThruster::WatchdogTimeout()
 ConstructInfo SimpleThruster::getConstructInfo()
 {
     ConstructInfo info;
-    ConstructInfoValue value;
     ConstructInfoNode node;
     
     // Specs
-    value.optional = true;
     node.optional = true;
-    value.valueType = ConstructInfoValueType::BOOL;
-    node.attributes.insert({"inverted", value});
+    node.attributes.insert({"inverted", {ConstructInfoValueType::BOOL, true}});
     info.nodes.insert({"specs", node});
 
     // Limits
     node.attributes.clear();
-    value.valueType = ConstructInfoValueType::SCALAR;
-    node.attributes.insert({"max_positive_thrust", value});
-    node.attributes.insert({"max_negative_thrust", value});
+    node.attributes.insert({"max_positive_thrust", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"max_negative_thrust", {ConstructInfoValueType::SCALAR, true}});
     info.nodes.insert({"limits", node});
 
     // Propeller
     node.attributes.clear();
-    value.optional = false;
     node.optional = false;
-    value.valueType = ConstructInfoValueType::BOOL;
-    node.attributes.insert({"right", value});
+    node.attributes.insert({"right", {ConstructInfoValueType::BOOL, false}});
 
     ConstructInfoNode childNode;
     childNode.optional = false;
-    value.optional = false;
-    value.valueType = ConstructInfoValueType::STRING;
-    childNode.attributes.insert({"filename", value});
-    value.optional = true;
-    value.valueType = ConstructInfoValueType::SCALAR;
-    childNode.attributes.insert({"scale", value});
+    childNode.attributes.insert({"filename", {ConstructInfoValueType::STRING, false}});
+    childNode.attributes.insert({"scale", {ConstructInfoValueType::SCALAR, true}});
     node.childNodes.insert({"mesh", childNode});
 
     childNode.attributes.clear();
     childNode.optional = false;
-    value.optional = false;
-    value.valueType = ConstructInfoValueType::STRING;
-    childNode.attributes.insert({"name", value});
+    childNode.attributes.insert({"name", {ConstructInfoValueType::STRING, false}});
     node.childNodes.insert({"material", childNode});
     node.childNodes.insert({"look", childNode});
 

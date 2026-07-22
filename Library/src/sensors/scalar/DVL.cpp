@@ -28,6 +28,7 @@
 #include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
+#include "core/DeviceFactory.h"
 #include "entities/MovingEntity.h"
 #include "sensors/Sample.h"
 #include "graphics/OpenGLPipeline.h"
@@ -55,9 +56,9 @@ DVL::DVL(const std::string& uniqueName, Scalar beamAngleDeg, bool beamPositiveZ,
     setWaterLayer(0, 0, 0);
 }
 
-void DVL::setWaterLayer(Scalar minSize, Scalar nearBoundary, Scalar farBoundary)
+void DVL::setWaterLayer(Scalar minThickness, Scalar nearBoundary, Scalar farBoundary)
 {
-    waterLayer_.setX(btClamped(minSize, Scalar(0), channels_[3].rangeMax - channels_[3].rangeMin));
+    waterLayer_.setX(btClamped(minThickness, Scalar(0), channels_[3].rangeMax - channels_[3].rangeMin));
     waterLayer_.setY(btClamped(nearBoundary, channels_[3].rangeMin, channels_[3].rangeMax - waterLayer_.getX()));
     waterLayer_.setZ(btClamped(farBoundary, waterLayer_.getX() + waterLayer_.getY(), channels_[3].rangeMax));
 }
@@ -332,5 +333,140 @@ ScalarSensorType DVL::getScalarSensorType() const
 {
     return ScalarSensorType::DVL;
 }
+
+// Statics
+
+ConstructInfo DVL::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+    
+    // History
+    node.optional = true;
+    node.attributes.insert({"samples", {ConstructInfoValueType::INT, false}});
+    info.nodes.insert({"history", node});
+
+    // Specs
+    node.attributes.clear();
+    node.optional = false;
+    node.attributes.insert({"beam_angle", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"beam_positive_z", {ConstructInfoValueType::BOOL, false}});
+    info.nodes.insert({"specs", node});
+
+    // Water layer
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"minimum_layer_thickness", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"boundary_near", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"boundary_far", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"water_layer", node});
+
+    // Range
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"velocity", {ConstructInfoValueType::VECTOR3, true}});
+    node.attributes.insert({"altitude_min", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"altitude_max", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"range", node});
+    
+    // Noise
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"velocity", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"velocity_percent", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"altitude", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"water_velocity", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"water_velocity_percent", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"noise", node});
+
+    return info;
+}
+
+std::unique_ptr<DVL> DVL::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // History (optional)
+    int history = -1;
+    ConstructInfoValue& value = info.nodes.at("history").attributes.at("samples");
+    if (value.valid)
+        history = std::get<int>(value.value);
+    
+    // Specs
+    Scalar beamAngle = std::get<Scalar>(info.nodes.at("specs").attributes.at("beam_angle").value);
+    bool beamPositiveZ = std::get<bool>(info.nodes.at("specs").attributes.at("beam_positive_z").value);
+
+    // Create sensor
+    std::unique_ptr<DVL> sensor = std::make_unique<DVL>(uniqueName, beamAngle, beamPositiveZ, frequency, history);    
+
+    // Water layer
+    Scalar minLayerThickness (0.);
+    Scalar boundaryNear (0.);
+    Scalar boundaryFar (BT_LARGE_FLOAT);
+
+    value = info.nodes.at("water_layer").attributes.at("minimum_layer_thickness");
+    if (value.valid)
+        minLayerThickness = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("water_layer").attributes.at("boundary_near");
+    if (value.valid)
+        boundaryNear = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("water_layer").attributes.at("boundary_far");
+    if (value.valid)
+        boundaryFar = std::get<Scalar>(value.value);
+
+    sensor->setWaterLayer(minLayerThickness, boundaryNear, boundaryFar);
+
+    // Range (optional)
+    Vector3 velocityMax = VMAX();
+    Scalar altitudeMin (0.);
+    Scalar altitudeMax (BT_LARGE_FLOAT);
+    
+    value = info.nodes.at("range").attributes.at("velocity");
+    if (value.valid)
+        velocityMax = std::get<Vector3>(value.value);
+
+    value = info.nodes.at("range").attributes.at("altitude_min");
+    if (value.valid)
+        altitudeMin = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("range").attributes.at("altitude_max");
+    if (value.valid)
+        altitudeMax = std::get<Scalar>(value.value);
+
+    sensor->setRange(velocityMax, altitudeMin, altitudeMax);
+
+    // Noise (optional)
+    Scalar velocity (0.);
+    Scalar velocityPercent (0.);
+    Scalar altitude (0.);
+    Scalar waterVelocity (0.);
+    Scalar waterVelocityPercent (0.);
+    
+    value = info.nodes.at("noise").attributes.at("velocity");
+    if (value.valid)
+        velocity = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("noise").attributes.at("velocity_percent");
+    if (value.valid)
+        velocityPercent = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("noise").attributes.at("altitude");
+    if (value.valid)
+        altitude = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("noise").attributes.at("water_velocity");
+    if (value.valid)
+        waterVelocity = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("noise").attributes.at("water_velocity_percent");
+    if (value.valid)
+        waterVelocityPercent = std::get<Scalar>(value.value);
+    
+    sensor->setNoise(velocityPercent, velocity, altitude, waterVelocityPercent, waterVelocity);
+
+    return sensor;
+}
+
+REGISTER_SENSOR("dvl", DVL)
 
 }

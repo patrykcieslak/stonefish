@@ -28,6 +28,7 @@
 #include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
+#include "core/DeviceFactory.h"
 #include "utils/UnitSystem.h"
 #include "sensors/Sample.h"
 #include "graphics/OpenGLContent.h"
@@ -134,5 +135,79 @@ ScalarSensorType Profiler::getScalarSensorType() const
 {
     return ScalarSensorType::PROFILER;
 }
+
+// Statics
+
+ConstructInfo Profiler::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+    
+    // History
+    node.optional = true;
+    node.attributes.insert({"samples", {ConstructInfoValueType::INT, false}});
+    info.nodes.insert({"history", node});
+
+    // Specs
+    node.attributes.clear();
+    node.optional = false;
+    node.attributes.insert({"fov", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"steps", {ConstructInfoValueType::INT, false}});
+    info.nodes.insert({"specs", node});
+
+    // Range
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"distance_min", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"distance_max", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"range", node});
+
+    // Noise
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"distance", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"noise", node});
+
+    return info;
+}
+
+std::unique_ptr<Profiler> Profiler::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // History (optional)
+    int history = -1;
+    ConstructInfoValue& value = info.nodes.at("history").attributes.at("samples");
+    if (value.valid)
+        history = std::get<int>(value.value);
+    
+    // Specs
+    Scalar fov = std::get<Scalar>(info.nodes.at("specs").attributes.at("fov").value);
+    int steps = std::get<int>(info.nodes.at("specs").attributes.at("steps").value);
+
+    // Create sensor
+    std::unique_ptr<Profiler> sensor = std::make_unique<Profiler>(uniqueName, fov, steps, frequency, history);    
+
+    // Range (optional)
+    Scalar distanceMin (0.);
+    Scalar distanceMax (BT_LARGE_FLOAT);
+    
+    value = info.nodes.at("range").attributes.at("distance_min");
+    if (value.valid)
+        distanceMin = std::get<Scalar>(value.value);
+    
+    value = info.nodes.at("range").attributes.at("distance_max");
+    if (value.valid)
+        distanceMax = std::get<Scalar>(value.value);
+
+    sensor->setRange(distanceMin, distanceMax);
+
+    // Noise (optional)
+    value = info.nodes.at("noise").attributes.at("distance");
+    if (value.valid)
+        sensor->setNoise(std::get<Scalar>(value.value));
+
+    return sensor;
+}
+
+REGISTER_SENSOR("profiler", Profiler)
 
 }
