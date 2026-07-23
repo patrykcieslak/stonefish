@@ -367,7 +367,8 @@ std::unique_ptr<SSS> SSS::Construct(const std::string& uniqueName, Scalar freque
 
     // Construct
     std::unique_ptr<SSS> sensor = std::make_unique<SSS>(uniqueName, bins, lines, hFov, vFov, tilt, rangeMin, rangeMax, outputFormat, frequency);
-
+    sensor->setGain(gain);
+    
     // Noise
     Scalar multiplicative {0.01};
     Scalar additive {0.02};

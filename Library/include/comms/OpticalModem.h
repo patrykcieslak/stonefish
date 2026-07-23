@@ -55,6 +55,15 @@ namespace sf
 
         //! A method returning the type of the comm.
         virtual CommType getType() const;
+
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo getConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<OpticalModem> Construct(const std::string& uniqueName, uint64_t deviceId, ConstructInfo& info);
         
     protected:
         //! A method performing internal comm state update.

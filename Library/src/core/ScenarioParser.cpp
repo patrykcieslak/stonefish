@@ -55,10 +55,7 @@
 #include "actuators/LinkActuator.h"
 #include "actuators/JointActuator.h"
 #include "actuators/Light.h"
-#include "comms/AcousticModem.h"
-#include "comms/SimpleUSBL.h"
-#include "comms/RealUSBL.h"
-#include "comms/OpticalModem.h"
+#include "comms/Comm.h"
 #include "joints/FixedJoint.h"
 #include "graphics/OpenGLDataStructs.h"
 #include "utils/SystemUtil.hpp"
@@ -926,6 +923,9 @@ bool ScenarioParser::ParseStatic(XMLElement* element)
         return false;
     }
     std::string objectName(name);
+
+    log.Print(MessageType::INFO, "Parsing static body '%s'.", objectName.c_str());
+
     if(element->QueryStringAttribute("type", &type) != XML_SUCCESS)
     {
         log.Print(MessageType::ERROR, "Type of static body '%s' missing!", objectName.c_str());
@@ -1177,6 +1177,8 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
         return false;
     }
     std::string objectName(name);
+
+    log.Print(MessageType::INFO, "Parsing animated body '%s'.", objectName.c_str());
 
     if(element->QueryStringAttribute("type", &type) != XML_SUCCESS)
     {
@@ -1584,6 +1586,8 @@ bool ScenarioParser::ParseCable(XMLElement* element)
     }
     std::string cableName(name);
 
+    log.Print(MessageType::INFO, "Parsing cable '%s'.", cableName.c_str());
+
     const char* phyType = nullptr;
     PhysicsSettings phy;
     if(element->QueryStringAttribute("physics", &phyType) == XML_SUCCESS)
@@ -1748,6 +1752,11 @@ std::unique_ptr<SolidEntity> ScenarioParser::ParseSolid(XMLElement* element, std
         return nullptr;
     }
     std::string solidName = ns != "" ? ns + "/" + std::string(name) : std::string(name);
+
+    if (ns == "")
+        log.Print(MessageType::INFO, "Parsing dynamic body '%s'.", solidName.c_str());
+    else
+        log.Print(MessageType::INFO, "Parsing link '%s'.", solidName.c_str());
 
     if(element->QueryStringAttribute("type", &type) != XML_SUCCESS)
     {
@@ -2101,6 +2110,9 @@ bool ScenarioParser::ParseRobot(XMLElement* element)
         return false;
     }
     std::string robotName(name);
+
+    log.Print(MessageType::INFO, "Parsing robot '%s'.", robotName.c_str());
+
     if(element->QueryAttribute("fixed", &fixed) != XML_SUCCESS)
     {
         log.Print(MessageType::ERROR, "Base type of robot '%s' not specified!", robotName.c_str());
@@ -2281,6 +2293,8 @@ bool ScenarioParser::ParseJoint(XMLElement* element, Robot* robot)
         return false;
     }
     std::string jointName = robot->getName() + "/" + std::string(name);
+
+    log.Print(MessageType::INFO, "Parsing joint '%s'.", jointName.c_str());
 
     if(element->QueryStringAttribute("type", &type) != XML_SUCCESS)
     {
@@ -2581,6 +2595,8 @@ std::unique_ptr<Actuator> ScenarioParser::ParseActuator(XMLElement* element, con
     if(namePrefix != "")
         actuatorName = namePrefix + "/" + actuatorName;
 
+    log.Print(MessageType::INFO, "Parsing actuator '%s'.", actuatorName.c_str());
+
     if(element->QueryStringAttribute("type", &type) != XML_SUCCESS)
     {
         log.Print(MessageType::ERROR, "Type of actuator '%s' missing!", actuatorName.c_str());
@@ -2622,6 +2638,8 @@ std::unique_ptr<Sensor> ScenarioParser::ParseSensor(XMLElement* element, const s
     if(namePrefix != "")
         sensorName = namePrefix + "/" + sensorName;
     
+    log.Print(MessageType::INFO, "Parsing sensor '%s'.", sensorName.c_str());
+
     if(element->QueryStringAttribute("type", &type) != XML_SUCCESS)
     {
         log.Print(MessageType::ERROR, "Type of sensor '%s' missing!", sensorName.c_str());
@@ -2688,6 +2706,8 @@ std::unique_ptr<Light> ScenarioParser::ParseLight(XMLElement* element, const std
     if(namePrefix != "")
         lightName = namePrefix + "/" + lightName;
     
+    log.Print(MessageType::INFO, "Parsing light '%s'.", lightName.c_str());    
+
     XMLElement* item;
     Scalar illu, radius;
 	Scalar cone = Scalar(0);
@@ -2723,6 +2743,8 @@ std::unique_ptr<Light> ScenarioParser::ParseLight(XMLElement* element, const std
 
 std::unique_ptr<Comm> ScenarioParser::ParseComm(XMLElement* element, const std::string& namePrefix)
 {
+    // ---- Common ----
+    std::unique_ptr<Comm> comm {};
     const char* name = nullptr;
     const char* type = nullptr;
     unsigned int devId;
@@ -2736,6 +2758,8 @@ std::unique_ptr<Comm> ScenarioParser::ParseComm(XMLElement* element, const std::
     if(namePrefix != "")
         commName = namePrefix + "/" + commName;
 
+    log.Print(MessageType::INFO, "Parsing communication device '%s'.", commName.c_str());
+
     if(element->QueryStringAttribute("type", &type) != XML_SUCCESS)
     {
         log.Print(MessageType::ERROR, "Type of communication device '%s' missing!", commName.c_str());
@@ -2748,201 +2772,21 @@ std::unique_ptr<Comm> ScenarioParser::ParseComm(XMLElement* element, const std::
         log.Print(MessageType::ERROR, "Id of communication device '%s' missing!", commName.c_str());
         return nullptr;
     }
-     
-    XMLElement* item;
-    std::unique_ptr<Comm> comm;
-    if(typeStr == "acoustic_modem")
-    {
-        Scalar minFovDeg;
-        Scalar maxFovDeg;
-        Scalar range;
-        unsigned int cId = 0;
-        bool occlusion = true;
-        
-        if((item = element->FirstChildElement("specs")) == nullptr
-            || item->QueryAttribute("min_vertical_fov", &minFovDeg) != XML_SUCCESS
-            || item->QueryAttribute("max_vertical_fov", &maxFovDeg) != XML_SUCCESS
-            || item->QueryAttribute("range", &range) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Specs of communication device '%s' not properly defined!", commName.c_str());
-            return nullptr;
-        }
-        item = element->FirstChildElement("connect");
-        if(item == nullptr || item->QueryAttribute("device_id", &cId) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Communication device '%s' not connected!", commName.c_str());
-            return nullptr;
-        }
-        item->QueryAttribute("occlusion_test", &occlusion);
-    
-        comm = std::make_unique<AcousticModem>(commName, devId, minFovDeg, maxFovDeg, range);
-        comm->Connect(cId);
-        static_cast<AcousticModem*>(comm.get())->setOcclusionTest(occlusion);
-        return comm;
-    }
-    else if(typeStr == "usbl")
-    {
-        Scalar minFovDeg;
-        Scalar maxFovDeg;
-        Scalar range;
-        unsigned int cId = 0;
-        Scalar pingRate;
-        bool occlusion = true;
-        
-        if((item = element->FirstChildElement("specs")) == nullptr
-            || item->QueryAttribute("min_vertical_fov", &minFovDeg) != XML_SUCCESS
-            || item->QueryAttribute("max_vertical_fov", &maxFovDeg) != XML_SUCCESS
-            || item->QueryAttribute("range", &range) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Specs of communication device '%s' not properly defined!", commName.c_str());
-            return nullptr;
-        }
-        item = element->FirstChildElement("connect");
-        if(item == nullptr || item->QueryAttribute("device_id", &cId) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Communication device '%s' not connected!", commName.c_str());
-            return nullptr;
-        }
-        item->QueryAttribute("occlusion_test", &occlusion);
 
-        comm = std::make_unique<SimpleUSBL>(commName, devId, minFovDeg, maxFovDeg, range);
-        comm->Connect(cId);
-        static_cast<AcousticModem*>(comm.get())->setOcclusionTest(occlusion);
-        
-        if((item = element->FirstChildElement("autoping")) != nullptr
-            && item->QueryAttribute("rate", &pingRate) == XML_SUCCESS)
-            static_cast<USBL*>(comm.get())->EnableAutoPing(pingRate);
-        
-        //Optional noise definitions
-        if((item = element->FirstChildElement("noise")) != nullptr)
-        {
-            Scalar rangeDev = Scalar(0);
-            Scalar hAngleDevDeg = Scalar(0);
-            Scalar vAngleDevDeg = Scalar(0);
-            int c = 0;
-            if(item->QueryAttribute("range", &rangeDev) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("horizontal_angle", &hAngleDevDeg) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("vertical_angle", &vAngleDevDeg) == XML_SUCCESS)
-                ++c;
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Noise of communication device '%s' not properly defined - using defaults.", commName.c_str());
-            else
-                static_cast<SimpleUSBL*>(comm.get())->setNoise(rangeDev, hAngleDevDeg, vAngleDevDeg);
-        }
-        //Optional resolution definitions
-        if((item = element->FirstChildElement("resolution")) != nullptr)
-        {
-            Scalar rangeRes = Scalar(0);
-            Scalar angleResDeg = Scalar(0);
-            int c = 0;
-            if(item->QueryAttribute("range", &rangeRes) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("angle", &angleResDeg) == XML_SUCCESS)
-                ++c;
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Resolution of communication device '%s' not properly defined - using defaults.", commName.c_str());
-            else
-                static_cast<SimpleUSBL*>(comm.get())->setResolution(rangeRes, angleResDeg);
-        }
-        return comm;
-    }
-    else if(typeStr == "usbl2")
+    // ---- Specific ----
+    const CommFactoryEntry* factory = CommFactory::Instance().Find(typeStr);
+    if (factory == nullptr)
     {
-        Scalar minFovDeg;
-        Scalar maxFovDeg;
-        Scalar range;
-        Scalar freq;
-        Scalar baseline;
-        unsigned int cId = 0;
-        Scalar pingRate;
-        bool occlusion = true;
-        
-        if((item = element->FirstChildElement("specs")) == nullptr
-            || item->QueryAttribute("min_vertical_fov", &minFovDeg) != XML_SUCCESS
-            || item->QueryAttribute("max_vertical_fov", &maxFovDeg) != XML_SUCCESS
-            || item->QueryAttribute("range", &range) != XML_SUCCESS
-            || item->QueryAttribute("frequency", &freq) != XML_SUCCESS
-            || item->QueryAttribute("baseline", &baseline) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Specs of communication device '%s' not properly defined!", commName.c_str());
-            return nullptr;
-        }
-        item = element->FirstChildElement("connect");
-        if(item == nullptr || item->QueryAttribute("device_id", &cId) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Communication device '%s' not connected!", commName.c_str());
-            return nullptr;
-        }
-        item->QueryAttribute("occlusion_test", &occlusion);
-
-        comm = std::make_unique<RealUSBL>(commName, devId, minFovDeg, maxFovDeg, range, freq, baseline);
-        comm->Connect(cId);
-        static_cast<AcousticModem*>(comm.get())->setOcclusionTest(occlusion);
-        
-        if((item = element->FirstChildElement("autoping")) != nullptr
-            && item->QueryAttribute("rate", &pingRate) == XML_SUCCESS)
-            static_cast<USBL*>(comm.get())->EnableAutoPing(pingRate);
-        
-        //Optional noise definitions
-        if((item = element->FirstChildElement("noise")) != nullptr)
-        {
-            Scalar timeDev(0);
-            Scalar svDev(0);
-            Scalar phaseDev(0);
-            Scalar blError(0);
-            Scalar depthDev(0);
-            int c = 0;
-            if(item->QueryAttribute("tof", &timeDev) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("sound_velocity", &svDev) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("phase", &phaseDev) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("baseline_error", &blError) == XML_SUCCESS)
-                ++c;
-            if(item->QueryAttribute("depth", &depthDev) == XML_SUCCESS)
-                ++c;
-            if(c == 0)
-                log.Print(MessageType::WARNING, "Noise of communication device '%s' not properly defined - using defaults.", commName.c_str());
-            else
-                static_cast<RealUSBL*>(comm.get())->setNoise(timeDev, svDev, phaseDev, blError, depthDev);
-        }
-        return comm;
-    }
-    else if(typeStr == "optical_modem" || typeStr == "vlc")
-    {
-        Scalar fovDeg;
-        Scalar range;
-        Scalar ambientLightSensitivity {1};
-        unsigned int cId {0};
-        
-        if((item = element->FirstChildElement("specs")) == nullptr
-            || item->QueryAttribute("fov", &fovDeg) != XML_SUCCESS
-            || item->QueryAttribute("range", &range) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Specs of communication device '%s' not properly defined!", commName.c_str());
-            return nullptr;
-        }
-        item->QueryAttribute("ambient_light_sensitivity", &ambientLightSensitivity);
-        
-        item = element->FirstChildElement("connect");
-        if(item == nullptr || item->QueryAttribute("device_id", &cId) != XML_SUCCESS)
-        {
-            log.Print(MessageType::ERROR, "Communication device '%s' not connected!", commName.c_str());
-            return nullptr;
-        }
-        
-        comm = std::make_unique<OpticalModem>(commName, devId, fovDeg, range, ambientLightSensitivity);
-        comm->Connect(cId);
-        return comm;
-    }
-    else 
-    {
-        log.Print(MessageType::ERROR, "Unknown type of communication device '%s'!", commName.c_str());
+        log.Print(MessageType::ERROR, "Communication device type '%s' not supported!", typeStr.c_str());
         return nullptr;
     }
+
+    ConstructInfo info = factory->getConstructInfo();
+
+    if (ParseConstructInfo(element, info))
+        comm = factory->construct(commName, devId, info);
+    else
+        return nullptr;
 }
 
 bool ScenarioParser::ParseContact(XMLElement* element)
@@ -2954,6 +2798,8 @@ bool ScenarioParser::ParseContact(XMLElement* element)
         return false;
     }
     std::string contactName(name);
+
+    log.Print(MessageType::INFO, "Parsing contact '%s'.", contactName.c_str());
         
     XMLElement* itemA;
     XMLElement* itemB;
@@ -3051,7 +2897,7 @@ FixedJoint* ScenarioParser::ParseGlue(XMLElement* element)
         return nullptr;
     }
     std::string glueName(name);
-    
+
     XMLElement* itemA;
     XMLElement* itemB;
     if((itemA = element->FirstChildElement("first_body")) == nullptr
@@ -3432,7 +3278,10 @@ bool ScenarioParser::ParseConstructInfo(XMLElement* element, ConstructInfo& info
         
             // Parse child nodes
             for (auto& child : node.childNodes)
-                parseNode(item, child.first, child.second);
+            {
+                if (!parseNode(item, child.first, child.second))
+                    return false;
+            }
         }
         else if (!node.optional) // && item == nullptr
         {
@@ -3445,7 +3294,8 @@ bool ScenarioParser::ParseConstructInfo(XMLElement* element, ConstructInfo& info
 
     for (auto& node : info.nodes)
     {
-        parseNode(element, node.first, node.second);    
+        if (!parseNode(element, node.first, node.second))
+            return false;
     }
 
     return true;

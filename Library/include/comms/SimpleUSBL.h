@@ -60,6 +60,15 @@ namespace sf
 
         //! A method that processes all messages in the rx buffer.
         void ProcessMessages() override;
+
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo getConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<SimpleUSBL> Construct(const std::string& uniqueName, uint64_t deviceId, ConstructInfo& info);
     
     private:
         Scalar rangeRes_;

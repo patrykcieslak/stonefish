@@ -369,8 +369,8 @@ namespace sf
         }
         
     protected:
-        Scalar ktn_;
         Scalar ktp_;
+        Scalar ktn_;
         Scalar dl_;
         Scalar du_;
     };
@@ -503,11 +503,11 @@ namespace sf
         }
     
     protected:
-        Scalar D_;
+        Scalar u_;
         Scalar ktp_;
         Scalar ktn_;
         Scalar kq_;
-        Scalar u_;
+        Scalar D_;
         bool RH_;
         Scalar rho_;
         Scalar alpha_;

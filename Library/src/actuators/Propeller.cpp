@@ -230,7 +230,7 @@ std::unique_ptr<Propeller> Propeller::Construct(const std::string& uniqueName, C
 
     // Optional
     bool inverted = false;
-    ConstructInfoValue& value = info.nodes.at("specs").attributes.at("thrust_coeff_backward");
+    ConstructInfoValue& value = info.nodes.at("specs").attributes.at("thrust_coeff_reverse");
     if (value.valid)
         thrustCoeff.second = std::get<Scalar>(value.value);
     value = info.nodes.at("specs").attributes.at("inverted");

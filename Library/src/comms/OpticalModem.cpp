@@ -30,6 +30,7 @@
 #include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
+#include "core/DeviceFactory.h"
 #include "graphics/OpenGLPipeline.h"
 
 namespace sf
@@ -404,5 +405,47 @@ std::vector<Renderable> OpticalModem::Render()
 
     return items;
 }
+
+// Statics
+
+ConstructInfo OpticalModem::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+    
+    // Specs
+    node.optional = false;
+    node.attributes.insert({"fov", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"range", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"ambient_light_sensitivity", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"specs", node});
+
+    // Connect
+    node.attributes.clear();
+    node.optional = false;
+    node.attributes.insert({"device_id", {ConstructInfoValueType::INT, false}});
+    info.nodes.insert({"connect", node});
+    
+    return info;
+}
+
+std::unique_ptr<OpticalModem> OpticalModem::Construct(const std::string& uniqueName, uint64_t deviceId, ConstructInfo& info)
+{
+    // Required
+    Scalar fov = std::get<Scalar>(info.nodes.at("specs").attributes.at("fov").value);
+    Scalar range = std::get<Scalar>(info.nodes.at("specs").attributes.at("range").value);
+    Scalar ambientLightSensitivity {1.};
+    ConstructInfoValue& value = info.nodes.at("specs").attributes.at("ambient_light_sensitivity");
+    if (value.valid)
+        ambientLightSensitivity = std::get<Scalar>(value.value);
+
+    // Construct
+    std::unique_ptr<OpticalModem> comm = std::make_unique<OpticalModem>(uniqueName, deviceId, fov, range, ambientLightSensitivity);    
+    comm->Connect(std::get<int>(info.nodes.at("connect").attributes.at("device_id").value));
+    
+    return comm;
+}
+
+REGISTER_COMM("optical_modem", OpticalModem)
 
 }

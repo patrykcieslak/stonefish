@@ -355,6 +355,7 @@ std::unique_ptr<FLS> FLS::Construct(const std::string& uniqueName, Scalar freque
 
     // Construct
     std::unique_ptr<FLS> sensor = std::make_unique<FLS>(uniqueName, beams, bins, hFov, vFov, rangeMin, rangeMax, outputFormat, frequency);
+    sensor->setGain(gain);
 
     // Noise
     Scalar multiplicative {0.025};

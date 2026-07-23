@@ -25,6 +25,8 @@
 
 #include "comms/RealUSBL.h"
 
+#include "core/DeviceFactory.h"
+
 namespace sf
 {
 
@@ -117,5 +119,106 @@ Scalar RealUSBL::CalcModel(Scalar R, Scalar theta)
     }
     return result;
 }
+
+// Statics
+
+ConstructInfo RealUSBL::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+    
+    // Specs
+    node.optional = false;
+    node.attributes.insert({"min_vertical_fov", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"max_vertical_fov", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"range", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"frequency", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"baseline", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"specs", node});
+
+    // Connect
+    node.attributes.clear();
+    node.optional = false;
+    node.attributes.insert({"device_id", {ConstructInfoValueType::INT, false}});
+    node.attributes.insert({"occlusion_test", {ConstructInfoValueType::BOOL, true}});
+    info.nodes.insert({"connect", node});
+
+    // Autoping (optional)
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"rate", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"autoping", node});
+
+    // Noise
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"time_of_flight", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"sound_velocity", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"phase", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"depth", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"baseline_error", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"noise", node});
+    
+    return info;
+}
+
+std::unique_ptr<RealUSBL> RealUSBL::Construct(const std::string& uniqueName, uint64_t deviceId, ConstructInfo& info)
+{
+    // Required
+    Scalar minVerticalFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("min_vertical_fov").value);
+    Scalar maxVerticalFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("max_vertical_fov").value);
+    Scalar range = std::get<Scalar>(info.nodes.at("specs").attributes.at("range").value);
+    Scalar frequency = std::get<Scalar>(info.nodes.at("specs").attributes.at("frequency").value);
+    Scalar baseline = std::get<Scalar>(info.nodes.at("specs").attributes.at("baseline").value);
+
+    // Construct
+    std::unique_ptr<RealUSBL> comm = std::make_unique<RealUSBL>(uniqueName, deviceId, minVerticalFov, maxVerticalFov, 
+        range, frequency, baseline);
+    comm->Connect(std::get<int>(info.nodes.at("connect").attributes.at("device_id").value));
+    
+    // Optional
+    bool occlusionTest {true};
+    ConstructInfoValue& value = info.nodes.at("connect").attributes.at("occlusion_test");
+    if (value.valid)
+        occlusionTest = std::get<bool>(value.value);
+    comm->setOcclusionTest(occlusionTest);
+    
+    value = info.nodes.at("autoping").attributes.at("rate");
+    if (value.valid)
+        comm->EnableAutoPing(std::get<Scalar>(value.value));
+
+    // Noise (optional)
+    Scalar tof {0.};
+    Scalar soundVelocity {0.};
+    Scalar phase {0.};
+    Scalar depth {0.};
+    Scalar baselineErr {0.};
+    
+    value = info.nodes.at("noise").attributes.at("time_of_flight");
+    if (value.valid)
+        tof = std::get<Scalar>(value.value);
+    
+    value = info.nodes.at("noise").attributes.at("sound_velocity");
+    if (value.valid)
+        soundVelocity = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("noise").attributes.at("phase");
+    if (value.valid)
+        phase = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("noise").attributes.at("depth");
+    if (value.valid)
+        depth = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("noise").attributes.at("baseline_error");
+    if (value.valid)
+        baselineErr = std::get<Scalar>(value.value);
+
+    comm->setNoise(tof, soundVelocity, phase, baselineErr, depth);
+
+    return comm;
+}
+
+REGISTER_COMM("usbl", RealUSBL)
 
 }

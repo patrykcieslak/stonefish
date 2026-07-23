@@ -443,6 +443,7 @@ std::unique_ptr<MSIS> MSIS::Construct(const std::string& uniqueName, Scalar freq
     // Construct
     std::unique_ptr<MSIS> sensor = std::make_unique<MSIS>(uniqueName, step, bins, hFov, vFov, rotationMin, rotationMax, 
         rangeMin, rangeMax, outputFormat, frequency);
+    sensor->setGain(gain);
 
     // Noise
     Scalar multiplicative {0.025};

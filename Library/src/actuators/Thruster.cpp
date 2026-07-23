@@ -236,6 +236,7 @@ ConstructInfo Thruster::getConstructInfo()
 
     // Rotor dynamics
     node.attributes.clear();
+    node.childNodes.clear();
     childNode.attributes.clear();
     node.optional = false;
     node.attributes.insert({"type", {ConstructInfoValueType::STRING, false}});

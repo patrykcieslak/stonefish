@@ -33,7 +33,7 @@
 namespace sf
 {
     //! An enum defining types of comms.
-    enum class CommType {RADIO, ACOUSTIC, USBL, OPTICAL};
+    enum class CommType {RADIO, ACOUSTIC, USBL, OPTICAL, PLUGIN};
     
     struct Renderable;
     class Entity;

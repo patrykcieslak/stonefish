@@ -25,6 +25,8 @@
 
 #include "comms/SimpleUSBL.h"
 
+#include "core/DeviceFactory.h"
+
 namespace sf
 {
         
@@ -121,5 +123,110 @@ void SimpleUSBL::ProcessMessages()
     // Standard processing of messages and removal of "ACK and "PING" messages
     AcousticModem::ProcessMessages();
 }
+
+// Statics
+
+ConstructInfo SimpleUSBL::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+    
+    // Specs
+    node.optional = false;
+    node.attributes.insert({"min_vertical_fov", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"max_vertical_fov", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"range", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"specs", node});
+
+    // Connect
+    node.attributes.clear();
+    node.optional = false;
+    node.attributes.insert({"device_id", {ConstructInfoValueType::INT, false}});
+    node.attributes.insert({"occlusion_test", {ConstructInfoValueType::BOOL, true}});
+    info.nodes.insert({"connect", node});
+
+    // Autoping (optional)
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"rate", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"autoping", node});
+
+    // Noise
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"range", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"horizontal_angle", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"vertical_angle", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"noise", node});
+
+    // Resolution
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"range", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"angle", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"resolution", node});
+    
+    return info;
+}
+
+std::unique_ptr<SimpleUSBL> SimpleUSBL::Construct(const std::string& uniqueName, uint64_t deviceId, ConstructInfo& info)
+{
+    // Required
+    Scalar minVerticalFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("min_vertical_fov").value);
+    Scalar maxVerticalFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("max_vertical_fov").value);
+    Scalar range = std::get<Scalar>(info.nodes.at("specs").attributes.at("range").value);
+
+    // Construct
+    std::unique_ptr<SimpleUSBL> comm = std::make_unique<SimpleUSBL>(uniqueName, deviceId, minVerticalFov, maxVerticalFov, range);    
+    comm->Connect(std::get<int>(info.nodes.at("connect").attributes.at("device_id").value));
+    
+    // Optional
+    bool occlusionTest {true};
+    ConstructInfoValue& value = info.nodes.at("connect").attributes.at("occlusion_test");
+    if (value.valid)
+        occlusionTest = std::get<bool>(value.value);
+    comm->setOcclusionTest(occlusionTest);
+    
+    value = info.nodes.at("autoping").attributes.at("rate");
+    if (value.valid)
+        comm->EnableAutoPing(std::get<Scalar>(value.value));
+
+    // Noise (optional)
+    Scalar rangeDev {0.};
+    Scalar hAngleDev {0.};
+    Scalar vAngleDev {0.};
+    
+    value = info.nodes.at("noise").attributes.at("range");
+    if (value.valid)
+        rangeDev = std::get<Scalar>(value.value);
+    
+    value = info.nodes.at("noise").attributes.at("horizontal_angle");
+    if (value.valid)
+        hAngleDev = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("noise").attributes.at("vertical_angle");
+    if (value.valid)
+        vAngleDev = std::get<Scalar>(value.value);
+
+    comm->setNoise(rangeDev, hAngleDev, vAngleDev);
+
+    // Resolution (optional)
+    Scalar rangeRes (0.);
+    Scalar angleRes (0.);
+
+    value = info.nodes.at("resolution").attributes.at("range");
+    if (value.valid)
+        rangeRes = std::get<Scalar>(value.value);
+    
+    value = info.nodes.at("resolution").attributes.at("angle");
+    if (value.valid)
+        angleRes = std::get<Scalar>(value.value);
+
+    comm->setResolution(rangeRes, angleRes);
+
+    return comm;
+}
+
+REGISTER_COMM("simple_usbl", SimpleUSBL)
 
 }

@@ -29,90 +29,12 @@
 #include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
+#include "core/DeviceFactory.h"
 #include "graphics/OpenGLPipeline.h"
 
 namespace sf
 {
  
-//Static
-std::map<uint64_t, AcousticModem*> AcousticModem::nodes; 
-
-void AcousticModem::addNode(AcousticModem* node)
-{
-    if(node->getDeviceId() == 0)
-    {
-        cError("Modem device ID=0 not allowed!");
-        return;
-    }
-        
-    if(nodes.find(node->getDeviceId()) != nodes.end())
-        cError("Modem node with ID=%d already exists!", node->getDeviceId());
-    else
-        nodes[node->getDeviceId()] = node;
-}
-
-void AcousticModem::removeNode(uint64_t deviceId)
-{
-    if(deviceId == 0)
-        return;
-        
-    std::map<uint64_t, AcousticModem*>::iterator it = nodes.find(deviceId);
-    if(it != nodes.end())
-        nodes.erase(it);
-}
-
-AcousticModem* AcousticModem::getNode(uint64_t deviceId)
-{
-    if(deviceId == 0)
-        return nullptr;
-    
-    try
-    {
-        return nodes.at(deviceId);
-    }
-    catch(const std::out_of_range& oor)
-    {
-        return nullptr;
-    }
-} 
-
-std::vector<uint64_t> AcousticModem::getNodeIds()
-{
-    std::vector<uint64_t> ids;
-    for(auto it=nodes.begin(); it != nodes.end(); ++it)
-        ids.push_back(it->first);
-    return ids;
-}
-
-bool AcousticModem::mutualContact(uint64_t device1Id, uint64_t device2Id)
-{
-    AcousticModem* node1 = getNode(device1Id);
-    AcousticModem* node2 = getNode(device2Id);
-    
-    if(node1 == nullptr || node2 == nullptr)
-        return false;
-        
-    Vector3 pos1 = node1->getDeviceFrame().getOrigin();
-    Vector3 pos2 = node2->getDeviceFrame().getOrigin();
-    Vector3 dir = pos2-pos1;
-    Scalar distance = dir.length();
-    
-    if(!node1->isReceptionPossible(dir, distance) || !node2->isReceptionPossible(-dir, distance))
-        return false;
-        
-    if(node1->getOcclusionTest() || node2->getOcclusionTest())
-    {
-        btCollisionWorld::ClosestRayResultCallback closest(pos1, pos2);
-        closest.m_collisionFilterGroup = MASK_DYNAMIC;
-        closest.m_collisionFilterMask = MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING;
-        SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld()->rayTest(pos1, pos2, closest);
-        return !closest.hasHit();
-    }
-    else
-        return true;
-}
-
-//Member 
 AcousticModem::AcousticModem(const std::string& uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange)
     : Comm(uniqueName, deviceId)
 {
@@ -413,5 +335,129 @@ std::vector<Renderable> AcousticModem::Render()
 
     return items;
 }
+
+// Statics
+
+std::map<uint64_t, AcousticModem*> AcousticModem::nodes; 
+
+void AcousticModem::addNode(AcousticModem* node)
+{
+    if(node->getDeviceId() == 0)
+    {
+        cError("Modem device ID=0 not allowed!");
+        return;
+    }
+        
+    if(nodes.find(node->getDeviceId()) != nodes.end())
+        cError("Modem node with ID=%d already exists!", node->getDeviceId());
+    else
+        nodes[node->getDeviceId()] = node;
+}
+
+void AcousticModem::removeNode(uint64_t deviceId)
+{
+    if(deviceId == 0)
+        return;
+        
+    std::map<uint64_t, AcousticModem*>::iterator it = nodes.find(deviceId);
+    if(it != nodes.end())
+        nodes.erase(it);
+}
+
+AcousticModem* AcousticModem::getNode(uint64_t deviceId)
+{
+    if(deviceId == 0)
+        return nullptr;
+    
+    try
+    {
+        return nodes.at(deviceId);
+    }
+    catch(const std::out_of_range& oor)
+    {
+        return nullptr;
+    }
+} 
+
+std::vector<uint64_t> AcousticModem::getNodeIds()
+{
+    std::vector<uint64_t> ids;
+    for(auto it=nodes.begin(); it != nodes.end(); ++it)
+        ids.push_back(it->first);
+    return ids;
+}
+
+bool AcousticModem::mutualContact(uint64_t device1Id, uint64_t device2Id)
+{
+    AcousticModem* node1 = getNode(device1Id);
+    AcousticModem* node2 = getNode(device2Id);
+    
+    if(node1 == nullptr || node2 == nullptr)
+        return false;
+        
+    Vector3 pos1 = node1->getDeviceFrame().getOrigin();
+    Vector3 pos2 = node2->getDeviceFrame().getOrigin();
+    Vector3 dir = pos2-pos1;
+    Scalar distance = dir.length();
+    
+    if(!node1->isReceptionPossible(dir, distance) || !node2->isReceptionPossible(-dir, distance))
+        return false;
+        
+    if(node1->getOcclusionTest() || node2->getOcclusionTest())
+    {
+        btCollisionWorld::ClosestRayResultCallback closest(pos1, pos2);
+        closest.m_collisionFilterGroup = MASK_DYNAMIC;
+        closest.m_collisionFilterMask = MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING;
+        SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld()->rayTest(pos1, pos2, closest);
+        return !closest.hasHit();
+    }
+    else
+        return true;
+}
+
+ConstructInfo AcousticModem::getConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+    
+    // Specs
+    node.optional = false;
+    node.attributes.insert({"min_vertical_fov", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"max_vertical_fov", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"range", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"specs", node});
+
+    // Connect
+    node.attributes.clear();
+    node.optional = false;
+    node.attributes.insert({"device_id", {ConstructInfoValueType::INT, false}});
+    node.attributes.insert({"occlusion_test", {ConstructInfoValueType::BOOL, true}});
+    info.nodes.insert({"connect", node});
+    
+    return info;
+}
+
+std::unique_ptr<AcousticModem> AcousticModem::Construct(const std::string& uniqueName, uint64_t deviceId, ConstructInfo& info)
+{
+    // Required
+    Scalar minVerticalFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("min_vertical_fov").value);
+    Scalar maxVerticalFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("max_vertical_fov").value);
+    Scalar range = std::get<Scalar>(info.nodes.at("specs").attributes.at("range").value);
+
+    // Construct
+    std::unique_ptr<AcousticModem> comm = std::make_unique<AcousticModem>(uniqueName, deviceId, minVerticalFov, maxVerticalFov, range);    
+    comm->Connect(std::get<int>(info.nodes.at("connect").attributes.at("device_id").value));
+    
+    // Optional
+    bool occlusionTest {true};
+    ConstructInfoValue& value = info.nodes.at("connect").attributes.at("occlusion_test");
+    if (value.valid)
+        occlusionTest = std::get<bool>(value.value);
+    comm->setOcclusionTest(occlusionTest);
+    
+    return comm;
+}
+
+REGISTER_COMM("acoustic_modem", AcousticModem)
 
 }

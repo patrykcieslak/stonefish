@@ -93,6 +93,7 @@ namespace sf
         void WatchdogTimeout() override;
 
         //Params
+        std::unique_ptr<SolidEntity> propeller_;
         Scalar D_;
         std::pair<Scalar, Scalar> kT0_;
         Scalar kQ0_;
@@ -100,7 +101,6 @@ namespace sf
         Scalar ki_;
         Scalar iLim_;
         Scalar omegaLim_;
-        std::unique_ptr<SolidEntity> propeller_;
         bool RH_;
         bool inv_;
         

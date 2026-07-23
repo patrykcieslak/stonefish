@@ -38,21 +38,21 @@ enum class ConstructInfoValueType {BOOL, INT, SCALAR, VECTOR3, TRANSFORM, STRING
 struct ConstructInfoValue
 {
     ConstructInfoValueType valueType;
-    std::variant<bool, int, Scalar, Vector3, Transform, std::string, ColorMap> value;  
     bool optional;
+    std::variant<bool, int, Scalar, Vector3, Transform, std::string, ColorMap> value;  
     bool valid;
 
     ConstructInfoValue() : 
         valueType(ConstructInfoValueType::SCALAR),
-        value(Scalar(0.)),
         optional(true),
+        value(Scalar(0.)),
         valid(false)
     {}
 
     ConstructInfoValue(ConstructInfoValueType type, bool isOptional) :
         valueType(type),
-        value(Scalar(0.)),
         optional(isOptional),
+        value(Scalar(0.)),
         valid(false)
     {}
 };
