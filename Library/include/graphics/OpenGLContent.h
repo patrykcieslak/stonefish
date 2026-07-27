@@ -359,9 +359,10 @@ namespace sf
          \param alpha a flag to indicate if the texture has transparency
          \param anisotropy defines maximum anisotropic filtering
          \param internal a flag to indicate if the texture is an internal resource
+         \param fm texture filtering mode
          \return the id of the loaded texture
          */
-        static GLuint LoadTexture(const std::string& filename, bool srgb = true, bool alpha = false, GLfloat anisotropy = 0.f, bool internal = false);
+        static GLuint LoadTexture(const std::string& filename, bool srgb = true, bool alpha = false, GLfloat anisotropy = 0.f, bool internal = false, FilteringMode fm = FilteringMode::TRILINEAR);
         
         //! A static method to load an internal texture.
         /*!

@@ -31,6 +31,17 @@ uniform vec3 eyePos;
 uniform sampler2D texReflectivity;
 uniform sampler2D texNormal;
 
+float rgbToFloat32(vec3 rgbNormalized)
+{
+    uvec3 rgb = uvec3(round(rgbNormalized * 255.0));
+
+    uint top24 = (rgb.r << 16u) |
+                 (rgb.g << 8u)  |
+                  rgb.b;
+
+    return uintBitsToFloat(top24 << 8u);
+}
+
 void main()
 {
     vec3 N = texture(texNormal, texCoord).rgb;
@@ -39,6 +50,7 @@ void main()
     vec3 toEye = eyePos - fragPos;
     float len = length(toEye);
     toEye /= len;
+    float refl_val = rgbToFloat32(texture(texReflectivity, texCoord).rgb);
     rangeIntensity.x = len;                  // slant range
-    rangeIntensity.y = clamp(dot(N, toEye), 0.0, 1.0) * texture(texReflectivity, texCoord).r;
+    rangeIntensity.y = clamp(dot(N, toEye), 0.0, 1.0) * refl_val;
 }
