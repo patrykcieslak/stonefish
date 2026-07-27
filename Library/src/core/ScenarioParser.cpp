@@ -92,6 +92,7 @@
 #include "utils/SystemUtil.hpp"
 #include "tinyexpr.h"
 #include <sstream>
+#include <cmath>
 
 namespace sf
 {
@@ -833,6 +834,8 @@ bool ScenarioParser::ParseLooks(XMLElement* element)
         std::string normalMapStr = "";
         const char* tempMap = nullptr;
         std::string tempMapStr = "";
+        const char* reflectivityMap = nullptr;
+        std::string reflectivityMapStr = "";
         
         if(look->QueryStringAttribute("name", &name) != XML_SUCCESS)
         {
@@ -859,21 +862,24 @@ bool ScenarioParser::ParseLooks(XMLElement* element)
             textureStr = GetFullPath(std::string(texture));
         if(look->QueryStringAttribute("normal_map", &normalMap) == XML_SUCCESS)
             normalMapStr = GetFullPath(std::string(normalMap));
+
+        if(look->QueryStringAttribute("reflectivity_map", &reflectivityMap) == XML_SUCCESS)
+            reflectivityMapStr = GetFullPath(std::string(reflectivityMap));
         
         if(look->QueryAttribute("temperature", &tempRange.first) == XML_SUCCESS)
         {
             tempRange.second = tempRange.first;
-            sm->CreateLook(lookName, color, roughness, metalness, reflectivity, textureStr, normalMapStr, "", tempRange);
+            sm->CreateLook(lookName, color, roughness, metalness, reflectivity, textureStr, normalMapStr, reflectivityMapStr, "", tempRange);
         }
         else if(look->QueryStringAttribute("temperature_map", &tempMap) == XML_SUCCESS
                 && look->QueryAttribute("temperature_min", &tempRange.first) == XML_SUCCESS
                 && look->QueryAttribute("temperature_max", &tempRange.second) == XML_SUCCESS)
         {
             tempMapStr = GetFullPath(std::string(tempMap));
-            sm->CreateLook(lookName, color, roughness, metalness, reflectivity, textureStr, normalMapStr, tempMapStr, tempRange);
+            sm->CreateLook(lookName, color, roughness, metalness, reflectivity, textureStr, normalMapStr, reflectivityMapStr, tempMapStr, tempRange);
         }
         else
-        sm->CreateLook(lookName, color, roughness, metalness, reflectivity, textureStr, normalMapStr);
+        sm->CreateLook(lookName, color, roughness, metalness, reflectivity, textureStr, normalMapStr, reflectivityMapStr);
         look = look->NextSiblingElement("look");
     }
     
@@ -2989,23 +2995,38 @@ Actuator* ScenarioParser::ParseActuator(XMLElement* element, const std::string& 
                 && (item2 = item->FirstChildElement("output")) != nullptr
                 && item2->QueryStringAttribute("value", &coutput) == XML_SUCCESS)
             {
-                
-                // Lambda function to convert a space-separated string to a vector of Scalars
-                // @TODO: Add as standard in the library?
-                auto stringToVector = [](const std::string& str) -> std::vector<Scalar> 
-                {
-                    std::vector<Scalar> result;
-                    std::stringstream ss(str);
-                    Scalar temp;
-                    while (ss >> temp)
-                    {
-                        result.push_back(temp);
-                    }
-                    return result;
-                };
 
-                input = stringToVector(std::string(cinput));
-                output = stringToVector(std::string(coutput));
+                if(!ParseScalarList(cinput, input))
+                {
+                    log.Print(MessageType::ERROR,
+                        "Linear interpolation input of actuator '%s' is not properly defined!",
+                        actuatorName.c_str());
+                    return nullptr;
+                }
+
+                if(!ParseScalarList(coutput, output))
+                {
+                    log.Print(MessageType::ERROR,
+                        "Linear interpolation output of actuator '%s' is not properly defined!",
+                        actuatorName.c_str());
+                    return nullptr;
+                }
+
+                if(input.size() != output.size())
+                {
+                    log.Print(MessageType::ERROR,
+                        "Linear interpolation input and output of actuator '%s' must have the same size!",
+                        actuatorName.c_str());
+                    return nullptr;
+                }
+
+                if(input.size() < 2)
+                {
+                    log.Print(MessageType::ERROR,
+                        "Linear interpolation of actuator '%s' must contain at least two pairs!",
+                        actuatorName.c_str());
+                    return nullptr;
+                }
                 
                 thrustModel = std::make_shared<InterpolatedThrust>(input, output);
             }
@@ -4431,6 +4452,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
         Scalar rangeMax(10.0);
         Scalar gain(1.0);
         ColorMap cMap = ColorMap::GREEN_BLUE;
+        BeamPattern verticalBeamPattern;
 
         if((item = element->FirstChildElement("specs")) == nullptr 
             || item->QueryAttribute("bins", &nBins) != XML_SUCCESS
@@ -4476,9 +4498,87 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
         }
         if((item = element->FirstChildElement("display")) != nullptr)
             ParseColorMap(item, cMap);
-        
+            
+        // Optional vertical beam pattern
+        if((item = element->FirstChildElement(
+                "vertical_beam_pattern")) != nullptr)
+        {
+            const char* angleValues = nullptr;
+            const char* gainValues = nullptr;
+
+            if(item->QueryStringAttribute("angles", &angleValues) != XML_SUCCESS
+            || item->QueryStringAttribute("gains", &gainValues) != XML_SUCCESS)
+            {
+                log.Print(MessageType::ERROR,
+                    "Vertical beam pattern of sensor '%s' must define angles and gains arrays!",
+                    sensorName.c_str());
+                return nullptr;
+            }
+
+            std::vector<Scalar> angles;
+            std::vector<Scalar> gains;
+            if(!ParseScalarList(angleValues, angles)|| !ParseScalarList(gainValues, gains))
+            {
+                log.Print(MessageType::ERROR,
+                    "Arrays in vertical beam pattern of sensor '%s' are not properly defined!",
+                    sensorName.c_str());
+                return nullptr;
+            }
+
+            if(angles.size() != gains.size())
+            {
+                log.Print(MessageType::ERROR,
+                    "Angle and gain arrays in vertical beam pattern of sensor '%s' must have the same size!",
+                    sensorName.c_str());
+                return nullptr;
+            }
+
+            if(angles.size() < 2)
+            {
+                log.Print(MessageType::ERROR,
+                    "Vertical beam pattern of sensor '%s' must contain at least two samples!",
+                    sensorName.c_str());
+                return nullptr;
+            }
+
+            verticalBeamPattern.reserve(angles.size());
+            for(std::vector<Scalar>::size_type i = 0; i < angles.size(); ++i)
+            {
+                BeamPatternSample value {angles[i], gains[i]};
+
+                if(!std::isfinite(static_cast<double>(value.angleDeg))
+                || !std::isfinite(static_cast<double>(value.gain)))
+                {
+                    log.Print(MessageType::ERROR,
+                        "Vertical beam pattern of sensor '%s' must contain only finite values!",
+                        sensorName.c_str());
+                    return nullptr;
+                }
+
+                if(value.gain < Scalar(0)|| value.gain > Scalar(1))
+                {
+                    log.Print(MessageType::ERROR,
+                        "Gain in vertical beam pattern of sensor '%s' must be in the range [0, 1]!",
+                        sensorName.c_str());
+                    return nullptr;
+                }
+
+                if(!verticalBeamPattern.empty() && !(verticalBeamPattern.back().angleDeg < value.angleDeg))
+                {
+                    log.Print(MessageType::ERROR,
+                        "Angles in vertical beam pattern of sensor '%s' must be strictly increasing!",
+                        sensorName.c_str());
+                    return nullptr;
+                }
+
+                verticalBeamPattern.push_back(value);
+            }
+        }
+
+
         SSS* sss = new SSS(sensorName, nBins, nLines, vFov, hFov, tilt, rangeMin, rangeMax, cMap, outFormat, rate);
         sss->setGain(gain);
+        sss->setVerticalBeamPattern(verticalBeamPattern);
 
         //Optional noise definition
         if((item = element->FirstChildElement("noise")) != nullptr)    
@@ -4499,6 +4599,7 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
             sss->setNoise(0.01f, 0.02f); //Default values that look realistic
             log.Print(MessageType::WARNING, "Noise of sensor '%s' not defined - using defaults.", sensorName.c_str());
         }
+
         sens = sss;
     }
     else if(typeStr == "msis")
@@ -5173,6 +5274,20 @@ bool ScenarioParser::ParseVector(const char* components, Vector3& v)
     v.setY(y);
     v.setZ(z);
     return true;
+}
+
+bool ScenarioParser::ParseScalarList(const char* values, std::vector<Scalar>& vec)
+{
+    vec.clear();
+    if(values == nullptr)
+        return false;
+
+    std::istringstream stream(values);
+    Scalar value;
+    while(stream >> value)
+        vec.push_back(value);
+
+    return stream.eof() && !vec.empty();
 }
 
 bool ScenarioParser::ParseTransform(XMLElement* element, Transform& T)

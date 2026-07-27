@@ -293,6 +293,7 @@ namespace sf
     private:
         bool CopyNode(XMLNode* destParent, const XMLNode* src);
         bool ParseVector(const char* components, Vector3& v);
+        bool ParseScalarList(const char* values, std::vector<Scalar>& vec);
         bool ParseTransform(XMLElement* element, Transform& T);
         bool ParseColor(XMLElement* element, Color& c);
         bool ParseColorMap(XMLElement* element, ColorMap& cm);

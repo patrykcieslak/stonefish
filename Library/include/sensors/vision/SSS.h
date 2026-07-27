@@ -27,12 +27,21 @@
 #define __Stonefish_SSS__
 
 #include <functional>
+#include <vector>
 #include "sensors/vision/Camera.h"
 #include "graphics/OpenGLSonar.h"
 
 namespace sf
 {
     class OpenGLSSS;
+
+    struct BeamPatternSample
+    {
+        Scalar angleDeg;
+        Scalar gain;
+    };
+
+    using BeamPattern = std::vector<BeamPatternSample>;
     
     //! A class representing a side-scan sonar.
     class SSS : public Camera
@@ -113,6 +122,13 @@ namespace sf
          */
         void setNoise(float multiplicativeStdDev, float additiveStdDev);
 
+        //! Set the vertical beam pattern as angle [deg] and linear intensity gain pairs.
+        /*!
+         \param pattern a vector of angle [deg] and linear intensity gain pairs
+         */
+        //! An empty pattern selects the legacy smoothstep response.
+        void setVerticalBeamPattern(const BeamPattern& pattern);
+
         //! A method returning the minimum range of the sonar.
         Scalar getRangeMin() const;
         
@@ -160,6 +176,7 @@ namespace sf
         Scalar fovV;
         Scalar tilt;
         ColorMap cMap;
+        BeamPattern verticalBeamPattern_;
         SonarOutputFormat outputFormat_;
         std::function<void(SSS*)> newDataCallback;
     };

@@ -34,6 +34,9 @@ uniform float gain;
 uniform float vfov;
 uniform float tilt;
 
+uniform sampler1D verticalBeamPattern;
+
+
 #inject "gaussianNoise.glsl"
 
 void main()
@@ -61,7 +64,8 @@ void main()
             float factor = float(i)/float(N_VERT_BEAM_SAMPLES-1);
             float theta = tilt + (factor-0.5) * fov;
             vec2 bs = imageLoad(sonarHist, ivec3(i, gl_GlobalInvocationID.x, gl_GlobalInvocationID.y)).rg;
-            bs.x *= smoothstep(0.0, 0.2, factor) * (1.0 - smoothstep(0.8, 1.0, factor));
+            float beamWeight = texelFetch( verticalBeamPattern, int(i), 0).r; // Sample the vertical beam pattern
+            bs.x *= beamWeight;
             bs.x /= clamp(sin(theta), 0.01, 1.0); //Intensity compensation based on flat bottom model
             data += bs;
         }

@@ -1354,7 +1354,8 @@ std::string OpenGLContent::CreateSimpleLook(const std::string& name, glm::vec3 r
 
 std::string OpenGLContent::CreatePhysicalLook(const std::string& name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness, 
                                               GLfloat reflectivity, const std::string& albedoTexturePath, const std::string& normalMapPath, 
-                                              const std::string& temperatureMapPath, glm::vec2 temperatureRange)
+                                              const std::string& reflectivityMapPath, const std::string& temperatureMapPath,
+                                              glm::vec2 temperatureRange)
 {
     Look look;
     look.name = lookNameManager.AddName(name);
@@ -1366,6 +1367,10 @@ std::string OpenGLContent::CreatePhysicalLook(const std::string& name, glm::vec3
     if(albedoTexturePath != "") look.albedoTexture = LoadTexture(albedoTexturePath, true, false, maxAnisotropy);
     if(normalMapPath != "") look.normalMap = LoadTexture(normalMapPath, false);
     if(temperatureMapPath != "") look.temperatureMap = LoadTexture(temperatureMapPath, false);
+    if(reflectivityMapPath != "")
+    {
+        look.reflectivityMap = LoadTexture(reflectivityMapPath, false, false, 0.f, false, FilteringMode::NEAREST);
+    }
     look.temperatureRange = temperatureRange;
     looks.push_back(look);
     return look.name;
@@ -1436,7 +1441,7 @@ const Look& OpenGLContent::getLook(size_t id)
 }
     
 //Static methods
-GLuint OpenGLContent::LoadTexture(const std::string& filename, bool srgb, bool alpha, GLfloat anisotropy, bool internal)
+GLuint OpenGLContent::LoadTexture(const std::string& filename, bool srgb, bool alpha, GLfloat anisotropy, bool internal, FilteringMode fm)
 {
     int width, height, channels;
     int reqChannels = alpha ? 4 : 3;
@@ -1474,14 +1479,37 @@ GLuint OpenGLContent::LoadTexture(const std::string& filename, bool srgb, bool a
     if(srgb)
         glTexImage2D(GL_TEXTURE_2D, 0, alpha ? GL_SRGB8_ALPHA8 : GL_SRGB8, width, height, 0, alpha ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, dataBuffer);
     else
-        glTexImage2D(GL_TEXTURE_2D, 0, alpha ? GL_RGBA8 : GL_RGB8, width, height, 0, alpha? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, dataBuffer);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D, 0, alpha ? GL_RGBA8 : GL_RGB8, width, height, 0, alpha? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, dataBuffer);    
+    // Set Filter mode texture parameters
+    switch(fm)
+    {
+        case FilteringMode::NEAREST:
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            break;
+
+        case FilteringMode::BILINEAR:
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            break;
+
+        case FilteringMode::BILINEAR_MIPMAP:
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glGenerateMipmap(GL_TEXTURE_2D);
+            break;
+
+        case FilteringMode::TRILINEAR:
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glGenerateMipmap(GL_TEXTURE_2D);
+            break;
+    }
+
     if(anisotropy > 0.f)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glGenerateMipmap(GL_TEXTURE_2D);
     OpenGLState::UnbindTexture(TEX_BASE);
     
     stbi_image_free(dataBuffer);

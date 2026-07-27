@@ -638,23 +638,46 @@ Side-scan sonar (SSS)
 
 The side-scan sonar (SSS) is an acoutic device with two tranducers, located symmetrically on the robot's hull, with a specified angular separation. The transducers are commonly pointing to the seafloor and allow for fast and detailed mapping of large areas. Each of the transducers emits and receives one beam, creating one line of an acoustic image. The display of the acoustic map is done by adding subsequent lines in a "waterfall" fashion. The SSS suffers from significant mesurement noise, which can be simulated as a combination of a multiplicative component and an additive component corrupting the measured echo intensity, both possible to adjust by providing their standard deviations.
 
-The output data format can be set in the same way as for the FLS.
+The output data format can be set in the same way as for the FLS. An optional vertical beam pattern can be defined as angle/gain samples. Angles are specified in degrees relative to the transducer axis, gains are linear intensity values in the range ``[0, 1]``, and samples have to be ordered by strictly increasing angle. At least two samples are required. Queries outside the supplied angle interval use the gain of the nearest endpoint. If ``vertical_beam_pattern`` is omitted, the legacy smoothstep response is used.
 
 .. code-block:: xml
 
     <sensor name="SSS" type="sss">
-        <specs bins="500" lines="400" horizontal_beam_width="2.0" vertical_beam_width="50.0" vertical_tilt="60.0"/>
-        <settings range_min="1.0" range_max="100.0" gain="1.2"/>
-        <noise multiplicative="0.02" additive="0.04"/>
+        <specs bins="500"
+            lines="400"
+            horizontal_beam_width="2.0"
+            vertical_beam_width="90.0"
+            vertical_tilt="60.0"
+            output_format="float32"/>
+
+        <vertical_beam_pattern
+            angles="-45 -30 -15 0 15 30 45"
+            gains="0.0450 0.0000 0.4053 1.0000 0.4053 0.0000 0.0450"/>
+
+        <settings range_min="1.0"
+                range_max="100.0"
+                gain="1.2"/>
+        <noise multiplicative="0.02"
+            additive="0.04"/>
         <display colormap="hot"/>
-        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <origin xyz="0.0 0.0 0.0"
+                rpy="0.0 0.0 0.0"/>
         <link name="Link1"/>
     </sensor>
 
 .. code-block:: cpp
 
     #include <Stonefish/sensors/vision/SSS.h>
-    sf::SSS* sss = new sf::SSS("SSS", 500, 400, 50.0, 2.0, 60.0, 1.0, 100.0, sf::ColorMap::HOT);
+    sf::SSS* sss = new sf::SSS("SSS", 500, 400, 90.0, 2.0, 60.0, 1.0, 100.0, sf::ColorMap::HOT);
     sss->setGain(1.2);
+    sss->setVerticalBeamPattern({
+        {-45.0, 0.0450},
+        {-30.0, 0.0000},
+        {-15.0, 0.4053},
+        {  0.0, 1.0000},
+        { 15.0, 0.4053},
+        { 30.0, 0.0000},
+        { 45.0, 0.0450}
+    });
     sss->setNoise(0.02, 0.04);
     robot->AddVisionSensor(sss, "Link1", sf::I4());

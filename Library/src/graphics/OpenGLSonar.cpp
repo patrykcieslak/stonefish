@@ -37,7 +37,7 @@
 namespace sf
 {
 
-GLSLShader* OpenGLSonar::sonarInputShader_[2] = {nullptr, nullptr};
+GLSLShader* OpenGLSonar::sonarInputShader_[4] = {nullptr, nullptr, nullptr, nullptr};
 GLSLShader* OpenGLSonar::sonarVisualizeShader_[2] = {nullptr, nullptr};
 
 OpenGLSonar::OpenGLSonar(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonarUp, glm::uvec2 displayResolution, glm::vec2 range, SonarOutputFormat outputFormat)
@@ -185,6 +185,27 @@ void OpenGLSonar::Init()
     sonarInputShader_[1]->AddUniform("texNormal", ParameterType::INT);
     sonarInputShader_[1]->Use();
     sonarInputShader_[1]->SetUniform("texNormal", TEX_MAT_NORMAL);
+
+    sonarInputShader_[2] = new GLSLShader("sonarInputRefl.frag", "sonarInputUv.vert");
+    sonarInputShader_[2]->AddUniform("MVP", ParameterType::MAT4);
+    sonarInputShader_[2]->AddUniform("M", ParameterType::MAT4);
+    sonarInputShader_[2]->AddUniform("N", ParameterType::MAT3);
+    sonarInputShader_[2]->AddUniform("eyePos", ParameterType::VEC3);
+    sonarInputShader_[2]->AddUniform("texReflectivity", ParameterType::INT);
+    sonarInputShader_[2]->Use();
+    sonarInputShader_[2]->SetUniform("texReflectivity", TEX_MAT_REFLECTIVITY);
+
+    sonarInputShader_[3] = new GLSLShader("sonarInputReflUv.frag", "sonarInputUv.vert");
+    sonarInputShader_[3]->AddUniform("MVP", ParameterType::MAT4);
+    sonarInputShader_[3]->AddUniform("M", ParameterType::MAT4);
+    sonarInputShader_[3]->AddUniform("N", ParameterType::MAT3);
+    sonarInputShader_[3]->AddUniform("eyePos", ParameterType::VEC3);
+    sonarInputShader_[3]->AddUniform("texNormal", ParameterType::INT);
+    sonarInputShader_[3]->AddUniform("texReflectivity", ParameterType::INT);
+    sonarInputShader_[3]->Use();
+    sonarInputShader_[3]->SetUniform("texNormal", TEX_MAT_NORMAL);
+    sonarInputShader_[3]->SetUniform("texReflectivity", TEX_MAT_REFLECTIVITY);
+
     OpenGLState::UseProgram(0);
     
     sonarVisualizeShader_[0] = new GLSLShader("sonarVisualize.frag", "printer.vert");
@@ -200,6 +221,8 @@ void OpenGLSonar::Destroy()
 {
     if(sonarInputShader_[0] != nullptr) delete sonarInputShader_[0];
     if(sonarInputShader_[1] != nullptr) delete sonarInputShader_[1];
+    if(sonarInputShader_[2] != nullptr) delete sonarInputShader_[2];
+    if(sonarInputShader_[3] != nullptr) delete sonarInputShader_[3];
     if(sonarVisualizeShader_[0] != nullptr) delete sonarVisualizeShader_[0];
     if(sonarVisualizeShader_[1] != nullptr) delete sonarVisualizeShader_[1];
 }
