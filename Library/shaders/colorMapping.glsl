@@ -5,6 +5,11 @@ const float perulaB[256] = float[](0.5292, 0.5411, 0.553, 0.565, 0.5771, 0.5892,
 
 vec3 applyColorMapping(float value, int cmap)
 {
+    if(value==0.0)
+    {
+        return vec3(0.0, 0.0, 0.0);
+    }
+
     vec3 color;
     switch(cmap)
     {
