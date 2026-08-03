@@ -364,6 +364,14 @@ namespace sf
          */
         static GLuint LoadTexture(const std::string& filename, bool srgb = true, bool alpha = false, GLfloat anisotropy = 0.f, bool internal = false, FilteringMode fm = FilteringMode::TRILINEAR);
         
+        //! Load a one-channel, 16-bit or 32-bit floating-point OpenEXR texture.
+        /*!
+        \param filename path to the OpenEXR file
+        \param fm texture filtering mode
+        \return texture handle, or 0 when loading fails
+        */
+        static GLuint LoadScalarTexture(const std::string& filename, FilteringMode fm = FilteringMode::NEAREST);
+
         //! A static method to load an internal texture.
         /*!
          \param filename the name of the texture file

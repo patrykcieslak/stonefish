@@ -47,6 +47,12 @@
 #include "ResourceHandle.h"
 #endif
 
+#include <OpenEXR/ImfArray.h>
+#include <OpenEXR/ImfChannelList.h>
+#include <OpenEXR/ImfFrameBuffer.h>
+#include <OpenEXR/ImfInputFile.h>
+#include <OpenEXR/ImfTestFile.h>
+
 #define clamp(x,min,max)     (x > max ? max : (x < min ? min : x))
 
 namespace sf
@@ -1369,7 +1375,7 @@ std::string OpenGLContent::CreatePhysicalLook(const std::string& name, glm::vec3
     if(temperatureMapPath != "") look.temperatureMap = LoadTexture(temperatureMapPath, false);
     if(reflectivityMapPath != "")
     {
-        look.reflectivityMap = LoadTexture(reflectivityMapPath, false, false, 0.f, false, FilteringMode::NEAREST);
+        look.reflectivityMap = LoadScalarTexture(reflectivityMapPath, FilteringMode::NEAREST);
     }
     look.temperatureRange = temperatureRange;
     looks.push_back(look);
@@ -1515,6 +1521,165 @@ GLuint OpenGLContent::LoadTexture(const std::string& filename, bool srgb, bool a
     stbi_image_free(dataBuffer);
     
     return texture;
+}
+
+GLuint OpenGLContent::LoadScalarTexture(const std::string& filename, FilteringMode fm)
+{
+    try
+    {
+        GLuint texture;
+
+        // Open the EXR file and read the header
+        bool isTiled = false;
+        bool isDeep = false;
+        bool isMultipart = false;
+
+        if(!Imf::isOpenExrFile(filename.c_str(), isTiled, isDeep, isMultipart))
+        {
+            cError("File is not a valid OpenEXR image: %s", filename.c_str());
+            return 0;
+        }
+
+        if(isMultipart)
+        {
+            cError("Multipart EXR files are not supported: %s", filename.c_str());
+            return 0;
+        }
+
+        if(isDeep)
+        {
+            cError("Deep EXR files are not supported: %s", filename.c_str());
+            return 0;
+        }
+        Imf::InputFile file(filename.c_str());
+        const Imf::Header& header = file.header();
+
+        const Imf::ChannelList& channelList = header.channels();
+        Imf::ChannelList::ConstIterator channelIt = channelList.begin();
+
+        // Check if the exr file contains a single channel
+        if (channelIt == channelList.end())
+        {
+            cError("EXR file does not contain any channels: %s", filename.c_str());
+            return 0;
+        }
+
+        const std::string channelName = channelIt.name(); // Get the name of the first channel
+        const Imf::Channel& channel = channelIt.channel();
+
+        // Move to next channel and check if there is more than one channel
+        ++channelIt;
+        if (channelIt != channelList.end())
+        {
+            cError("EXR file contains more than one channel: %s", filename.c_str());
+            return 0;
+        }
+
+        // Expecting a float input image and 1x1 sampling
+        if(channel.type != Imf::FLOAT && channel.type != Imf::HALF)
+        {
+            cError("EXR channel must have FLOAT or HALF type: %s",filename.c_str());
+            return 0;
+        }
+
+        if(channel.xSampling != 1 || channel.ySampling != 1)
+        {
+            cError("EXR channel must use 1x1 sampling: %s",filename.c_str());
+            return 0;
+        }
+
+        // Check if the EXR file is mipmapped or ripmapped
+        if(header.hasTileDescription() && header.tileDescription().mode != Imf::ONE_LEVEL)
+        {
+            cError("Mipmapped and ripmapped EXR files are not supported: %s", filename.c_str());
+            return 0;
+        }
+
+        // EXR data windows are inclusive, so we need to calculate the width and height accordingly
+        const Imath::Box2i& dataWindow = header.dataWindow();
+
+        if(dataWindow.isEmpty())
+        {
+            cError("Empty EXR data window: %s", filename.c_str());
+            return 0;
+        }
+
+        const Imath::V2i extent = dataWindow.size();
+
+        const GLsizei width = extent.x + 1;
+        const GLsizei height = extent.y + 1;
+
+        // Allocate memory for the pixel data
+        Imf::Array2D<float> pixels;
+        pixels.resizeErase(height, width);
+
+        // Read the pixel data from the EXR file
+        Imf::FrameBuffer frameBuffer;
+        frameBuffer.insert(channelName,
+            Imf::Slice::Make(
+                Imf::FLOAT, // Destination type
+                &pixels[0][0],
+                dataWindow,
+                sizeof(float),
+                sizeof(float) * static_cast<std::size_t>(width)));
+        
+        file.setFrameBuffer(frameBuffer); // set the frame buffer for reading
+        file.readPixels(dataWindow.min.y, dataWindow.max.y); // read the pixel data
+
+        // Flip the pixel data vertically to match OpenGL's coordinate system
+        for(GLsizei y = 0; y < height / 2; ++y)
+        {
+            for(GLsizei x = 0; x < width; ++x)
+            {
+                std::swap(
+                    pixels[y][x],
+                    pixels[height - 1 - y][x]);
+            }
+        }
+
+        // Generate the OpenGL texture
+        glGenTextures(1, &texture);
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, &pixels[0][0]);
+        // Set Filter mode texture parameters
+        switch(fm)
+        {
+            case FilteringMode::NEAREST:
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                break;
+
+            case FilteringMode::BILINEAR:
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                break;
+
+            case FilteringMode::BILINEAR_MIPMAP:
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glGenerateMipmap(GL_TEXTURE_2D);
+                break;
+
+            case FilteringMode::TRILINEAR:
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glGenerateMipmap(GL_TEXTURE_2D);
+                break;
+        }
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        OpenGLState::UnbindTexture(TEX_BASE);
+
+        cInfo("Loaded scalar EXR texture '%s' (%d x %d, channel '%s')",filename.c_str(),
+            static_cast<int>(width),static_cast<int>(height),channelName.c_str());
+        return texture; // Return the generated texture ID
+    }
+    catch(const std::exception& exception)
+    {
+        cError("Failed to load scalar EXR texture '%s': %s",filename.c_str(),exception.what());
+        return 0;
+    }
 }
 
 GLuint OpenGLContent::LoadInternalTexture(const std::string& filename, bool srgb, bool alpha, GLfloat anisotropy)
