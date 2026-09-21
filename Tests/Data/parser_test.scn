@@ -126,7 +126,7 @@
 			</thrust_model>
 		</actuator>
 
-		<sensor name="Plugin" type="plugin" rate="10.0" plugin="/home/pcieslak/Libs/stonefish/build/Tests/libLinkSensorPlugin.so">
+		<sensor name="Plugin" type="plugin" rate="10.0" plugin="../../build/Tests/libLinkSensorPlugin.so">
 			<link name="L2"/>
 			<origin rpy="0 0 0" xyz="0 0 0"/>
 		</sensor>
