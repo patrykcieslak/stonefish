@@ -72,13 +72,13 @@ void FlyingTestManager::BuildScenario()
     quadCopter->DefineLinks(std::move(fuselage));
     quadCopter->BuildKinematicStructure();
     quadCopter->AddLinkActuator(std::make_unique<sf::Propeller>("Propeller1", std::make_unique<sf::Polyhedron>("Prop1", phy, sf::GetDataPath() + "propeller_air.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "propeller"), 
-        0.2, 0.1, 0.01, 10000, true), "Fuselage", sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0.5,0.0,-0.02)));
+        0.2, std::make_pair(0.1, 0.1), 0.01, 10000, true), "Fuselage", sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0.5,0.0,-0.02)));
     quadCopter->AddLinkActuator(std::make_unique<sf::Propeller>("Propeller2", std::make_unique<sf::Polyhedron>("Prop2", phy, sf::GetDataPath() + "propeller_air.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "propeller"), 
-        0.2, 0.1, 0.01, 10000, true), "Fuselage", sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(-0.5,0.0,-0.02)));
+        0.2, std::make_pair(0.1, 0.1), 0.01, 10000, true), "Fuselage", sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(-0.5,0.0,-0.02)));
     quadCopter->AddLinkActuator(std::make_unique<sf::Propeller>("Propeller3", std::make_unique<sf::Polyhedron>("Prop3", phy, sf::GetDataPath() + "propeller_air.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "propeller"), 
-        0.2, 0.1, 0.01, 10000, false), "Fuselage", sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0.0,0.5,-0.02)));
+        0.2, std::make_pair(0.1, 0.1), 0.01, 10000, false), "Fuselage", sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0.0,0.5,-0.02)));
     quadCopter->AddLinkActuator(std::make_unique<sf::Propeller>("Propeller4", std::make_unique<sf::Polyhedron>("Prop4", phy, sf::GetDataPath() + "propeller_air.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "propeller"), 
-        0.2, 0.1, 0.01, 10000, false), "Fuselage", sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0.0,-0.5,-0.02)));
+        0.2, std::make_pair(0.1, 0.1), 0.01, 10000, false), "Fuselage", sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0.0,-0.5,-0.02)));
     
     sf::Robot* robot = AddRobot(std::move(quadCopter), sf::Transform(sf::IQ(), sf::Vector3(0,0,-0.02)));
     static_cast<sf::Propeller*>(robot->getActuator("Propeller1"))->setSetpoint(0.5);

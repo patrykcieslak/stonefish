@@ -54,7 +54,7 @@
 #include <sensors/Contact.h>
 #include <sensors/vision/ColorCamera.h>
 #include <sensors/vision/DepthCamera.h>
-#include <sensors/vision/Multibeam2.h>
+#include <sensors/vision/Lidar.h>
 #include <sensors/vision/FLS.h>
 #include <sensors/vision/SSS.h>
 #include <sensors/vision/MSIS.h>
@@ -242,22 +242,22 @@ void UnderwaterTestManager::BuildScenario()
     std::unique_ptr<sf::GPS> gps = std::make_unique<sf::GPS>("GPS");
     gps->setNoise(0.5);
     
-    //std::unique_ptr<sf::Multibeam2> mb = std::make_unique<sf::Multibeam2>("Multibeam", 1000, 300, 50.0, 40.0, 0.1, 10.0, 10.0);
+    //std::unique_ptr<sf::Lidar> mb = std::make_unique<sf::Lidar>("Multibeam", 1000, 300, 50.0, 40.0, 0.1, 10.0, 10.0);
     //mb->setDisplayOnScreen(true);
     
     //std::unique_ptr<sf::DepthCamera> dc = std::make_unique<sf::DepthCamera>("DepthCam", 1000, 350, 50.0, 0.1, 10.0, 10.0);
     //dc->setDisplayOnScreen(true);
     
-    std::unique_ptr<sf::FLS> fls = std::make_unique<sf::FLS>("FLS", 256, 500, 150.0, 30.0, 1.0, 20.0, sf::ColorMap::GREEN_BLUE, sf::SonarOutputFormat::U8);
+    std::unique_ptr<sf::FLS> fls = std::make_unique<sf::FLS>("FLS", 256, 500, 150.0, 30.0, 1.0, 20.0, sf::SonarOutputFormat::U8);
     fls->setNoise(0.05, 0.05);
     fls->setDisplayOnScreen(true, 800, 250, 0.4f);
     //fls->InstallNewDataHandler(std::bind(&UnderwaterTestManager::FLSDataCallback, this, std::placeholders::_1));
 
-    std::unique_ptr<sf::MSIS> msis = std::make_unique<sf::MSIS>("MSIS", 1.5, 500, 2.0, 30.0, -50, 50, 1.0, 100.0, sf::ColorMap::GREEN_BLUE, sf::SonarOutputFormat::U8);
+    std::unique_ptr<sf::MSIS> msis = std::make_unique<sf::MSIS>("MSIS", 1.5, 500, 2.0, 30.0, -50, 50, 1.0, 100.0, sf::SonarOutputFormat::U8);
     msis->setDisplayOnScreen(true, 880, 455, 0.6f);
     //msis->InstallNewDataHandler(std::bind(&UnderwaterTestManager::MSISDataCallback, this, std::placeholders::_1));
     
-    std::unique_ptr<sf::SSS> sss = std::make_unique<sf::SSS>("SSS", 800, 400, 70.0, 1.5, 50.0, 1.0, 100.0, sf::ColorMap::GREEN_BLUE, sf::SonarOutputFormat::U8);
+    std::unique_ptr<sf::SSS> sss = std::make_unique<sf::SSS>("SSS", 800, 400, 70.0, 1.5, 50.0, 1.0, 100.0, sf::SonarOutputFormat::U8);
     sss->setDisplayOnScreen(true, 710, 5, 0.6f);
     //sss->InstallNewDataHandler(std::bind(&UnderwaterTestManager::SSSDataCallback, this, std::placeholders::_1));
     

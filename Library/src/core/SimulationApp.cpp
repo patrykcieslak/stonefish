@@ -50,11 +50,13 @@ SimulationApp::SimulationApp(const std::string& title, const std::string& dataDi
 
 SimulationApp::~SimulationApp()
 {
-    for (auto h : pluginHandles_)
-        dlclose(h.second);
-
     if(SimulationApp::handle == this)
         SimulationApp::handle = nullptr;
+
+    simManager_.reset();
+
+    for (auto h : pluginHandles_)
+        dlclose(h.second);
 }
 
 void SimulationApp::setMaxPhysicsThreads(unsigned int n)
