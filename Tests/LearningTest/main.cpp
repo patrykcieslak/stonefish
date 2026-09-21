@@ -63,7 +63,7 @@ int learning(void* data)
         sf::Scalar command = btCos(angle1 * angle2) * 15;
 
         // Apply actuator commands
-        static_cast<sf::Motor*>(simManager->getActuator("Motor"))->setCommand(command);
+        static_cast<sf::Motor*>(simManager->getActuator("Motor"))->setTorque(command);
     }
     
     return 0;
