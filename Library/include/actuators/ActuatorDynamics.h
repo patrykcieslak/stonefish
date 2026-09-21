@@ -449,8 +449,9 @@ namespace sf
           \param kq torque coefficient
           \param D diameter of the propeller [m]
           \param RH flag informing if the propeller is right-handed
+          \param rho initial fluid density [kg/m^3]
         */
-        FDThrust(Scalar ktp, Scalar ktn, Scalar kq, Scalar D, bool RH, Scalar rho)
+        FDThrust(Scalar ktp, Scalar ktn, Scalar kq, Scalar D, bool RH, Scalar rho = Scalar(0))
             : ktp_(ktp), ktn_(ktn), kq_(kq), D_(D), RH_(RH), rho_(rho)
         {
             // TODO: Find a better way of defining alpha and beta
@@ -494,6 +495,15 @@ namespace sf
         void setIncomingFluidVelocity(Scalar vel)
         {
             u_ = vel;
+        }
+
+        //! A method used to set the density of the fluid the thruster is working in.
+        /*!
+          \param rho density of the fluid [kg/m^3]
+        */
+        void setLiquidDensity(Scalar rho)
+        {
+            rho_ = rho;
         }
 
         //! A method returning the type of the model.
