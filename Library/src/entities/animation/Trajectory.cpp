@@ -31,6 +31,11 @@ namespace sf
 Trajectory::Trajectory(PlaybackMode playback) 
     : playMode(playback), playTime(0), endTime(0), iteration(0), forward(true)
 {
+    interpTrans = I4();
+    interpVel = V0();
+    interpAngVel = V0();
+    interpAcc = V0();
+    interpAngAcc = V0();
 }
 
 Trajectory::~Trajectory()
@@ -65,6 +70,11 @@ Vector3 Trajectory::getInterpolatedAngularVelocity() const
 Vector3 Trajectory::getInterpolatedLinearAcceleration() const
 {
     return interpAcc;
+}
+
+Vector3 Trajectory::getInterpolatedAngularAcceleration() const
+{
+    return interpAngAcc;
 }
 
 void Trajectory::Play(Scalar dt)
@@ -119,6 +129,7 @@ void Trajectory::Play(Scalar dt)
         interpVel.setZero();
         interpAngVel.setZero();
         interpAcc.setZero();
+        interpAngAcc.setZero();
     }
 }
 
