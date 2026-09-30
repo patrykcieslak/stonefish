@@ -51,6 +51,8 @@ Animated bodies require a definition of a trajectory to follow, when the simulat
 
 - **B-spline** ``type="spline"`` - position of the body is interpolated using a cubic B-spline, orientation of the body is interpolated linearly. Linear velocities are computed as 1st order derivatives, while angular velocities using simple differentation, both based on time differences between the key points.
 
+- **Natural cubic spline** ``type="cubic-spline"`` - position of the body is interpolated using a natural cubic spline parametrized directly by the key point times, orientation of the body is interpolated using a smooth rotation spline passing through the key point orientations. Linear and angular velocities and accelerations are computed analytically and are continuous along the whole trajectory, including the key points. This trajectory type is recommended when attaching sensors measuring accelerations, e.g., an IMU, also when they are placed away from the origin of the body.
+
 - **Catmull-Rom** ``type="catmull-rom"`` - position of the body is interpolated using a Catmull-Rom spline, orientation of the body is interpolated linearly. Linear velocities are computed as 1st order derivatives, while angular velocities using simple differentation, both based on time differences between the key points.
 
 When any of the trajectories, other than the manual, is selected, the body is animated automatically along it, with three possible **playback modes**:
