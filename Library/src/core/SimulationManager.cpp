@@ -664,6 +664,13 @@ Vector3 SimulationManager::getGravity() const
     return Vector3(0,0,g);
 }
 
+Vector3 SimulationManager::getEarthRate() const
+{
+    const Scalar omegaE = Scalar(7.292115e-5); //WGS84 Earth rotation rate [rad/s]
+    Scalar lat = ned->getLatitude();
+    return Vector3(omegaE * btCos(lat), Scalar(0), -omegaE * btSin(lat));
+}
+
 void SimulationManager::setICSolverParams(bool useGravity, Scalar timeStep, unsigned int maxIterations, Scalar maxTime, Scalar linearTolerance, Scalar angularTolerance)
 {
     icUseGravity = useGravity;

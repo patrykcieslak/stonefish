@@ -164,4 +164,9 @@ Matrix3 NED::__nRe__(const Scalar lat_rad, const Scalar lon_rad) const
     return ret;
 }
 
+Scalar NED::getLatitude() const
+{
+    return _init_lat;
+}
+
 }

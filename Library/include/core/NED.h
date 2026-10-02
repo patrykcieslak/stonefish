@@ -117,6 +117,12 @@ namespace sf
         void Ned2Geodetic(const Scalar north, const Scalar east, const Scalar depth,
                           Scalar& lat, Scalar& lon, Scalar& height) const;
         
+        //! A method returning the latitude of the NED origin.
+        /*!
+         \return latitude of the NED origin [rad]
+         */
+        Scalar getLatitude() const;
+        
     private:
         Scalar _init_lat;
         Scalar _init_lon;

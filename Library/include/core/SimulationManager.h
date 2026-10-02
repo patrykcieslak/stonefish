@@ -460,6 +460,12 @@ namespace sf
         //! A method returning the gravity vector.
         Vector3 getGravity() const;
         
+        //! A method returning the Earth rotation rate vector expressed in the world (NED) frame.
+        /*!
+         \return Earth angular velocity at the latitude of the NED origin [rad s^-1]
+         */
+        Vector3 getEarthRate() const;
+        
         //! A method returning the simulation time in seconds.
         /*! 
          \param applyOffset a flag deciding if the offset between simulation time and real time should be applied
