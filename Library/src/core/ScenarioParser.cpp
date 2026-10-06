@@ -50,6 +50,7 @@
 #include "sensors/scalar/Accelerometer.h"
 #include "sensors/scalar/Gyroscope.h"
 #include "sensors/scalar/IMU.h"
+#include "sensors/scalar/RawIMU.h"
 #include "sensors/scalar/DVL.h"
 #include "sensors/scalar/GPS.h"
 #include "sensors/scalar/INS.h"
@@ -3513,6 +3514,91 @@ Sensor* ScenarioParser::ParseSensor(XMLElement* element, const std::string& name
                 log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
             else
                 imu->setNoise(axyz, avxyz, yawDrift, laxyz);
+        }
+        sens = imu;
+    }
+    else if(typeStr == "raw_imu")
+    {
+        int history;
+        if((item = element->FirstChildElement("history")) == nullptr || item->QueryAttribute("samples", &history) != XML_SUCCESS)
+            history = -1;
+            
+        RawIMU* imu = new RawIMU(sensorName, rate, history);
+        
+        //Helper reading an attribute given either as a vector or as a scalar (same for all axes)
+        auto queryVector = [this](XMLElement* el, const char* attr, Vector3& out) -> bool
+        {
+            const char* str = nullptr;
+            Scalar val;
+            if(el->QueryStringAttribute(attr, &str) == XML_SUCCESS && ParseVector(str, out))
+                return true;
+            if(el->QueryAttribute(attr, &val) == XML_SUCCESS)
+            {
+                out = Vector3(val, val, val);
+                return true;
+            }
+            return false;
+        };
+        
+        //Optional range definition
+        if((item = element->FirstChildElement("range")) != nullptr)    
+        {
+            Vector3 avxyz = VMAX();
+            Vector3 laxyz = VMAX();
+            int c = 0;
+            if(queryVector(item, "angular_velocity", avxyz)) ++c;
+            if(queryVector(item, "linear_acceleration", laxyz)) ++c;
+            
+            if(c == 0)
+                log.Print(MessageType::WARNING, "Range of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+            else
+                imu->setRange(avxyz, laxyz);
+        }
+        //Optional white noise definition
+        if((item = element->FirstChildElement("noise")) != nullptr)    
+        {
+            Vector3 avxyz = V0();
+            Vector3 laxyz = V0();
+            int c = 0;
+            if(queryVector(item, "angular_velocity", avxyz)) ++c;
+            if(queryVector(item, "linear_acceleration", laxyz)) ++c;
+            
+            if(c == 0)
+                log.Print(MessageType::WARNING, "Noise of sensor '%s' not properly defined - using defaults.", sensorName.c_str());
+            else
+                imu->setNoise(avxyz, laxyz);
+        }
+        //Optional bias definitions
+        const char* biasTags[2] = {"gyro_bias", "acc_bias"};
+        for(int b=0; b<2; ++b)
+        {
+            if((item = element->FirstChildElement(biasTags[b])) != nullptr)
+            {
+                Vector3 constant = V0();
+                Vector3 turnOn = V0();
+                Vector3 instability = V0();
+                Vector3 tau = V0();
+                int c = 0;
+                if(queryVector(item, "value", constant)) ++c;
+                if(queryVector(item, "turn_on", turnOn)) ++c;
+                if(queryVector(item, "instability", instability)) ++c;
+                if(queryVector(item, "tau", tau)) ++c;
+                
+                if(c == 0)
+                    log.Print(MessageType::WARNING, "Bias '%s' of sensor '%s' not properly defined - ignoring.", biasTags[b], sensorName.c_str());
+                else if(b == 0)
+                    imu->setGyroBias(constant, turnOn, instability, tau);
+                else
+                    imu->setAccBias(constant, turnOn, instability, tau);
+            }
+        }
+        //Optional Earth rotation switch (enabled by default)
+        if((item = element->FirstChildElement("earth_rotation")) != nullptr)
+        {
+            bool enabled = true;
+            if(item->QueryBoolAttribute("enabled", &enabled) != XML_SUCCESS)
+                log.Print(MessageType::WARNING, "Earth rotation of sensor '%s' not properly defined - using default.", sensorName.c_str());
+            imu->setEarthRotation(enabled);
         }
         sens = imu;
     }

@@ -227,6 +227,49 @@ The inertial measurement unit (IMU) measures the orientation, angular velocities
     imu->setNoise(sf::Vector3(0.1, 0.1, 0.5), sf::Vector3(0.05, 0.05, 0.05), 0.001, sf::Vector3(0.1, 0.1, 0.1));
     robot->AddLinkSensor(imu, "Link1", sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(0.1, 0.0, 0.0));
 
+Raw IMU
+-------
+
+The raw inertial measurement unit measures only the angular velocities and the specific force (linear acceleration including gravity) of the link, like a real strapdown IMU. It does not output orientation.
+
+Optionally, the measurements include the effects of the Earth rotation. These are computed at the latitude of the NED origin, defined in the environment. The gyroscopes sense the Earth rotation rate :math:`\Omega_n = \omega_e [\cos\varphi, 0, -\sin\varphi]^T`, with :math:`\omega_e = 7.292115 \cdot 10^{-5}` rad/s. The accelerometers sense the Coriolis acceleration :math:`2 \Omega_n \times v`. The gravity is treated as plumb-bob gravity, so the centripetal term is already included. The transport rate is neglected. The Earth rotation is enabled by default and it only affects the measurements, not the simulated dynamics.
+
+Each triad (gyroscopes and accelerometers) can have a bias composed of three terms, defined for each axis:
+
+- a constant bias ``value``,
+- a random turn-on bias, drawn from a normal distribution with standard deviation ``turn_on`` at every reset of the simulation,
+- a time-varying bias modelled as a first-order Gauss-Markov process, with standard deviation ``instability`` and correlation time ``tau`` [s]. If ``tau`` is not positive, the bias is a random walk and ``instability`` is its intensity, in units per square root of second.
+
+The measurement ranges and the standard deviation of the white noise can be optionally defined, for each axis.
+
+.. code-block:: xml
+
+    <sensor name="RawIMU" rate="200.0" type="raw_imu">
+        <range angular_velocity="10.0" linear_acceleration="50.0"/>
+        <noise angular_velocity="0.0001" linear_acceleration="0.001"/>
+        <gyro_bias value="0.0 0.0 0.0" turn_on="0.00001" instability="0.000002" tau="300.0"/>
+        <acc_bias value="0.0 0.0 0.0" turn_on="0.001" instability="0.00005" tau="300.0"/>
+        <earth_rotation enabled="true"/>
+        <history samples="1"/>
+        <origin xyz="0.1 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <link name="Link1"/>
+    </sensor>
+
+.. code-block:: cpp
+
+    #include <Stonefish/sensors/scalar/RawIMU.h>
+    sf::RawIMU* imu = new sf::RawIMU("RawIMU", 200.0, 1);
+    imu->setRange(sf::Vector3(10.0, 10.0, 10.0), sf::Vector3(50.0, 50.0, 50.0));
+    imu->setNoise(sf::Vector3(0.0001, 0.0001, 0.0001), sf::Vector3(0.001, 0.001, 0.001));
+    imu->setGyroBias(sf::Vector3(0.0, 0.0, 0.0), sf::Vector3(0.00001, 0.00001, 0.00001), sf::Vector3(0.000002, 0.000002, 0.000002), sf::Vector3(300.0, 300.0, 300.0));
+    imu->setAccBias(sf::Vector3(0.0, 0.0, 0.0), sf::Vector3(0.001, 0.001, 0.001), sf::Vector3(0.00005, 0.00005, 0.00005), sf::Vector3(300.0, 300.0, 300.0));
+    imu->setEarthRotation(true);
+    robot->AddLinkSensor(imu, "Link1", sf::Transform(sf::Quaternion(0.0, 0.0, 0.0), sf::Vector3(0.1, 0.0, 0.0));
+
+.. note::
+
+    The current values of the biases can be obtained with ``getGyroBias()`` and ``getAccBias()``, which is useful as ground truth when evaluating navigation filters.
+
 Odometry
 --------
 
