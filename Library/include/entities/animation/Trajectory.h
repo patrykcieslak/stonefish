@@ -71,6 +71,9 @@ namespace sf
         //! A method returning the current interpolated linear acceleration.
         Vector3 getInterpolatedLinearAcceleration() const;
 
+        //! A method returning the current interpolated angular acceleration.
+        Vector3 getInterpolatedAngularAcceleration() const;
+
         //! A method returning the current playback time.
         Scalar getPlaybackTime() const;
 
@@ -89,6 +92,7 @@ namespace sf
         Vector3 interpVel;
         Vector3 interpAngVel;
         Vector3 interpAcc;
+        Vector3 interpAngAcc;
     };
 }
 

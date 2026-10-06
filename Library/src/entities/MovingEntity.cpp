@@ -37,6 +37,8 @@ namespace sf
 MovingEntity::MovingEntity(std::string uniqueName, std::string material, std::string look) : Entity(uniqueName)
 {
     rigidBody = nullptr;
+    linearAcc.setZero();
+    angularAcc.setZero();
     mat = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(material);
     if(SimulationApp::getApp()->hasGraphics())
         lookId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);

@@ -36,6 +36,7 @@
 #include "entities/animation/PWLTrajectory.h"
 #include "entities/animation/CRTrajectory.h"
 #include "entities/animation/BSTrajectory.h"
+#include "entities/animation/NCSTrajectory.h"
 #include "entities/solids/Box.h"
 #include "entities/solids/Cylinder.h"
 #include "entities/solids/Sphere.h"
@@ -1300,12 +1301,14 @@ bool ScenarioParser::ParseAnimated(XMLElement* element)
                 ((ManualTrajectory*)tr)->setTransform(T);
             }
         }
-        else if(trTypeStr == "pwl" || trTypeStr == "spline" || trTypeStr == "catmull-rom")
+        else if(trTypeStr == "pwl" || trTypeStr == "spline" || trTypeStr == "cubic-spline" || trTypeStr == "catmull-rom")
         {
             if(trTypeStr == "pwl")
                 tr = new PWLTrajectory(pm);
             else if(trTypeStr == "spline")
                 tr = new BSTrajectory(pm);
+            else if(trTypeStr == "cubic-spline")
+                tr = new NCSTrajectory(pm);
             else
                 tr = new CRTrajectory(pm);
             

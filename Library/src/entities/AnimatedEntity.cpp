@@ -296,10 +296,19 @@ void AnimatedEntity::Update(Scalar dt)
         return;
 
     tr->Play(dt);
-    rigidBody->getMotionState()->setWorldTransform(tr->getInterpolatedTransform() *  T_CG2O.inverse());
-    rigidBody->setLinearVelocity(tr->getInterpolatedLinearVelocity());
-    rigidBody->setAngularVelocity(tr->getInterpolatedAngularVelocity());    
-    setLinearAcceleration(tr->getInterpolatedLinearAcceleration());
+
+    //Trajectory defines the motion of the origin frame -> transfer to CG
+    Transform T_O = tr->getInterpolatedTransform();
+    Transform T_CG = T_O * T_CG2O.inverse();
+    Vector3 r = T_CG.getOrigin() - T_O.getOrigin();
+    Vector3 omega = tr->getInterpolatedAngularVelocity();
+    Vector3 epsilon = tr->getInterpolatedAngularAcceleration();
+
+    rigidBody->getMotionState()->setWorldTransform(T_CG);
+    rigidBody->setLinearVelocity(tr->getInterpolatedLinearVelocity() + omega.cross(r));
+    rigidBody->setAngularVelocity(omega);
+    setLinearAcceleration(tr->getInterpolatedLinearAcceleration() + epsilon.cross(r) + omega.cross(omega.cross(r)));
+    setAngularAcceleration(epsilon);
 }
 
 std::vector<Renderable> AnimatedEntity::Render()
