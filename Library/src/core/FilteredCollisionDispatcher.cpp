@@ -55,14 +55,14 @@ bool FilteredCollisionDispatcher::needsCollision(const btCollisionObject* body0,
         return false;
 
     if(inclusive_)
-        needs = SimulationApp::getApp()->getSimulationManager()->CheckCollision(ent0, ent1) > -1;
+        needs = SimulationApp::GetApp()->GetSimulationManager()->CheckCollision(ent0, ent1) > -1;
     else //exclusive
-        needs = SimulationApp::getApp()->getSimulationManager()->CheckCollision(ent0, ent1) == -1;
+        needs = SimulationApp::GetApp()->GetSimulationManager()->CheckCollision(ent0, ent1) == -1;
     
     return needs;
 }
 
-void FilteredCollisionDispatcher::myNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)
+void FilteredCollisionDispatcher::MyNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)
 {
     btCollisionObject* colObj0 = (btCollisionObject*)collisionPair.m_pProxy0->m_clientObject;
     btCollisionObject* colObj1 = (btCollisionObject*)collisionPair.m_pProxy1->m_clientObject;

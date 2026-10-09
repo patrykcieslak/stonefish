@@ -54,13 +54,13 @@ namespace sf
         virtual std::vector<Renderable> Render(VelocityFieldUBO& ubo) = 0;
 
         //! A method to enable/disable the velocity field.
-        void setEnabled(bool en);
+        void SetEnabled(bool en);
 
         //! A method informing if the velocity field is enabled.
-        bool isEnabled() const;
+        bool IsEnabled() const;
 
         //! A method returning the type of the velocity field.
-        virtual VelocityFieldType getType() const = 0;
+        virtual VelocityFieldType GetType() const = 0;
 
     private:
         bool enabled_;

@@ -54,7 +54,7 @@ ForceTorque::ForceTorque(const std::string& uniqueName, const Transform& origin,
 {
 }
 
-Transform ForceTorque::getSensorFrame() const
+Transform ForceTorque::GetSensorFrame() const
 {
     return lastFrame_;
 }
@@ -63,16 +63,16 @@ void ForceTorque::InternalUpdate(Scalar dt)
 {
     if(j_ != nullptr && attach_ != nullptr)
     {
-        Vector3 force(j_->getFeedback(0), j_->getFeedback(1), j_->getFeedback(2));
-        Vector3 torque(j_->getFeedback(3), j_->getFeedback(4), j_->getFeedback(5));
+        Vector3 force(j_->GetFeedback(0), j_->GetFeedback(1), j_->GetFeedback(2));
+        Vector3 torque(j_->GetFeedback(3), j_->GetFeedback(4), j_->GetFeedback(5));
     
-        if(j_->isMultibodyJoint())
+        if(j_->IsMultibodyJoint())
         {  
             force /= dt;
             torque /= dt;
         }
     
-        lastFrame_ = attach_->getOTransform() * o2s_;
+        lastFrame_ = attach_->GetOTransform() * o2s_;
         Matrix3 toSensor = lastFrame_.getBasis().inverse();
         force = toSensor * force;
         torque = toSensor * torque;
@@ -84,12 +84,12 @@ void ForceTorque::InternalUpdate(Scalar dt)
     else
     {   
         Vector3 force, torque;
-        unsigned int childId = fe_->getJointFeedback(jId_, force, torque);
-        lastFrame_ = fe_->getLink(childId).solid->getCG2OTransform() * o2s_;
+        unsigned int childId = fe_->GetJointFeedback(jId_, force, torque);
+        lastFrame_ = fe_->GetLink(childId).solid->GetCG2OTransform() * o2s_;
         Matrix3 toSensor = lastFrame_.getBasis().inverse();
         force = toSensor * force;
         torque = toSensor * torque;
-        lastFrame_ = fe_->getLink(childId).solid->getCGTransform() * lastFrame_; //From local to global
+        lastFrame_ = fe_->GetLink(childId).solid->GetCgTransform() * lastFrame_; //From local to global
         
         AddSampleToHistory(std::make_unique<Sample>(
             std::vector<Scalar>({force.getX(), force.getY(), force.getZ(), torque.getX(), torque.getY(), torque.getZ()})
@@ -97,7 +97,7 @@ void ForceTorque::InternalUpdate(Scalar dt)
     }
 }
 
-void ForceTorque::setRange(const Vector3& forceMax, const Vector3& torqueMax)
+void ForceTorque::SetRange(const Vector3& forceMax, const Vector3& torqueMax)
 {
     channels_[0].rangeMin = -btClamped(forceMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
     channels_[1].rangeMin = -btClamped(forceMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
@@ -114,20 +114,20 @@ void ForceTorque::setRange(const Vector3& forceMax, const Vector3& torqueMax)
     channels_[5].rangeMax = btClamped(torqueMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
     
-void ForceTorque::setNoise(Scalar forceStdDev, Scalar torqueStdDev)
+void ForceTorque::SetNoise(Scalar forceStdDev, Scalar torqueStdDev)
 {
-    channels_[0].setStdDev(btClamped(forceStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels_[1].setStdDev(btClamped(forceStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels_[2].setStdDev(btClamped(forceStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels_[3].setStdDev(btClamped(torqueStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels_[4].setStdDev(btClamped(torqueStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels_[5].setStdDev(btClamped(torqueStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[0].SetStdDev(btClamped(forceStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[1].SetStdDev(btClamped(forceStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[2].SetStdDev(btClamped(forceStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[3].SetStdDev(btClamped(torqueStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[4].SetStdDev(btClamped(torqueStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[5].SetStdDev(btClamped(torqueStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
     
 std::vector<Renderable> ForceTorque::Render()
 {
     std::vector<Renderable> items = Sensor::Render();
-    if(isRenderable())
+    if(IsRenderable())
     {
         Renderable item;
         item.type = RenderableType::SENSOR_CS;
@@ -137,14 +137,14 @@ std::vector<Renderable> ForceTorque::Render()
     return items;
 }
 
-ScalarSensorType ForceTorque::getScalarSensorType() const
+ScalarSensorType ForceTorque::GetScalarSensorType() const
 {
     return ScalarSensorType::FT;
 }
 
 // Statics
 
-ConstructInfo ForceTorque::getConstructInfo()
+ConstructInfo ForceTorque::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -202,7 +202,7 @@ std::unique_ptr<ForceTorque> ForceTorque::Construct(const std::string& uniqueNam
     if (value.valid)
         torqueMax = std::get<Vector3>(value.value);
 
-    sensor->setRange(forceMax, torqueMax);
+    sensor->SetRange(forceMax, torqueMax);
     
     // Noise (optional)
     Scalar force (0.);
@@ -216,7 +216,7 @@ std::unique_ptr<ForceTorque> ForceTorque::Construct(const std::string& uniqueNam
     if (value.valid)
         torque = std::get<Scalar>(value.value);
 
-    sensor->setNoise(force, torque);
+    sensor->SetNoise(force, torque);
 
     return sensor;
 }

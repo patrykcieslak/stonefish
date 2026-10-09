@@ -114,35 +114,35 @@ namespace sf
         void Update();
         
         //! A method that informs if the camera needs update.
-        bool needsUpdate() override;
+        bool NeedsUpdate() override;
         
         //! A method to set a pointer to a camera sensor.
         /*!
          \param cam a pointer to a camera sensor
          \param index the id of the OpenGL thermal camera
          */
-        void setCamera(Camera* cam, unsigned int index = 0);
+        void SetCamera(Camera* cam, unsigned int index = 0);
         
         //! A method to set the noise properties of the thermal camera.
         /*!
          \param tempStdDev the standard deviation of the temperature measurement
          */
-        void setNoise(GLfloat tempStdDev);
+        void SetNoise(GLfloat tempStdDev);
 
         //! A method to set the range of temperatures represented by the color mapped image.
         /*!
          \param range the range of the temperatures in deg C
         */
-        void setDisplayRange(glm::vec2 tempRange);
+        void SetDisplayRange(glm::vec2 tempRange);
 
         //! A method to set the color map used during temperature data visulization.
         /*!
          \param cm the color map to be used
          */
-        void setColorMap(ColorMap cm);
+        void SetColorMap(ColorMap cm);
 
         //! A method returning the type of the view.
-        ViewType getType() const override;
+        ViewType GetType() const override;
         
         //! A static method to load shaders.
         static void Init();

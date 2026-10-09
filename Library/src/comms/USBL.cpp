@@ -38,12 +38,12 @@ USBL::USBL(const std::string& uniqueName, uint64_t deviceId, Scalar minVerticalF
     noise_ = false;
 }
     
-std::map<uint64_t, BeaconInfo>& USBL::getBeaconInfo()
+std::map<uint64_t, BeaconInfo>& USBL::GetBeaconInfo()
 {
     return beacons_;
 }
 
-CommType USBL::getType() const
+CommType USBL::GetType() const
 {
     return CommType::USBL;
 }

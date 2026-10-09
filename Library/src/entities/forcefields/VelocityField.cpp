@@ -32,12 +32,12 @@ VelocityField::VelocityField() : enabled_(true)
 {
 }
 
-void VelocityField::setEnabled(bool en)
+void VelocityField::SetEnabled(bool en)
 {
     enabled_ = en;
 }
 
-bool VelocityField::isEnabled() const
+bool VelocityField::IsEnabled() const
 {
     return enabled_;
 }

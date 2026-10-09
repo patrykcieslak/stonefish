@@ -50,39 +50,39 @@ OpenGLLight::OpenGLLight(glm::vec3 position, GLfloat radius, glm::vec3 c, GLfloa
     sourceObject_ = -1;
 }
 
-bool OpenGLLight::isActive()
+bool OpenGLLight::IsActive()
 {
     return active_;
 }
 
-glm::vec4 OpenGLLight::getColorLi()
+glm::vec4 OpenGLLight::GetColorLi()
 {
     return colorLi_;
 }
 
-glm::vec3 OpenGLLight::getPosition()
+glm::vec3 OpenGLLight::GetPosition()
 {
     return pos_;
 }
 
-GLfloat OpenGLLight::getSourceRadius()
+GLfloat OpenGLLight::GetSourceRadius()
 {
 	return R_;
 }
 
-int OpenGLLight::getSourceObject()
+int OpenGLLight::GetSourceObject()
 {
     return sourceObject_;
 }
 
-glm::mat4 OpenGLLight::getTransform()
+glm::mat4 OpenGLLight::GetTransform()
 {
     return glm::translate(pos_);
 }
 
 bool OpenGLLight::operator<(const OpenGLLight& l)
 {
-    return (int)getType() < (int)l.getType();
+    return (int)GetType() < (int)l.GetType();
 }
 
 void OpenGLLight::UpdatePosition(glm::vec3 p)
@@ -126,7 +126,7 @@ void OpenGLLight::Init(const std::vector<std::unique_ptr<OpenGLLight>>& lights)
     //Count spotlights
     unsigned int numOfSpotLights = 0;
     for(unsigned int i=0; i < lights.size(); ++i)
-        if(lights[i]->getType() == LightType::SPOT) ++numOfSpotLights;
+        if(lights[i]->GetType() == LightType::SPOT) ++numOfSpotLights;
         
     //Generate shadowmap array
     glGenTextures(1, &spotShadowArrayTex);
@@ -152,7 +152,7 @@ void OpenGLLight::Init(const std::vector<std::unique_ptr<OpenGLLight>>& lights)
     //Initialize lights shadow FBOs
     numOfSpotLights = 0;
     for(unsigned int i=0; i < lights.size(); ++i)
-        if(lights[i]->getType() == LightType::SPOT) lights[i]->InitShadowmap(numOfSpotLights++);		
+        if(lights[i]->GetType() == LightType::SPOT) lights[i]->InitShadowmap(numOfSpotLights++);		
         
     //Bind textures and samplers
     OpenGLState::BindTexture(TEX_SPOT_SHADOW, GL_TEXTURE_2D_ARRAY, spotShadowArrayTex);

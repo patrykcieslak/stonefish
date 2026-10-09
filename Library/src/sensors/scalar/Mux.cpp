@@ -36,7 +36,7 @@ bool Mux::AddComponent(ScalarSensor* s, size_t channel)
     if(s == nullptr)
         return false;
     
-    if(channel >= s->getNumOfChannels())
+    if(channel >= s->GetNumOfChannels())
         return false;
     
     MuxComponent cmp;
@@ -47,7 +47,7 @@ bool Mux::AddComponent(ScalarSensor* s, size_t channel)
     return true;
 }
 
-MuxComponent* Mux::getComponent(size_t index)
+MuxComponent* Mux::GetComponent(size_t index)
 {
     if(index < components_.size())
         return &components_[index];
@@ -55,16 +55,16 @@ MuxComponent* Mux::getComponent(size_t index)
     return nullptr;
 }
 
-std::vector<Scalar> Mux::getLastSample()
+std::vector<Scalar> Mux::GetLastSample()
 {
     std::vector<Scalar> sample(components_.size());
     for(size_t i = 0; i < components_.size(); ++i)
-        sample[i] = components_[i].sensor->getLastSample().getValue(components_[i].channel);
+        sample[i] = components_[i].sensor->GetLastSample().GetValue(components_[i].channel);
 
     return sample;
 }
 
-size_t Mux::getNumOfComponents() const
+size_t Mux::GetNumOfComponents() const
 {
     return components_.size();
 }

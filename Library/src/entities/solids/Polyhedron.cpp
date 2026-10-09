@@ -78,7 +78,7 @@ Polyhedron::Polyhedron(const std::string& uniqueName, PhysicsSettings phy,
 {
 }
     
-SolidType Polyhedron::getSolidType() const
+SolidType Polyhedron::GetSolidType() const
 {
     return SolidType::POLYHEDRON;
 }
@@ -86,9 +86,9 @@ SolidType Polyhedron::getSolidType() const
 std::unique_ptr<btCollisionShape> Polyhedron::BuildCollisionShape()
 {
     std::unique_ptr<btConvexHullShape> convex = std::make_unique<btConvexHullShape>();
-    for(size_t i=0; i<phyMesh_->getNumOfVertices(); ++i)
+    for(size_t i=0; i<phyMesh_->GetNumOfVertices(); ++i)
     {
-        glm::vec3 pos = phyMesh_->getVertexPos(i);
+        glm::vec3 pos = phyMesh_->GetVertexPos(i);
         Vector3 v(pos.x, pos.y, pos.z);
         convex->addPoint(v);
     }
@@ -99,11 +99,11 @@ std::unique_ptr<btCollisionShape> Polyhedron::BuildCollisionShape()
 
 void Polyhedron::BuildGraphicalObject()
 {
-    if(graMesh_ == NULL || !SimulationApp::getApp()->hasGraphics())
+    if(graMesh_ == NULL || !SimulationApp::GetApp()->HasGraphics())
         return;
     
-    graObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(graMesh_.get());
-    phyObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh_.get());
+    graObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BuildObject(graMesh_.get());
+    phyObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BuildObject(phyMesh_.get());
 }
 
 }

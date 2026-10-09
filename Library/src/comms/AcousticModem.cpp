@@ -46,21 +46,21 @@ AcousticModem::AcousticModem(const std::string& uniqueName, uint64_t deviceId, S
     position_ = V0();
     frame_ = std::string("");
     occlusion_ = true;
-    addNode(this);
+    AddNode(this);
 }
 
 AcousticModem::~AcousticModem()
 {
-    removeNode(this->getDeviceId());
+    RemoveNode(this->GetDeviceId());
 }
 
-bool AcousticModem::isReceptionPossible(Vector3 worldDir, Scalar distance)
+bool AcousticModem::IsReceptionPossible(Vector3 worldDir, Scalar distance)
 {
     //Check if modems are close enough
     if(distance > range_) return false;
         
     //Check if direction is in the FOV of the device
-    Vector3 dir = (getDeviceFrame().getBasis().inverse() * worldDir).normalized();
+    Vector3 dir = (GetDeviceFrame().getBasis().inverse() * worldDir).normalized();
     Scalar d = Vector3(dir.getX(), dir.getY(), Scalar(0)).safeNorm();
     Scalar vAngle = M_PI_2; // When dir.z == 0.0
     if(!btFuzzyZero(dir.getZ()))
@@ -68,45 +68,45 @@ bool AcousticModem::isReceptionPossible(Vector3 worldDir, Scalar distance)
     return btFabs(vAngle) >= minFov2_ && btFabs(vAngle) <= maxFov2_;
 }
 
-void AcousticModem::setOcclusionTest(bool enabled)
+void AcousticModem::SetOcclusionTest(bool enabled)
 {
     occlusion_ = enabled;
 }
 
-bool AcousticModem::getOcclusionTest() const
+bool AcousticModem::GetOcclusionTest() const
 {
     return occlusion_;
 }
 
-void AcousticModem::getPosition(Vector3& pos, std::string& referenceFrame)
+void AcousticModem::GetPosition(Vector3& pos, std::string& referenceFrame)
 {
     pos = position_;
     referenceFrame = frame_;
 }
 
-CommType AcousticModem::getType() const
+CommType AcousticModem::GetType() const
 {
     return CommType::ACOUSTIC;
 }
 
 void AcousticModem::SendMessage(const std::vector<uint8_t>& data)
 {    
-    if(getConnectedId() < 0) // Not connected
+    if(GetConnectedId() < 0) // Not connected
         return;
-    else if(getConnectedId() == 0) // Broadcast
+    else if(GetConnectedId() == 0) // Broadcast
     {
-        std::vector<uint64_t> nodeIds = getNodeIds();
+        std::vector<uint64_t> nodeIds = GetNodeIds();
         for(size_t i=0; i<nodeIds.size(); ++i)
         {
-            if(nodeIds[i] != getDeviceId() && mutualContact(getDeviceId(), nodeIds[i]))
+            if(nodeIds[i] != GetDeviceId() && MutualContact(GetDeviceId(), nodeIds[i]))
             {
                 auto msg = std::make_shared<AcousticDataFrame>();
-                msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true);
+                msg->timeStamp = SimulationApp::GetApp()->GetSimulationManager()->GetSimulationTime(true);
                 msg->seq = txSeq_++;
-                msg->source = getDeviceId();
+                msg->source = GetDeviceId();
                 msg->destination = nodeIds[i];
                 msg->data = data;
-                msg->txPosition = getDeviceFrame().getOrigin();
+                msg->txPosition = GetDeviceFrame().getOrigin();
                 msg->travelled = Scalar(0);
                 txBuffer_.push_back(msg);
             }
@@ -114,16 +114,16 @@ void AcousticModem::SendMessage(const std::vector<uint8_t>& data)
     }
     else // Conneted to one receiver
     {
-        if(!mutualContact(getDeviceId(), getConnectedId()))
+        if(!MutualContact(GetDeviceId(), GetConnectedId()))
             return;
         
         auto msg = std::make_shared<AcousticDataFrame>();
-        msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true);
+        msg->timeStamp = SimulationApp::GetApp()->GetSimulationManager()->GetSimulationTime(true);
         msg->seq = txSeq_++;
-        msg->source = getDeviceId();
-        msg->destination = getConnectedId();
+        msg->source = GetDeviceId();
+        msg->destination = GetConnectedId();
         msg->data = data;
-        msg->txPosition = getDeviceFrame().getOrigin();
+        msg->txPosition = GetDeviceFrame().getOrigin();
         msg->travelled = Scalar(0);
         txBuffer_.push_back(msg);
     }
@@ -148,9 +148,9 @@ void AcousticModem::ProcessMessages()
             ackMsg->timeStamp = msg->timeStamp;
             ackMsg->seq = msg->seq;
             ackMsg->destination = msg->source;
-            ackMsg->source = getDeviceId();
+            ackMsg->source = GetDeviceId();
             ackMsg->data = ackData;
-            ackMsg->txPosition = getDeviceFrame().getOrigin();
+            ackMsg->txPosition = GetDeviceFrame().getOrigin();
             ackMsg->travelled = msg->travelled;
             txBuffer_.push_back(ackMsg);
         }
@@ -167,8 +167,8 @@ void AcousticModem::InternalUpdate(Scalar dt)
     //Propagate messages already sent
     for(auto mIt = propagating_.begin(); mIt != propagating_.end();)
     {
-        AcousticModem* dest = getNode(mIt->first->destination);
-        Vector3 dO = dest->getDeviceFrame().getOrigin();
+        AcousticModem* dest = GetNode(mIt->first->destination);
+        Vector3 dO = dest->GetDeviceFrame().getOrigin();
         Vector3 sO = mIt->second;
         Vector3 dir = dO - sO;
         Scalar d = dir.length();
@@ -196,7 +196,7 @@ void AcousticModem::InternalUpdate(Scalar dt)
         txBuffer_.pop_front();
 
         // The message is sent or lost
-        if(mutualContact(msg->source, msg->destination))
+        if(MutualContact(msg->source, msg->destination))
         {
             propagating_.insert(std::make_pair(msg, msg->txPosition));
         }
@@ -219,10 +219,10 @@ std::vector<Renderable> AcousticModem::Render()
     
     //Fov indicator
     Renderable item1;
-    item1.model = glMatrixFromTransform(getDeviceFrame());
+    item1.model = glMatrixFromTransform(GetDeviceFrame());
     item1.type = RenderableType::SENSOR_LINES;
     item1.data = std::make_shared<std::vector<glm::vec3>>();
-    auto points = item1.getDataAsPoints();
+    auto points = item1.GetDataAsPoints();
 
     GLfloat iconSize = 0.25f;
     int div = 24;
@@ -293,26 +293,26 @@ std::vector<Renderable> AcousticModem::Render()
     item3.type = RenderableType::SENSOR_LINES;
     item3.model = glm::mat4(1.f);
     item3.data = std::make_shared<std::vector<glm::vec3>>();
-    points = item3.getDataAsPoints();
+    points = item3.GetDataAsPoints();
 
-    if(getConnectedId() == 0)
+    if(GetConnectedId() == 0)
     {
-        std::vector<uint64_t> nodeIds = getNodeIds();
+        std::vector<uint64_t> nodeIds = GetNodeIds();
         for(size_t i=0; i<nodeIds.size(); ++i)
-            if(nodeIds[i] != getDeviceId())
+            if(nodeIds[i] != GetDeviceId())
             {               
-                Transform Tn = getNode(nodeIds[i])->getDeviceFrame();
-                points->push_back(glVectorFromVector(getDeviceFrame().getOrigin()));
+                Transform Tn = GetNode(nodeIds[i])->GetDeviceFrame();
+                points->push_back(glVectorFromVector(GetDeviceFrame().getOrigin()));
                 points->push_back(glVectorFromVector(Tn.getOrigin()));
             }
     }
-    else if(getConnectedId() > 0)
+    else if(GetConnectedId() > 0)
     {
-        AcousticModem* cNode = getNode(getConnectedId());
+        AcousticModem* cNode = GetNode(GetConnectedId());
         if(cNode != nullptr)
         {
-            points->push_back(glVectorFromVector(getDeviceFrame().getOrigin()));
-            points->push_back(glVectorFromVector(cNode->getDeviceFrame().getOrigin()));    
+            points->push_back(glVectorFromVector(GetDeviceFrame().getOrigin()));
+            points->push_back(glVectorFromVector(cNode->GetDeviceFrame().getOrigin()));    
         }
     }
     if(!points->empty())
@@ -323,7 +323,7 @@ std::vector<Renderable> AcousticModem::Render()
     item4.type = RenderableType::SENSOR_POINTS;
     item4.model = glm::mat4(1.f);
     item4.data = std::make_shared<std::vector<glm::vec3>>();
-    points = item4.getDataAsPoints();
+    points = item4.GetDataAsPoints();
 
     for( auto mIt = propagating_.begin(); mIt != propagating_.end(); ++mIt)
     {
@@ -340,21 +340,21 @@ std::vector<Renderable> AcousticModem::Render()
 
 std::map<uint64_t, AcousticModem*> AcousticModem::nodes; 
 
-void AcousticModem::addNode(AcousticModem* node)
+void AcousticModem::AddNode(AcousticModem* node)
 {
-    if(node->getDeviceId() == 0)
+    if(node->GetDeviceId() == 0)
     {
         cError("Modem device ID=0 not allowed!");
         return;
     }
         
-    if(nodes.find(node->getDeviceId()) != nodes.end())
-        cError("Modem node with ID=%d already exists!", node->getDeviceId());
+    if(nodes.find(node->GetDeviceId()) != nodes.end())
+        cError("Modem node with ID=%d already exists!", node->GetDeviceId());
     else
-        nodes[node->getDeviceId()] = node;
+        nodes[node->GetDeviceId()] = node;
 }
 
-void AcousticModem::removeNode(uint64_t deviceId)
+void AcousticModem::RemoveNode(uint64_t deviceId)
 {
     if(deviceId == 0)
         return;
@@ -364,7 +364,7 @@ void AcousticModem::removeNode(uint64_t deviceId)
         nodes.erase(it);
 }
 
-AcousticModem* AcousticModem::getNode(uint64_t deviceId)
+AcousticModem* AcousticModem::GetNode(uint64_t deviceId)
 {
     if(deviceId == 0)
         return nullptr;
@@ -379,7 +379,7 @@ AcousticModem* AcousticModem::getNode(uint64_t deviceId)
     }
 } 
 
-std::vector<uint64_t> AcousticModem::getNodeIds()
+std::vector<uint64_t> AcousticModem::GetNodeIds()
 {
     std::vector<uint64_t> ids;
     for(auto it=nodes.begin(); it != nodes.end(); ++it)
@@ -387,35 +387,35 @@ std::vector<uint64_t> AcousticModem::getNodeIds()
     return ids;
 }
 
-bool AcousticModem::mutualContact(uint64_t device1Id, uint64_t device2Id)
+bool AcousticModem::MutualContact(uint64_t device1Id, uint64_t device2Id)
 {
-    AcousticModem* node1 = getNode(device1Id);
-    AcousticModem* node2 = getNode(device2Id);
+    AcousticModem* node1 = GetNode(device1Id);
+    AcousticModem* node2 = GetNode(device2Id);
     
     if(node1 == nullptr || node2 == nullptr)
         return false;
         
-    Vector3 pos1 = node1->getDeviceFrame().getOrigin();
-    Vector3 pos2 = node2->getDeviceFrame().getOrigin();
+    Vector3 pos1 = node1->GetDeviceFrame().getOrigin();
+    Vector3 pos2 = node2->GetDeviceFrame().getOrigin();
     Vector3 dir = pos2-pos1;
     Scalar distance = dir.length();
     
-    if(!node1->isReceptionPossible(dir, distance) || !node2->isReceptionPossible(-dir, distance))
+    if(!node1->IsReceptionPossible(dir, distance) || !node2->IsReceptionPossible(-dir, distance))
         return false;
         
-    if(node1->getOcclusionTest() || node2->getOcclusionTest())
+    if(node1->GetOcclusionTest() || node2->GetOcclusionTest())
     {
         btCollisionWorld::ClosestRayResultCallback closest(pos1, pos2);
         closest.m_collisionFilterGroup = MASK_DYNAMIC;
         closest.m_collisionFilterMask = MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING;
-        SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld()->rayTest(pos1, pos2, closest);
+        SimulationApp::GetApp()->GetSimulationManager()->GetDynamicsWorld()->rayTest(pos1, pos2, closest);
         return !closest.hasHit();
     }
     else
         return true;
 }
 
-ConstructInfo AcousticModem::getConstructInfo()
+ConstructInfo AcousticModem::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -453,7 +453,7 @@ std::unique_ptr<AcousticModem> AcousticModem::Construct(const std::string& uniqu
     ConstructInfoValue& value = info.nodes.at("connect").attributes.at("occlusion_test");
     if (value.valid)
         occlusionTest = std::get<bool>(value.value);
-    comm->setOcclusionTest(occlusionTest);
+    comm->SetOcclusionTest(occlusionTest);
     
     return comm;
 }

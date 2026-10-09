@@ -42,10 +42,10 @@ Trigger::Trigger(const std::string& uniqueName, Scalar radius, const Transform& 
     
     std::unique_ptr<Mesh> mesh = OpenGLContent::BuildSphere((GLfloat)radius);
     
-    if(SimulationApp::getApp()->hasGraphics())
+    if(SimulationApp::GetApp()->HasGraphics())
     {
-        objectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh.get());
-        lookId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+        objectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BuildObject(mesh.get());
+        lookId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->GetLookId(look);
     }
     else
     {
@@ -63,10 +63,10 @@ Trigger::Trigger(const std::string& uniqueName, Scalar radius, Scalar length, co
     
     std::unique_ptr<Mesh> mesh = OpenGLContent::BuildCylinder((GLfloat)radius, (GLfloat)length);
     
-    if(SimulationApp::getApp()->hasGraphics())
+    if(SimulationApp::GetApp()->HasGraphics())
     {
-        objectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh.get());
-        lookId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+        objectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BuildObject(mesh.get());
+        lookId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->GetLookId(look);
     }
     else
     {
@@ -85,10 +85,10 @@ Trigger::Trigger(const std::string& uniqueName, const Vector3& dimensions, const
     glm::vec3 halfExt((GLfloat)(dimensions.x()/Scalar(2)), (GLfloat)(dimensions.y()/Scalar(2)), (GLfloat)(dimensions.z()/Scalar(2)));
     std::unique_ptr<Mesh> mesh = OpenGLContent::BuildBox(halfExt);
     
-    if(SimulationApp::getApp()->hasGraphics())
+    if(SimulationApp::GetApp()->HasGraphics())
     {
-        objectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh.get());
-        lookId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+        objectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BuildObject(mesh.get());
+        lookId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->GetLookId(look);
     }
     else
     {
@@ -97,7 +97,7 @@ Trigger::Trigger(const std::string& uniqueName, const Vector3& dimensions, const
     }
 }
 
-ForcefieldType Trigger::getForcefieldType()
+ForcefieldType Trigger::GetForcefieldType()
 {
     return ForcefieldType::TRIGGER;
 }
@@ -133,7 +133,7 @@ void Trigger::Activate(btCollisionObject* co)
     else
         return;
     
-    if(ent->getType() == EntityType::SOLID)
+    if(ent->GetType() == EntityType::SOLID)
     {
         SolidEntity* solid = (SolidEntity*)ent;
         for(unsigned int i=0; i<solids_.size(); ++i)
@@ -150,7 +150,7 @@ void Trigger::Clear()
     active_ = false;
 }
 
-bool Trigger::isActive()
+bool Trigger::IsActive()
 {
     return active_;
 }
@@ -159,7 +159,7 @@ std::vector<Renderable> Trigger::Render()
 {
     std::vector<Renderable> items(0);
     
-    if(objectId_ >= 0 && isRenderable())
+    if(objectId_ >= 0 && IsRenderable())
     {
         Transform trans = ghost_->getWorldTransform();
         Renderable item;

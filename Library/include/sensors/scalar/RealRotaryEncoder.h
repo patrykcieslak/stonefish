@@ -51,7 +51,7 @@ namespace sf
         void Reset();
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const override;
+        ScalarSensorType GetScalarSensorType() const override;
         
     private:
         unsigned int cprResolution_;

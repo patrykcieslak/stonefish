@@ -60,19 +60,19 @@ namespace sf
         /*!
          \param s the desired angle of the rudder as an angle [rad]
          */
-        void setSetpoint(Scalar s);
+        void SetSetpoint(Scalar s);
         
         //! A method returning the current setpoint.
-        Scalar getSetpoint() const;
+        Scalar GetSetpoint() const;
 
         //! A method returning the angular position of the rudder [rad]
-        Scalar getAngle() const;
+        Scalar GetAngle() const;
         
         //! A method returning type of link actuator.
-        LinkActuatorType getLinkActuatorType() const override;
+        LinkActuatorType GetLinkActuatorType() const override;
 
         //! A method returning the construction info for the actuator.
-        static ConstructInfo getConstructInfo();
+        static ConstructInfo GetConstructInfo();
 
         //! A method constructing the actuator based on info structure.
         /*!

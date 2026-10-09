@@ -32,8 +32,8 @@ namespace sf
 
 CylindricalJoint::CylindricalJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, const Vector3& axis, bool collideLinked) : Joint(uniqueName, collideLinked)
 {
-    btRigidBody* bodyA = solidA->getRigidBody();
-    btRigidBody* bodyB = solidB->getRigidBody();
+    btRigidBody* bodyA = solidA->GetRigidBody();
+    btRigidBody* bodyB = solidB->GetRigidBody();
     
     Vector3 sliderAxis = axis.normalized();
     Vector3 v2;
@@ -66,7 +66,7 @@ CylindricalJoint::CylindricalJoint(const std::string& uniqueName, SolidEntity* s
     angleIC_ = Scalar(0.);
 }
 
-void CylindricalJoint::setDamping(Scalar linearConstantFactor, Scalar linearViscousFactor, Scalar angularConstantFactor, Scalar angularViscousFactor)
+void CylindricalJoint::SetDamping(Scalar linearConstantFactor, Scalar linearViscousFactor, Scalar angularConstantFactor, Scalar angularViscousFactor)
 {
     linSigDamping_ = linearConstantFactor > Scalar(0) ? linearConstantFactor : Scalar(0);
     linVelDamping_ = linearViscousFactor > Scalar(0) ? linearViscousFactor : Scalar(0);
@@ -74,7 +74,7 @@ void CylindricalJoint::setDamping(Scalar linearConstantFactor, Scalar linearVisc
     angVelDamping_ = angularViscousFactor > Scalar(0) ? angularViscousFactor : Scalar(0);
 }
 
-void CylindricalJoint::setLimits(Scalar linearMin, Scalar linearMax, Scalar angularMin, Scalar angularMax)
+void CylindricalJoint::SetLimits(Scalar linearMin, Scalar linearMax, Scalar angularMin, Scalar angularMax)
 {
     btSliderConstraint* slider = static_cast<btSliderConstraint*>(constraint_.get());
     slider->setLowerLinLimit(linearMin);
@@ -83,13 +83,13 @@ void CylindricalJoint::setLimits(Scalar linearMin, Scalar linearMax, Scalar angu
     slider->setUpperAngLimit(angularMax);
 }
 
-void CylindricalJoint::setIC(Scalar displacement, Scalar angle)
+void CylindricalJoint::SetIc(Scalar displacement, Scalar angle)
 {
     displacementIC_ = displacement;
     angleIC_ = angle;
 }
 
-JointType CylindricalJoint::getType() const
+JointType CylindricalJoint::GetType() const
 {
     return JointType::CYLINDRICAL;
 }
@@ -153,7 +153,7 @@ std::vector<Renderable> CylindricalJoint::Render()
     item.model = glm::mat4(1.f);
     item.type = RenderableType::JOINT_LINES;
     item.data = std::make_shared<std::vector<glm::vec3>>();
-    auto points = item.getDataAsPoints();
+    auto points = item.GetDataAsPoints();
     
     Vector3 A = constraint_->getRigidBodyA().getCenterOfMassPosition();
     Vector3 B = constraint_->getRigidBodyB().getCenterOfMassPosition();

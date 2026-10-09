@@ -52,8 +52,8 @@ void FloatingTestManager::BuildScenario()
     ////////OBJECTS    
     //Create environment
     EnableOcean(0.0);
-    getOcean()->setWaterType(0.2);
-    getAtmosphere()->SetSunPosition(0.0, 60.0);
+    GetOcean()->SetWaterType(0.2);
+    GetAtmosphere()->SetSunPosition(0.0, 60.0);
     
     //Hull
     sf::PhysicsSettings phy;
@@ -70,7 +70,7 @@ void FloatingTestManager::BuildScenario()
 
     std::unique_ptr<sf::Polyhedron> propeller = std::make_unique<sf::Polyhedron>("Propeller", phy, sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "propeller");
     std::unique_ptr<sf::MechanicalPI> rotorDynamics =  std::make_unique<sf::MechanicalPI>(1.0, 10.0, 5.0, 5.0);
-    std::unique_ptr<sf::FDThrust> thrustModel = std::make_unique<sf::FDThrust>(0.18, 0.48, 0.48, 0.05, true, getOcean()->getLiquid().density);
+    std::unique_ptr<sf::FDThrust> thrustModel = std::make_unique<sf::FDThrust>(0.18, 0.48, 0.48, 0.05, true, GetOcean()->GetLiquid().density);
     std::unique_ptr<sf::Thruster> thrust = std::make_unique<sf::Thruster>("Thruster", std::move(propeller), std::move(rotorDynamics), std::move(thrustModel), 
         0.18, true, 105.0, false, true);
 
@@ -85,5 +85,5 @@ void FloatingTestManager::BuildScenario()
     boat->AddLinkSensor(std::move(odom), "Hull", sf::I4());
     AddRobot(std::move(boat), sf::Transform(sf::IQ(), sf::Vector3(0,0,0)));
     
-    static_cast<sf::Thruster*>(th)->setSetpoint(1.0);
+    static_cast<sf::Thruster*>(th)->SetSetpoint(1.0);
 }

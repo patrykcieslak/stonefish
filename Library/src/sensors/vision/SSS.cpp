@@ -41,8 +41,8 @@ SSS::SSS(const std::string& uniqueName, unsigned int numOfBins, unsigned int num
     range_.x = 0.f;
     range_.y = 0.f;
     noise_ = glm::vec2(0.f);
-    setRangeMax(maxRange);
-    setRangeMin(minRange);
+    SetRangeMax(maxRange);
+    SetRangeMin(minRange);
     gain_ = Scalar(1);
     fovV_ = horizontalBeamWidthDeg <= Scalar(0) ? Scalar(1) : (horizontalBeamWidthDeg > Scalar(90) ? Scalar(90) : horizontalBeamWidthDeg);
     tilt_ = verticalTiltDeg < Scalar(0) ? Scalar(0) : (verticalTiltDeg > Scalar(90) ? Scalar(90) : verticalTiltDeg);
@@ -53,12 +53,12 @@ SSS::SSS(const std::string& uniqueName, unsigned int numOfBins, unsigned int num
     glSSS_ = nullptr;
 }
 
-void SSS::setRangeMin(Scalar r)
+void SSS::SetRangeMin(Scalar r)
 {
     range_.x = r < Scalar(0.02) ? 0.02f : (r < Scalar(range_.y) ? (GLfloat)r : range_.x);
 }
 
-void SSS::setRangeMax(Scalar r)
+void SSS::SetRangeMax(Scalar r)
 {
     range_.y = r > Scalar(range_.x) ? (GLfloat)r : range_.x;
     Scalar pulseTime = (Scalar(2)*range_.y/SOUND_VELOCITY_WATER) * Scalar(1.1);
@@ -66,67 +66,67 @@ void SSS::setRangeMax(Scalar r)
         freq_ = Scalar(1)/pulseTime;
 }
 
-void SSS::setGain(Scalar g)
+void SSS::SetGain(Scalar g)
 {
     gain_ = g > Scalar(0) ? g : Scalar(1);
 }
 
-void SSS::setNoise(float multiplicativeStdDev, float additiveStdDev)
+void SSS::SetNoise(float multiplicativeStdDev, float additiveStdDev)
 {
     if(multiplicativeStdDev >= 0.f)
         noise_.x = multiplicativeStdDev;
     if(additiveStdDev >= 0.f)
         noise_.y = additiveStdDev;
     if(glSSS_ != nullptr)
-        glSSS_->setNoise(noise_);
+        glSSS_->SetNoise(noise_);
 }
 
-void SSS::setDisplaySettings(ColorMap cm)
+void SSS::SetDisplaySettings(ColorMap cm)
 {
     cMap_ = cm;
 }
 
-void* SSS::getImageDataPointer(unsigned int index)
+void* SSS::GetImageDataPointer(unsigned int index)
 {
     return sonarData_;
 }
 
-void SSS::getDisplayResolution(unsigned int& x, unsigned int& y) const
+void SSS::GetDisplayResolution(unsigned int& x, unsigned int& y) const
 {
-    getResolution(x, y); //numOfBins x numOfLines
+    GetResolution(x, y); //numOfBins x numOfLines
 }
 
-GLubyte* SSS::getDisplayDataPointer()
+GLubyte* SSS::GetDisplayDataPointer()
 {
     return displayData_.data();
 }
 
-Scalar SSS::getRangeMin() const
+Scalar SSS::GetRangeMin() const
 {
     return Scalar(range_.x);
 }
 
-Scalar SSS::getRangeMax() const
+Scalar SSS::GetRangeMax() const
 {
     return Scalar(range_.y);
 }
 
-Scalar SSS::getGain() const
+Scalar SSS::GetGain() const
 {
     return gain_;
 }
 
-SonarOutputFormat SSS::getOutputFormat() const
+SonarOutputFormat SSS::GetOutputFormat() const
 {
     return outputFormat_;
 }
    
-VisionSensorType SSS::getVisionSensorType() const
+VisionSensorType SSS::GetVisionSensorType() const
 {
     return VisionSensorType::SSS;
 }
 
-OpenGLView* SSS::getOpenGLView() const
+OpenGLView* SSS::GetOpenGlView() const
 {
     return glSSS_;
 }
@@ -143,17 +143,17 @@ void SSS::InitGraphics(bool& seesParticles)
 
     // Set up sonar
     glSSS_ = glSSS.get();
-    glSSS_->setNoise(noise_);
-    glSSS_->setSonar(this);
-    glSSS_->setColorMap(cMap_);
+    glSSS_->SetNoise(noise_);
+    glSSS_->SetSonar(this);
+    glSSS_->SetColorMap(cMap_);
     UpdateTransform();
     glSSS_->UpdateTransform();
     InternalUpdate(0);
 
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glSSS));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->AddView(std::move(glSSS));
 
     unsigned int w, h;
-    getDisplayResolution(w, h);
+    GetDisplayResolution(w, h);
     displayData_.resize(w*h*3);
 }
 
@@ -177,7 +177,7 @@ void SSS::NewDataReady(void* data, unsigned int index)
         if(index == 0)
         {
             unsigned int w, h;
-            getDisplayResolution(w, h);
+            GetDisplayResolution(w, h);
             memcpy(displayData_.data(), data, w*h*3);
         }
         else
@@ -198,12 +198,12 @@ void SSS::InternalUpdate(Scalar dt)
 std::vector<Renderable> SSS::Render()
 {
     std::vector<Renderable> items = Sensor::Render();
-    if(isRenderable())
+    if(IsRenderable())
     {
         Renderable item1;
         item1.type = RenderableType::SENSOR_LINES; 
         item1.data = std::make_shared<std::vector<glm::vec3>>();
-        auto points = item1.getDataAsPoints();   
+        auto points = item1.GetDataAsPoints();   
         
         //Create single transducer dummy
         int div = 12;
@@ -280,13 +280,13 @@ std::vector<Renderable> SSS::Render()
         glm::mat4 views[2];
         views[0] = glm::rotate(-offsetAngle, glm::vec3(0.f,1.f,0.f));
         views[1] = glm::rotate(offsetAngle, glm::vec3(0.f,1.f,0.f));
-        item1.model = glMatrixFromTransform(getSensorFrame()) * views[0];
+        item1.model = glMatrixFromTransform(GetSensorFrame()) * views[0];
         items.push_back(item1);
 
         Renderable item2;
         item2.type = item1.type;
         item2.data = item1.data;
-        item2.model = glMatrixFromTransform(getSensorFrame()) * views[1];
+        item2.model = glMatrixFromTransform(GetSensorFrame()) * views[1];
         items.push_back(item2);
     }
     return items;
@@ -294,7 +294,7 @@ std::vector<Renderable> SSS::Render()
 
 // Statics
 
-ConstructInfo SSS::getConstructInfo()
+ConstructInfo SSS::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -367,7 +367,7 @@ std::unique_ptr<SSS> SSS::Construct(const std::string& uniqueName, Scalar freque
 
     // Construct
     std::unique_ptr<SSS> sensor = std::make_unique<SSS>(uniqueName, bins, lines, hFov, vFov, tilt, rangeMin, rangeMax, outputFormat, frequency);
-    sensor->setGain(gain);
+    sensor->SetGain(gain);
     
     // Noise
     Scalar multiplicative {0.01};
@@ -381,12 +381,12 @@ std::unique_ptr<SSS> SSS::Construct(const std::string& uniqueName, Scalar freque
     if (value.valid)
         additive = std::get<Scalar>(value.value);
 
-    sensor->setNoise(multiplicative, additive);
+    sensor->SetNoise(multiplicative, additive);
 
     // Display
     value = info.nodes.at("display").attributes.at("colormap");
     if (value.valid)
-        sensor->setDisplaySettings(std::get<ColorMap>(value.value));
+        sensor->SetDisplaySettings(std::get<ColorMap>(value.value));
 
     return sensor;
 }

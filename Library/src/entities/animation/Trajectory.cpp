@@ -33,32 +33,32 @@ Trajectory::Trajectory(PlaybackMode playback)
 {
 }
 
-Scalar Trajectory::getPlaybackTime() const
+Scalar Trajectory::GetPlaybackTime() const
 {
     return playTime_;
 }
 
-unsigned int Trajectory::getPlaybackIteration() const
+unsigned int Trajectory::GetPlaybackIteration() const
 {
     return iteration_;
 }
 
-Transform Trajectory::getInterpolatedTransform() const
+Transform Trajectory::GetInterpolatedTransform() const
 {
     return interpTrans_;
 }
 
-Vector3 Trajectory::getInterpolatedLinearVelocity() const
+Vector3 Trajectory::GetInterpolatedLinearVelocity() const
 {
     return interpVel_;
 }
 
-Vector3 Trajectory::getInterpolatedAngularVelocity() const
+Vector3 Trajectory::GetInterpolatedAngularVelocity() const
 {
     return interpAngVel_;
 }
 
-Vector3 Trajectory::getInterpolatedLinearAcceleration() const
+Vector3 Trajectory::GetInterpolatedLinearAcceleration() const
 {
     return interpAcc_;
 }
@@ -118,7 +118,7 @@ void Trajectory::Play(Scalar dt)
     }
 }
 
-void Trajectory::calculateVelocityShortestPath(const Transform &transform0, const Transform &transform1, Scalar timeStep, Vector3 &linVel, Vector3 &angVel)
+void Trajectory::CalculateVelocityShortestPath(const Transform &transform0, const Transform &transform1, Scalar timeStep, Vector3 &linVel, Vector3 &angVel)
 {
     linVel = (transform1.getOrigin() - transform0.getOrigin()) / timeStep;
 

@@ -61,20 +61,20 @@ namespace sf
         virtual void AttachToJoint(Joint* joint);
         
         //! A method returning the type of the sensor.
-        SensorType getType() const;
+        SensorType GetType() const;
         
         //! A method returning the current sensor frame in world.
-        Transform getSensorFrame() const;
+        Transform GetSensorFrame() const;
 
         //! A method returning the velocity of the sensor measurement frame.
         /*!
          \param linear output of the linear velocity of the sensor measurement frame [m/s]
          \param angular output of the angular velocity of the sensor measurement frame [rad/s]
          */
-        void getSensorVelocity(Vector3& linear, Vector3& angular) const override;
+        void GetSensorVelocity(Vector3& linear, Vector3& angular) const override;
         
         //! A method returning the name of the joint that the sensor is attached to.
-        std::string getJointName() const;
+        std::string GetJointName() const;
         
     protected:
         FeatherstoneEntity* fe_;

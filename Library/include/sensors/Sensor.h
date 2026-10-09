@@ -68,34 +68,34 @@ namespace sf
         void MarkDataOld();
 
         //! A method to check if new data is available.
-        bool isNewDataAvailable() const;
+        bool IsNewDataAvailable() const;
         
         //! A method to set the sampling rate of the sensor.
         /*!
          \param f the sampling frequency of the sensor [Hz]
          */
-        void setUpdateFrequency(Scalar f);
+        void SetUpdateFrequency(Scalar f);
 
         //! A method returning the sensor's name.
-        const std::string& getName() const;
+        const std::string& GetName() const;
 
         //! A method returning the sampling rate of the sensor.
-        Scalar getUpdateFrequency() const;
+        Scalar GetUpdateFrequency() const;
         
         //! A method informing if the sensor is enabled.
-        bool isEnabled() const;
+        bool IsEnabled() const;
 
         //! A method informing if the sensor is renderable.
-        bool isRenderable() const;
+        bool IsRenderable() const;
         
         //! A method to set if the sensor is enabled.
-        void setEnabled(bool en);
+        void SetEnabled(bool en);
 
         //! A method to set if the sensor is renderable.
-        void setRenderable(bool render);
+        void SetRenderable(bool render);
 
         //! A method to set the visual representation of the sensor.
-        void setVisual(const std::string& meshFilename, Scalar scale, const std::string& look);
+        void SetVisual(const std::string& meshFilename, Scalar scale, const std::string& look);
                 
         //! A method performing an internal update of the sensor state.
         /*!
@@ -104,20 +104,20 @@ namespace sf
         virtual void InternalUpdate(Scalar dt) = 0;
         
         //! A method returning the type of the sensor.
-        virtual SensorType getType() const = 0;
+        virtual SensorType GetType() const = 0;
 
         //! A method returning the sensor measurement frame.
-        virtual Transform getSensorFrame() const = 0;
+        virtual Transform GetSensorFrame() const = 0;
 
         //! A method returning the velocity of the sensor measurement frame.
         /*!
          \param linear output of the linear velocity of the sensor measurement frame [m/s]
          \param angular output of the angular velocity of the sensor measurement frame [rad/s]
          */
-        virtual void getSensorVelocity(Vector3& linear, Vector3& angular) const = 0;
+        virtual void GetSensorVelocity(Vector3& linear, Vector3& angular) const = 0;
 
         //! A deleter method required for the plugin architecture.
-        static void defaultDeleter(Sensor* s);
+        static void DefaultDeleter(Sensor* s);
         
     protected:
         Scalar freq_;

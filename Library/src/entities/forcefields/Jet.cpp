@@ -33,20 +33,20 @@ Jet::Jet(const Vector3& point, const Vector3& direction, Scalar radius, Scalar o
     c_ = point;
     n_ = direction.normalized();
     r_ = radius;
-    setOutletVelocity(outletVelocity);
+    SetOutletVelocity(outletVelocity);
 }
 
-void Jet::setOutletVelocity(Scalar x)
+void Jet::SetOutletVelocity(Scalar x)
 {
     vout_ = x;
 }
 
-Scalar Jet::getOutletVelocity() const
+Scalar Jet::GetOutletVelocity() const
 {
     return vout_;
 }
 
-VelocityFieldType Jet::getType() const
+VelocityFieldType Jet::GetType() const
 {
     return VelocityFieldType::JET;
 }
@@ -93,7 +93,7 @@ std::vector<Renderable> Jet::Render(VelocityFieldUBO& ubo)
     orifice.type = RenderableType::HYDRO_LINE_STRIP;
     orifice.model = model;
     orifice.data = std::make_shared<std::vector<glm::vec3>>();
-    auto orificePoints = orifice.getDataAsPoints();
+    auto orificePoints = orifice.GetDataAsPoints();
     
     for(unsigned int i=0; i<=12; ++i)
     {
@@ -107,7 +107,7 @@ std::vector<Renderable> Jet::Render(VelocityFieldUBO& ubo)
     cone.type = RenderableType::HYDRO_LINES;
     cone.model = orifice.model;
     cone.data = std::make_shared<std::vector<glm::vec3>>();
-    auto conePoints = cone.getDataAsPoints();
+    auto conePoints = cone.GetDataAsPoints();
     conePoints->push_back(glm::vec3(0, 0, 0));
     conePoints->push_back(glm::vec3(0, 0, vout_));
     

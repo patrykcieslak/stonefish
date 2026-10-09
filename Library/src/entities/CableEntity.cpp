@@ -40,14 +40,14 @@ namespace sf
 CableEntity::CableEntity(const std::string& uniqueName, PhysicsSettings phy, Vector3 firstEnd, Vector3 secondEnd, 
     size_t numSegments, Scalar diameter, const std::string& material, const std::string& look, Scalar stretching, float uvScale) : Entity(uniqueName), phy_(phy)
 {
-    SimulationManager* sm = SimulationApp::getApp()->getSimulationManager();
+    SimulationManager* sm = SimulationApp::GetApp()->GetSimulationManager();
 
     // Get material
-    mat_ = sm->getMaterialManager()->getMaterial(material);
+    mat_ = sm->GetMaterialManager()->GetMaterial(material);
     
     // Create cable soft body
     numSegments = numSegments < 2 ? 2 : numSegments;
-    cableBody_ = std::unique_ptr<btSoftBody>(btSoftBodyHelpers::CreateRope(sm->getSoftBodyWorldInfo(), firstEnd, secondEnd, numSegments, 0));
+    cableBody_ = std::unique_ptr<btSoftBody>(btSoftBodyHelpers::CreateRope(sm->GetSoftBodyWorldInfo(), firstEnd, secondEnd, numSegments, 0));
     nodalForces_.resize(cableBody_->m_nodes.size());
     restLength_ = (secondEnd - firstEnd).safeNorm();
 
@@ -82,10 +82,10 @@ CableEntity::CableEntity(const std::string& uniqueName, PhysicsSettings phy, Vec
     
     // Get Look
     displayMode_ = DisplayMode::GRAPHICAL;
-    if(SimulationApp::getApp()->hasGraphics())
+    if(SimulationApp::GetApp()->HasGraphics())
     {
-        OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
-        lookId_ = content->getLookId(look);
+        OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent();
+        lookId_ = content->GetLookId(look);
         uvScale_ = uvScale > 0.f ? uvScale : 1.f;
 
         size_t numNodes = cableBody_->m_nodes.size();
@@ -102,22 +102,22 @@ CableEntity::CableEntity(const std::string& uniqueName, PhysicsSettings phy, Vec
     }
 }
 
-void CableEntity::setDisplayMode(DisplayMode m)
+void CableEntity::SetDisplayMode(DisplayMode m)
 {
     displayMode_ = m;
 }
 
-EntityType CableEntity::getType() const
+EntityType CableEntity::GetType() const
 {
     return EntityType::CABLE;
 }
 
-Scalar CableEntity::getRestLength() const
+Scalar CableEntity::GetRestLength() const
 {
     return restLength_;
 }
 
-Scalar CableEntity::getLength() const
+Scalar CableEntity::GetLength() const
 {
     if (cableBody_ != nullptr)
     {
@@ -130,12 +130,12 @@ Scalar CableEntity::getLength() const
         return Scalar(0);
 }
 
-btSoftBody* CableEntity::getSoftBody() const
+btSoftBody* CableEntity::GetSoftBody() const
 {
     return cableBody_.get();
 }
 
-void CableEntity::getAABB(Vector3& min, Vector3& max)
+void CableEntity::GetAabb(Vector3& min, Vector3& max)
 {
     if (cableBody_ != nullptr)
         cableBody_->getAabb(min, max);
@@ -175,7 +175,7 @@ void CableEntity::AttachToSolid(CableEnds ends, SolidEntity* solid)
 
     if (cableBody_ != nullptr && solid != nullptr)
     {
-        btRigidBody* rb = solid->getRigidBody();
+        btRigidBody* rb = solid->GetRigidBody();
         if (rb == nullptr) // Not working for multibody colliders (deformable anchor doesn't work!)
             return;
 
@@ -199,12 +199,12 @@ void CableEntity::AddToSimulation(SimulationManager* sm)
     {
         if (phy_.collisions)
         {
-            sm->getDynamicsWorld()->addSoftBody(cableBody_.get(), MASK_DYNAMIC, MASK_GHOST | MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING);
+            sm->GetDynamicsWorld()->addSoftBody(cableBody_.get(), MASK_DYNAMIC, MASK_GHOST | MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING);
         }
         else
         {
             cableBody_->setCollisionFlags(cableBody_->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
-            sm->getDynamicsWorld()->addSoftBody(cableBody_.get(), MASK_DYNAMIC, MASK_GHOST);
+            sm->GetDynamicsWorld()->addSoftBody(cableBody_.get(), MASK_DYNAMIC, MASK_GHOST);
         }
     }
 }
@@ -215,7 +215,7 @@ void CableEntity::ApplyGravity(const Vector3& g)
         cableBody_->addForce(g * cableBody_->getTotalMass() / static_cast<Scalar>(cableBody_->m_nodes.size()));
 }
 
-Scalar CableEntity::circularSegmentArea(Scalar h) const
+Scalar CableEntity::CircularSegmentArea(Scalar h) const
 {
     if (h <= Scalar(0))
         return Scalar(0);
@@ -243,7 +243,7 @@ void CableEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
 
     // Clear forces
     for (size_t i = 0; i < nodalForces_.size(); ++i)
-        nodalForces_[i].clearForces();
+        nodalForces_[i].ClearForces();
 
     for (int i = 0; i < cableBody_->m_nodes.size()-1; ++i)
     {
@@ -288,14 +288,14 @@ void CableEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
             }
             else if (btFuzzyZero(dz)) // Horizontal segment
             {
-                Scalar submergedA = circularSegmentArea(d1 + radius_);
+                Scalar submergedA = CircularSegmentArea(d1 + radius_);
                 submergedV = submergedA * segmentLength;
             }
             else if (btFabs(d1) <= margin && btFabs(d2) <= margin) // Inclined segment, both caps partially submerged
             {
                 // Compute submerged area at both ends
-                Scalar A1 = circularSegmentArea(d1/btCos(alpha) + radius_);
-                Scalar A2 = circularSegmentArea(d2/btCos(alpha) + radius_);
+                Scalar A1 = CircularSegmentArea(d1/btCos(alpha) + radius_);
+                Scalar A2 = CircularSegmentArea(d2/btCos(alpha) + radius_);
                 submergedV = (A1 + A2) / Scalar(2) * segmentLength;
             }
             else if (d1 < -margin && d2 > margin) // Inclined segment, first cap out of water, second cap submerged
@@ -313,14 +313,14 @@ void CableEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
                 // Compute length of half-submerged segment
                 Scalar a = radius_ + d2 / btCos(alpha);
                 Scalar l = a/btSin(alpha);
-                submergedV = circularSegmentArea(a) * l / Scalar(2);
+                submergedV = CircularSegmentArea(a) * l / Scalar(2);
             }
             else if (d1 >= -margin) // Inclined segment, first cap partially submerged, second cap submerged
             {
                 // Compute length of half-submerged segment
                 Scalar a = radius_ - d1 / btCos(alpha);
                 Scalar l = a/btSin(alpha);
-                submergedV = Scalar(M_PI) * radius_ * radius_ * segmentLength - circularSegmentArea(a) * l / Scalar(2);
+                submergedV = Scalar(M_PI) * radius_ * radius_ * segmentLength - CircularSegmentArea(a) * l / Scalar(2);
             }
         }
 
@@ -329,7 +329,7 @@ void CableEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
         {
             // !!! Here it is an approximation because the buoyancy force should be applied at the buoyancy center and then it will generate torque 
             // which will result in asymmetrical forces on both ends of the segment !!!
-            Vector3 buoyancy = -submergedV * ocn->getLiquid().density * SimulationApp::getApp()->getSimulationManager()->getGravity();
+            Vector3 buoyancy = -submergedV * ocn->GetLiquid().density * SimulationApp::GetApp()->GetSimulationManager()->GetGravity();
             nodalForces_[i].Fb += buoyancy / Scalar(2);
             nodalForces_[i+1].Fb += buoyancy / Scalar(2);
         }
@@ -352,7 +352,7 @@ void CableEntity::ComputeHydrodynamicForces(HydrodynamicsSettings settings, Ocea
             // Form drag
             {
                 Scalar S = Scalar(2) * radius_ * segmentLength;
-                Vector3 Fdq = -(Scalar(1) - f1) * f2 * Scalar(0.5) * ocn->getLiquid().density * Cd * S * relV.length() * relV;
+                Vector3 Fdq = -(Scalar(1) - f1) * f2 * Scalar(0.5) * ocn->GetLiquid().density * Cd * S * relV.length() * relV;
                 nodalForces_[i].Fdq += Fdq / Scalar(2);
                 nodalForces_[i+1].Fdq += Fdq / Scalar(2);
             }
@@ -419,7 +419,7 @@ std::vector<Renderable> CableEntity::Render()
 
         // Populate cable node data
         item.data = std::make_shared<std::vector<CableNode>>(numGraphicalNodes_);
-        auto cableNodes = item.getDataAsCableNodes();
+        auto cableNodes = item.GetDataAsCableNodes();
 
         for (size_t i = 0; i < numGraphicalNodes_; ++i)
         {
@@ -471,19 +471,19 @@ std::vector<Renderable> CableEntity::Render()
             itemFb.type = RenderableType::FORCE_BUOYANCY;
             itemFb.model = glm::mat4(1.f);
             itemFb.data = std::make_shared<std::vector<glm::vec3>>();
-            auto pointsFb = itemFb.getDataAsPoints();
+            auto pointsFb = itemFb.GetDataAsPoints();
 
             Renderable itemFdq;
             itemFdq.type = RenderableType::FORCE_QUADRATIC_DRAG;
             itemFdq.model = glm::mat4(1.f);
             itemFdq.data = std::make_shared<std::vector<glm::vec3>>();
-            auto pointsFdq = itemFdq.getDataAsPoints();
+            auto pointsFdq = itemFdq.GetDataAsPoints();
 
             Renderable itemFdf;
             itemFdf.type = RenderableType::FORCE_LINEAR_DRAG;
             itemFdf.model = glm::mat4(1.f);
             itemFdf.data = std::make_shared<std::vector<glm::vec3>>();
-            auto pointsFdf = itemFdf.getDataAsPoints();
+            auto pointsFdf = itemFdf.GetDataAsPoints();
 
             for (int i = 0; i < cableBody_->m_nodes.size(); ++i)
             {

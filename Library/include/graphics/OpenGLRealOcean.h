@@ -109,7 +109,7 @@ namespace sf
         /*!
          \param enabled a flag to indicating if wireframe should be enabled
          */
-        void setWireframe(bool enabled);
+        void SetWireframe(bool enabled);
         
     private:
         void InitializeSimulation() override;

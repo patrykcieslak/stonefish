@@ -92,16 +92,16 @@ namespace sf
         glm::vec3 GetUpDirection() const override;
         
         //! A method returning the type of the view.
-        ViewType getType() const override;
+        ViewType GetType() const override;
         
         //! A method to set a pointer to a camera sensor.
         /*!
          \param cam a pointer to a camera sensor
          */
-        void setCamera(ColorCamera* cam);
+        void SetCamera(ColorCamera* cam);
          
         //! A method that informs if the camera needs update.
-        bool needsUpdate() override;
+        bool NeedsUpdate() override;
         
     private:
         ColorCamera* camera_;

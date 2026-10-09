@@ -40,14 +40,14 @@ Plane::Plane(const std::string& uniqueName, Scalar planeSize, const std::string&
     BuildRigidBody();
 }
 
-void Plane::getAABB(Vector3 &min, Vector3 &max)
+void Plane::GetAabb(Vector3 &min, Vector3 &max)
 {
     //Plane shouldn't affect shadow calculation
     min.setValue(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);
     max.setValue(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);
 }
 
-StaticEntityType Plane::getStaticType()
+StaticEntityType Plane::GetStaticType()
 {
     return StaticEntityType::PLANE;
 }

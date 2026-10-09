@@ -49,7 +49,7 @@ FallingTestManager::FallingTestManager(sf::Scalar stepsPerSecond)
 
 void FallingTestManager::BuildScenario()
 {
-    setICSolverParams(false);
+    SetIcSolverParams(false);
 
     ///////MATERIALS////////
     CreateMaterial("Ground", 1000.0, 1.0);

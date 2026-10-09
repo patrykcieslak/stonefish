@@ -46,7 +46,7 @@ namespace sf
         Vector3 Fdq; // Form drag force
         Vector3 Fdf; // Skin friction force
 
-        void clearForces()
+        void ClearForces()
         {
             Fb.setZero();
             Fdq.setZero();
@@ -116,29 +116,29 @@ namespace sf
         /*!
          \param m flag defining the display mode
          */
-        void setDisplayMode(DisplayMode m);
+        void SetDisplayMode(DisplayMode m);
 
         //! A method returning the type of the entity.
-        EntityType getType() const override;
+        EntityType GetType() const override;
 
         //! A method returning the rest length of the cable.
-        Scalar getRestLength() const;
+        Scalar GetRestLength() const;
 
         //! A method returning the current lenght of the cable.
-        Scalar getLength() const;
+        Scalar GetLength() const;
 
         //! A method returning the underlying soft body object.
-        btSoftBody* getSoftBody() const;
+        btSoftBody* GetSoftBody() const;
 
         //! A method returning the extents of the entity axis alligned bounding box.
         /*!
          \param min a point located at the minimum coordinate corner
          \param max a point located at the maximum coordinate corner
          */
-        void getAABB(Vector3& min, Vector3& max) override;
+        void GetAabb(Vector3& min, Vector3& max) override;
                 
     private:
-        Scalar circularSegmentArea(Scalar h) const;
+        Scalar CircularSegmentArea(Scalar h) const;
 
         std::unique_ptr<btSoftBody> cableBody_;
         Scalar radius_;

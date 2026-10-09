@@ -54,13 +54,13 @@ namespace sf
          \param baselineError the error in the distance between transducers forming a pair [m]
          \param depthDev standard deviation of the depth measurement [m]
          */
-        void setNoise(Scalar timeDev, Scalar soundVelocityDev, Scalar phaseDev, Scalar baselineError, Scalar depthDev);
+        void SetNoise(Scalar timeDev, Scalar soundVelocityDev, Scalar phaseDev, Scalar baselineError, Scalar depthDev);
         
         //! A method that processes all messages in the rx buffer.
         void ProcessMessages() override;
 
         //! A method returning the construction info for the sensor.
-        static ConstructInfo getConstructInfo();
+        static ConstructInfo GetConstructInfo();
 
         //! A method constructing the sensor based on info structure.
         /*!

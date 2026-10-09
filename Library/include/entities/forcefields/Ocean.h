@@ -120,35 +120,35 @@ namespace sf
         /*!
          \param jerlov the type of water according to Jerlov (I-9C) <0,1>
          */
-        void setWaterType(Scalar jerlov);
+        void SetWaterType(Scalar jerlov);
 
         //! A method to enable rendering of suspended particles (underwater snow).
-        void setParticles(bool enabled);
+        void SetParticles(bool enabled);
 
         //! A method informing if the particles are enabled.
-        bool hasParticles() const;
+        bool HasParticles() const;
 
         //! A method returning the type of the water.
-        Scalar getWaterType() const;
+        Scalar GetWaterType() const;
           
         //! A method informing if the ocean waves are simulated.
-        bool hasWaves() const;
+        bool HasWaves() const;
         
         //! A method returning a pointer to the fluid filling the ocean.
-        Fluid getLiquid() const;
+        Fluid GetLiquid() const;
         
         //! A method returning a pointer to the OpenGL object implementing the ocean.
-        OpenGLOcean* getOpenGLOcean();
+        OpenGLOcean* GetOpenGlOcean();
 
         //! A method giving direct access to the defined velocity fields.
         /*!
          \param index an id of the current
          \return pointer to the current object
          */
-        VelocityField* getVelocityField(size_t index);
+        VelocityField* GetVelocityField(size_t index);
 
         //! A method returning the type of the force field.
-        ForcefieldType getForcefieldType();
+        ForcefieldType GetForcefieldType();
         
         //! A method initializing the rendering of the ocean.
         /*!

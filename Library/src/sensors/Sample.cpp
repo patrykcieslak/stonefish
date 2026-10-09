@@ -37,25 +37,25 @@ Sample::Sample(const std::vector<Scalar>& data, bool invalid, size_t index)
     if(invalid)
         timestamp_ = Scalar(-1);
     else
-        timestamp_ = SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true);
+        timestamp_ = SimulationApp::GetApp()->GetSimulationManager()->GetSimulationTime(true);
 }
 
-Scalar Sample::getTimestamp() const
+Scalar Sample::GetTimestamp() const
 {
     return timestamp_;
 }
     
-size_t Sample::getNumOfDimensions() const
+size_t Sample::GetNumOfDimensions() const
 {
     return data_.size();
 }
     
-Scalar* Sample::getDataPointer()
+Scalar* Sample::GetDataPointer()
 {
     return data_.data();
 }
 
-Scalar Sample::getValue(size_t dimension) const
+Scalar Sample::GetValue(size_t dimension) const
 {
     if(dimension < data_.size())
         return data_[dimension];
@@ -63,17 +63,17 @@ Scalar Sample::getValue(size_t dimension) const
         return Scalar(0);
 }
 
-std::vector<Scalar> Sample::getData() const
+std::vector<Scalar> Sample::GetData() const
 {
     return data_;
 }
 
-size_t Sample::getId() const
+size_t Sample::GetId() const
 {
     return id_;
 }
 
-void Sample::setId(size_t id)
+void Sample::SetId(size_t id)
 {
     id_ = id;
 }

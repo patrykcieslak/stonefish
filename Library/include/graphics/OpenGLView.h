@@ -100,10 +100,10 @@ namespace sf
         GLfloat GetLogDepthConstant() const;
         
         //! A method that checks if the view needs to be updated.
-        virtual bool needsUpdate() = 0;
+        virtual bool NeedsUpdate() = 0;
         
         //! A method returning the type of the view.
-        virtual ViewType getType() const = 0;
+        virtual ViewType GetType() const = 0;
         
         //! A method that sets the current viewport.
         void SetViewport();
@@ -112,22 +112,22 @@ namespace sf
         std::vector<GLint> GetViewport() const;
         
         //! A method returning the rendering framebuffer of the view.
-        GLuint getRenderFBO() const;
+        GLuint GetRenderFbo() const;
         
         //! A method returning a pointer to the view UBO data.
-        const ViewUBO* getViewUBOData() const;
+        const ViewUBO* GetViewUboData() const;
         
         //! A method to set if the view is enabled.
         /*!
          \param en a flag that says if the view should be enabled
          */
-        void setEnabled(bool en);
+        void SetEnabled(bool en);
         
         //! A method returning a flag saying if the view is enabled.
-        bool isEnabled();
+        bool IsEnabled();
 
         //! A method saying if the view works in continuous update mode.
-        bool isContinuous();
+        bool IsContinuous();
 
         //! A method extracting frustium planes from the view-projection matrix.
         /*!

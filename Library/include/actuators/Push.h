@@ -54,22 +54,22 @@ namespace sf
          \param positive positive force limit [N]
          \param negative negative force limit (absolute) [N]
         */
-        void setForceLimits(Scalar positive, Scalar negative);
+        void SetForceLimits(Scalar positive, Scalar negative);
 
         //! A method setting the new value of the desired force.
         /*!
          \param f the desired force to be generated
          */
-        void setForce(Scalar f);
+        void SetForce(Scalar f);
         
         //! A method returning the current setpoint.
-        Scalar getForce() const;
+        Scalar GetForce() const;
 
         //! A method returning type of link actuator.
-        LinkActuatorType getLinkActuatorType() const override;
+        LinkActuatorType GetLinkActuatorType() const override;
 
         //! A method returning the construction info for the actuator.
-        static ConstructInfo getConstructInfo();
+        static ConstructInfo GetConstructInfo();
 
         //! A method constructing the actuator based on info structure.
         /*!

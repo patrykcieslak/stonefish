@@ -48,7 +48,7 @@ namespace sf
          \param range the range measurement resolution [m]
          \param angleDeg the angle measurement resolution [deg]
          */
-        void setResolution(Scalar range, Scalar angleDeg);
+        void SetResolution(Scalar range, Scalar angleDeg);
 
         //! A method used to set the noise characteristics of the device.
         /*!
@@ -56,13 +56,13 @@ namespace sf
          \param horizontalAngleDevDeg standard deviation of the angle measurement noise [deg]
          \param verticalAngleDevDeg standard deviation of the angle measurement noise [deg]
          */
-        void setNoise(Scalar rangeDev, Scalar horizontalAngleDevDeg, Scalar verticalAngleDevDeg);
+        void SetNoise(Scalar rangeDev, Scalar horizontalAngleDevDeg, Scalar verticalAngleDevDeg);
 
         //! A method that processes all messages in the rx buffer.
         void ProcessMessages() override;
 
         //! A method returning the construction info for the sensor.
-        static ConstructInfo getConstructInfo();
+        static ConstructInfo GetConstructInfo();
 
         //! A method constructing the sensor based on info structure.
         /*!

@@ -47,12 +47,12 @@ namespace sf
         
         virtual void getAabb(const Transform& t,Vector3& aabbMin,Vector3& aabbMax) const;
         
-        Scalar getMajorRadius() const { return majorRadius_; }
-        Scalar getMinorRadius() const { return minorRadius_; }
-        Scalar getRadius() const { return getMajorRadius(); }
+        Scalar GetMajorRadius() const { return majorRadius_; }
+        Scalar GetMinorRadius() const { return minorRadius_; }
+        Scalar GetRadius() const { return GetMajorRadius(); }
         
-        Vector3 getHalfExtentsWithMargin() const;
-        const Vector3& getHalfExtentsWithoutMargin() const;
+        Vector3 GetHalfExtentsWithMargin() const;
+        const Vector3& GetHalfExtentsWithoutMargin() const;
         virtual void setLocalScaling(const Vector3& scaling);
         
         virtual const char*	getName()const { return "TORUS"; }

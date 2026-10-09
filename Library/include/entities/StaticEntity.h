@@ -71,34 +71,34 @@ namespace sf
          \param min a point located at the minimum coordinate corner
          \param max a point located at the maximum coordinate corner
          */
-        virtual void getAABB(Vector3& min, Vector3& max);
+        virtual void GetAabb(Vector3& min, Vector3& max);
         
         //! A method used to set new origin of the entity in the world frame.
         /*!
          \param trans a transformation of the entity origin in the world frame
          */
-        void setTransform(const Transform& trans);
+        void SetTransform(const Transform& trans);
         
         //! A method returning the transformation of the entity origin in the world frame.
-        Transform getTransform();
+        Transform GetTransform();
         
         //! A method returning the material of the entity.
-        Material getMaterial() const;
+        Material GetMaterial() const;
         
         //! A method returning the rigid body associated with the entity.
-        btRigidBody* getRigidBody();
+        btRigidBody* GetRigidBody();
         
         //! A method returning the type of the entity.
-        EntityType getType() const;
+        EntityType GetType() const;
         
         //! A method returninf the type of the static entity.
-        virtual StaticEntityType getStaticType() = 0;
+        virtual StaticEntityType GetStaticType() = 0;
         
         //! A method used to set display mode used for the body.
         /*!
          \param m flag defining the display mode
          */
-        void setDisplayMode(DisplayMode m);
+        void SetDisplayMode(DisplayMode m);
         
         //! A static method used to transform a group of static entities together (useful to change the position of multiple linked objects).
         /*!

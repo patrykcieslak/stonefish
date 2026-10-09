@@ -45,17 +45,17 @@ Atmosphere::Atmosphere(const std::string& uniqueName, Fluid g) : ForcefieldEntit
     velocityFieldsEnabled_ = false;
 }
         
-OpenGLAtmosphere* Atmosphere::getOpenGLAtmosphere()
+OpenGLAtmosphere* Atmosphere::GetOpenGlAtmosphere()
 {
     return glAtmosphere_.get();
 }
     
-ForcefieldType Atmosphere::getForcefieldType()
+ForcefieldType Atmosphere::GetForcefieldType()
 {
     return ForcefieldType::ATMOSPHERE;
 }
 
-Fluid Atmosphere::getGas() const
+Fluid Atmosphere::GetGas() const
 {
     return gas_;
 }
@@ -96,8 +96,8 @@ void Atmosphere::SetConditions(Scalar temperature, Scalar pressure, Scalar humid
 {
     if(glAtmosphere_ == nullptr) return;
     
-    glAtmosphere_->setAirTemperature((float)temperature);
-    glAtmosphere_->setAirHumidity((float)humidity); 
+    glAtmosphere_->SetAirTemperature((float)temperature);
+    glAtmosphere_->SetAirHumidity((float)humidity); 
 }
 
 void Atmosphere::AddVelocityField(std::unique_ptr<VelocityField> field)
@@ -151,7 +151,7 @@ Vector3 Atmosphere::GetFluidVelocity(const Vector3& point) const
         Vector3 fv = V0();
         for(size_t i=0; i<velocityFields_.size(); ++i)
         {
-            if(velocityFields_[i]->isEnabled())
+            if(velocityFields_[i]->IsEnabled())
                 fv += velocityFields_[i]->GetVelocityAtPoint(point);
         }
         return fv;
@@ -192,7 +192,7 @@ void Atmosphere::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co,
     else
         return;
     
-    if(ent->getType() == EntityType::SOLID)
+    if(ent->GetType() == EntityType::SOLID)
     {
         if(recompute)
         {

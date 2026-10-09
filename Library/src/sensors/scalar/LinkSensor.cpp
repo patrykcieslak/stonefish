@@ -37,25 +37,25 @@ LinkSensor::LinkSensor(const std::string& uniqueName, Scalar frequency, int hist
     o2s_ = Transform::getIdentity();
 }
 
-void LinkSensor::setRelativeSensorFrame(const Transform& origin)
+void LinkSensor::SetRelativeSensorFrame(const Transform& origin)
 {
     o2s_ = origin;
 }
 
-Transform LinkSensor::getSensorFrame() const
+Transform LinkSensor::GetSensorFrame() const
 {
     if(attach_ != nullptr)
-        return attach_->getOTransform() * o2s_;
+        return attach_->GetOTransform() * o2s_;
     else
         return o2s_;
 }
 
-void LinkSensor::getSensorVelocity(Vector3& linear, Vector3& angular) const
+void LinkSensor::GetSensorVelocity(Vector3& linear, Vector3& angular) const
 {
     if(attach_ != nullptr)
     {
-        linear = attach_->getLinearVelocity();
-        angular = attach_->getAngularVelocity();
+        linear = attach_->GetLinearVelocity();
+        angular = attach_->GetAngularVelocity();
     }
     else
     {
@@ -64,15 +64,15 @@ void LinkSensor::getSensorVelocity(Vector3& linear, Vector3& angular) const
     }
 }
 
-SensorType LinkSensor::getType() const
+SensorType LinkSensor::GetType() const
 {
     return SensorType::LINK;
 }
 
-std::string LinkSensor::getLinkName() const
+std::string LinkSensor::GetLinkName() const
 {
     if(attach_ != nullptr)
-        return attach_->getName();
+        return attach_->GetName();
     else
         return std::string("");
 }
@@ -89,11 +89,11 @@ void LinkSensor::AttachToSolid(MovingEntity* solid, const Transform& origin)
 std::vector<Renderable> LinkSensor::Render()
 {
     std::vector<Renderable> items = Sensor::Render();
-    if(isRenderable())
+    if(IsRenderable())
     {
         Renderable item;
         item.type = RenderableType::SENSOR_CS;
-        item.model = glMatrixFromTransform(getSensorFrame());
+        item.model = glMatrixFromTransform(GetSensorFrame());
         items.push_back(item);
     }
     return items;

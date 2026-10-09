@@ -43,7 +43,7 @@ OpenGLSpotLight::OpenGLSpotLight(glm::vec3 position, glm::vec3 direction, GLfloa
     GLfloat S = 2.f*M_PI*(1.f-cosf(coneAngle_/2.f));
     colorLi_ = glm::vec4(color, lum/S);
     clipSpace_ = glm::mat4();
-	GLfloat near = getSourceRadius()/tanf(coneAngle_/2.f);
+	GLfloat near = GetSourceRadius()/tanf(coneAngle_/2.f);
     zNear_ = glm::max(0.05f, near);
     zFar_ = sqrtf(colorLi_.a/MIN_INTENSITY_THRESHOLD);
 
@@ -57,7 +57,7 @@ OpenGLSpotLight::OpenGLSpotLight(glm::vec3 position, glm::vec3 direction, GLfloa
     //vertices
     for(unsigned int i=0; i<=slices; ++i)
     {
-        vt.pos = glm::vec3(sinf(i/(GLfloat)slices*M_PI*2.f)*getSourceRadius(), -cosf(i/(GLfloat)slices*M_PI*2.f)*getSourceRadius(), 0.0);
+        vt.pos = glm::vec3(sinf(i/(GLfloat)slices*M_PI*2.f)*GetSourceRadius(), -cosf(i/(GLfloat)slices*M_PI*2.f)*GetSourceRadius(), 0.0);
         m->vertices.push_back(vt);
     }
     //faces
@@ -68,7 +68,7 @@ OpenGLSpotLight::OpenGLSpotLight(glm::vec3 position, glm::vec3 direction, GLfloa
         f.vertexID[2] = i + 1;
         m->faces.push_back(f);
     }
-    sourceObject_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(m.get());
+    sourceObject_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BuildObject(m.get());
     
 	UpdatePosition(position);
     UpdateDirection(direction);
@@ -96,30 +96,30 @@ void OpenGLSpotLight::InitShadowmap(GLint shadowmapLayer)
     OpenGLState::BindFramebuffer(0);
 }
 
-LightType OpenGLSpotLight::getType() const
+LightType OpenGLSpotLight::GetType() const
 {
     return LightType::SPOT;
 }
 
-glm::vec3 OpenGLSpotLight::getDirection()
+glm::vec3 OpenGLSpotLight::GetDirection()
 {
     return dir_;
 }
 
-GLfloat OpenGLSpotLight::getAngle()
+GLfloat OpenGLSpotLight::GetAngle()
 {
     return coneAngle_;
 }
 
-glm::mat4 OpenGLSpotLight::getClipSpace()
+glm::mat4 OpenGLSpotLight::GetClipSpace()
 {
     return clipSpace_;
 }
 
-glm::mat4 OpenGLSpotLight::getTransform()
+glm::mat4 OpenGLSpotLight::GetTransform()
 {
-    glm::vec3 pos = getPosition() + getDirection() * (zNear_ - 1e-3f);
-    return glm::inverse(glm::lookAt(pos, pos + getDirection(), glm::vec3(0,0,1.f)));
+    glm::vec3 pos = GetPosition() + GetDirection() * (zNear_ - 1e-3f);
+    return glm::inverse(glm::lookAt(pos, pos + GetDirection(), glm::vec3(0,0,1.f)));
 }
     
 void OpenGLSpotLight::UpdateDirection(glm::vec3 d)
@@ -136,21 +136,21 @@ void OpenGLSpotLight::UpdateTransform()
 void OpenGLSpotLight::SetupShader(LightUBO* ubo)
 {
     SpotLightUBO* spotUbo = (SpotLightUBO*)ubo;
-    spotUbo->position = getPosition();
+    spotUbo->position = GetPosition();
     spotUbo->color = glm::vec3(colorLi_) * colorLi_.a; 
-    spotUbo->direction = getDirection();
-    spotUbo->cone = (GLfloat)cosf(getAngle()/2.f);
-    spotUbo->clipSpace = getClipSpace();
+    spotUbo->direction = GetDirection();
+    spotUbo->cone = (GLfloat)cosf(GetAngle()/2.f);
+    spotUbo->clipSpace = GetClipSpace();
     spotUbo->frustumNear = zNear_;
     spotUbo->frustumFar = zFar_;
-    spotUbo->radius = glm::vec3(0.1f,0.1f,getSourceRadius());
+    spotUbo->radius = glm::vec3(0.1f,0.1f,GetSourceRadius());
 }
 
 void OpenGLSpotLight::BakeShadowmap(OpenGLPipeline* pipe)
 {
     glm::mat4 proj = glm::perspective((GLfloat)(2.f * coneAngle_), 1.f, zNear_, zFar_);
-    glm::mat4 view = glm::lookAt(getPosition(),
-                                 getPosition() + getDirection(),
+    glm::mat4 view = glm::lookAt(GetPosition(),
+                                 GetPosition() + GetDirection(),
                                  glm::vec3(0,0,1.f));
     
     glm::mat4 bias(0.5f, 0.f, 0.f, 0.f,
@@ -159,8 +159,8 @@ void OpenGLSpotLight::BakeShadowmap(OpenGLPipeline* pipe)
                    0.5f, 0.5f, 0.5f, 1.f);
     clipSpace_ = bias * (proj * view);
     
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->SetProjectionMatrix(proj);
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->SetViewMatrix(view);
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->SetProjectionMatrix(proj);
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->SetViewMatrix(view);
     
     OpenGLState::BindFramebuffer(shadowFBO_);
     OpenGLState::Viewport(0, 0, SPOT_LIGHT_SHADOWMAP_SIZE, SPOT_LIGHT_SHADOWMAP_SIZE);

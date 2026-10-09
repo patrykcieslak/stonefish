@@ -78,13 +78,13 @@ namespace sf
         /*!
          \param signalStdDev the standard deviation of the echo intensity
          */
-        void setNoise(glm::vec2 signalStdDev);
+        void SetNoise(glm::vec2 signalStdDev);
 
         //! A method to set a pointer to a sonar sensor.
         /*!
          \param son a pointer to a sonar sensor
          */
-        void setSonar(SSS* s);
+        void SetSonar(SSS* s);
         
     protected:
         //SSS specific

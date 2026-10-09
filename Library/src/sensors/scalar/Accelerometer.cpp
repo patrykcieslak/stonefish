@@ -44,22 +44,22 @@ Accelerometer::Accelerometer(const std::string& uniqueName, Scalar frequency, in
 void Accelerometer::InternalUpdate(Scalar dt)
 {
     // Calculate transformation from global to imu frame
-    Transform accTrans = getSensorFrame();
+    Transform accTrans = GetSensorFrame();
     
     // Get acceleration
-    Vector3 R = accTrans.getOrigin() - attach_->getCGTransform().getOrigin();
+    Vector3 R = accTrans.getOrigin() - attach_->GetCgTransform().getOrigin();
     Vector3 la = accTrans.getBasis().inverse() * (
-                                                attach_->getLinearAcceleration() 
-                                                + attach_->getAngularAcceleration().cross(R)
-                                                + attach_->getAngularVelocity().cross(attach_->getAngularVelocity().cross(R))
-                                                - SimulationApp::getApp()->getSimulationManager()->getGravity()
+                                                attach_->GetLinearAcceleration() 
+                                                + attach_->GetAngularAcceleration().cross(R)
+                                                + attach_->GetAngularVelocity().cross(attach_->GetAngularVelocity().cross(R))
+                                                - SimulationApp::GetApp()->GetSimulationManager()->GetGravity()
                                                 );
     
     // Record sample
     AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({la.x(), la.y(), la.z()})));
 }
 
-void Accelerometer::setRange(Vector3 linearAccelerationMax)
+void Accelerometer::SetRange(Vector3 linearAccelerationMax)
 {
     channels_[0].rangeMin = -btClamped(linearAccelerationMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
     channels_[1].rangeMin = -btClamped(linearAccelerationMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
@@ -69,21 +69,21 @@ void Accelerometer::setRange(Vector3 linearAccelerationMax)
     channels_[2].rangeMax = btClamped(linearAccelerationMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
     
-void Accelerometer::setNoise(Vector3 linearAccelerationStdDev)
+void Accelerometer::SetNoise(Vector3 linearAccelerationStdDev)
 {
-    channels_[0].setStdDev(btClamped(linearAccelerationStdDev.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels_[1].setStdDev(btClamped(linearAccelerationStdDev.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels_[2].setStdDev(btClamped(linearAccelerationStdDev.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[0].SetStdDev(btClamped(linearAccelerationStdDev.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[1].SetStdDev(btClamped(linearAccelerationStdDev.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[2].SetStdDev(btClamped(linearAccelerationStdDev.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
 
-ScalarSensorType Accelerometer::getScalarSensorType() const
+ScalarSensorType Accelerometer::GetScalarSensorType() const
 {
     return ScalarSensorType::ACC;
 }
     
 // Statics
 
-ConstructInfo Accelerometer::getConstructInfo()
+ConstructInfo Accelerometer::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -117,12 +117,12 @@ std::unique_ptr<Accelerometer> Accelerometer::Construct(const std::string& uniqu
     // Range (optional)
     value = info.nodes.at("range").attributes.at("linear_acceleration");
     if (value.valid)
-        sensor->setRange(std::get<Vector3>(value.value));
+        sensor->SetRange(std::get<Vector3>(value.value));
 
     // Noise (optional)
     value = info.nodes.at("noise").attributes.at("linear_acceleration");
     if (value.valid)
-        sensor->setNoise(std::get<Vector3>(value.value));
+        sensor->SetNoise(std::get<Vector3>(value.value));
 
     return sensor;
 }

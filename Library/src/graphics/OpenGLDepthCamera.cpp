@@ -213,7 +213,7 @@ void OpenGLDepthCamera::Update()
     needsUpdate_ = true;
 }
 
-bool OpenGLDepthCamera::needsUpdate()
+bool OpenGLDepthCamera::NeedsUpdate()
 {
     if(needsUpdate_)
     {
@@ -224,7 +224,7 @@ bool OpenGLDepthCamera::needsUpdate()
         return false;
 }
 
-void OpenGLDepthCamera::setCamera(Camera* cam, unsigned int index)
+void OpenGLDepthCamera::SetCamera(Camera* cam, unsigned int index)
 {
     camera_ = cam;
     idx_ = index;
@@ -235,19 +235,19 @@ void OpenGLDepthCamera::setCamera(Camera* cam, unsigned int index)
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 }
 
-void OpenGLDepthCamera::setNoise(GLfloat depthStdDev)
+void OpenGLDepthCamera::SetNoise(GLfloat depthStdDev)
 {
     noiseDepth_ = depthStdDev;
 }
 
-ViewType OpenGLDepthCamera::getType() const
+ViewType OpenGLDepthCamera::GetType() const
 {
     return ViewType::DEPTH_CAMERA;
 }
 
 void OpenGLDepthCamera::ComputeOutput(std::vector<Renderable>& objects)
 {
-    OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
+    OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent();
     content->SetCurrentView(this);
     content->SetDrawingMode(DrawingMode::SHADOW);
     OpenGLState::BindFramebuffer(renderFBO_);
@@ -274,7 +274,7 @@ void OpenGLDepthCamera::LinearizeDepth()
     depthCameraOutputShader[0]->SetUniform("rangeInfo", glm::vec4(range_.x, range_.y, range_.x*range_.y, range_.x-range_.y));
     depthCameraOutputShader[0]->SetUniform("noiseSeed", glm::vec3(randDist_(randGen_), randDist_(randGen_), randDist_(randGen_)));
     depthCameraOutputShader[0]->SetUniform("noiseStddev", noiseDepth_);
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
     OpenGLState::BindFramebuffer(0);
@@ -297,7 +297,7 @@ void OpenGLDepthCamera::Depth2LinearRanges()
     depthCameraOutputShader[1]->SetUniform("projInfo", projInfo);
     depthCameraOutputShader[1]->SetUniform("rangeInfo", glm::vec4(range_.x, range_.y, range_.x*range_.y, range_.x-range_.y));
     depthCameraOutputShader[1]->SetUniform("texDepth", TEX_POSTPROCESS1);
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
     OpenGLState::BindFramebuffer(0);
@@ -310,7 +310,7 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO, bool updated)
     unsigned int dispX, dispY;
     GLfloat dispScale;
     if(camera_ != nullptr)
-        display = camera_->getDisplayOnScreen(dispX, dispY, dispScale);
+        display = camera_->GetDisplayOnScreen(dispX, dispY, dispScale);
     
     //Draw on screen
     if(display)
@@ -318,7 +318,7 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO, bool updated)
         if(usesRanges_) Depth2LinearRanges();
         else LinearizeDepth();
         
-        int windowHeight = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowHeight();
+        int windowHeight = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetWindowHeight();
         
         //Bind depth texture
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, linearDepthTex_);
@@ -328,7 +328,7 @@ void OpenGLDepthCamera::DrawLDR(GLuint destinationFBO, bool updated)
         depthVisualizeShader->Use();
         depthVisualizeShader->SetUniform("texLinearDepth", TEX_POSTPROCESS1);
         depthVisualizeShader->SetUniform("range", range_);
-        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+        static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->DrawSAQ();
         OpenGLState::BindFramebuffer(0);
         OpenGLState::UseProgram(0);
         //Unbind textures

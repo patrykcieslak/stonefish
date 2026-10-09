@@ -44,7 +44,7 @@ OpenGLFlatOcean::OpenGLFlatOcean(GLfloat size) : OpenGLOcean(200000.f)
     GLint compiled;
     GLuint pcssFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lighting.frag", "", &compiled);
 	std::vector<GLuint> precompiled;
-    precompiled.push_back(OpenGLAtmosphere::getAtmosphereAPI());
+    precompiled.push_back(OpenGLAtmosphere::GetAtmosphereApi());
     precompiled.push_back(pcssFragment);
 
     //Surface rendering
@@ -254,8 +254,8 @@ void OpenGLFlatOcean::DrawBacksurface(OpenGLView* view)
     oceanShaders_["backsurface"]->SetUniform("size", oceanSize_);
     oceanShaders_["backsurface"]->SetUniform("eyePos", view->GetEyePosition());
     oceanShaders_["backsurface"]->SetUniform("gridSizes", params_.gridSizes);
-    oceanShaders_["backsurface"]->SetUniform("cWater", getLightAttenuation());
-    oceanShaders_["backsurface"]->SetUniform("bWater", getLightScattering());
+    oceanShaders_["backsurface"]->SetUniform("cWater", GetLightAttenuation());
+    oceanShaders_["backsurface"]->SetUniform("bWater", GetLightScattering());
     oceanShaders_["backsurface"]->SetUniform("viewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
     oceanShaders_["backsurface"]->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
     oceanShaders_["backsurface"]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);

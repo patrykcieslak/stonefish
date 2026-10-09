@@ -30,20 +30,20 @@ namespace sf
 
 Uniform::Uniform(const Vector3& velocity)
 {
-    setVelocity(velocity);
+    SetVelocity(velocity);
 }
 
-VelocityFieldType Uniform::getType() const
+VelocityFieldType Uniform::GetType() const
 {
     return VelocityFieldType::UNIFORM;
 }
 
-void Uniform::setVelocity(const Vector3& x)
+void Uniform::SetVelocity(const Vector3& x)
 {
     v_ = x;
 }
 
-Vector3 Uniform::getVelocity() const
+Vector3 Uniform::GetVelocity() const
 {
     return v_;
 }

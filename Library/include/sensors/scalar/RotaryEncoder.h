@@ -66,10 +66,10 @@ namespace sf
         virtual void Reset();
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const override;
+        ScalarSensorType GetScalarSensorType() const override;
 
         //! A method returning the construction info for the sensor.
-        static ConstructInfo getConstructInfo();
+        static ConstructInfo GetConstructInfo();
 
         //! A method constructing the sensor based on info structure.
         /*!

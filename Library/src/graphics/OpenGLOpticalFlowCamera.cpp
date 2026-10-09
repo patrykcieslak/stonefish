@@ -220,7 +220,7 @@ void OpenGLOpticalFlowCamera::Update()
     needsUpdate_ = true;
 }
 
-bool OpenGLOpticalFlowCamera::needsUpdate()
+bool OpenGLOpticalFlowCamera::NeedsUpdate()
 {
     if(needsUpdate_)
     {
@@ -231,7 +231,7 @@ bool OpenGLOpticalFlowCamera::needsUpdate()
         return false;
 }
 
-void OpenGLOpticalFlowCamera::setCamera(Camera* cam, unsigned int index)
+void OpenGLOpticalFlowCamera::SetCamera(Camera* cam, unsigned int index)
 {
     camera_ = cam;
 
@@ -246,24 +246,24 @@ void OpenGLOpticalFlowCamera::setCamera(Camera* cam, unsigned int index)
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 }
 
-void OpenGLOpticalFlowCamera::setNoise(glm::vec2 velStdDev)
+void OpenGLOpticalFlowCamera::SetNoise(glm::vec2 velStdDev)
 {
     noiseVel_ = velStdDev;
 }
 
-void OpenGLOpticalFlowCamera::setMaxVelocity(GLfloat v)
+void OpenGLOpticalFlowCamera::SetMaxVelocity(GLfloat v)
 {
     maxVel_ = v;
 }
 
-ViewType OpenGLOpticalFlowCamera::getType() const
+ViewType OpenGLOpticalFlowCamera::GetType() const
 {
     return ViewType::OPTICAL_FLOW_CAMERA;
 }
 
 void OpenGLOpticalFlowCamera::ComputeOutput(std::vector<Renderable>& objects)
 {
-    OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
+    OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent();
     content->SetCurrentView(this);
     content->SetDrawingMode(DrawingMode::RAW);
     
@@ -285,7 +285,7 @@ void OpenGLOpticalFlowCamera::ComputeOutput(std::vector<Renderable>& objects)
     if(camera_ != nullptr)
     {
         Vector3 linear, angular;
-        camera_->getSensorVelocity(linear, angular);
+        camera_->GetSensorVelocity(linear, angular);
         opticalFlowCameraOutputShader->SetUniform("v_c", glVectorFromVector(linear));
         opticalFlowCameraOutputShader->SetUniform("w_c", glVectorFromVector(angular));
     }
@@ -313,7 +313,7 @@ void OpenGLOpticalFlowCamera::ComputeOutput(std::vector<Renderable>& objects)
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderFlowTex_[0]);
     flipShader->Use();
     flipShader->SetUniform("texSource", TEX_POSTPROCESS1);
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->DrawSAQ();
     
     //Color mapped velocity display
     OpenGLState::BindFramebuffer(displayFBO_);
@@ -339,14 +339,14 @@ void OpenGLOpticalFlowCamera::DrawLDR(GLuint destinationFBO, bool updated)
     unsigned int dispX, dispY;
     GLfloat dispScale;
     if(camera_ != nullptr)
-        display = camera_->getDisplayOnScreen(dispX, dispY, dispScale);
+        display = camera_->GetDisplayOnScreen(dispX, dispY, dispScale);
     
     //Draw on screen
     if(display)
     {
-        OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
-        int windowHeight = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowHeight();
-        int windowWidth = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowWidth();
+        OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent();
+        int windowHeight = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetWindowHeight();
+        int windowWidth = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetWindowWidth();
         OpenGLState::BindFramebuffer(destinationFBO);
         OpenGLState::Viewport(0, 0, windowWidth, windowHeight);
         OpenGLState::DisableCullFace();

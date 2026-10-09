@@ -51,7 +51,7 @@ CableTestManager::CableTestManager(sf::Scalar stepsPerSecond)
 
 void CableTestManager::BuildScenario()
 {
-    setICSolverParams(false);
+    SetIcSolverParams(false);
 
     ///////MATERIALS////////
     CreateMaterial("Ground", 1000.0, 1.0);
@@ -71,9 +71,9 @@ void CableTestManager::BuildScenario()
     CreateLook("Rope", sf::Color::Gray(1.f), 1.f, 0.f, 0.f, sf::GetDataPath() + "rope_color.jpg", sf::GetDataPath() + "rope_normal.png");
 
     EnableOcean();
-    getOcean()->setWaterType(0.2);
-    getOcean()->AddVelocityField(std::make_unique<sf::Uniform>(sf::Vector3(0.0,0.0,0.0)));
-    getOcean()->EnableVelocityFields();
+    GetOcean()->SetWaterType(0.2);
+    GetOcean()->AddVelocityField(std::make_unique<sf::Uniform>(sf::Vector3(0.0,0.0,0.0)));
+    GetOcean()->EnableVelocityFields();
     
     ////////OBJECTS
     AddStaticEntity(std::make_unique<sf::Plane>("Floor", 10000, "Ground", "Grid"), sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 10.0)));
@@ -102,7 +102,7 @@ void CableTestManager::BuildScenario()
     winch->BuildKinematicStructure();
     
     std::unique_ptr<sf::Servo> servo = std::make_unique<sf::Servo>("Servo", 1.0, 1.0, 100.0);
-    servo->setControlMode(sf::ServoControlMode::VELOCITY);
+    servo->SetControlMode(sf::ServoControlMode::VELOCITY);
     winch->AddJointActuator(std::move(servo), "Joint1");
     
     sf::FeatherstoneRobot* winchPtr = static_cast<sf::FeatherstoneRobot*>(
@@ -111,7 +111,7 @@ void CableTestManager::BuildScenario()
     sf::SolidEntity* sphere = AddSolidEntity(std::make_unique<sf::Sphere>("CableAttachSphere", phy, 0.01, sf::I4(), "Steel", "Green"), 
         sf::Transform(sf::IQ(), sf::Vector3(5.0, 1.0, -4.8)));
 
-    AddJoint(std::make_unique<sf::FixedJoint>("CableAttachJoint", sphere, winchPtr->getDynamics(), 0));
+    AddJoint(std::make_unique<sf::FixedJoint>("CableAttachJoint", sphere, winchPtr->GetDynamics(), 0));
 
     sf::CableEntity* cable2 = static_cast<sf::CableEntity*>(
         AddEntity(std::make_unique<sf::CableEntity>("Cable2", phy, sf::Vector3(5.0, 1.0, -4.78), sf::Vector3(5.0, 1.0, -1.0), 100, 0.02f, "Wood", "Rope", 0.f, 80.f))
@@ -126,12 +126,12 @@ void CableTestManager::BuildScenario()
 
 void CableTestManager::SimulationStepCompleted(sf::Scalar timeStep)
 {
-    sf::CableEntity* cable = dynamic_cast<sf::CableEntity*>(getEntity("Cable1"));
+    sf::CableEntity* cable = dynamic_cast<sf::CableEntity*>(GetEntity("Cable1"));
     if (cable != nullptr)
     {
-        sf::Scalar length = cable->getLength();
-        sf::Scalar restLength = cable->getRestLength();
+        sf::Scalar length = cable->GetLength();
+        sf::Scalar restLength = cable->GetRestLength();
         sf::Scalar stretch = (length - restLength) / restLength;
-        std::cout << std::setprecision(3) << "[" << cable->getName() << "] Length: " << length << " m, Stretch: " << stretch * 100 << " %" << std::endl;
+        std::cout << std::setprecision(3) << "[" << cable->GetName() << "] Length: " << length << " m, Stretch: " << stretch * 100 << " %" << std::endl;
     }
 }

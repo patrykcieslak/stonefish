@@ -37,7 +37,7 @@
     { \
         ClassName##Register() \
         { \
-            SensorFactory::Instance().Register(TypeName, { &ClassName::getConstructInfo, &ClassName::Construct} ); \
+            SensorFactory::Instance().Register(TypeName, { &ClassName::GetConstructInfo, &ClassName::Construct} ); \
         } \
     } ClassName##RegisterInstance;
 
@@ -46,7 +46,7 @@
     { \
         ClassName##Register() \
         { \
-            ActuatorFactory::Instance().Register(TypeName, { &ClassName::getConstructInfo, &ClassName::Construct} ); \
+            ActuatorFactory::Instance().Register(TypeName, { &ClassName::GetConstructInfo, &ClassName::Construct} ); \
         } \
     } ClassName##RegisterInstance;
 
@@ -55,7 +55,7 @@
     { \
         ClassName##Register() \
         { \
-            CommFactory::Instance().Register(TypeName, { &ClassName::getConstructInfo, &ClassName::Construct} ); \
+            CommFactory::Instance().Register(TypeName, { &ClassName::GetConstructInfo, &ClassName::Construct} ); \
         } \
     } ClassName##RegisterInstance;
 
@@ -65,7 +65,7 @@ namespace sf
 
 struct SensorFactoryEntry
 {
-    std::function<ConstructInfo()> getConstructInfo;
+    std::function<ConstructInfo()> GetConstructInfo;
     std::function<std::unique_ptr<Sensor>(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)> construct; 
 };
 
@@ -88,7 +88,7 @@ private:
 
 struct ActuatorFactoryEntry
 {
-    std::function<ConstructInfo()> getConstructInfo;
+    std::function<ConstructInfo()> GetConstructInfo;
     std::function<std::unique_ptr<Actuator>(const std::string& uniqueName, ConstructInfo& info)> construct; 
 };
 
@@ -111,7 +111,7 @@ private:
 
 struct CommFactoryEntry
 {
-    std::function<ConstructInfo()> getConstructInfo;
+    std::function<ConstructInfo()> GetConstructInfo;
     std::function<std::unique_ptr<Comm>(const std::string& uniqueName, uint64_t deviceId, ConstructInfo& info)> construct; 
 };
 

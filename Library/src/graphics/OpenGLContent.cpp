@@ -146,12 +146,12 @@ OpenGLContent::OpenGLContent()
     glEnableVertexAttribArray(0);
     
     glBindBuffer(GL_ARRAY_BUFFER, cylinder_.vboVertex);
-    glBufferData(GL_ARRAY_BUFFER, m->getVertexSize() * m->getNumOfVertices(), m->getVertexDataPointer(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, m->getVertexSize(), 0);
+    glBufferData(GL_ARRAY_BUFFER, m->GetVertexSize() * m->GetNumOfVertices(), m->GetVertexDataPointer(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, m->GetVertexSize(), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cylinder_.vboIndex);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face) * m->faces.size(), m->getFaceDataPointer(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face) * m->faces.size(), m->GetFaceDataPointer(), GL_STATIC_DRAW);
     OpenGLState::BindVertexArray(0);
     
     //Ellipsoid helper
@@ -167,12 +167,12 @@ OpenGLContent::OpenGLContent()
     glEnableVertexAttribArray(0);
     
     glBindBuffer(GL_ARRAY_BUFFER, ellipsoid_.vboVertex);
-    glBufferData(GL_ARRAY_BUFFER, m->getVertexSize() * m->getNumOfVertices(), m->getVertexDataPointer(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, m->getVertexSize(), 0);
+    glBufferData(GL_ARRAY_BUFFER, m->GetVertexSize() * m->GetNumOfVertices(), m->GetVertexDataPointer(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, m->GetVertexSize(), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ellipsoid_.vboIndex);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face) * m->faces.size(), m->getFaceDataPointer(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Face) * m->faces.size(), m->GetFaceDataPointer(), GL_STATIC_DRAW);
     OpenGLState::BindVertexArray(0);
 
     //Generate UBOs
@@ -238,7 +238,7 @@ OpenGLContent::OpenGLContent()
     GLint compiled; 
     GLuint pcssFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lighting.frag", "", &compiled);
     std::vector<GLuint> commonMaterialShaders;
-    commonMaterialShaders.push_back(OpenGLAtmosphere::getAtmosphereAPI());
+    commonMaterialShaders.push_back(OpenGLAtmosphere::GetAtmosphereApi());
 	commonMaterialShaders.push_back(pcssFragment);
 
     //Shaders common for all algorithms
@@ -465,7 +465,7 @@ OpenGLContent::OpenGLContent()
 
     //Light source rendering shaders
     std::vector<GLuint> commonLightShaders;
-    commonLightShaders.push_back(OpenGLAtmosphere::getAtmosphereAPI());
+    commonLightShaders.push_back(OpenGLAtmosphere::GetAtmosphereApi());
     commonLightShaders.push_back(pcssFragment);
     
     //Above surface
@@ -606,7 +606,7 @@ void OpenGLContent::SetCurrentView(OpenGLView* v)
     FC_ = v->GetLogDepthConstant();
 
     glBindBuffer(GL_UNIFORM_BUFFER, viewUBO_);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(ViewUBO), v->getViewUBOData());
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(ViewUBO), v->GetViewUboData());
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     glMemoryBarrier(GL_UNIFORM_BARRIER_BIT);
 }
@@ -839,9 +839,9 @@ void OpenGLContent::DrawObject(int objectId, int lookId, const glm::mat4& M)
         case DrawingMode::TEMPERATURE:
         {
             if(lookId < 0)
-                UseLook(getLook(looks_.size()-1), false, M); // Use default look
+                UseLook(GetLook(looks_.size()-1), false, M); // Use default look
             else
-                UseLook(getLook(lookId), objects_[objectId].texturable, M); // Use user defined look
+                UseLook(GetLook(lookId), objects_[objectId].texturable, M); // Use user defined look
         }
         break;
 
@@ -859,17 +859,17 @@ void OpenGLContent::DrawLightSource(unsigned int lightId)
     if(lightId >= lights_.size())
         return;
 
-    int objectId = lights_[lightId]->getSourceObject();
+    int objectId = lights_[lightId]->GetSourceObject();
     if(objectId < 0 || objectId >= (int)objects_.size())
         return;
 
-    if(lights_[lightId]->isActive())
+    if(lights_[lightId]->IsActive())
     {
         //Render light source (on)
-        glm::vec4 colorLi = lights_[lightId]->getColorLi();
-        glm::mat4 M = lights_[lightId]->getTransform();
-        GLint type = lights_[lightId]->getType() == LightType::POINT ? 0 : 1; 
-        GLint id = lights_[lightId]->getType() == LightType::POINT ? lightId : lightId - lightsUBOData_.numPointLights;
+        glm::vec4 colorLi = lights_[lightId]->GetColorLi();
+        glm::mat4 M = lights_[lightId]->GetTransform();
+        GLint type = lights_[lightId]->GetType() == LightType::POINT ? 0 : 1; 
+        GLint id = lights_[lightId]->GetType() == LightType::POINT ? lightId : lightId - lightsUBOData_.numPointLights;
 
         GLSLShader* shader = mode_ == DrawingMode::FULL ? basicShaders_["light_source0"].get() : basicShaders_["light_source1"].get();
         shader->Use();
@@ -885,9 +885,9 @@ void OpenGLContent::DrawLightSource(unsigned int lightId)
         
         if(mode_ == DrawingMode::UNDERWATER)
         {
-            Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
-            shader->SetUniform("cWater", ocean->getOpenGLOcean()->getLightAttenuation());
-            shader->SetUniform("bWater", ocean->getOpenGLOcean()->getLightScattering());
+            Ocean* ocean = SimulationApp::GetApp()->GetSimulationManager()->GetOcean();
+            shader->SetUniform("cWater", ocean->GetOpenGlOcean()->GetLightAttenuation());
+            shader->SetUniform("bWater", ocean->GetOpenGlOcean()->GetLightScattering());
         }
 
         OpenGLState::BindVertexArray(objects_[objectId].vao);
@@ -897,7 +897,7 @@ void OpenGLContent::DrawLightSource(unsigned int lightId)
     else
     {
         //Render light mesh (off)
-        glm::mat4 M = lights_[lightId]->getTransform();
+        glm::mat4 M = lights_[lightId]->GetTransform();
         DrawObject(objectId, -1, M);
     }
 }
@@ -922,9 +922,9 @@ void OpenGLContent::DrawCable(size_t cableId, GLfloat radius, const std::vector<
         case DrawingMode::TEMPERATURE:
         {
             if (lookId < 0)
-                UseCableLook(getLook(looks_.size() - 1), radius); // Use default look
+                UseCableLook(GetLook(looks_.size() - 1), radius); // Use default look
             else
-                UseCableLook(getLook(lookId), radius); // Use user defined look
+                UseCableLook(GetLook(lookId), radius); // Use user defined look
         }
             break;
     
@@ -945,10 +945,10 @@ void OpenGLContent::SetupLights()
     
     for(size_t i=0; i<lights_.size(); ++i)
     {
-        if(!lights_[i]->isActive())
+        if(!lights_[i]->IsActive())
             continue;
             
-        if(lights_[i]->getType() == LightType::POINT)
+        if(lights_[i]->GetType() == LightType::POINT)
         {
             lights_[i]->SetupShader(&lightsUBOData_.pointLights[pointId]);
             ++pointId;
@@ -971,8 +971,8 @@ void OpenGLContent::SetupLights()
 void OpenGLContent::UseLook(const Look& look, bool texturable, const glm::mat4& M)
 {	
     bool waves = false;
-    Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
-    if(ocean != NULL && ocean->hasWaves()) waves = true;
+    Ocean* ocean = SimulationApp::GetApp()->GetSimulationManager()->GetOcean();
+    if(ocean != NULL && ocean->HasWaves()) waves = true;
     
     texturable = texturable && (look.albedoTexture > 0 || look.normalMap > 0 || look.temperatureMap > 0);
     
@@ -1103,13 +1103,13 @@ void OpenGLContent::UseLook(const Look& look, bool texturable, const glm::mat4& 
 
     if(mode_ == DrawingMode::UNDERWATER)
     {
-        shader->SetUniform("cWater", ocean->getOpenGLOcean()->getLightAttenuation());
-        shader->SetUniform("bWater", ocean->getOpenGLOcean()->getLightScattering());
+        shader->SetUniform("cWater", ocean->GetOpenGlOcean()->GetLightAttenuation());
+        shader->SetUniform("bWater", ocean->GetOpenGlOcean()->GetLightScattering());
         if(waves)
         {
-            OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, ocean->getOpenGLOcean()->getWaveTexture());
+            OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, ocean->GetOpenGlOcean()->GetWaveTexture());
             shader->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
-            shader->SetUniform("gridSizes", ocean->getOpenGLOcean()->getWaveGridSizes());
+            shader->SetUniform("gridSizes", ocean->GetOpenGlOcean()->GetWaveGridSizes());
         }
     }
 }
@@ -1117,8 +1117,8 @@ void OpenGLContent::UseLook(const Look& look, bool texturable, const glm::mat4& 
 void OpenGLContent::UseCableLook(const Look& look, GLfloat radius)
 {
     bool waves = false;
-    Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
-    if(ocean != NULL && ocean->hasWaves()) waves = true;
+    Ocean* ocean = SimulationApp::GetApp()->GetSimulationManager()->GetOcean();
+    if(ocean != NULL && ocean->HasWaves()) waves = true;
     
     std::string shaderMode;
     switch (mode_)
@@ -1229,13 +1229,13 @@ void OpenGLContent::UseCableLook(const Look& look, GLfloat radius)
 
     if(mode_ == DrawingMode::UNDERWATER)
     {
-        shader->SetUniform("cWater", ocean->getOpenGLOcean()->getLightAttenuation());
-        shader->SetUniform("bWater", ocean->getOpenGLOcean()->getLightScattering());
+        shader->SetUniform("cWater", ocean->GetOpenGlOcean()->GetLightAttenuation());
+        shader->SetUniform("bWater", ocean->GetOpenGlOcean()->GetLightScattering());
         if(waves)
         {
-            OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, ocean->getOpenGLOcean()->getWaveTexture());
+            OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D_ARRAY, ocean->GetOpenGlOcean()->GetWaveTexture());
             shader->SetUniform("texWaveFFT", TEX_POSTPROCESS1);
-            shader->SetUniform("gridSizes", ocean->getOpenGLOcean()->getWaveGridSizes());
+            shader->SetUniform("gridSizes", ocean->GetOpenGlOcean()->GetWaveGridSizes());
         }
     }
 }
@@ -1253,7 +1253,7 @@ unsigned int OpenGLContent::BuildObject(Mesh* mesh)
     OpenGLState::BindVertexArray(obj.vao);	
     glEnableVertexAttribArray(0); //Position
     glEnableVertexAttribArray(1); //Normal
-    if(mesh->isTexturable())
+    if(mesh->IsTexturable())
     {
         glEnableVertexAttribArray(2); //UV
         glEnableVertexAttribArray(3); //Tangent
@@ -1261,13 +1261,13 @@ unsigned int OpenGLContent::BuildObject(Mesh* mesh)
     }
     
     glBindBuffer(GL_ARRAY_BUFFER, obj.vboVertex);
-    glBufferData(GL_ARRAY_BUFFER, mesh->getVertexSize() * mesh->getNumOfVertices(), mesh->getVertexDataPointer(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, mesh->getVertexSize(), 0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE,  mesh->getVertexSize(), (void*)sizeof(glm::vec3));
-    if(mesh->isTexturable())
+    glBufferData(GL_ARRAY_BUFFER, mesh->GetVertexSize() * mesh->GetNumOfVertices(), mesh->GetVertexDataPointer(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, mesh->GetVertexSize(), 0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE,  mesh->GetVertexSize(), (void*)sizeof(glm::vec3));
+    if(mesh->IsTexturable())
     {
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, mesh->getVertexSize(), (void*)(sizeof(glm::vec3)*2));
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_TRUE,  mesh->getVertexSize(), (void*)(sizeof(glm::vec3)*2 + sizeof(glm::vec2)));
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, mesh->GetVertexSize(), (void*)(sizeof(glm::vec3)*2));
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_TRUE,  mesh->GetVertexSize(), (void*)(sizeof(glm::vec3)*2 + sizeof(glm::vec2)));
     }
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
@@ -1341,7 +1341,7 @@ void OpenGLContent::AddView(std::unique_ptr<OpenGLView> view)
     views_.push_back(std::move(view));
 }
 
-OpenGLView* OpenGLContent::getView(size_t id)
+OpenGLView* OpenGLContent::GetView(size_t id)
 {
     if(id < views_.size())
         return views_[id].get();
@@ -1349,7 +1349,7 @@ OpenGLView* OpenGLContent::getView(size_t id)
         return nullptr;
 }
 
-size_t OpenGLContent::getViewsCount()
+size_t OpenGLContent::GetViewsCount()
 {
     return views_.size();
 }
@@ -1360,7 +1360,7 @@ void OpenGLContent::AddLight(std::unique_ptr<OpenGLLight> light)
     std::sort(lights_.begin(), lights_.end());
 }
 
-OpenGLLight* OpenGLContent::getLight(size_t id)
+OpenGLLight* OpenGLContent::GetLight(size_t id)
 {
     if(id < lights_.size())
         return lights_[id].get();
@@ -1368,12 +1368,12 @@ OpenGLLight* OpenGLContent::getLight(size_t id)
         return nullptr;
 }
 
-size_t OpenGLContent::getLightsCount()
+size_t OpenGLContent::GetLightsCount()
 {
     return lights_.size();
 }
 
-int OpenGLContent::getLookId(const std::string& name)
+int OpenGLContent::GetLookId(const std::string& name)
 {
     if (name.empty()) return -1; // No name specified --> default look
 
@@ -1387,12 +1387,12 @@ int OpenGLContent::getLookId(const std::string& name)
         return -1; // Default look
 }
 
-const Object& OpenGLContent::getObject(size_t id)
+const Object& OpenGLContent::GetObject(size_t id)
 {
     return objects_[id];
 }
 
-const Look& OpenGLContent::getLook(size_t id)
+const Look& OpenGLContent::GetLook(size_t id)
 {
     if(id >= looks_.size())
         return looks_[0];
@@ -1642,7 +1642,7 @@ std::unique_ptr<Mesh> OpenGLContent::BuildPlane(GLfloat halfExtents, GLfloat uvS
 
     glm::vec3 T;
     mesh->ComputeFaceTangent(0, T);
-    for(size_t i=0; i<mesh->getNumOfVertices(); ++i)
+    for(size_t i=0; i<mesh->GetNumOfVertices(); ++i)
         mesh->vertices[i].tangent = T;
     
     int n = btClamped((int)roundf(log2f(halfExtents/50.f)), 0, 8);
@@ -2052,9 +2052,9 @@ std::unique_ptr<Mesh> OpenGLContent::BuildSphere(GLfloat radius, unsigned int su
     for(size_t i=0; i<mesh->faces.size(); ++i)
     {
         //Get triangle, convert from OpenGL to physics
-        glm::vec3 v1gl = mesh->getVertexPos(i, 0);
-        glm::vec3 v2gl = mesh->getVertexPos(i, 1);
-        glm::vec3 v3gl = mesh->getVertexPos(i, 2);
+        glm::vec3 v1gl = mesh->GetVertexPos(i, 0);
+        glm::vec3 v2gl = mesh->GetVertexPos(i, 1);
+        glm::vec3 v3gl = mesh->GetVertexPos(i, 2);
         Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
         Vector3 v2(v2gl.x,v2gl.y,v2gl.z);
         Vector3 v3(v3gl.x,v3gl.y,v3gl.z);
@@ -2535,7 +2535,7 @@ std::unique_ptr<Mesh> OpenGLContent::LoadMesh(const std::string& filename, GLflo
     CheckAndRepairFaceVertexOrder(mesh.get());
     if(smooth)
         SmoothNormals(mesh.get());
-    if(mesh->isTexturable())
+    if(mesh->IsTexturable())
         ComputeTangents(static_cast<TexturableMesh*>(mesh.get()));
 
     return mesh;
@@ -2546,10 +2546,10 @@ void OpenGLContent::TransformMesh(Mesh* mesh, const Transform& T)
     glm::mat4 gT = glMatrixFromTransform(T);
     glm::mat3 gR(gT);
     
-    if(mesh->isTexturable())
+    if(mesh->IsTexturable())
     {
         TexturableMesh* m = static_cast<TexturableMesh*>(mesh);
-        for(size_t i=0; i<m->getNumOfVertices(); ++i)
+        for(size_t i=0; i<m->GetNumOfVertices(); ++i)
         {
             m->vertices[i].pos = glm::vec3(gT * glm::vec4(m->vertices[i].pos, 1.f));
             m->vertices[i].normal = gR * m->vertices[i].normal;
@@ -2559,7 +2559,7 @@ void OpenGLContent::TransformMesh(Mesh* mesh, const Transform& T)
     else
     {   
         PlainMesh* m = static_cast<PlainMesh*>(mesh);
-        for(size_t i=0; i<m->getNumOfVertices(); ++i)
+        for(size_t i=0; i<m->GetNumOfVertices(); ++i)
         {
             m->vertices[i].pos = glm::vec3(gT * glm::vec4(m->vertices[i].pos, 1.f));
             m->vertices[i].normal = gR * m->vertices[i].normal;
@@ -2570,7 +2570,7 @@ void OpenGLContent::TransformMesh(Mesh* mesh, const Transform& T)
 void OpenGLContent::CheckAndRepairFaceVertexOrder(Mesh* mesh)
 {
     size_t repaired = 0;
-    if(mesh->isTexturable())
+    if(mesh->IsTexturable())
     {
         TexturableMesh* m = static_cast<TexturableMesh*>(mesh);
         for(size_t i=0; i<m->faces.size(); ++i)
@@ -2608,11 +2608,11 @@ void OpenGLContent::CheckAndRepairFaceVertexOrder(Mesh* mesh)
 
 void OpenGLContent::SmoothNormals(Mesh* mesh)
 {
-    if(mesh->isTexturable())
+    if(mesh->IsTexturable())
     {
         TexturableMesh* m = static_cast<TexturableMesh*>(mesh);
         //Clear normals
-        for(size_t i=0; i<m->getNumOfVertices(); ++i)
+        for(size_t i=0; i<m->GetNumOfVertices(); ++i)
             m->vertices[i].normal = glm::vec3(0.f);
         //Accumulate normals
         for(size_t i=0; i<m->faces.size(); ++i)
@@ -2622,14 +2622,14 @@ void OpenGLContent::SmoothNormals(Mesh* mesh)
                 m->vertices[m->faces[i].vertexID[h]].normal += N;
         }
         //Normalize
-        for(size_t i=0; i<m->getNumOfVertices(); ++i)
+        for(size_t i=0; i<m->GetNumOfVertices(); ++i)
             m->vertices[i].normal = glm::normalize(m->vertices[i].normal); 
     }
     else
     {
         PlainMesh* m = static_cast<PlainMesh*>(mesh);
         //Clear normals
-        for(size_t i=0; i<m->getNumOfVertices(); ++i)
+        for(size_t i=0; i<m->GetNumOfVertices(); ++i)
             m->vertices[i].normal = glm::vec3(0.f);
         //Accumulate normals
         for(size_t i=0; i<m->faces.size(); ++i)
@@ -2639,7 +2639,7 @@ void OpenGLContent::SmoothNormals(Mesh* mesh)
                 m->vertices[m->faces[i].vertexID[h]].normal += N;
         }
         //Normalize
-        for(size_t i=0; i<m->getNumOfVertices(); ++i)
+        for(size_t i=0; i<m->GetNumOfVertices(); ++i)
             m->vertices[i].normal = glm::normalize(m->vertices[i].normal);
     }
 }
@@ -2647,7 +2647,7 @@ void OpenGLContent::SmoothNormals(Mesh* mesh)
 void OpenGLContent::ComputeTangents(TexturableMesh* mesh)
 {
     //Clear tangents
-    for(size_t i=0; i<mesh->getNumOfVertices(); ++i)
+    for(size_t i=0; i<mesh->GetNumOfVertices(); ++i)
     {
         mesh->vertices[i].tangent = glm::vec3(0.f);
         //mesh->vertices[i].bitangent = glm::vec3(0.f);
@@ -2661,7 +2661,7 @@ void OpenGLContent::ComputeTangents(TexturableMesh* mesh)
             mesh->vertices[mesh->faces[i].vertexID[h]].tangent += T;
     }
     //Normalize
-    for(size_t i=0; i<mesh->getNumOfVertices(); ++i)
+    for(size_t i=0; i<mesh->GetNumOfVertices(); ++i)
     {
         mesh->vertices[i].tangent = glm::normalize(mesh->vertices[i].tangent);
         mesh->vertices[i].tangent = glm::normalize(mesh->vertices[i].tangent - mesh->vertices[i].normal * glm::dot(mesh->vertices[i].normal, mesh->vertices[i].tangent));
@@ -2674,12 +2674,12 @@ GLuint vertex4EdgeIco(std::map<std::pair<GLuint, GLuint>, GLuint>& lookup, Mesh*
     if(key.first > key.second)
         std::swap(key.first, key.second);
         
-    auto inserted = lookup.insert({key, mesh->getNumOfVertices()});
+    auto inserted = lookup.insert({key, mesh->GetNumOfVertices()});
     if(inserted.second)
     {
-        glm::vec3 edge0 = mesh->getVertexPos(firstID);  
-        glm::vec3 edge1 = mesh->getVertexPos(secondID);
-        if(mesh->isTexturable())
+        glm::vec3 edge0 = mesh->GetVertexPos(firstID);  
+        glm::vec3 edge1 = mesh->GetVertexPos(secondID);
+        if(mesh->IsTexturable())
         {
             TexturableMesh* m = static_cast<TexturableMesh*>(mesh);
             TexturableVertex vt;
@@ -2707,10 +2707,10 @@ GLuint vertex4Edge(std::map<std::pair<GLuint, GLuint>, GLuint>& lookup, Mesh* me
     if(key.first > key.second)
         std::swap(key.first, key.second);
         
-    auto inserted=lookup.insert({key, mesh->getNumOfVertices()});
+    auto inserted=lookup.insert({key, mesh->GetNumOfVertices()});
     if(inserted.second)
     {
-        if(mesh->isTexturable())
+        if(mesh->IsTexturable())
         {
             TexturableMesh* m = static_cast<TexturableMesh*>(mesh);
             glm::vec3 edge0 = m->vertices[firstID].pos;
@@ -2873,9 +2873,9 @@ void OpenGLContent::AABB(Mesh* mesh, glm::vec3& min, glm::vec3& max)
     GLfloat minY=BT_LARGE_FLOAT, maxY=-BT_LARGE_FLOAT;
     GLfloat minZ=BT_LARGE_FLOAT, maxZ=-BT_LARGE_FLOAT;
     
-    for(size_t i=0; i<mesh->getNumOfVertices(); ++i)
+    for(size_t i=0; i<mesh->GetNumOfVertices(); ++i)
     {
-        glm::vec3 vertex = mesh->getVertexPos(i);
+        glm::vec3 vertex = mesh->GetVertexPos(i);
         
         if(vertex.x > maxX)
             maxX = vertex.x;
@@ -2904,16 +2904,16 @@ void OpenGLContent::AABS(Mesh* mesh, GLfloat& bsRadius, glm::vec3& bsCenterOffse
 {
     glm::vec3 tempCenter(0,0,0);
     
-    for(size_t i=0; i<mesh->getNumOfVertices(); ++i)
-        tempCenter += mesh->getVertexPos(i);
+    for(size_t i=0; i<mesh->GetNumOfVertices(); ++i)
+        tempCenter += mesh->GetVertexPos(i);
     
-    tempCenter /= (GLfloat)mesh->getNumOfVertices();
+    tempCenter /= (GLfloat)mesh->GetNumOfVertices();
     
     GLfloat radius = 0;
     
-    for(size_t i=0; i<mesh->getNumOfVertices(); ++i)
+    for(size_t i=0; i<mesh->GetNumOfVertices(); ++i)
     {
-        glm::vec3 v = mesh->getVertexPos(i);
+        glm::vec3 v = mesh->GetVertexPos(i);
         GLfloat r = glm::length(v-tempCenter);
         if(r > radius)
             radius = r;

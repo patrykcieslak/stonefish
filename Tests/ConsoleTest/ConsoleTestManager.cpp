@@ -101,5 +101,5 @@ void ConsoleTestManager::BuildScenario()
 
 void ConsoleTestManager::SimulationStepCompleted(sf::Scalar timeStep)
 {
-    cInfo("Simulation time: %1.3lf", getSimulationTime());
+    cInfo("Simulation time: %1.3lf", GetSimulationTime());
 }

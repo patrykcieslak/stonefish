@@ -36,27 +36,27 @@ Push::Push(const std::string& uniqueName, bool inverted) : LinkActuator(uniqueNa
 {
     setpoint_ = Scalar(0);
     inv_ = inverted;
-    setForceLimits(BT_LARGE_FLOAT, BT_LARGE_FLOAT); // No limits
+    SetForceLimits(BT_LARGE_FLOAT, BT_LARGE_FLOAT); // No limits
 }
 
-LinkActuatorType Push::getLinkActuatorType() const
+LinkActuatorType Push::GetLinkActuatorType() const
 {
     return LinkActuatorType::PUSH;
 }
 
-void Push::setForceLimits(Scalar positive, Scalar negative)
+void Push::SetForceLimits(Scalar positive, Scalar negative)
 {
     limits_.first = btClamped(positive, Scalar(0), Scalar(BT_LARGE_FLOAT));
     limits_.second = btClamped(btFabs(negative), Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
 
-void Push::setForce(Scalar f)
+void Push::SetForce(Scalar f)
 {
     setpoint_ = btClamped(f, -limits_.second, limits_.first);
     ResetWatchdog();
 }
 
-Scalar Push::getForce() const
+Scalar Push::GetForce() const
 {
     return setpoint_;
 }
@@ -68,8 +68,8 @@ void Push::Update(Scalar dt)
     if(attach_ != nullptr)
     {
         //Get transforms
-        Transform solidTrans = attach_->getCGTransform();
-        Transform pushTrans = attach_->getOTransform() * o2a_;
+        Transform solidTrans = attach_->GetCgTransform();
+        Transform pushTrans = attach_->GetOTransform() * o2a_;
         
         Scalar force = inv_ ? -setpoint_ : setpoint_;
         
@@ -83,7 +83,7 @@ std::vector<Renderable> Push::Render()
 {
     Transform pushTrans = Transform::getIdentity();
     if(attach_ != nullptr)
-        pushTrans = attach_->getOTransform() * o2a_;
+        pushTrans = attach_->GetOTransform() * o2a_;
     else
         LinkActuator::Render();
     
@@ -93,7 +93,7 @@ std::vector<Renderable> Push::Render()
     item.model = glMatrixFromTransform(pushTrans);  
     item.type = RenderableType::ACTUATOR_LINES;
     item.data = std::make_shared<std::vector<glm::vec3>>();
-    auto points = item.getDataAsPoints();
+    auto points = item.GetDataAsPoints();
     points->push_back(glm::vec3(0,0,0));
     points->push_back(glm::vec3(0.1f*(inv_ ? -setpoint_ : setpoint_),0,0));
     items.push_back(item);
@@ -103,12 +103,12 @@ std::vector<Renderable> Push::Render()
 
 void Push::WatchdogTimeout()
 {
-    setForce(Scalar(0));
+    SetForce(Scalar(0));
 }
 
 // Statics
 
-ConstructInfo Push::getConstructInfo()
+ConstructInfo Push::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -145,7 +145,7 @@ std::unique_ptr<Push> Push::Construct(const std::string& uniqueName, ConstructIn
         maxNegativeForce = std::get<Scalar>(value.value);
 
     std::unique_ptr<Push> actuator = std::make_unique<Push>(uniqueName, inverted);
-    actuator->setForceLimits(maxPositiveForce, maxNegativeForce);
+    actuator->SetForceLimits(maxPositiveForce, maxNegativeForce);
 
     return actuator;
 }

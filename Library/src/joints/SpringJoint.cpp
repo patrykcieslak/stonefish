@@ -36,8 +36,8 @@ SpringJoint::SpringJoint(const std::string& uniqueName, SolidEntity* solid, cons
                         const Vector3& linearStiffness, const Vector3& angularStiffness,
                         const Vector3& linearDamping, const Vector3& angularDamping) : Joint(uniqueName, false)
 {
-    btRigidBody* bodyA = solid->getRigidBody();
-    Transform frameInA = solid->getCGTransform().inverse() * attachment;
+    btRigidBody* bodyA = solid->GetRigidBody();
+    Transform frameInA = solid->GetCgTransform().inverse() * attachment;
 
     std::unique_ptr<btGeneric6DofSpring2Constraint> spring = std::make_unique<btGeneric6DofSpring2Constraint>(*bodyA, frameInA, RO_ZYX);
     spring->enableSpring(0, true);
@@ -65,8 +65,8 @@ SpringJoint::SpringJoint(const std::string& uniqueName, SolidEntity* solidA, Sol
                         const Vector3& linearStiffness, const Vector3& angularStiffness,
                         const Vector3& linearDamping, const Vector3& angularDamping) : Joint(uniqueName, false)
 {
-    btRigidBody* bodyA = solidA->getRigidBody();
-    btRigidBody* bodyB = solidB->getRigidBody();
+    btRigidBody* bodyA = solidA->GetRigidBody();
+    btRigidBody* bodyB = solidB->GetRigidBody();
     Transform frameInA = bodyA->getCenterOfMassTransform().inverse() * attachment;
     Transform frameInB = bodyB->getCenterOfMassTransform().inverse() * attachment;
     
@@ -92,7 +92,7 @@ SpringJoint::SpringJoint(const std::string& uniqueName, SolidEntity* solidA, Sol
     constraint_ = std::move(spring);
 }
 
-JointType SpringJoint::getType() const
+JointType SpringJoint::GetType() const
 {
     return JointType::SPRING;
 }
@@ -107,7 +107,7 @@ std::vector<Renderable> SpringJoint::Render()
         item.model = glm::mat4(1.f);
         item.type = RenderableType::JOINT_LINES;
         item.data = std::make_shared<std::vector<glm::vec3>>();
-        auto points = item.getDataAsPoints();
+        auto points = item.GetDataAsPoints();
         Vector3 A = (c->getRigidBodyA().getCenterOfMassTransform() * c->getFrameOffsetA()).getOrigin();
         Vector3 B = (c->getRigidBodyB().getCenterOfMassTransform() * c->getFrameOffsetB()).getOrigin();   
         points->push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));

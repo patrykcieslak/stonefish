@@ -196,62 +196,62 @@ namespace sf
         /*!
          \param ec exposure compensation factor
          */
-        void setExposureCompensation(GLfloat ec);
+        void SetExposureCompensation(GLfloat ec);
 
         //! A method returning the exposure compensation factor.
-        GLfloat getExposureCompensation();
+        GLfloat GetExposureCompensation();
 
         //! A method returning the postprocessing framebuffer of the camera.
-        GLuint getPostprocessFBO();
+        GLuint GetPostprocessFbo();
 
         //! A method returning the quater resolution postprocessing framebuffer of the camera.
-        GLuint getQuaterPostprocessFBO();
+        GLuint GetQuaterPostprocessFbo();
 
         //! A method returning the id of the color texture.
         /*!
          \param index the id of the texture in the list
          \return OpenGL id of the texture
          */
-        GLuint getColorTexture(unsigned int index);
+        GLuint GetColorTexture(unsigned int index);
         
         //! A method returning the id of the final texture.
-        GLuint getFinalTexture();
+        GLuint GetFinalTexture();
         
         //! A method returning the id of the ambient occlusion texture.
-        GLuint getAOTexture();
+        GLuint GetAoTexture();
         
         //! A method returning the id of the linear depth texture.
         /*!
          \param frontFace a flag to decide if front or back face depth is requested
          \return OpenGL id of the texture
          */
-        GLuint getLinearDepthTexture(bool frontFace);
+        GLuint GetLinearDepthTexture(bool frontFace);
         
         //! A method returning the id of a postprocessing texture.
         /*!
          \param index the id of the texture in the list
          \return OpenGL id of the texture
          */
-        GLuint getPostprocessTexture(unsigned int index);
+        GLuint GetPostprocessTexture(unsigned int index);
         
         //! A method returning the id of a quater resolution postprocessing texture.
         /*!
          \param index the id of the texture in the list
          \return OpenGL id of the texture
          */
-        GLuint getQuaterPostprocessTexture(unsigned int index);
+        GLuint GetQuaterPostprocessTexture(unsigned int index);
 
         //! A method returning the id of the last used color buffer.
-        GLuint getLastActiveColorBuffer();
+        GLuint GetLastActiveColorBuffer();
 
         //! A method informing if view is using ambient occlusion.
-        bool hasAO();
+        bool HasAo();
 		
 		//! A method informing if HDR tone mapping is enabled.
-		bool usingToneMapping();
+		bool UsingToneMapping();
 		
 		//! A method informing if auto exposure function is enabled.
-        bool usingAutoExposure();
+        bool UsingAutoExposure();
 		
         //! A static method to load shaders.
         static void Init(const RenderSettings& rSettings);

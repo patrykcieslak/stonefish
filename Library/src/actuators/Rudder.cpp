@@ -54,23 +54,23 @@ Rudder::Rudder(const std::string& uniqueName, std::unique_ptr<SolidEntity> rudde
     rudder_->BuildGraphicalObject();
 }
 
-LinkActuatorType Rudder::getLinkActuatorType() const
+LinkActuatorType Rudder::GetLinkActuatorType() const
 {
     return LinkActuatorType::RUDDER;
 }
 
-void Rudder::setSetpoint(Scalar s)
+void Rudder::SetSetpoint(Scalar s)
 {
     if(inv_) s *= Scalar(-1);
     setpoint_ = std::max(std::min(s, maxAngle_), -maxAngle_);
 }
 
-Scalar Rudder::getSetpoint() const
+Scalar Rudder::GetSetpoint() const
 {
     return inv_ ? -setpoint_ : setpoint_;
 }
 
-Scalar Rudder::getAngle() const
+Scalar Rudder::GetAngle() const
 {
     return theta_;
 }
@@ -91,14 +91,14 @@ void Rudder::Update(Scalar dt)
         Quaternion rudderRot(theta_, 0, 0);
 
         //Get transforms
-        Transform solidTrans = attach_->getCGTransform();
+        Transform solidTrans = attach_->GetCgTransform();
         // o2a is the transform of the actuator
-        Transform rudderTrans = attach_->getOTransform() * o2a_ * Transform(rudderRot);
+        Transform rudderTrans = attach_->GetOTransform() * o2a_ * Transform(rudderRot);
         Vector3 relPos = rudderTrans.getOrigin() - solidTrans.getOrigin();
 
-        Ocean* ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();
+        Ocean* ocn = SimulationApp::GetApp()->GetSimulationManager()->GetOcean();
 
-        Vector3 absVel = attach_->getLinearVelocityInLocalPoint(relPos);
+        Vector3 absVel = attach_->GetLinearVelocityInLocalPoint(relPos);
         Vector3 fluidVel = ocn->GetFluidVelocity(rudderTrans.getOrigin());
         Vector3 velocity = rudderTrans.getBasis().transpose()*(absVel - fluidVel);
 
@@ -119,7 +119,7 @@ void Rudder::Update(Scalar dt)
             // MS thesis. Institutt for teknisk kybernetikk, 2007.
 
             // Fluid density
-            Scalar rho = ocn->getLiquid().density;
+            Scalar rho = ocn->GetLiquid().density;
 
             // Speed
             Scalar u = velocity.length();
@@ -173,28 +173,28 @@ std::vector<Renderable> Rudder::Render()
 {
     Transform rudderTrans = Transform::getIdentity();
     if(attach_ != NULL)
-        rudderTrans = attach_->getOTransform() * o2a_;
+        rudderTrans = attach_->GetOTransform() * o2a_;
     else
         LinkActuator::Render();
     
     //Rotate rudder
-    rudderTrans *= Transform(Quaternion(theta_, 0, 0)) * rudder_->getO2GTransform();
+    rudderTrans *= Transform(Quaternion(theta_, 0, 0)) * rudder_->GetO2GTransform();
     
     //Add renderable
     std::vector<Renderable> items(0);
     Renderable item;
     item.type = RenderableType::SOLID;
-    item.materialName = rudder_->getMaterial().name;
-    item.objectId = rudder_->getGraphicalObject();
-    item.lookId = dm_ == DisplayMode::GRAPHICAL ? rudder_->getLook() : -1;
+    item.materialName = rudder_->GetMaterial().name;
+    item.objectId = rudder_->GetGraphicalObject();
+    item.lookId = dm_ == DisplayMode::GRAPHICAL ? rudder_->GetLook() : -1;
 	item.model = glMatrixFromTransform(rudderTrans);
     items.push_back(item);
     
     item.type = RenderableType::ACTUATOR_LINES;
     item.data = std::make_shared<std::vector<glm::vec3>>();
-    auto points = item.getDataAsPoints();
+    auto points = item.GetDataAsPoints();
     points->push_back(glm::vec3(0,0,0));
-    Vector3 VG = .1*(rudder_->getO2GTransform().inverse().getBasis()*(liftV_ + dragV_));
+    Vector3 VG = .1*(rudder_->GetO2GTransform().inverse().getBasis()*(liftV_ + dragV_));
     points->push_back(glm::vec3(VG.getX(),VG.getY(),VG.getZ()));
     items.push_back(item);
     
@@ -203,7 +203,7 @@ std::vector<Renderable> Rudder::Render()
 
 // Statics
 
-ConstructInfo Rudder::getConstructInfo()
+ConstructInfo Rudder::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;

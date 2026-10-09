@@ -40,19 +40,19 @@ namespace sf
         /*!
          \param T current transform
          */
-        void setTransform(const Transform& T);
+        void SetTransform(const Transform& T);
 
         //! A method setting the current linear velocity.
         /*!
          \param v velocity [m/s]
          */
-        void setLinearVelocity(const Vector3& v);
+        void SetLinearVelocity(const Vector3& v);
 
         //! A method setting the current angular velocity.
         /*!
          \param omega angular velocity [rad/s]
          */
-        void setAngularVelocity(const Vector3& omega);
+        void SetAngularVelocity(const Vector3& omega);
 
         //! A method updating the interpolated transform and velocities.
         virtual void Interpolate() override;

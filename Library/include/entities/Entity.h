@@ -91,16 +91,16 @@ namespace sf
         /*!
          \param render a flag informing if the entity should be rendered
          */
-        void setRenderable(bool render);
+        void SetRenderable(bool render);
         
         //! A method informing if the entity is renderable.
-        bool isRenderable() const;
+        bool IsRenderable() const;
         
         //! A method returning the name of the entity.
-        const std::string& getName() const;
+        const std::string& GetName() const;
         
         //! A method returning the type of the entity.
-        virtual EntityType getType() const = 0;
+        virtual EntityType GetType() const = 0;
         
         //! A method implementing rendering of the entity.
         virtual std::vector<Renderable> Render() = 0;
@@ -116,7 +116,7 @@ namespace sf
          \param min a point located at the minimum coordinate corner
          \param max a point located at the maximum coordinate corner
          */
-        virtual void getAABB(Vector3& min, Vector3& max) = 0;
+        virtual void GetAabb(Vector3& min, Vector3& max) = 0;
         
     private:
         bool renderable_;

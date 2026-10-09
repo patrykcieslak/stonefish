@@ -87,7 +87,7 @@ void PerformanceMonitor::HydrodynamicsFinished()
     Update(hydroStart_, hydroTime_, hydroTimeAvg_);
 }
 
-double PerformanceMonitor::getSimulationTime()
+double PerformanceMonitor::GetSimulationTime()
 {
     SDL_LockMutex(updateMtx_);
     if(!simFinished_)
@@ -100,7 +100,7 @@ double PerformanceMonitor::getSimulationTime()
     return simTimeCopy;
 }
 
-double PerformanceMonitor::getPhysicsTime()
+double PerformanceMonitor::GetPhysicsTime()
 {
     SDL_LockMutex(updateMtx_);
     double t = phyTime_.back();
@@ -108,7 +108,7 @@ double PerformanceMonitor::getPhysicsTime()
     return t;
 }
 
-double PerformanceMonitor::getPhysicsTimeAverage()
+double PerformanceMonitor::GetPhysicsTimeAverage()
 {
     SDL_LockMutex(updateMtx_);
     double t = phyTimeAvg_;
@@ -116,7 +116,7 @@ double PerformanceMonitor::getPhysicsTimeAverage()
     return t;
 }
 
-double PerformanceMonitor::getHydrodynamicsTime()
+double PerformanceMonitor::GetHydrodynamicsTime()
 {
     SDL_LockMutex(updateMtx_);
     double t = hydroTime_.back();
@@ -124,7 +124,7 @@ double PerformanceMonitor::getHydrodynamicsTime()
     return t;
 }
 
-double PerformanceMonitor::getHydrodynamicsTimeAverage()
+double PerformanceMonitor::GetHydrodynamicsTimeAverage()
 {
     SDL_LockMutex(updateMtx_);
     double t = hydroTimeAvg_;

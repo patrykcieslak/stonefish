@@ -140,7 +140,7 @@ void OpenGLSonar::Update()
     needsUpdate_ = true;
 }
 
-bool OpenGLSonar::needsUpdate()
+bool OpenGLSonar::NeedsUpdate()
 {
     if(needsUpdate_)
     {
@@ -151,17 +151,17 @@ bool OpenGLSonar::needsUpdate()
         return false;
 }
 
-void OpenGLSonar::setColorMap(ColorMap cm)
+void OpenGLSonar::SetColorMap(ColorMap cm)
 {
     cMap_ = cm;
 }
 
-SonarOutputFormat OpenGLSonar::getOutputFormat() const
+SonarOutputFormat OpenGLSonar::GetOutputFormat() const
 {
     return outputFormat_;
 }
 
-ViewType OpenGLSonar::getType() const
+ViewType OpenGLSonar::GetType() const
 {
     return ViewType::SONAR;
 }

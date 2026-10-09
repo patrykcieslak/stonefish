@@ -36,9 +36,9 @@ namespace sf
 
 MovingEntity::MovingEntity(const std::string& uniqueName, const std::string& material, const std::string& look) : Entity(uniqueName)
 {
-    mat_ = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(material);
-    if(SimulationApp::getApp()->hasGraphics())
-        lookId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+    mat_ = SimulationApp::GetApp()->GetSimulationManager()->GetMaterialManager()->GetMaterial(material);
+    if(SimulationApp::GetApp()->HasGraphics())
+        lookId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->GetLookId(look);
     else
         lookId_ = -1;
     graObjectId_ = -1;
@@ -46,46 +46,46 @@ MovingEntity::MovingEntity(const std::string& uniqueName, const std::string& mat
     particles_.reset();
 }
 
-Material MovingEntity::getMaterial() const
+Material MovingEntity::GetMaterial() const
 {
     return mat_;
 }
 
-void MovingEntity::setLinearAcceleration(Vector3 a)
+void MovingEntity::SetLinearAcceleration(Vector3 a)
 {
     linearAcc_ = a;
 }
         
-void MovingEntity::setAngularAcceleration(Vector3 epsilon)
+void MovingEntity::SetAngularAcceleration(Vector3 epsilon)
 {
     angularAcc_ = epsilon;
 }
 
-void MovingEntity::setDisplayMode(DisplayMode m)
+void MovingEntity::SetDisplayMode(DisplayMode m)
 {
     dm_ = m;
 }
 
-void MovingEntity::setLook(int newLookId)
+void MovingEntity::SetLook(int newLookId)
 {
     lookId_ = newLookId;
 }
 
-int MovingEntity::getLook() const
+int MovingEntity::GetLook() const
 {
     return lookId_;
 }
 
-int MovingEntity::getGraphicalObject() const
+int MovingEntity::GetGraphicalObject() const
 {
     return graObjectId_;
 }
 
-const std::shared_ptr<OpenGLOceanParticles>& MovingEntity::getOceanParticles()
+const std::shared_ptr<OpenGLOceanParticles>& MovingEntity::GetOceanParticles()
 {
     if(particles_ == nullptr 
-        && SimulationApp::getApp()->hasGraphics() 
-        && SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
+        && SimulationApp::GetApp()->HasGraphics() 
+        && SimulationApp::GetApp()->GetSimulationManager()->IsOceanEnabled())
     {
         particles_ = std::make_shared<OpenGLOceanParticles>(STD_OCEAN_PARTICLES_COUNT, STD_OCEAN_PARTICLES_RADIUS);
     }
@@ -93,7 +93,7 @@ const std::shared_ptr<OpenGLOceanParticles>& MovingEntity::getOceanParticles()
     return particles_;
 }
 
-btRigidBody* MovingEntity::getRigidBody()
+btRigidBody* MovingEntity::GetRigidBody()
 {
     return rigidBody_.get();
 }

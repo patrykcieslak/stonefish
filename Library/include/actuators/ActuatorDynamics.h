@@ -52,13 +52,13 @@ namespace sf
         virtual Scalar Update(Scalar dt, Scalar sp) = 0;
 
         //! A method returning the model type.
-        virtual RotorDynamicsType getType() = 0;
+        virtual RotorDynamicsType GetType() = 0;
 
         //! A method used to set the limit of output.
         /*!
           \param limit the absolute limit of the output [rad/s]
         */
-        void setOutputLimit(Scalar limit)
+        void SetOutputLimit(Scalar limit)
         {
             outputLimit_ = limit;
         }
@@ -85,7 +85,7 @@ namespace sf
         }
 
         //! A method returning the model type.
-        RotorDynamicsType getType()
+        RotorDynamicsType GetType()
         {
             return RotorDynamicsType::ZERO_ORDER;
         }
@@ -117,7 +117,7 @@ namespace sf
         }
 
         //! A method returning the model type.
-        RotorDynamicsType getType()
+        RotorDynamicsType GetType()
         {
             return RotorDynamicsType::FIRST_ORDER;
         }
@@ -153,7 +153,7 @@ namespace sf
         }
 
         //! A method returning the model type.
-        RotorDynamicsType getType()
+        RotorDynamicsType GetType()
         {
             return RotorDynamicsType::YOEGER;
         }
@@ -194,7 +194,7 @@ namespace sf
         }
 
         //! A method returning the model type.
-        RotorDynamicsType getType()
+        RotorDynamicsType GetType()
         {
             return RotorDynamicsType::BESSA;
         }
@@ -244,13 +244,13 @@ namespace sf
         /*!
           \param damping absolute value of the damping torque [Nm]
         */
-        void setDampingTorque(Scalar tau)
+        void SetDampingTorque(Scalar tau)
         {
             damping_ = btFabs(tau);
         }
 
         //! A method returning the model type.
-        RotorDynamicsType getType()
+        RotorDynamicsType GetType()
         {
             return RotorDynamicsType::MECHANICAL_PI;
         }
@@ -286,7 +286,7 @@ namespace sf
         virtual std::pair<Scalar, Scalar> Update(Scalar input) = 0;
 
         //! A method returning the type of the model.
-        virtual ThrustModelType getType() = 0;
+        virtual ThrustModelType GetType() = 0;
     };
 
     // ---------- Implemententation of several models of thrust generation -----------
@@ -317,7 +317,7 @@ namespace sf
         }
 
         //! A method returning the type of the model.
-        ThrustModelType getType() override
+        ThrustModelType GetType() override
         {
             return ThrustModelType::QUADRATIC;
         }
@@ -363,7 +363,7 @@ namespace sf
         }
 
         //! A method returning the type of the model.
-        ThrustModelType getType() override
+        ThrustModelType GetType() override
         {
             return ThrustModelType::DEADBAND;
         }
@@ -428,7 +428,7 @@ namespace sf
         }
 
         //! A method returning the type of the model.
-        ThrustModelType getType() override
+        ThrustModelType GetType() override
         {
             return ThrustModelType::LINTERP;
         }
@@ -491,13 +491,13 @@ namespace sf
         /*!
           \param vel velocity of the fluid coming into thruster [m/s]
         */
-        void setIncomingFluidVelocity(Scalar vel)
+        void SetIncomingFluidVelocity(Scalar vel)
         {
             u_ = vel;
         }
 
         //! A method returning the type of the model.
-        ThrustModelType getType() override
+        ThrustModelType GetType() override
         {
             return ThrustModelType::FD;
         }

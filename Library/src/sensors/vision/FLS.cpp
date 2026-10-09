@@ -41,8 +41,8 @@ FLS::FLS(const std::string& uniqueName, unsigned int numOfBeams, unsigned int nu
     range_.x = 0.f;
     range_.y = 0.f;
     noise_ = glm::vec2(0.f);
-    setRangeMax(maxRange);
-    setRangeMin(minRange);
+    SetRangeMax(maxRange);
+    SetRangeMin(minRange);
     gain_ = Scalar(1);
     fovV_ = verticalFOVDeg <= Scalar(0) ? Scalar(20) : (verticalFOVDeg > Scalar(179) ? Scalar(179) : verticalFOVDeg);
     cMap_ = ColorMap::GREEN_BLUE;
@@ -52,12 +52,12 @@ FLS::FLS(const std::string& uniqueName, unsigned int numOfBeams, unsigned int nu
     glFLS_ = nullptr;
 }
 
-void FLS::setRangeMin(Scalar r)
+void FLS::SetRangeMin(Scalar r)
 {
     range_.x = r < Scalar(0.02) ? 0.02f : (r < Scalar(range_.y) ? (GLfloat)r : range_.x);
 }
 
-void FLS::setRangeMax(Scalar r)
+void FLS::SetRangeMax(Scalar r)
 {
     range_.y = r > Scalar(range_.x) ? (GLfloat)r : range_.x;
     Scalar pulseTime = (Scalar(2)*range_.y/SOUND_VELOCITY_WATER) * Scalar(1.1);
@@ -65,69 +65,69 @@ void FLS::setRangeMax(Scalar r)
         freq_ = Scalar(1)/pulseTime;
 }
 
-void FLS::setGain(Scalar g)
+void FLS::SetGain(Scalar g)
 {
     gain_ = g > Scalar(0) ? g : Scalar(1);
 }
 
-void FLS::setNoise(float multiplicativeStdDev, float additiveStdDev)
+void FLS::SetNoise(float multiplicativeStdDev, float additiveStdDev)
 {
     if(multiplicativeStdDev >= 0.f)
         noise_.x = multiplicativeStdDev;
     if(additiveStdDev >= 0.f)
         noise_.y = additiveStdDev;
     if(glFLS_ != nullptr)
-        glFLS_->setNoise(noise_);
+        glFLS_->SetNoise(noise_);
 }
 
-void FLS::setDisplaySettings(ColorMap cm)
+void FLS::SetDisplaySettings(ColorMap cm)
 {
     cMap_ = cm;
 }
 
-void* FLS::getImageDataPointer(unsigned int index)
+void* FLS::GetImageDataPointer(unsigned int index)
 {
     return sonarData_;
 }
 
-void FLS::getDisplayResolution(unsigned int& x, unsigned int& y) const
+void FLS::GetDisplayResolution(unsigned int& x, unsigned int& y) const
 {
-    getResolution(x, y);
+    GetResolution(x, y);
     GLfloat hFactor = sinf(glm::radians((float)fovH_)/2.f);
     x = (int)ceilf(2.f*hFactor*y);
 }
 
-GLubyte* FLS::getDisplayDataPointer()
+GLubyte* FLS::GetDisplayDataPointer()
 {
     return displayData_.data();
 }
 
-Scalar FLS::getRangeMin() const
+Scalar FLS::GetRangeMin() const
 {
     return Scalar(range_.x);
 }
 
-Scalar FLS::getRangeMax() const
+Scalar FLS::GetRangeMax() const
 {
     return Scalar(range_.y);
 }
 
-Scalar FLS::getGain() const
+Scalar FLS::GetGain() const
 {
     return gain_;
 }
 
-SonarOutputFormat FLS::getOutputFormat() const
+SonarOutputFormat FLS::GetOutputFormat() const
 {
     return outputFormat_;
 }
     
-VisionSensorType FLS::getVisionSensorType() const
+VisionSensorType FLS::GetVisionSensorType() const
 {
     return VisionSensorType::FLS;
 }
 
-OpenGLView* FLS::getOpenGLView() const
+OpenGLView* FLS::GetOpenGlView() const
 {
     return glFLS_;
 }
@@ -144,17 +144,17 @@ void FLS::InitGraphics(bool& seesParticles)
 
     // Set up sonar
     glFLS_ = glFLS.get();
-    glFLS_->setNoise(noise_);
-    glFLS_->setSonar(this);
-    glFLS_->setColorMap(cMap_);
+    glFLS_->SetNoise(noise_);
+    glFLS_->SetSonar(this);
+    glFLS_->SetColorMap(cMap_);
     UpdateTransform();
     glFLS_->UpdateTransform();
     InternalUpdate(0);
 
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glFLS));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->AddView(std::move(glFLS));
 
     unsigned int w, h;
-    getDisplayResolution(w, h);
+    GetDisplayResolution(w, h);
     displayData_.resize(w*h*3);
 }
 
@@ -178,7 +178,7 @@ void FLS::NewDataReady(void* data, unsigned int index)
         if(index == 0)
         {
             unsigned int w, h;
-            getDisplayResolution(w, h);
+            GetDisplayResolution(w, h);
             memcpy(displayData_.data(), data, w*h*3);
         }
         else
@@ -199,13 +199,13 @@ void FLS::InternalUpdate(Scalar dt)
 std::vector<Renderable> FLS::Render()
 {
     std::vector<Renderable> items = Sensor::Render();
-    if(isRenderable())
+    if(IsRenderable())
     {
         Renderable item;
-        item.model = glMatrixFromTransform(getSensorFrame());
+        item.model = glMatrixFromTransform(GetSensorFrame());
         item.type = RenderableType::SENSOR_LINES;    
         item.data = std::make_shared<std::vector<glm::vec3>>();
-        auto points = item.getDataAsPoints();
+        auto points = item.GetDataAsPoints();
         
         //Create sonar dummy
         int div = 12;
@@ -284,7 +284,7 @@ std::vector<Renderable> FLS::Render()
 
 // Statics
 
-ConstructInfo FLS::getConstructInfo()
+ConstructInfo FLS::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -355,7 +355,7 @@ std::unique_ptr<FLS> FLS::Construct(const std::string& uniqueName, Scalar freque
 
     // Construct
     std::unique_ptr<FLS> sensor = std::make_unique<FLS>(uniqueName, beams, bins, hFov, vFov, rangeMin, rangeMax, outputFormat, frequency);
-    sensor->setGain(gain);
+    sensor->SetGain(gain);
 
     // Noise
     Scalar multiplicative {0.025};
@@ -369,12 +369,12 @@ std::unique_ptr<FLS> FLS::Construct(const std::string& uniqueName, Scalar freque
     if (value.valid)
         additive = std::get<Scalar>(value.value);
 
-    sensor->setNoise(multiplicative, additive);
+    sensor->SetNoise(multiplicative, additive);
 
     // Display
     value = info.nodes.at("display").attributes.at("colormap");
     if (value.valid)
-        sensor->setDisplaySettings(std::get<ColorMap>(value.value));
+        sensor->SetDisplaySettings(std::get<ColorMap>(value.value));
 
     return sensor;
 }

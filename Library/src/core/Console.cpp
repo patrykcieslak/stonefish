@@ -43,12 +43,12 @@ Console::~Console()
     SDL_DestroyMutex(linesMutex_);
 }
     
-SDL_mutex* Console::getLinesMutex()
+SDL_mutex* Console::GetLinesMutex()
 {
     return linesMutex_;
 }
 
-std::vector<ConsoleMessage> Console::getLines()
+std::vector<ConsoleMessage> Console::GetLines()
 {
     return lines_;
 }

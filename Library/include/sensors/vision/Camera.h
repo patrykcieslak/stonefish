@@ -74,7 +74,7 @@ namespace sf
          \param y position of the image in the window [px]
          \param scale scaling factor of the image
          */
-        void setDisplayOnScreen(bool display, unsigned int x, unsigned int y, float scale);
+        void SetDisplayOnScreen(bool display, unsigned int x, unsigned int y, float scale);
         
         //! A method informing if the camera image should be displayed in the main window.
         /*!
@@ -83,24 +83,24 @@ namespace sf
          \param scale reference to the scaling factor of the image
          \return a flag indicating if the view should be displayed
          */
-        bool getDisplayOnScreen(unsigned int& x, unsigned int& y, float& scale) const;
+        bool GetDisplayOnScreen(unsigned int& x, unsigned int& y, float& scale) const;
         
         //! A method returning the horizontal field of view of the camera [deg].
-        Scalar getHorizontalFOV() const;
+        Scalar GetHorizontalFov() const;
         
         //! A method returning the resolution of the camera image.
         /*!
          \param x a reference to a variable that will store the horizontal resolution [pix]
          \param y a reference to a variable that will store the vertical resolution [pix]
          */
-        void getResolution(unsigned int& x, unsigned int& y) const;
+        void GetResolution(unsigned int& x, unsigned int& y) const;
         
         //! A method returning the pointer to the image data.
         /*!
          \param index the id of the OpenGL camera for which the data pointer is requested
          \return pointer to the image data buffer
          */
-        virtual void* getImageDataPointer(unsigned int index = 0) = 0;
+        virtual void* GetImageDataPointer(unsigned int index = 0) = 0;
         
     protected:
         Scalar fovH_;

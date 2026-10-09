@@ -83,12 +83,12 @@ Terrain::Terrain(const std::string& uniqueName, const std::string& pathToHeightm
     BuildRigidBody();
 }
 
-StaticEntityType Terrain::getStaticType()
+StaticEntityType Terrain::GetStaticType()
 {
     return StaticEntityType::TERRAIN;
 }
     
-void Terrain::getAABB(Vector3 &min, Vector3 &max)
+void Terrain::GetAabb(Vector3 &min, Vector3 &max)
 {
     //Terrain shouldn't affect shadow calculation
     min.setValue(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);
@@ -101,7 +101,7 @@ void Terrain::AddToSimulation(SimulationManager* sm, const Transform& origin)
     {
         motionState_ = std::make_unique<btDefaultMotionState>(origin*Transform(IQ(), Vector3(0,0,-maxHeight_/Scalar(2))));
         rigidBody_->setMotionState(motionState_.get());
-        sm->getDynamicsWorld()->addRigidBody(rigidBody_.get(), MASK_STATIC, MASK_DYNAMIC);
+        sm->GetDynamicsWorld()->addRigidBody(rigidBody_.get(), MASK_STATIC, MASK_DYNAMIC);
     }
 }
 

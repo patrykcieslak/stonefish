@@ -45,8 +45,8 @@ void LearningTestManager::BuildScenario()
 {
     // Introducing some global damping to stabilize the simulation
     sf::Scalar erp, stopErp;
-    getJointErp(erp, stopErp);
-    setSolverParams(erp, stopErp, 1.0, 0.1, 0.0, 0.0, 0.0);
+    GetJointErp(erp, stopErp);
+    SetSolverParams(erp, stopErp, 1.0, 0.1, 0.0, 0.0, 0.0);
 
     // Materials
     CreateMaterial("Ground", 1000.0, 1.0);

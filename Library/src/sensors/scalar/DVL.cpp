@@ -53,10 +53,10 @@ DVL::DVL(const std::string& uniqueName, Scalar beamAngleDeg, bool beamPositiveZ,
     channels_[3].rangeMax = Scalar(1000);
     addNoiseStdDev_[0] = addNoiseStdDev_[1] = Scalar(0);
     mulNoiseFactor_[0] = mulNoiseFactor_[1] = Scalar(0);
-    setWaterLayer(0, 0, 0);
+    SetWaterLayer(0, 0, 0);
 }
 
-void DVL::setWaterLayer(Scalar minThickness, Scalar nearBoundary, Scalar farBoundary)
+void DVL::SetWaterLayer(Scalar minThickness, Scalar nearBoundary, Scalar farBoundary)
 {
     waterLayer_.setX(btClamped(minThickness, Scalar(0), channels_[3].rangeMax - channels_[3].rangeMin));
     waterLayer_.setY(btClamped(nearBoundary, channels_[3].rangeMin, channels_[3].rangeMax - waterLayer_.getX()));
@@ -74,7 +74,7 @@ void DVL::InternalUpdate(Scalar dt)
     */
     //Check hit with bottom
     unsigned short status = 0;
-    Transform dvlTrans = getSensorFrame();
+    Transform dvlTrans = GetSensorFrame();
     
     //Simulate 4 beam DVL (typical design)
     Vector3 dir[4];
@@ -107,7 +107,7 @@ void DVL::InternalUpdate(Scalar dt)
             btCollisionWorld::ClosestRayResultCallback closest(from_, to_);
             closest.m_collisionFilterGroup = MASK_DYNAMIC;
             closest.m_collisionFilterMask = MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING;
-            SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld()->rayTest(from_, to_, closest);
+            SimulationApp::GetApp()->GetSimulationManager()->GetDynamicsWorld()->rayTest(from_, to_, closest);
             
             if(closest.hasHit())
             {
@@ -138,7 +138,7 @@ void DVL::InternalUpdate(Scalar dt)
             btCollisionWorld::ClosestRayResultCallback closest(from[i], to[i]);
             closest.m_collisionFilterGroup = MASK_DYNAMIC;
             closest.m_collisionFilterMask = MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING;
-            SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld()->rayTest(from[i], to[i], closest);
+            SimulationApp::GetApp()->GetSimulationManager()->GetDynamicsWorld()->rayTest(from[i], to[i], closest);
             
             if(closest.hasHit() && btDot(closest.m_hitNormalWorld, dirFactor * dir[i]) > Scalar(0))
             {
@@ -153,7 +153,7 @@ void DVL::InternalUpdate(Scalar dt)
     else //Successful bottom ping
     {
         altitude = minRange * btCos(beamAngle_);
-        v = dvlTrans.getBasis().inverse() * attach_->getLinearVelocityInLocalPoint(dvlTrans.getOrigin() - attach_->getCGTransform().getOrigin());
+        v = dvlTrans.getBasis().inverse() * attach_->GetLinearVelocityInLocalPoint(dvlTrans.getOrigin() - attach_->GetCgTransform().getOrigin());
         status = 0;
     }
     
@@ -165,7 +165,7 @@ void DVL::InternalUpdate(Scalar dt)
     //ASSUME: Water layer far boundary has to be closer than 80% of altitude.
     if(!tooClose && waterLayer_.getX() > Scalar(0) && Scalar(0.8)*altitude > waterLayer_.getX() + waterLayer_.getY()) //Water layer ping possible
     {
-        Ocean* ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();
+        Ocean* ocn = SimulationApp::GetApp()->GetSimulationManager()->GetOcean();
         if(ocn != nullptr)
         {
             Vector3 zDir = dvlTrans.getBasis().getColumn(2);
@@ -192,12 +192,12 @@ void DVL::InternalUpdate(Scalar dt)
     }
     
     //Update noise characteristics
-    channels_[0].setStdDev(mulNoiseFactor_[0] * v.x() + addNoiseStdDev_[0]);
-    channels_[1].setStdDev(mulNoiseFactor_[0] * v.y() + addNoiseStdDev_[0]);
-    channels_[2].setStdDev(mulNoiseFactor_[0] * v.z() + addNoiseStdDev_[0]);
-    channels_[4].setStdDev(mulNoiseFactor_[1] * wv.x() + addNoiseStdDev_[1]);
-    channels_[5].setStdDev(mulNoiseFactor_[1] * wv.y() + addNoiseStdDev_[1]);
-    channels_[6].setStdDev(mulNoiseFactor_[1] * wv.z() + addNoiseStdDev_[1]);
+    channels_[0].SetStdDev(mulNoiseFactor_[0] * v.x() + addNoiseStdDev_[0]);
+    channels_[1].SetStdDev(mulNoiseFactor_[0] * v.y() + addNoiseStdDev_[0]);
+    channels_[2].SetStdDev(mulNoiseFactor_[0] * v.z() + addNoiseStdDev_[0]);
+    channels_[4].SetStdDev(mulNoiseFactor_[1] * wv.x() + addNoiseStdDev_[1]);
+    channels_[5].SetStdDev(mulNoiseFactor_[1] * wv.y() + addNoiseStdDev_[1]);
+    channels_[6].SetStdDev(mulNoiseFactor_[1] * wv.z() + addNoiseStdDev_[1]);
     
     //Save data
     AddSampleToHistory(std::make_unique<Sample>(
@@ -208,14 +208,14 @@ void DVL::InternalUpdate(Scalar dt)
 std::vector<Renderable> DVL::Render()
 {
     std::vector<Renderable> items = LinkSensor::Render();
-    if(isRenderable())
+    if(IsRenderable())
     {
-        unsigned short status = (unsigned short)trunc(getLastValue(7));
+        unsigned short status = (unsigned short)trunc(GetLastValue(7));
         Renderable item;
         item.type = RenderableType::SENSOR_LINES;
-        item.model = glMatrixFromTransform(getSensorFrame());    
+        item.model = glMatrixFromTransform(GetSensorFrame());    
         item.data = std::make_shared<std::vector<glm::vec3>>();
-        auto points = item.getDataAsPoints();
+        auto points = item.GetDataAsPoints();
 
         //Bottom ping
         if(status == 0 || status == 2) //Good bottom ping
@@ -263,7 +263,7 @@ std::vector<Renderable> DVL::Render()
         //Water ping
         if(status == 1 || status == 2) //Good water ping
         {
-            Scalar layerSize = btClamped(Scalar(0.8) * getLastValue(3) - waterLayer_.getY(), waterLayer_.getX(), waterLayer_.getZ()-waterLayer_.getY());        
+            Scalar layerSize = btClamped(Scalar(0.8) * GetLastValue(3) - waterLayer_.getY(), waterLayer_.getX(), waterLayer_.getZ()-waterLayer_.getY());        
             GLfloat a1 = (GLfloat)waterLayer_.getY();
             GLfloat a2 = (GLfloat)(waterLayer_.getY() + layerSize);
             GLfloat r1 = a1 * glm::tan((GLfloat)beamAngle_);
@@ -285,7 +285,7 @@ std::vector<Renderable> DVL::Render()
     return items;
 }
 
-void DVL::setRange(const Vector3& velocityMax, Scalar altitudeMin, Scalar altitudeMax)
+void DVL::SetRange(const Vector3& velocityMax, Scalar altitudeMin, Scalar altitudeMax)
 {
     //Velocity
     channels_[0].rangeMin = -btClamped(velocityMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
@@ -306,16 +306,16 @@ void DVL::setRange(const Vector3& velocityMax, Scalar altitudeMin, Scalar altitu
     channels_[6].rangeMax = btClamped(velocityMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
 
-void DVL::setNoise(Scalar velPercent, Scalar velStdDev, Scalar altitudeStdDev, Scalar waterVelPercent, Scalar waterVelStdDev)
+void DVL::SetNoise(Scalar velPercent, Scalar velStdDev, Scalar altitudeStdDev, Scalar waterVelPercent, Scalar waterVelStdDev)
 {
-    channels_[3].setStdDev(btClamped(altitudeStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[3].SetStdDev(btClamped(altitudeStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
     addNoiseStdDev_[0] = btClamped(velStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT));
     addNoiseStdDev_[1] = btClamped(waterVelStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT));;
     mulNoiseFactor_[0] = btClamped(velPercent, Scalar(0), Scalar(100))/Scalar(100);
     mulNoiseFactor_[1] = btClamped(waterVelPercent, Scalar(0), Scalar(100))/Scalar(100);
 }
 
-void DVL::getRange(Vector3& velocityMax, Scalar& altitudeMin, Scalar& altitudeMax) const
+void DVL::GetRange(Vector3& velocityMax, Scalar& altitudeMin, Scalar& altitudeMax) const
 {
     velocityMax.setX(channels_[0].rangeMax);
     velocityMax.setY(channels_[1].rangeMax);
@@ -324,19 +324,19 @@ void DVL::getRange(Vector3& velocityMax, Scalar& altitudeMin, Scalar& altitudeMa
     altitudeMax = channels_[3].rangeMax;
 }
 
-Scalar DVL::getBeamAngle() const
+Scalar DVL::GetBeamAngle() const
 {
     return beamAngle_;
 }
 
-ScalarSensorType DVL::getScalarSensorType() const
+ScalarSensorType DVL::GetScalarSensorType() const
 {
     return ScalarSensorType::DVL;
 }
 
 // Statics
 
-ConstructInfo DVL::getConstructInfo()
+ConstructInfo DVL::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -414,7 +414,7 @@ std::unique_ptr<DVL> DVL::Construct(const std::string& uniqueName, Scalar freque
     if (value.valid)
         boundaryFar = std::get<Scalar>(value.value);
 
-    sensor->setWaterLayer(minLayerThickness, boundaryNear, boundaryFar);
+    sensor->SetWaterLayer(minLayerThickness, boundaryNear, boundaryFar);
 
     // Range (optional)
     Vector3 velocityMax = VMAX();
@@ -433,7 +433,7 @@ std::unique_ptr<DVL> DVL::Construct(const std::string& uniqueName, Scalar freque
     if (value.valid)
         altitudeMax = std::get<Scalar>(value.value);
 
-    sensor->setRange(velocityMax, altitudeMin, altitudeMax);
+    sensor->SetRange(velocityMax, altitudeMin, altitudeMax);
 
     // Noise (optional)
     Scalar velocity (0.);
@@ -462,7 +462,7 @@ std::unique_ptr<DVL> DVL::Construct(const std::string& uniqueName, Scalar freque
     if (value.valid)
         waterVelocityPercent = std::get<Scalar>(value.value);
     
-    sensor->setNoise(velocityPercent, velocity, altitude, waterVelocityPercent, waterVelocity);
+    sensor->SetNoise(velocityPercent, velocity, altitude, waterVelocityPercent, waterVelocity);
 
     return sensor;
 }

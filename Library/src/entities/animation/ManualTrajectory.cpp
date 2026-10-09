@@ -37,17 +37,17 @@ ManualTrajectory::ManualTrajectory() : Trajectory(PlaybackMode::ONETIME)
     endTime_ = 1e16; //Never ends
 }
 
-void ManualTrajectory::setTransform(const Transform& T)
+void ManualTrajectory::SetTransform(const Transform& T)
 {
     interpTrans_ = T;
 }
 
-void ManualTrajectory::setLinearVelocity(const Vector3& v)
+void ManualTrajectory::SetLinearVelocity(const Vector3& v)
 {
     interpVel_ = v;
 }
 
-void ManualTrajectory::setAngularVelocity(const Vector3& omega)
+void ManualTrajectory::SetAngularVelocity(const Vector3& omega)
 {
     interpAngVel_ = omega;
 }

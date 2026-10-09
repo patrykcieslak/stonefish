@@ -42,33 +42,33 @@ void Pressure::InternalUpdate(Scalar dt)
 {
     Scalar data(0.); //Gauge pressure //data(101325.); //Pa (1 atm)
     
-    Ocean* liq = SimulationApp::getApp()->getSimulationManager()->getOcean();
+    Ocean* liq = SimulationApp::GetApp()->GetSimulationManager()->GetOcean();
     if(liq != NULL)
-        data += liq->GetPressure(getSensorFrame().getOrigin());
+        data += liq->GetPressure(GetSensorFrame().getOrigin());
     
     //Record sample
     AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({data})));
 }
 
-void Pressure::setRange(Scalar max)
+void Pressure::SetRange(Scalar max)
 {
     channels_[0].rangeMin = Scalar(0);
     channels_[0].rangeMax = btClamped(max, Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
     
-void Pressure::setNoise(Scalar pressureStdDev)
+void Pressure::SetNoise(Scalar pressureStdDev)
 {
-    channels_[0].setStdDev(btClamped(pressureStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[0].SetStdDev(btClamped(pressureStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
 
-ScalarSensorType Pressure::getScalarSensorType() const
+ScalarSensorType Pressure::GetScalarSensorType() const
 {
     return ScalarSensorType::PRESSURE;
 }
 
 // Statics
 
-ConstructInfo Pressure::getConstructInfo()
+ConstructInfo Pressure::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -102,12 +102,12 @@ std::unique_ptr<Pressure> Pressure::Construct(const std::string& uniqueName, Sca
     // Range (optional)
     value = info.nodes.at("range").attributes.at("pressure");
     if (value.valid)
-        sensor->setRange(std::get<Scalar>(value.value));
+        sensor->SetRange(std::get<Scalar>(value.value));
 
     // Noise (optional)
     value = info.nodes.at("noise").attributes.at("pressure");
     if (value.valid)
-        sensor->setNoise(std::get<Scalar>(value.value));
+        sensor->SetNoise(std::get<Scalar>(value.value));
 
     return sensor;
 }

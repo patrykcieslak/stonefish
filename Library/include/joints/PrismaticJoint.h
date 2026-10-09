@@ -63,23 +63,23 @@ namespace sf
          \param constantFactor a constant damping force [N]
          \param viscousFactor a coefficient of viscous damping [N*s*rad^-1]
          */
-        void setDamping(Scalar constantFactor, Scalar viscousFactor);
+        void SetDamping(Scalar constantFactor, Scalar viscousFactor);
         
         //! A method to set the limits of the joint.
         /*!
          \param min the minimum displacement of the joint [m]
          \param max the maximum displacement of the joint [m]
          */
-        void setLimits(Scalar min, Scalar max);
+        void SetLimits(Scalar min, Scalar max);
         
         //! A method to set the desired initial condition of the joint.
         /*!
          \param displacement the initial displacement of the joint [m]
          */
-        void setIC(Scalar displacement);
+        void SetIc(Scalar displacement);
         
         //! A method returning the type of the joint.
-        JointType getType() const;
+        JointType GetType() const;
         
     private:
         Vector3 axisInA_;

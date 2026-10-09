@@ -32,36 +32,36 @@
 namespace sf
 {
 
-void Actuator::defaultDeleter(Actuator* a)
+void Actuator::DefaultDeleter(Actuator* a)
 {
     delete a;
 }
 
 Actuator::Actuator(const std::string& uniqueName)
 {
-    name_ = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
+    name_ = SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->AddName(uniqueName);
     dm_ = DisplayMode::GRAPHICAL;
-    setWatchdog(Scalar(-1));
+    SetWatchdog(Scalar(-1));
 }
 
 Actuator::~Actuator()
 {
-    if(SimulationApp::getApp() != nullptr)
-        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name_);
+    if(SimulationApp::GetApp() != nullptr)
+        SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->RemoveName(name_);
 }
 
-void Actuator::setDisplayMode(DisplayMode m)
+void Actuator::SetDisplayMode(DisplayMode m)
 {
     dm_ = m;
 }
 
-void Actuator::setWatchdog(Scalar timeout)
+void Actuator::SetWatchdog(Scalar timeout)
 {
     watchdogTimeout_ = timeout;
     watchdog_ = Scalar(0);
 }
 
-const std::string& Actuator::getName() const
+const std::string& Actuator::GetName() const
 {
     return name_;
 }

@@ -68,52 +68,52 @@ namespace sf
         /*!
          \param m control mode
          */
-        void setControlMode(ServoControlMode m);
+        void SetControlMode(ServoControlMode m);
         
         //! A method to set the desired position setpoint.
         /*!
          \param pos the desired angular pos [rad]
          */
-        void setDesiredPosition(Scalar pos);
+        void SetDesiredPosition(Scalar pos);
         
         //! A method to set the desired velocity setpoint.
         /*!
          \param vel the desired angular velocity [rad/s]
          */
-        void setDesiredVelocity(Scalar vel);
+        void SetDesiredVelocity(Scalar vel);
         
         //! A method to set the maximum velocity of the servo.
         /*!
          \param vel the maximum allowed servo velocity [rad/s]
         */
-        void setMaxVelocity(Scalar vel);
+        void SetMaxVelocity(Scalar vel);
 
         //! A method to set the maximum torque applied by the servo.
         /*!
          \param tau the max torque [Nm]
          */
-        void setMaxTorque(Scalar tau);
+        void SetMaxTorque(Scalar tau);
 
         //! A method returning the desired position setpoint.
-        Scalar getDesiredPosition() const;
+        Scalar GetDesiredPosition() const;
         
         //! A method returning the desired velocity setpoint.
-        Scalar getDesiredVelocity() const;
+        Scalar GetDesiredVelocity() const;
         
         //! A method returning the position of the servo motor.
-        Scalar getPosition() const;
+        Scalar GetPosition() const;
         
         //! A method returning the velocity of the servo motor.
-        Scalar getVelocity() const;
+        Scalar GetVelocity() const;
         
         //! A method returning the effort of the servo motor (force or torque).
-        Scalar getEffort() const;
+        Scalar GetEffort() const;
         
         //! A method returning type of joint actuator.
-        JointActuatorType getJointActuatorType() const override;
+        JointActuatorType GetJointActuatorType() const override;
 
         //! A method returning the construction info for the actuator.
-        static ConstructInfo getConstructInfo();
+        static ConstructInfo GetConstructInfo();
 
         //! A method constructing the actuator based on info structure.
         /*!

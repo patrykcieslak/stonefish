@@ -92,7 +92,7 @@ namespace sf
         virtual void SimulationStepCompleted(Scalar timeStep);
 
         //! A method returning the current simulation clock time in us (overriding allows for external time source).
-        virtual uint64_t getSimulationClock() const;
+        virtual uint64_t GetSimulationClock() const;
 
         //! A method sleeping for a given simulation clock time (overriding allows for external time source).
         /*!
@@ -273,22 +273,22 @@ namespace sf
         /*!
          \param steps number steps of simulation per second
          */
-        void setStepsPerSecond(Scalar steps);
+        void SetStepsPerSecond(Scalar steps);
 
         //! A method to set a flag that enables automatic calling of the SimulationStepCompleted method.
-        void setCallSimulationStepCompleted(bool call);
+        void SetCallSimulationStepCompleted(bool call);
 
         //! A method that directly sets the fluid dynamics prescaler.
         /*!
          \param presc a prescaler used to compute the update frequency of fluid dynamics computations
          */
-        void setFluidDynamicsPrescaler(unsigned int presc);
+        void SetFluidDynamicsPrescaler(unsigned int presc);
 
         //! A method that sets how simulation time relates to real time.
         /*!
          \param f a multiple of real time (1.0 = real time)
          */
-        void setRealtimeFactor(Scalar f);
+        void SetRealtimeFactor(Scalar f);
         
         //! A method used to setup the initial conditions solver.
         /*!
@@ -299,7 +299,7 @@ namespace sf
          \param linearTolerance a tolerance of change of position between two steps
          \param angularTolerance a tolerance of change of angles between two steps
          */
-        void setICSolverParams(bool useGravity, Scalar timeStep = Scalar(0.001), unsigned int maxIterations = 100000,
+        void SetIcSolverParams(bool useGravity, Scalar timeStep = Scalar(0.001), unsigned int maxIterations = 100000,
                                Scalar maxTime = BT_LARGE_FLOAT, Scalar linearTolerance = Scalar(1e-6), Scalar angularTolerance = Scalar(1e-6));
         
         //! A method used to change some global solver params for stability tuning.
@@ -312,101 +312,101 @@ namespace sf
          \param linearSleepingThreshold a linear velocity below which the dynamic bodies will sleep [m/s]
          \param angularSleepingThreshold an angular velocity below which the dynamic bodies will sleep [rad/s]
         */
-        void setSolverParams(Scalar erp, Scalar stopErp, Scalar erp2, Scalar globalDamping, Scalar globalFriction, 
+        void SetSolverParams(Scalar erp, Scalar stopErp, Scalar erp2, Scalar globalDamping, Scalar globalFriction, 
                                 Scalar linearSleepingThreshold, Scalar angularSleepingThreshold);
 
         //! A method that sets the display mode of dynamical rigid bodies.
         /*!
          \param m a flag that defines the display style of dynamical bodies
          */
-        void setSolidDisplayMode(DisplayMode m);
+        void SetSolidDisplayMode(DisplayMode m);
         
         //! A method that returns the display style of dynamical podies.
         /*!
          \return flag defining the display style
          */
-        DisplayMode getSolidDisplayMode() const;
+        DisplayMode GetSolidDisplayMode() const;
         
         //! A method returning the usage of the CPU by the physics computation in percent.
-        Scalar getCpuUsage() const;
+        Scalar GetCpuUsage() const;
         
         //! A method returning the current number of steps per second used.
-        Scalar getStepsPerSecond() const;
+        Scalar GetStepsPerSecond() const;
 
         //! A method returning the flag that enables automatic calling of the SimulationStepCompleted method.
-        bool getCallSimulationStepCompleted() const;
+        bool GetCallSimulationStepCompleted() const;
         
         //! A method returning the axis-aligned bounding box of the simulation world.
         /*!
          \param min a position of the minimum corner
          \param max a position of the maximum corner
          */
-        void getWorldAABB(Vector3& min, Vector3& max);
+        void GetWorldAabb(Vector3& min, Vector3& max);
         
         //! A method returning the collision filtering used in simulation.
-        CollisionFilter getCollisionFilter() const;
+        CollisionFilter GetCollisionFilter() const;
         
         //! A method returning the type of solver used.
-        Solver getSolver() const;
+        Solver GetSolver() const;
 
         //! A method returning soft body world information.
-        btSoftBodyWorldInfo& getSoftBodyWorldInfo();
+        btSoftBodyWorldInfo& GetSoftBodyWorldInfo();
         
         //! A method returning a robot by index
         /*!
          \param index an id of the robot
          \return a pointer to a robot object
          */
-        Robot* getRobot(unsigned int index);
+        Robot* GetRobot(unsigned int index);
         
         //! A method returning a robot by name.
         /*!
          \param name a name of the robot
          \return a pointer to a robot object
          */
-        Robot* getRobot(const std::string& name);
+        Robot* GetRobot(const std::string& name);
         
         //! A method returning an entity by index.
         /*!
          \param index an id of the entity
          \return a pointer to an entity object
          */
-        Entity* getEntity(unsigned int index);
+        Entity* GetEntity(unsigned int index);
         
         //! A method returning an entity by name.
         /*!
          \param name a name of the entity
          \return a pointer to an entity object
          */
-        Entity* getEntity(const std::string& name);
+        Entity* GetEntity(const std::string& name);
         
         //! A method returning a joint by index.
         /*!
          \param index an id of the joint
          \return a pointer to an joint object
          */
-        Joint* getJoint(unsigned int index);
+        Joint* GetJoint(unsigned int index);
         
         //! A method returning a joint by name.
         /*!
          \param name a name of the joint
          \return a pointer to a joint object
          */
-        Joint* getJoint(const std::string& name);
+        Joint* GetJoint(const std::string& name);
         
         //! A method returning a contact by index.
         /*!
          \param index an id of the contact
          \return a pointer to a contact object
          */
-        Contact* getContact(unsigned int index);
+        Contact* GetContact(unsigned int index);
         
         //! A method returning a contact by name.
         /*!
          \param name a name of the contact
          \return a pointer to a contact object
          */
-        Contact* getContact(const std::string& name);
+        Contact* GetContact(const std::string& name);
         
         //! A method returning a contavt by entity pair.
         /*!
@@ -414,98 +414,98 @@ namespace sf
          \param entB a pointer to the sencond entity
          \return a pointer to a contact object
          */
-        Contact* getContact(Entity* entA, Entity* entB);
+        Contact* GetContact(Entity* entA, Entity* entB);
         
         //! A method returning an actuator by index.
         /*!
          \param index an id of the actuator
          \return a pointer to an actuator object
          */
-        Actuator* getActuator(unsigned int index);
+        Actuator* GetActuator(unsigned int index);
         
         //! A method returning an actuator by name.
         /*!
          \param name a name of the actuator
          \return a pointer to an actuator object
          */
-        Actuator* getActuator(const std::string& name);
+        Actuator* GetActuator(const std::string& name);
         
         //! A method returning a sensor by index.
         /*!
          \param index an id of the sensor
          \return a pointer to a sensor object
          */
-        Sensor* getSensor(unsigned int index);
+        Sensor* GetSensor(unsigned int index);
         
         //! A method returning a sensor by name.
         /*!
          \param name a name of the sensor
          \return a pointer to a sensor object
          */
-        Sensor* getSensor(const std::string& name);
+        Sensor* GetSensor(const std::string& name);
         
         //! A method returning a communication device by index.
         /*!
          \param index an id of the communication device
          \return a pointer to a comm object
          */
-        Comm* getComm(unsigned int index);
+        Comm* GetComm(unsigned int index);
         
         //! A method returning a communication device by name.
         /*!
          \param name a name of the communication device
          \return a pointer to a comm object
          */
-        Comm* getComm(const std::string& name);
+        Comm* GetComm(const std::string& name);
         
         //! A method returning a pointer to the NED object.
-        NED* getNED();
+        NED* GetNed();
         
         //! A method returning a pointer to the ocean object.
-        Ocean* getOcean();
+        Ocean* GetOcean();
         
         //! A method returning a pointer to the atmosphere object.
-        Atmosphere* getAtmosphere();
+        Atmosphere* GetAtmosphere();
         
         //! A method setting the gravity constant used in the simulation.
-        void setGravity(Scalar gravityConstant);
+        void SetGravity(Scalar gravityConstant);
         
         //! A method returning the gravity vector.
-        Vector3 getGravity() const;
+        Vector3 GetGravity() const;
         
         //! A method returning the simulation time in seconds.
         /*! 
          \param applyOffset a flag deciding if the offset between simulation time and real time should be applied
          \return the time of simulation in seconds
          */
-        Scalar getSimulationTime(bool applyOffset = false) const;
+        Scalar GetSimulationTime(bool applyOffset = false) const;
         
         //! A method informing about the relation between the simulated time and real time.
-        Scalar getRealtimeFactor() const;
+        Scalar GetRealtimeFactor() const;
         
         //! A method returning a pointer to the material manager.
-        MaterialManager* getMaterialManager();
+        MaterialManager* GetMaterialManager();
         
         //! A method returning a pointer to the name manager.
-        NameManager* getNameManager();
+        NameManager* GetNameManager();
         
         //! A method returning a reference to the performance monitor.
-        PerformanceMonitor& getPerformanceMonitor();
+        PerformanceMonitor& GetPerformanceMonitor();
         
         //! A method informing if the simulation is freshly started.
-        bool isSimulationFresh() const;
+        bool IsSimulationFresh() const;
         
         //! A method informing if the ocean is enabled in the simulation.
-        bool isOceanEnabled() const;
+        bool IsOceanEnabled() const;
         
         //! A method returning a pointer to the Bullet dynamics world.
-        btSoftMultiBodyDynamicsWorld* getDynamicsWorld();
+        btSoftMultiBodyDynamicsWorld* GetDynamicsWorld();
 
         //! A method returning the simulation sleeping settings.
-        void getSleepingThresholds(Scalar& linear, Scalar& angular) const;
+        void GetSleepingThresholds(Scalar& linear, Scalar& angular) const;
 
         //! A method returning the simulation setup related to joint constraints.
-        void getJointErp(Scalar& erp, Scalar& stopErp) const;
+        void GetJointErp(Scalar& erp, Scalar& stopErp) const;
         
         //------ Aliases created to shorten the code needed to build the scenario ------
         

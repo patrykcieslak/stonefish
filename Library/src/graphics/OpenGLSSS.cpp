@@ -245,7 +245,7 @@ void OpenGLSSS::UpdateTransform()
 
     //Update settings if necessary
     bool updateProjection = false;
-    glm::vec3 rangeGain((GLfloat)sonar_->getRangeMin(), (GLfloat)sonar_->getRangeMax(), (GLfloat)sonar_->getGain());
+    glm::vec3 rangeGain((GLfloat)sonar_->GetRangeMin(), (GLfloat)sonar_->GetRangeMax(), (GLfloat)sonar_->GetGain());
     if(rangeGain.x != range_.x)
     {
         range_.x = rangeGain.x;
@@ -296,12 +296,12 @@ void OpenGLSSS::UpdateTransform()
     }
 }
 
-void OpenGLSSS::setNoise(glm::vec2 signalStdDev)
+void OpenGLSSS::SetNoise(glm::vec2 signalStdDev)
 {
     noise_ = signalStdDev;
 }
 
-void OpenGLSSS::setSonar(SSS* s)
+void OpenGLSSS::SetSonar(SSS* s)
 {
     sonar_ = s;
 
@@ -332,7 +332,7 @@ void OpenGLSSS::setSonar(SSS* s)
 
 void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
 {
-    OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
+    OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent();
     content->SetDrawingMode(DrawingMode::RAW);
     //Generate sonar input
     OpenGLState::BindFramebuffer(renderFBO_);
@@ -355,10 +355,10 @@ void OpenGLSSS::ComputeOutput(std::vector<Renderable>& objects)
         {
             if(objects[h].type != RenderableType::SOLID)
                 continue;
-            const Object& obj = content->getObject(objects[h].objectId);
-            const Look& look = content->getLook(objects[h].lookId);
+            const Object& obj = content->GetObject(objects[h].objectId);
+            const Look& look = content->GetLook(objects[h].lookId);
             glm::mat4 M = objects[h].model;
-            Material mat = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(objects[h].materialName);
+            Material mat = SimulationApp::GetApp()->GetSimulationManager()->GetMaterialManager()->GetMaterial(objects[h].materialName);
             bool normalMapping = obj.texturable && (look.normalMap > 0);
             shader = normalMapping ? sonarInputShader_[1].get() : sonarInputShader_[0].get();
             shader->Use();
@@ -446,14 +446,14 @@ void OpenGLSSS::DrawLDR(GLuint destinationFBO, bool updated)
     unsigned int dispX, dispY;
     GLfloat dispScale;
     if(sonar_ != nullptr)
-        display = sonar_->getDisplayOnScreen(dispX, dispY, dispScale);
+        display = sonar_->GetDisplayOnScreen(dispX, dispY, dispScale);
     
     //Draw on screen
     if(display)
     {
-        OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
-        int windowHeight = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowHeight();
-        int windowWidth = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowWidth();
+        OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent();
+        int windowHeight = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetWindowHeight();
+        int windowWidth = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetWindowWidth();
         OpenGLState::BindFramebuffer(destinationFBO);    
         content->SetViewportSize(windowWidth, windowHeight); 
         OpenGLState::Viewport(0, 0, windowWidth, windowHeight);

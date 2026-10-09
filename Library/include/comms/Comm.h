@@ -118,37 +118,37 @@ namespace sf
         void MarkDataOld();
         
         //! A method to check if new data is available.
-        bool isNewDataAvailable();
+        bool IsNewDataAvailable();
         
         //! A method informing if the comm is renderable.
-        bool isRenderable();
+        bool IsRenderable();
         
         //! A method to set if the comm is renderable.
-        void setRenderable(bool render);
+        void SetRenderable(bool render);
 
         //! A method returning the number of messages in the rx buffer.
-        size_t getRxBufferCount() const;
+        size_t GetRxBufferCount() const;
 
         //! A method returning the number of messages in the tx buffer.
-        size_t getTxBufferCount() const;
+        size_t GetTxBufferCount() const;
         
         //! A method returning the current comm device frame in world.
-        Transform getDeviceFrame();
+        Transform GetDeviceFrame();
         
         //! A method returning the device node id.
-        uint64_t getDeviceId();
+        uint64_t GetDeviceId();
         
         //! A method returning the conneted device node id.
-        uint64_t getConnectedId();
+        uint64_t GetConnectedId();
         
         //! A method returning the comm name.
-        const std::string& getName() const;
+        const std::string& GetName() const;
         
         //! A method returning the type of the comm.
-        virtual CommType getType() const = 0;
+        virtual CommType GetType() const = 0;
 
         //! A deleter method required for the plugin architecture.
-        static void defaultDeleter(Comm* c);
+        static void DefaultDeleter(Comm* c);
         
     protected:
         //! A method performing an internal update of the comm state.

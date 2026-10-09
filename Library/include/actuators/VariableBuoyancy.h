@@ -55,22 +55,22 @@ namespace sf
         /*!
          \param rate the desired flow rate of the VBS [m3/s]
           */
-        void setFlowRate(Scalar rate);
+        void SetFlowRate(Scalar rate);
         
         //! A method returning the current flow rate setpoint.
-        Scalar getFlowRate() const;
+        Scalar GetFlowRate() const;
         
         //! A method returning the current volume of the liquid in the system.
-        Scalar getLiquidVolume() const;
+        Scalar GetLiquidVolume() const;
 
         //! A method returning the generated force.
-        Scalar getForce() const;
+        Scalar GetForce() const;
         
         //! A method returning type of link actuator.
-        LinkActuatorType getLinkActuatorType() const override;
+        LinkActuatorType GetLinkActuatorType() const override;
 
         //! A method returning the construction info for the actuator.
-        static ConstructInfo getConstructInfo();
+        static ConstructInfo GetConstructInfo();
 
         //! A method constructing the actuator based on info structure.
         /*!

@@ -166,7 +166,7 @@ void OpenGLConsole::Render(bool overlay)
         texQuadShader_->SetUniform("color",  glm::vec4(0.3f,0.3f,0.3f,1.f));
         texQuadShader_->SetUniform("rect", glm::vec4(0, 0, 1.f, 1.f));
         
-        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGUI()->getTranslucentTexture());
+        OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGui()->GetTranslucentTexture());
         OpenGLState::BindVertexArray(consoleVAO_);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         
@@ -206,7 +206,7 @@ void OpenGLConsole::Render(bool overlay)
     }
     else //During loading of resources (displaying in second thread -> no VAO sharing)
     {
-        glUseProgram(texQuadShader_->getProgramHandle());
+        glUseProgram(texQuadShader_->GetProgramHandle());
         texQuadShader_->SetUniform("tex", 0);
         texQuadShader_->SetUniform("color",  glm::vec4(1.f,1.f,1.f,1.f));
         texQuadShader_->SetUniform("rect", glm::vec4((windowW_ - logoSize - logoMargin)/(GLfloat)windowW_, 1.f - (logoMargin+logoSize)/(GLfloat)windowH_, logoSize/(GLfloat)windowW_, logoSize/(GLfloat)windowH_));

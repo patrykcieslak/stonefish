@@ -135,38 +135,38 @@ namespace sf
         std::vector<Renderable> Render();
         
         //! A method returning the type of the entity.
-        EntityType getType() const;
+        EntityType GetType() const;
         
         //! A method returning the pose of the body origin in the world frame.
-        Transform getOTransform() const;
+        Transform GetOTransform() const;
     
         //! A method returning the pose of the body in the world frame.
-        Transform getCGTransform() const;
+        Transform GetCgTransform() const;
 
         //! A method returning the linear velocity of the body.
-        Vector3 getLinearVelocity() const;
+        Vector3 GetLinearVelocity() const;
         
         //! A method returning the angular velocity of the body.
-        Vector3 getAngularVelocity() const;
+        Vector3 GetAngularVelocity() const;
         
         //! A method returning the linear velocity of the body at the given point.
-        Vector3 getLinearVelocityInLocalPoint(const Vector3& relPos) const;
+        Vector3 GetLinearVelocityInLocalPoint(const Vector3& relPos) const;
 
         //! A method returning the linear acceleration of the body.
-        Vector3 getLinearAcceleration() const;
+        Vector3 GetLinearAcceleration() const;
         
         //! A method returning the angular acceleration of the body.
-        Vector3 getAngularAcceleration() const;
+        Vector3 GetAngularAcceleration() const;
 
         //! A method returning a pointer to the body trajectory.
-        Trajectory* getTrajectory();
+        Trajectory* GetTrajectory();
 
         //! A method returning the extents of the body axis alligned bounding box.
         /*!
          \param min a point located at the minimum coordinate corner
          \param max a point located at the maximum coordinate corner
          */
-        void getAABB(Vector3& min, Vector3& max);
+        void GetAabb(Vector3& min, Vector3& max);
       
     private:
         void BuildRigidBody(bool collides);

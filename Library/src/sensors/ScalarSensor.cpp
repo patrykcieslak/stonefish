@@ -37,15 +37,15 @@ ScalarSensor::ScalarSensor(const std::string& uniqueName, Scalar frequency, long
 {
 }
 
-const Sample& ScalarSensor::getLastSample() const
+const Sample& ScalarSensor::GetLastSample() const
 {
     if(history_.size() > 0)
         return *history_.back();
     else
-        throw std::runtime_error("Sensor '" + getName() + "' has no measurement history");
+        throw std::runtime_error("Sensor '" + GetName() + "' has no measurement history");
 }
 
-std::unique_ptr<std::vector<Sample>> ScalarSensor::getHistory()
+std::unique_ptr<std::vector<Sample>> ScalarSensor::GetHistory()
 {
     SDL_LockMutex(updateMutex_);
     
@@ -58,25 +58,25 @@ std::unique_ptr<std::vector<Sample>> ScalarSensor::getHistory()
     return historyCopy;
 }
 
-size_t ScalarSensor::getNumOfChannels() const
+size_t ScalarSensor::GetNumOfChannels() const
 {
     return channels_.size();
 }
 
-Scalar ScalarSensor::getValue(size_t index, size_t channel) const
+Scalar ScalarSensor::GetValue(size_t index, size_t channel) const
 {
     if(index < history_.size() && channel < channels_.size())
-        return history_[index]->getValue(channel);
+        return history_[index]->GetValue(channel);
     else
         return Scalar(0);
 }
 
-Scalar ScalarSensor::getLastValue(size_t channel) const
+Scalar ScalarSensor::GetLastValue(size_t channel) const
 {
-    return getValue(history_.size() - 1, channel);
+    return GetValue(history_.size() - 1, channel);
 }
 
-SensorChannel ScalarSensor::getSensorChannelDescription(size_t channel) const
+SensorChannel ScalarSensor::GetSensorChannelDescription(size_t channel) const
 {
     if(channel < channels_.size())
         return channels_[channel];
@@ -102,12 +102,12 @@ void ScalarSensor::AddSampleToHistory(std::unique_ptr<Sample> sample)
     }
     //else == 0 --> unlimited history
     
-    sample->setId(sampleCount_);
+    sample->SetId(sampleCount_);
     ++sampleCount_;
     
-    for(size_t i=0; i<sample->getNumOfDimensions(); ++i)
+    for(size_t i=0; i<sample->GetNumOfDimensions(); ++i)
     {
-        Scalar* data = sample->getDataPointer();
+        Scalar* data = sample->GetDataPointer();
         
         //Add noise
         if(channels_[i].stdDev > Scalar(0) && data[i] < channels_[i].rangeMax && data[i] > channels_[i].rangeMin)
@@ -134,7 +134,7 @@ void ScalarSensor::SaveMeasurementsToTextFile(const std::string& path, bool incl
     if(history_.size() == 0)
         return;
     
-    cInfo("Saving %s measurements to: %s", getName().c_str(), path.c_str());
+    cInfo("Saving %s measurements to: %s", GetName().c_str(), path.c_str());
     
     FILE* fp = fopen(path.c_str(), "wt");
     if(fp == NULL)
@@ -144,11 +144,11 @@ void ScalarSensor::SaveMeasurementsToTextFile(const std::string& path, bool incl
     }
     
     //Write header
-    fprintf(fp, "#Measurements from %s\n", getName().c_str());
+    fprintf(fp, "#Measurements from %s\n", GetName().c_str());
     fprintf(fp, "#Number of channels: %ld\n", channels_.size());
     fprintf(fp, "#Number of samples: %ld\n", history_.size());
     if(freq_ <= Scalar(0.))
-        fprintf(fp, "#Frequency: %1.3lf Hz\n", SimulationApp::getApp()->getSimulationManager()->getStepsPerSecond());
+        fprintf(fp, "#Frequency: %1.3lf Hz\n", SimulationApp::GetApp()->GetSimulationManager()->GetStepsPerSecond());
     else
         fprintf(fp, "#Frequency: %1.3lf Hz\n", freq_);
     fprintf(fp, "#Unit system: SI\n\n");
@@ -176,13 +176,13 @@ void ScalarSensor::SaveMeasurementsToTextFile(const std::string& path, bool incl
     {
         if(includeTime)
         {
-            fprintf(fp, format.c_str(), history_[i]->getTimestamp());
+            fprintf(fp, format.c_str(), history_[i]->GetTimestamp());
             fprintf(fp, "\t");
         }
         
         for(size_t h = 0; h < channels_.size(); h++)
         {
-            Scalar v = history_[i]->getValue(h);
+            Scalar v = history_[i]->GetValue(h);
             
             fprintf(fp, format.c_str(), v);
             

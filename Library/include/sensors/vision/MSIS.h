@@ -89,92 +89,92 @@ namespace sf
          \param l1Deg first limit of rotation angle [deg]
          \param l2Deg second limit of rotation angle [deg]
          */
-        void setRotationLimits(Scalar l1Deg, Scalar l2Deg);
+        void SetRotationLimits(Scalar l1Deg, Scalar l2Deg);
         
         //! A method setting the minimum range of the sonar.
         /*!
          \param r range [m]
          */
-        void setRangeMin(Scalar r);
+        void SetRangeMin(Scalar r);
 
         //! A method setting the minimum range of the sonar.
         /*!
          \param r range [m]
          */
-        void setRangeMax(Scalar r);
+        void SetRangeMax(Scalar r);
 
         //! A method setting the gain of the sonar.
         /*!
          \param g gain factor [1]
          */
-        void setGain(Scalar g);
+        void SetGain(Scalar g);
 
         //! A method setting the noise characteristics of the sensor.
         /*!
          \param multiplicativeStdDev the standard deviation of the multiplicative noise
          \param additiveStdDev the standard deviation of the additive noise
          */
-        void setNoise(float multiplicativeStdDev, float additiveStdDev);
+        void SetNoise(float multiplicativeStdDev, float additiveStdDev);
 
         //! A method used to set the display settings of the sensor.
         /*!
          \param cm the color map used to display the image
          */
-        void setDisplaySettings(ColorMap cm);
+        void SetDisplaySettings(ColorMap cm);
 
         //! A method returning the rotation limits.
         /*!
          \param l1Deg first limit of rotation angle [deg]
          \param l2Deg second limit of rotation angle [deg]
          */
-        void getRotationLimits(Scalar& l1Deg, Scalar& l2Deg) const;
+        void GetRotationLimits(Scalar& l1Deg, Scalar& l2Deg) const;
 
         //! A method returning the minimum range of the sonar.
-        Scalar getRangeMin() const;
+        Scalar GetRangeMin() const;
         
         //! A method returning the maximum range of the sonar.
-        Scalar getRangeMax() const;
+        Scalar GetRangeMax() const;
 
         //! A method returning the gain of the sonar.
-        Scalar getGain() const;
+        Scalar GetGain() const;
 
         //! A method returning the step size in degrees.
-        Scalar getRotationStepAngle() const;
+        Scalar GetRotationStepAngle() const;
 
         //! A method returning the current rotation step.
-        int getCurrentRotationStep() const;
+        int GetCurrentRotationStep() const;
 
         //! A method returning the current bean index in the sonar image.
-        GLuint getCurrentBeamIndex() const;
+        GLuint GetCurrentBeamIndex() const;
 
         //! A method returning the output format of the sonar data.
-        SonarOutputFormat getOutputFormat() const;
+        SonarOutputFormat GetOutputFormat() const;
 
         //! A method returning a pointer to the sonar data.
         /*!
          \param index the id of the OpenGL camera (here sonar) for which the data pointer is requested
          \return pointer to the image data buffer
          */
-        void* getImageDataPointer(unsigned int index = 0) override;
+        void* GetImageDataPointer(unsigned int index = 0) override;
         
         //! A method returning the resolution of the simulated display image.
         /*!
          \param x a reference to a variable that will store the horizontal resolution [pix]
          \param y a reference to a variable that will store the vertical resolution [pix]
          */
-        void getDisplayResolution(unsigned int& x, unsigned int& y) const;
+        void GetDisplayResolution(unsigned int& x, unsigned int& y) const;
         
         //! A method returning a pointer to the visualisation image data.
-        GLubyte* getDisplayDataPointer();
+        GLubyte* GetDisplayDataPointer();
         
         //! A method returning the type of the vision sensor.
-        VisionSensorType getVisionSensorType() const override;
+        VisionSensorType GetVisionSensorType() const override;
 
         //! A method returning a pointer to the underlaying OpenGLView object.
-        OpenGLView* getOpenGLView() const override;
+        OpenGLView* GetOpenGlView() const override;
 
         //! A method returning the construction info for the sensor.
-        static ConstructInfo getConstructInfo();
+        static ConstructInfo GetConstructInfo();
 
         //! A method constructing the sensor based on info structure.
         /*!

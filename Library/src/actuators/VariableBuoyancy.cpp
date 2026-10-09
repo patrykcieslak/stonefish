@@ -42,9 +42,9 @@ VariableBuoyancy::VariableBuoyancy(const std::string& uniqueName, const std::vec
     
     density_ = Scalar(1000.0);
     Ocean* ocn;
-    if((ocn = SimulationApp::getApp()->getSimulationManager()->getOcean()) != nullptr)
-        density_ = ocn->getLiquid().density;
-    gravity_ = SimulationApp::getApp()->getSimulationManager()->getGravity();
+    if((ocn = SimulationApp::GetApp()->GetSimulationManager()->GetOcean()) != nullptr)
+        density_ = ocn->GetLiquid().density;
+    gravity_ = SimulationApp::GetApp()->GetSimulationManager()->GetGravity();
     
     for(size_t i=0; i<volumeMeshPaths.size(); ++i)
     {
@@ -69,27 +69,27 @@ VariableBuoyancy::VariableBuoyancy(const std::string& uniqueName, const std::vec
     InterpolateVProps(V_, mass, CG_);
 }    
 
-LinkActuatorType VariableBuoyancy::getLinkActuatorType() const
+LinkActuatorType VariableBuoyancy::GetLinkActuatorType() const
 {
     return LinkActuatorType::VBS;
 }
         
-void VariableBuoyancy::setFlowRate(Scalar rate)
+void VariableBuoyancy::SetFlowRate(Scalar rate)
 {
     flowRate_ = rate;
 }
     
-Scalar VariableBuoyancy::getFlowRate() const
+Scalar VariableBuoyancy::GetFlowRate() const
 {
     return flowRate_;
 }
     
-Scalar VariableBuoyancy::getLiquidVolume() const
+Scalar VariableBuoyancy::GetLiquidVolume() const
 {
     return V_;
 }
 
-Scalar VariableBuoyancy::getForce() const
+Scalar VariableBuoyancy::GetForce() const
 {
     return force_.safeNorm();
 }
@@ -123,7 +123,7 @@ void VariableBuoyancy::InterpolateVProps(Scalar volume, Scalar& m, Vector3& cg)
     
 void VariableBuoyancy::Update(Scalar dt)
 {
-    Ocean* ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();
+    Ocean* ocn = SimulationApp::GetApp()->GetSimulationManager()->GetOcean();
     if(ocn != nullptr && attach_ != NULL)
     {
         //Update volume
@@ -137,8 +137,8 @@ void VariableBuoyancy::Update(Scalar dt)
         force_ = m*gravity_;
 
         //Apply forces and torques
-        Vector3 solidCG = attach_->getCGTransform().getOrigin();
-        Vector3 vbsCG = attach_->getOTransform() * o2a_ * CG_;
+        Vector3 solidCG = attach_->GetCgTransform().getOrigin();
+        Vector3 vbsCG = attach_->GetOTransform() * o2a_ * CG_;
         attach_->ApplyCentralForce(force_);
         attach_->ApplyTorque((vbsCG - solidCG).cross(force_));
     }
@@ -148,7 +148,7 @@ std::vector<Renderable> VariableBuoyancy::Render()
 {
     Transform vbsTrans = Transform::getIdentity();
     if(attach_ != NULL)
-        vbsTrans.setOrigin(attach_->getOTransform() * o2a_ * CG_);
+        vbsTrans.setOrigin(attach_->GetOTransform() * o2a_ * CG_);
     else
         LinkActuator::Render();
     
@@ -158,7 +158,7 @@ std::vector<Renderable> VariableBuoyancy::Render()
     item.type = RenderableType::ACTUATOR_LINES;
     item.model = glMatrixFromTransform(vbsTrans);
     item.data = std::make_shared<std::vector<glm::vec3>>();
-    auto points = item.getDataAsPoints();
+    auto points = item.GetDataAsPoints();
     points->push_back(glm::vec3(0,0,0));
     points->push_back(0.1f * glm::vec3((GLfloat)force_.x(), (GLfloat)force_.y(), (GLfloat)force_.z()));
     items.push_back(item);
@@ -168,7 +168,7 @@ std::vector<Renderable> VariableBuoyancy::Render()
     
 // Statics
 
-ConstructInfo VariableBuoyancy::getConstructInfo()
+ConstructInfo VariableBuoyancy::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;

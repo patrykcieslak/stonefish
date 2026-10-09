@@ -64,12 +64,12 @@ OpenGLTrackball::OpenGLTrackball(glm::vec3 centerPosition, GLfloat orbitRadius, 
     UpdateTransform();
 }
 
-ViewType OpenGLTrackball::getType() const
+ViewType OpenGLTrackball::GetType() const
 {
     return ViewType::TRACKBALL;
 }
 
-bool OpenGLTrackball::needsUpdate()
+bool OpenGLTrackball::NeedsUpdate()
 {
     return enabled_;
 }
@@ -94,7 +94,7 @@ void OpenGLTrackball::UpdateCenterPos()
 {
     if(holdingEntity_ != nullptr)
     {
-        Vector3 org = holdingEntity_->getOTransform().getOrigin();
+        Vector3 org = holdingEntity_->GetOTransform().getOrigin();
         tempCenter_ = glm::vec3((GLfloat)org.x(), (GLfloat)org.y(), (GLfloat)org.z());
     }
 }
@@ -109,7 +109,7 @@ void OpenGLTrackball::UpdateTransform()
     ExtractFrustumFromVP(viewUBOData_.frustum, viewUBOData_.VP);
 }
 
-GLfloat OpenGLTrackball::calculateZ(GLfloat x, GLfloat y)
+GLfloat OpenGLTrackball::CalculateZ(GLfloat x, GLfloat y)
 {
     if(x*x+y*y <= 0.5f)
         return sqrtf(1.f-(x*x+y*y));
@@ -130,7 +130,7 @@ void OpenGLTrackball::MouseDown(GLfloat x, GLfloat y, bool translate)
     else
     {
         transMode_ = false;
-        zStart_ = calculateZ(xStart_, yStart_);
+        zStart_ = CalculateZ(xStart_, yStart_);
         rotationStart_ = rotation_;
     }
     
@@ -153,7 +153,7 @@ void OpenGLTrackball::MouseMove(GLfloat x, GLfloat y)
         }
         else //rotate
         {
-            GLfloat z = calculateZ(x, y);
+            GLfloat z = CalculateZ(x, y);
             glm::quat rotation_new = glm::rotation(glm::normalize(glm::vec3(-xStart_, zStart_, yStart_)), glm::normalize(glm::vec3(-x, z, y)));
             rotation_ = rotation_new * rotationStart_;
         }
@@ -186,9 +186,9 @@ void OpenGLTrackball::GlueToMoving(MovingEntity* ent)
     holdingEntity_ = ent;
 
     //Clear ocean quadtree to avoid holes in the ocean rendering because of the sudden jump of camera origin
-    Ocean* ocean = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getSimulationManager()->getOcean();
-    if(ocean != nullptr && ocean->hasWaves())
-        ((OpenGLRealOcean*)ocean->getOpenGLOcean())->ResetSurface(this);
+    Ocean* ocean = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetSimulationManager()->GetOcean();
+    if(ocean != nullptr && ocean->HasWaves())
+        ((OpenGLRealOcean*)ocean->GetOpenGlOcean())->ResetSurface(this);
 }
 
 void OpenGLTrackball::DrawSelection(const std::vector<Renderable>& r, GLuint destinationFBO)
@@ -196,10 +196,10 @@ void OpenGLTrackball::DrawSelection(const std::vector<Renderable>& r, GLuint des
     if(r.size() == 0) //No selection
         return;
 
-    OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
+    OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent();
     
     //1. Draw flat shape to color and stencil buffer
-    OpenGLState::BindFramebuffer(getRenderFBO());
+    OpenGLState::BindFramebuffer(GetRenderFbo());
     SetRenderBuffers(0, false, false);
     OpenGLState::EnableStencilTest();
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
@@ -216,12 +216,12 @@ void OpenGLTrackball::DrawSelection(const std::vector<Renderable>& r, GLuint des
     outlineShader_[0]->Use();
     outlineShader_[0]->SetUniform("color", glm::vec4(1.f,0.55f,0.1f,1.f)); //glm::vec4(0.4f,0.9f,1.f,1.f));
     outlineShader_[0]->SetUniform("texStencil", TEX_POSTPROCESS1);
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, getColorTexture(0));
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, GetColorTexture(0));
     SetRenderBuffers(1, false, false);
     outlineShader_[0]->SetUniform("uvOffset", glm::vec2(1.f/(GLfloat)viewportWidth_, 1.f/(GLfloat)viewportHeight_)*1.5f);
     content->DrawSAQ();
 
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, getColorTexture(1));
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, GetColorTexture(1));
     SetRenderBuffers(0, false, false);
     content->DrawSAQ();
 
@@ -230,18 +230,18 @@ void OpenGLTrackball::DrawSelection(const std::vector<Renderable>& r, GLuint des
     OpenGLState::EnableStencilTest();
     glStencilMask(0x00);
     glStencilFunc(GL_EQUAL, 0, 0xFF);
-    content->DrawTexturedSAQ(getColorTexture(0));
+    content->DrawTexturedSAQ(GetColorTexture(0));
     OpenGLState::DisableStencilTest();
 
     //4. Gaussian blur 3x3
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, getColorTexture(1));
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, GetColorTexture(1));
     SetRenderBuffers(0, false, false);
     outlineShader_[1]->Use();
     outlineShader_[1]->SetUniform("tex", TEX_POSTPROCESS1);
     outlineShader_[1]->SetUniform("invTexSize", glm::vec2(1.f/(GLfloat)viewportWidth_, 1.f/(GLfloat)viewportHeight_));
     content->DrawSAQ();
 
-    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, getColorTexture(0));
+    OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, GetColorTexture(0));
     SetRenderBuffers(1, false, false);
     content->DrawSAQ();
     OpenGLState::UnbindTexture(TEX_POSTPROCESS1);
@@ -251,7 +251,7 @@ void OpenGLTrackball::DrawSelection(const std::vector<Renderable>& r, GLuint des
     OpenGLState::BindFramebuffer(destinationFBO); //No depth buffer, just one color buffer
     OpenGLState::EnableBlend();
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    content->DrawTexturedSAQ(getColorTexture(1));
+    content->DrawTexturedSAQ(GetColorTexture(1));
     OpenGLState::DisableBlend();
 }
 

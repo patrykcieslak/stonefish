@@ -35,37 +35,37 @@ namespace sf
 
 VisionSensor::VisionSensor(const std::string& uniqueName, Scalar frequency) : Sensor(uniqueName, frequency)
 {
-    if(!SimulationApp::getApp()->hasGraphics())
+    if(!SimulationApp::GetApp()->HasGraphics())
         cCritical("Not possible to use vision sensors in console simulation! Use graphical simulation if possible.");
     
     attach_ = nullptr;
     o2s_ = Transform::getIdentity();
 }
 
-void VisionSensor::setRelativeSensorFrame(const Transform& origin)
+void VisionSensor::SetRelativeSensorFrame(const Transform& origin)
 {
     o2s_ = origin;
 }
 
-Transform VisionSensor::getSensorFrame() const
+Transform VisionSensor::GetSensorFrame() const
 {
     if(attach_ != nullptr)
     {
-        if(attach_->getType() == EntityType::STATIC)
-            return ((StaticEntity*)attach_)->getTransform() * o2s_;
+        if(attach_->GetType() == EntityType::STATIC)
+            return ((StaticEntity*)attach_)->GetTransform() * o2s_;
         else
-            return ((MovingEntity*)attach_)->getOTransform() * o2s_;
+            return ((MovingEntity*)attach_)->GetOTransform() * o2s_;
     }
     else
         return o2s_;
 }
 
-void VisionSensor::getSensorVelocity(Vector3& linear, Vector3& angular) const
+void VisionSensor::GetSensorVelocity(Vector3& linear, Vector3& angular) const
 {
-    if(attach_ != nullptr && attach_->getType() != EntityType::STATIC)
+    if(attach_ != nullptr && attach_->GetType() != EntityType::STATIC)
     {
-        linear = ((MovingEntity*)attach_)->getLinearVelocity();
-        angular = ((MovingEntity*)attach_)->getAngularVelocity();
+        linear = ((MovingEntity*)attach_)->GetLinearVelocity();
+        angular = ((MovingEntity*)attach_)->GetAngularVelocity();
     }
     else 
     {
@@ -74,7 +74,7 @@ void VisionSensor::getSensorVelocity(Vector3& linear, Vector3& angular) const
     }
 }
 
-SensorType VisionSensor::getType() const
+SensorType VisionSensor::GetType() const
 {
     return SensorType::VISION;
 }
@@ -85,8 +85,8 @@ void VisionSensor::AttachToWorld(const Transform& origin)
     o2s_ = origin;
     bool seesParticles = false;
     InitGraphics(seesParticles);
-    if(seesParticles && SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
-        SimulationApp::getApp()->getSimulationManager()->getOcean()->getOpenGLOcean()->AllocateParticles(getOpenGLView());
+    if(seesParticles && SimulationApp::GetApp()->GetSimulationManager()->IsOceanEnabled())
+        SimulationApp::GetApp()->GetSimulationManager()->GetOcean()->GetOpenGlOcean()->AllocateParticles(GetOpenGlView());
 }
 
 void VisionSensor::AttachToStatic(StaticEntity* body, const Transform& origin)
@@ -97,8 +97,8 @@ void VisionSensor::AttachToStatic(StaticEntity* body, const Transform& origin)
         o2s_ = origin;
         bool seesParticles = false;
         InitGraphics(seesParticles);
-        if(seesParticles && SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
-            SimulationApp::getApp()->getSimulationManager()->getOcean()->getOpenGLOcean()->AllocateParticles(getOpenGLView());
+        if(seesParticles && SimulationApp::GetApp()->GetSimulationManager()->IsOceanEnabled())
+            SimulationApp::GetApp()->GetSimulationManager()->GetOcean()->GetOpenGlOcean()->AllocateParticles(GetOpenGlView());
     }
 }
 
@@ -111,8 +111,8 @@ void VisionSensor::AttachToSolid(MovingEntity* body, const Transform& origin)
         bool seesParticles = false;
         InitGraphics(seesParticles);
 
-        if(seesParticles && SimulationApp::getApp()->getSimulationManager()->isOceanEnabled())
-            SimulationApp::getApp()->getSimulationManager()->getOcean()->getOpenGLOcean()->AssignParticles(getOpenGLView(), body->getOceanParticles());
+        if(seesParticles && SimulationApp::GetApp()->GetSimulationManager()->IsOceanEnabled())
+            SimulationApp::GetApp()->GetSimulationManager()->GetOcean()->GetOpenGlOcean()->AssignParticles(GetOpenGlView(), body->GetOceanParticles());
     }
 }
 

@@ -52,7 +52,7 @@ int main(int argc, const char * argv[])
     h.showForces = false;
     
     std::unique_ptr<UnderwaterTestManager> simulationManager = std::make_unique<UnderwaterTestManager>(200.0);
-    simulationManager->setRealtimeFactor(1.0);
+    simulationManager->SetRealtimeFactor(1.0);
     UnderwaterTestApp app(std::string(DATA_DIR_PATH), s, h, std::move(simulationManager));
     app.Run();
     

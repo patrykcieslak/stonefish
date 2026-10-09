@@ -92,8 +92,8 @@ std::string MaterialManager::CreateFluid(const std::string& uniqueName, Scalar d
 bool MaterialManager::SetMaterialsInteraction(const std::string& firstMaterialName, const std::string& secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff)
 {
     MaterialPair p;
-    p.mat1Id = getMaterialIndex(firstMaterialName);
-    p.mat2Id = getMaterialIndex(secondMaterialName);
+    p.mat1Id = GetMaterialIndex(firstMaterialName);
+    p.mat2Id = GetMaterialIndex(secondMaterialName);
     
     Friction f;
     f.fStatic = staticFricCoeff;
@@ -136,10 +136,10 @@ Friction MaterialManager::GetMaterialsInteraction(int mat1Index, int mat2Index)
 
 Friction MaterialManager::GetMaterialsInteraction(const std::string& mat1Name, const std::string& mat2Name)
 {
-    return GetMaterialsInteraction(getMaterialIndex(mat1Name), getMaterialIndex(mat2Name));
+    return GetMaterialsInteraction(GetMaterialIndex(mat1Name), GetMaterialIndex(mat2Name));
 }
 
-int MaterialManager::getMaterialIndex(const std::string& name)
+int MaterialManager::GetMaterialIndex(const std::string& name)
 {
     auto it = std::find_if(materials_.begin(), materials_.end(), [&name](const Material& m) { return m.name == name; });
     if(it != materials_.end())
@@ -148,7 +148,7 @@ int MaterialManager::getMaterialIndex(const std::string& name)
         return -1;
 }
 
-Material MaterialManager::getMaterial(int index)
+Material MaterialManager::GetMaterial(int index)
 {
     if(index >= 0 && index < (int)materials_.size())
         return materials_[index];
@@ -156,12 +156,12 @@ Material MaterialManager::getMaterial(int index)
         return materials_[0];
 }
 
-Material MaterialManager::getMaterial(const std::string& name)
+Material MaterialManager::GetMaterial(const std::string& name)
 {
-    return getMaterial(getMaterialIndex(name));
+    return GetMaterial(GetMaterialIndex(name));
 }
 
-Fluid MaterialManager::getFluid(const std::string& name)
+Fluid MaterialManager::GetFluid(const std::string& name)
 {
     auto it = std::find_if(fluids_.begin(), fluids_.end(), [&name](const Fluid& f) { return f.name == name; });
     if(it != fluids_.end())
@@ -170,7 +170,7 @@ Fluid MaterialManager::getFluid(const std::string& name)
         return Fluid();
 }
 
-Fluid MaterialManager::getFluid(int index)
+Fluid MaterialManager::GetFluid(int index)
 {
     if(index >= 0 && index < (int)fluids_.size())
         return fluids_[index];

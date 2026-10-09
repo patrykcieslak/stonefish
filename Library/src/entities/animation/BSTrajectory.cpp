@@ -141,7 +141,7 @@ void BSTrajectory::Interpolate()
         //Angular quantities
         Vector3 dummy;
         interpTrans_.setRotation(slerp(T1.getRotation(), T2.getRotation(), (playTime_-t1)/(t2-t1)));
-        calculateVelocityShortestPath(T1, T2, t2-t1, dummy, interpAngVel_);
+        CalculateVelocityShortestPath(T1, T2, t2-t1, dummy, interpAngVel_);
         if(!forward_)
             interpAngVel_ = -interpAngVel_;
     }
@@ -153,10 +153,10 @@ void BSTrajectory::BuildGraphicalPath()
 
     if(points_.size() >= 3)
     {
-        vis_[1].getDataAsPoints()->clear();
+        vis_[1].GetDataAsPoints()->clear();
         std::vector<Scalar> p = spline_.sample((size_t)ceil(points_.back().t * 10));
         for(size_t i = 0; i<p.size(); i+=4)
-            vis_[1].getDataAsPoints()->push_back(glm::vec3((GLfloat)p[i+1], (GLfloat)p[i+2], (GLfloat)p[i+3]));
+            vis_[1].GetDataAsPoints()->push_back(glm::vec3((GLfloat)p[i+1], (GLfloat)p[i+2], (GLfloat)p[i+3]));
     }
 }
 

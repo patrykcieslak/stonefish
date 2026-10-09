@@ -51,19 +51,19 @@ namespace sf
         /*!
          \param linearAccelerationMax the maximum measured linear acceleration for each axis [m s^-2]
          */
-        void setRange(Vector3 linearAccelerationMax);
+        void SetRange(Vector3 linearAccelerationMax);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
          \param linearAccelerationStdDev standard deviation of the linear acceleration measurement noise for each axis
          */
-        void setNoise(Vector3 linearAccelerationStdDev);
+        void SetNoise(Vector3 linearAccelerationStdDev);
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const override;
+        ScalarSensorType GetScalarSensorType() const override;
 
         //! A method returning the construction info for the sensor.
-        static ConstructInfo getConstructInfo();
+        static ConstructInfo GetConstructInfo();
 
         //! A method constructing the sensor based on info structure.
         /*!

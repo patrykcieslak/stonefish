@@ -65,10 +65,10 @@ namespace sf
         void DisableAutoPing();
            
         //! A method to get the current information about the acoustic beacons.
-        std::map<uint64_t, BeaconInfo>& getBeaconInfo(); 
+        std::map<uint64_t, BeaconInfo>& GetBeaconInfo(); 
 
         //! A method returning the type of the comm.
-        CommType getType() const;
+        CommType GetType() const;
        
     protected:
         //! A method performing internal comm state update.

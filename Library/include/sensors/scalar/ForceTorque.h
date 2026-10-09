@@ -65,26 +65,26 @@ namespace sf
          \param forceMax a vector representing the maximum measured forces [N]
          \param torqueMax a vector representing the maximum mesured torque [Nm]
          */
-        void setRange(const Vector3& forceMax, const Vector3& torqueMax);
+        void SetRange(const Vector3& forceMax, const Vector3& torqueMax);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
          \param forceStdDev standard deviation of force measurement noise
          \param toqueStdDev standard deviation of torque measurement noise
          */
-        void setNoise(Scalar forceStdDev, Scalar torqueStdDev);
+        void SetNoise(Scalar forceStdDev, Scalar torqueStdDev);
         
         //! A method that implements rendering of the sensor.
         std::vector<Renderable> Render();
         
         //! A method returning the current sensor frame in world.
-        Transform getSensorFrame() const;
+        Transform GetSensorFrame() const;
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const override;
+        ScalarSensorType GetScalarSensorType() const override;
 
         //! A method returning the construction info for the sensor.
-        static ConstructInfo getConstructInfo();
+        static ConstructInfo GetConstructInfo();
 
         //! A method constructing the sensor based on info structure.
         /*!

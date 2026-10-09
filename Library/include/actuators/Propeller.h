@@ -60,28 +60,28 @@ namespace sf
         /*!
          \param s the desired speed of the thruster as fraction <0,1>
          */
-        void setSetpoint(Scalar s);
+        void SetSetpoint(Scalar s);
         
         //! A method returning the current setpoint.
-        Scalar getSetpoint() const;
+        Scalar GetSetpoint() const;
         
         //! A method returning the generated thrust.
-        Scalar getThrust() const;
+        Scalar GetThrust() const;
         
         //! A method returning the induced torque.
-        Scalar getTorque() const;
+        Scalar GetTorque() const;
 
         //! A method returning the angular position of the propeller [rad]
-        Scalar getAngle() const;
+        Scalar GetAngle() const;
         
         //! A method returning the angular velocity of the propeller [rad/s]
-        Scalar getOmega() const;
+        Scalar GetOmega() const;
         
         //! A method returning type of link actuator.
-        LinkActuatorType getLinkActuatorType() const override;
+        LinkActuatorType GetLinkActuatorType() const override;
 
         //! A method returning the construction info for the actuator.
-        static ConstructInfo getConstructInfo();
+        static ConstructInfo GetConstructInfo();
 
         //! A method constructing the actuator based on info structure.
         /*!

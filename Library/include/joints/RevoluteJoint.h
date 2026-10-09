@@ -87,36 +87,36 @@ namespace sf
          \param av setpoint of angular velocity [rad/s]
          \param dt time step of the simulation
         */
-        void setMotorVelocity(Scalar av);
+        void SetMotorVelocity(Scalar av);
         
         //! A method to set the damping characteristics of the joint.
         /*!
          \param constantFactor a constant damping torque [Nm]
          \param viscousFactor a coefficient of viscous damping [Nm*s*rad^-1]
          */
-        void setDamping(Scalar constantFactor, Scalar viscousFactor);
+        void SetDamping(Scalar constantFactor, Scalar viscousFactor);
         
         //! A method to set the limits of the joint.
         /*!
          \param min the minimum rotation angle of the joint [rad]
          \param max the maximum rotation angle of the joint [rad]
          */
-        void setLimits(Scalar min, Scalar max);
+        void SetLimits(Scalar min, Scalar max);
         
         //! A method to set the desired initial condition of the joint.
         /*!
          \param angle the initial angle of the joint [rad]
          */
-        void setIC(Scalar angle);
+        void SetIc(Scalar angle);
         
         //! A method returning the anglular position of the joint [rad].
-        Scalar getAngle();
+        Scalar GetAngle();
         
         //! A method returning the angular velocity of the joint [rad*s^-1]/
-        Scalar getAngularVelocity();
+        Scalar GetAngularVelocity();
         
         //! A method returning the type of the joint.
-        JointType getType() const;
+        JointType GetType() const;
         
     private:
         Vector3 axisInA_;

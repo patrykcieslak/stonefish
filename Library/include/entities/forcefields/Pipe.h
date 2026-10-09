@@ -60,16 +60,16 @@ namespace sf
         /*!
          \param v the velocity at the inlet [m/s]
          */
-        void setInletVelocity(Scalar v);
+        void SetInletVelocity(Scalar v);
 
         //! A method to get the flow velocity at the inlet.
-        Scalar getInletVelocity() const;
+        Scalar GetInletVelocity() const;
         
         //! A method implementing the rendering of the pipe.
         std::vector<Renderable> Render(VelocityFieldUBO& ubo);
 
          //! A method returning the type of the velocity field.
-        VelocityFieldType getType() const;
+        VelocityFieldType GetType() const;
         
     private:
         Vector3 p1_, n_;

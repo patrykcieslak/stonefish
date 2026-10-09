@@ -63,10 +63,10 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
     BuildRigidBody(collides);
 
     //Build graphical objects
-    if(SimulationApp::getApp()->hasGraphics())
+    if(SimulationApp::GetApp()->HasGraphics())
     { 
         std::unique_ptr<Mesh> phyMesh = OpenGLContent::BuildSphere((GLfloat)sphereRadius);
-        phyObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh.get());
+        phyObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BuildObject(phyMesh.get());
         graObjectId_ = phyObjectId_;
     }
 }
@@ -86,10 +86,10 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
     BuildRigidBody(collides);
 
     //Build graphical objects
-    if(SimulationApp::getApp()->hasGraphics())
+    if(SimulationApp::GetApp()->HasGraphics())
     { 
         std::unique_ptr<Mesh> phyMesh = OpenGLContent::BuildCylinder((GLfloat)cylinderRadius, (GLfloat)cylinderHeight);
-        phyObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh.get());
+        phyObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BuildObject(phyMesh.get());
         graObjectId_ = phyObjectId_;
     }
 }
@@ -108,10 +108,10 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
     BuildRigidBody(collides);
 
     //Build graphical objects
-    if(SimulationApp::getApp()->hasGraphics())
+    if(SimulationApp::GetApp()->HasGraphics())
     { 
         std::unique_ptr<Mesh> phyMesh = OpenGLContent::BuildBox(glm::vec3((GLfloat)boxDimensions.getX()/2.f, (GLfloat)boxDimensions.getY()/2.f, (GLfloat)boxDimensions.getZ()/2.f));
-        phyObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh.get());
+        phyObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BuildObject(phyMesh.get());
         graObjectId_ = phyObjectId_;
     }
 }
@@ -147,9 +147,9 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
 
     //Build rigid body
     std::unique_ptr<btConvexHullShape> shape = std::make_unique<btConvexHullShape>();
-    for(size_t i=0; i<phyMesh->getNumOfVertices(); ++i)
+    for(size_t i=0; i<phyMesh->GetNumOfVertices(); ++i)
     {
-        glm::vec3 pos = phyMesh->getVertexPos(i);
+        glm::vec3 pos = phyMesh->GetVertexPos(i);
         Vector3 v(pos.x, pos.y, pos.z);
         shape->addPoint(v);
     }
@@ -158,27 +158,27 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
     BuildRigidBody(collides);
 
     //Build graphical objects
-    if(SimulationApp::getApp()->hasGraphics())
+    if(SimulationApp::GetApp()->HasGraphics())
     { 
-        phyObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh.get());
+        phyObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BuildObject(phyMesh.get());
         if(graMesh != phyMesh)
-            graObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(graMesh.get());
+            graObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BuildObject(graMesh.get());
         else
             graObjectId_ = phyObjectId_;
     }
 }
 
-EntityType AnimatedEntity::getType() const
+EntityType AnimatedEntity::GetType() const
 {
     return EntityType::ANIMATED;
 }
 
-Transform AnimatedEntity::getOTransform() const
+Transform AnimatedEntity::GetOTransform() const
 {
-    return getCGTransform() * T_CG2O_;
+    return GetCgTransform() * T_CG2O_;
 }
 
-Transform AnimatedEntity::getCGTransform() const
+Transform AnimatedEntity::GetCgTransform() const
 {
     if(rigidBody_ != nullptr)
     {
@@ -190,7 +190,7 @@ Transform AnimatedEntity::getCGTransform() const
         return Transform::getIdentity();
 }
 
-Vector3 AnimatedEntity::getLinearVelocity() const
+Vector3 AnimatedEntity::GetLinearVelocity() const
 {
     if(rigidBody_ != nullptr)
         return rigidBody_->getLinearVelocity();
@@ -198,7 +198,7 @@ Vector3 AnimatedEntity::getLinearVelocity() const
         return V0();
 }
 
-Vector3 AnimatedEntity::getAngularVelocity() const
+Vector3 AnimatedEntity::GetAngularVelocity() const
 {
     if(rigidBody_ != nullptr)
         return rigidBody_->getAngularVelocity();
@@ -206,27 +206,27 @@ Vector3 AnimatedEntity::getAngularVelocity() const
         return V0();
 }
 
-Vector3 AnimatedEntity::getLinearVelocityInLocalPoint(const Vector3& relPos) const
+Vector3 AnimatedEntity::GetLinearVelocityInLocalPoint(const Vector3& relPos) const
 {
-    return getLinearVelocity() + getAngularVelocity().cross(relPos);
+    return GetLinearVelocity() + GetAngularVelocity().cross(relPos);
 }
 
-Vector3 AnimatedEntity::getLinearAcceleration() const
+Vector3 AnimatedEntity::GetLinearAcceleration() const
 {
     return linearAcc_;
 }
         
-Vector3 AnimatedEntity::getAngularAcceleration() const
+Vector3 AnimatedEntity::GetAngularAcceleration() const
 {
     return angularAcc_;
 }
 
-Trajectory* AnimatedEntity::getTrajectory()
+Trajectory* AnimatedEntity::GetTrajectory()
 {
     return traj_.get();
 }
 
-void AnimatedEntity::getAABB(Vector3& min, Vector3& max)
+void AnimatedEntity::GetAabb(Vector3& min, Vector3& max)
 {
     if(rigidBody_ != nullptr)
         rigidBody_->getAabb(min, max);
@@ -239,7 +239,7 @@ void AnimatedEntity::getAABB(Vector3& min, Vector3& max)
 
 void AnimatedEntity::BuildRigidBody(bool collides)
 {
-    motionState_ = std::make_unique<btDefaultMotionState>(traj_->getInterpolatedTransform());
+    motionState_ = std::make_unique<btDefaultMotionState>(traj_->GetInterpolatedTransform());
     collisionShape_->setMargin(0.0);
     
     btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(Scalar(0), motionState_.get(), collisionShape_.get(), V0());
@@ -262,9 +262,9 @@ void AnimatedEntity::AddToSimulation(SimulationManager* sm)
     if(rigidBody_ != nullptr)
     {
         if(rigidBody_->getCollisionFlags() & btCollisionObject::CF_NO_CONTACT_RESPONSE) //No collisions
-            sm->getDynamicsWorld()->addRigidBody(rigidBody_.get(), MASK_ANIMATED_NONCOLLIDING, MASK_DYNAMIC);
+            sm->GetDynamicsWorld()->addRigidBody(rigidBody_.get(), MASK_ANIMATED_NONCOLLIDING, MASK_DYNAMIC);
         else
-            sm->getDynamicsWorld()->addRigidBody(rigidBody_.get(), MASK_ANIMATED_COLLIDING, MASK_DYNAMIC); //Only collide with dynamic bodies
+            sm->GetDynamicsWorld()->addRigidBody(rigidBody_.get(), MASK_ANIMATED_COLLIDING, MASK_DYNAMIC); //Only collide with dynamic bodies
     }
 }
         
@@ -279,29 +279,29 @@ void AnimatedEntity::Update(Scalar dt)
         return;
 
     traj_->Play(dt);
-    rigidBody_->getMotionState()->setWorldTransform(traj_->getInterpolatedTransform() *  T_CG2O_.inverse());
-    rigidBody_->setLinearVelocity(traj_->getInterpolatedLinearVelocity());
-    rigidBody_->setAngularVelocity(traj_->getInterpolatedAngularVelocity());    
-    setLinearAcceleration(traj_->getInterpolatedLinearAcceleration());
+    rigidBody_->getMotionState()->setWorldTransform(traj_->GetInterpolatedTransform() *  T_CG2O_.inverse());
+    rigidBody_->setLinearVelocity(traj_->GetInterpolatedLinearVelocity());
+    rigidBody_->setAngularVelocity(traj_->GetInterpolatedAngularVelocity());    
+    SetLinearAcceleration(traj_->GetInterpolatedLinearAcceleration());
 }
 
 std::vector<Renderable> AnimatedEntity::Render()
 {
     std::vector<Renderable> items(0);
     
-    if(rigidBody_ != nullptr && isRenderable())
+    if(rigidBody_ != nullptr && IsRenderable())
     {
         Renderable item;
         item.type = RenderableType::SOLID_CS;
-        item.model = glMatrixFromTransform(getOTransform());
+        item.model = glMatrixFromTransform(GetOTransform());
         items.push_back(item);
 
         if(graObjectId_ >= 0)
         {
             item.type = RenderableType::SOLID;
-            item.cor = glVectorFromVector(getOTransform().getOrigin());
-            item.vel = glVectorFromVector(getLinearVelocity());
-            item.avel = glVectorFromVector(getAngularVelocity());
+            item.cor = glVectorFromVector(GetOTransform().getOrigin());
+            item.vel = glVectorFromVector(GetLinearVelocity());
+            item.avel = glVectorFromVector(GetAngularVelocity());
             item.materialName = mat_.name;
             item.objectId = dm_ == DisplayMode::GRAPHICAL ? graObjectId_ : phyObjectId_;
             item.lookId = dm_ == DisplayMode::GRAPHICAL ? lookId_ : -1;

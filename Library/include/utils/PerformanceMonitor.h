@@ -46,20 +46,20 @@ namespace sf
         void HydrodynamicsFinished();
 
         // In seconds.
-        double getSimulationTime();
+        double GetSimulationTime();
         
         // In microseconds.
-        double getPhysicsTime();
-        double getPhysicsTimeAverage();
-        template<typename T> std::vector<T> getPhysicsTimeHistory(size_t len) { return getHistory<T>(phyTime_, len); };
+        double GetPhysicsTime();
+        double GetPhysicsTimeAverage();
+        template<typename T> std::vector<T> GetPhysicsTimeHistory(size_t len) { return GetHistory<T>(phyTime_, len); };
 
-        double getHydrodynamicsTime();
-        double getHydrodynamicsTimeAverage();
-        template<typename T> std::vector<T> getHydrodynamicsTimeHistory(size_t len) { return getHistory<T>(hydroTime_, len); };
+        double GetHydrodynamicsTime();
+        double GetHydrodynamicsTimeAverage();
+        template<typename T> std::vector<T> GetHydrodynamicsTimeHistory(size_t len) { return GetHistory<T>(hydroTime_, len); };
 
     private:
         void Update(const std::chrono::high_resolution_clock::time_point& start, std::deque<double>& times, double& average);
-        template<typename T> std::vector<T> getHistory(std::deque<double>& data, size_t len)
+        template<typename T> std::vector<T> GetHistory(std::deque<double>& data, size_t len)
         { 
             std::vector<T> dataOut; 
             dataOut.resize(data.size() < len ? data.size() : len);

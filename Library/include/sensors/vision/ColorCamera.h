@@ -80,26 +80,26 @@ namespace sf
         /*!
          \param comp the exposure compensation value [EV]
          */
-        void setExposureCompensation(Scalar comp);
+        void SetExposureCompensation(Scalar comp);
         
         //! A method returning the exposure compensation factor [EV].
-        Scalar getExposureCompensation() const;
+        Scalar GetExposureCompensation() const;
     
         //! A method returning the pointer to the image data.
         /*!
          \param index the id of the OpenGL camera for which the data pointer is requested
          \return pointer to the image data buffer
          */
-        void* getImageDataPointer(unsigned int index = 0);
+        void* GetImageDataPointer(unsigned int index = 0);
         
         //! A method returning the type of the vision sensor.
-        VisionSensorType getVisionSensorType() const override;
+        VisionSensorType GetVisionSensorType() const override;
         
         //! A method returning a pointer to the underlaying OpenGLView object.
-        OpenGLView* getOpenGLView() const override;
+        OpenGLView* GetOpenGlView() const override;
 
         //! A method returning the construction info for the sensor.
-        static ConstructInfo getConstructInfo();
+        static ConstructInfo GetConstructInfo();
 
         //! A method constructing the sensor based on info structure.
         /*!

@@ -43,31 +43,31 @@ ColorCamera::ColorCamera(const std::string& uniqueName, unsigned int resolutionX
     glCamera_ = nullptr;
 }
     
-void ColorCamera::setExposureCompensation(Scalar comp)
+void ColorCamera::SetExposureCompensation(Scalar comp)
 {
     if(glCamera_ != nullptr)
-        glCamera_->setExposureCompensation((GLfloat)comp);
+        glCamera_->SetExposureCompensation((GLfloat)comp);
 }
     
-Scalar ColorCamera::getExposureCompensation() const
+Scalar ColorCamera::GetExposureCompensation() const
 {
     if(glCamera_ != nullptr)
-        return (Scalar)glCamera_->getExposureCompensation();
+        return (Scalar)glCamera_->GetExposureCompensation();
     else
         return Scalar(0);
 }
 
-void* ColorCamera::getImageDataPointer(unsigned int index)
+void* ColorCamera::GetImageDataPointer(unsigned int index)
 {
     return imageData_;
 }
 
-VisionSensorType ColorCamera::getVisionSensorType() const
+VisionSensorType ColorCamera::GetVisionSensorType() const
 {
     return VisionSensorType::COLOR_CAMERA;
 }
 
-OpenGLView* ColorCamera::getOpenGLView() const
+OpenGLView* ColorCamera::GetOpenGlView() const
 {
     return glCamera_;
 }
@@ -82,12 +82,12 @@ void ColorCamera::InitGraphics(bool& seesParticles)
     
     // Set up camera
     glCamera_ = glCamera.get();
-    glCamera_->setCamera(this);
+    glCamera_->SetCamera(this);
     UpdateTransform();
     glCamera_->UpdateTransform();
     InternalUpdate(0);
     
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glCamera));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->AddView(std::move(glCamera));
 }
 
 void ColorCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
@@ -120,7 +120,7 @@ void ColorCamera::InternalUpdate(Scalar dt)
 
 // Statics
 
-ConstructInfo ColorCamera::getConstructInfo()
+ConstructInfo ColorCamera::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;

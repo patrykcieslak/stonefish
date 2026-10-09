@@ -51,20 +51,20 @@ namespace sf
         /*!
          \param angularVelocityMax the maximum measured angular velocity for each axis [rad/s]
          */
-        void setRange(Vector3 angularVelocityMax);
+        void SetRange(Vector3 angularVelocityMax);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
          \param angularVelocityStdDev standard deviation of the angular velocity measurement noise
          \param angularVelocityBias bias of the angular velocity measurement fo each axis [rad/s]
          */
-        void setNoise(Vector3 angularVelocityStdDev, Vector3 angularVelocityBias);
+        void SetNoise(Vector3 angularVelocityStdDev, Vector3 angularVelocityBias);
 
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const override;
+        ScalarSensorType GetScalarSensorType() const override;
 
         //! A method returning the construction info for the sensor.
-        static ConstructInfo getConstructInfo();
+        static ConstructInfo GetConstructInfo();
 
         //! A method constructing the sensor based on info structure.
         /*!

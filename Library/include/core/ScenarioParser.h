@@ -73,10 +73,10 @@ namespace sf
         bool SaveLog(std::string filename);
 
         //! A method returning a copy of the log.
-        std::vector<ConsoleMessage> getLog();
+        std::vector<ConsoleMessage> GetLog();
 
         //! A method used to get the pointer to the associated simulation manager.
-        SimulationManager* getSimulationManager();
+        SimulationManager* GetSimulationManager();
 
     protected:
         Console log;
@@ -278,7 +278,7 @@ namespace sf
         virtual FixedJoint* ParseGlue(XMLElement* element);
 
         //! A method informing if the simulation is working in graphical mode.
-        bool isGraphicalSim();
+        bool IsGraphicalSim();
 
     private:
         bool CopyNode(XMLNode* destParent, const XMLNode* src);

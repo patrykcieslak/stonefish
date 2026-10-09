@@ -67,16 +67,16 @@ namespace sf
         void Engage(SimulationManager* sm);
         
         //!  
-        void setPump(bool enabled);
+        void SetPump(bool enabled);
 
         //!
-        bool getPump() const;
+        bool GetPump() const;
 
         //! A method returning type of link actuator.
-        LinkActuatorType getLinkActuatorType() const override;
+        LinkActuatorType GetLinkActuatorType() const override;
 
         //! A method returning the construction info for the actuator.
-        static ConstructInfo getConstructInfo();
+        static ConstructInfo GetConstructInfo();
 
         //! A method constructing the actuator based on info structure.
         /*!

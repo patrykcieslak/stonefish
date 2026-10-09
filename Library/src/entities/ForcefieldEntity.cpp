@@ -37,19 +37,19 @@ ForcefieldEntity::ForcefieldEntity(const std::string& uniqueName) : Entity(uniqu
     ghost_->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
 }
 
-EntityType ForcefieldEntity::getType() const
+EntityType ForcefieldEntity::GetType() const
 {
     return EntityType::FORCEFIELD;
 }
 
-btPairCachingGhostObject* ForcefieldEntity::getGhost()
+btPairCachingGhostObject* ForcefieldEntity::GetGhost()
 {
     return ghost_.get();
 }
 
 void ForcefieldEntity::AddToSimulation(SimulationManager* sm)
 {
-    sm->getDynamicsWorld()->addCollisionObject(ghost_.get(), MASK_GHOST, MASK_DYNAMIC);
+    sm->GetDynamicsWorld()->addCollisionObject(ghost_.get(), MASK_GHOST, MASK_DYNAMIC);
 }
 
 std::vector<Renderable> ForcefieldEntity::Render()
@@ -57,7 +57,7 @@ std::vector<Renderable> ForcefieldEntity::Render()
     return std::vector<Renderable>(0);
 }
 
-void ForcefieldEntity::getAABB(Vector3& min, Vector3& max)
+void ForcefieldEntity::GetAabb(Vector3& min, Vector3& max)
 {
     min.setValue(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);
     max.setValue(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);

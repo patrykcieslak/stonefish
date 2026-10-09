@@ -171,18 +171,18 @@ namespace sf
     {
         std::vector<Face> faces;
 
-        void* getFaceDataPointer() const 
+        void* GetFaceDataPointer() const 
         {
             return (void*)&faces[0].vertexID[0];
         }
 
         virtual ~Mesh() {}    
-        virtual bool isTexturable() const = 0;
-        virtual size_t getNumOfVertices() const = 0;
-        virtual void* getVertexDataPointer() const = 0;
-        virtual size_t getVertexSize() const = 0;
-        virtual glm::vec3 getVertexPos(size_t vertexID) const = 0;
-        virtual glm::vec3 getVertexPos(size_t faceID, unsigned short index) const = 0;
+        virtual bool IsTexturable() const = 0;
+        virtual size_t GetNumOfVertices() const = 0;
+        virtual void* GetVertexDataPointer() const = 0;
+        virtual size_t GetVertexSize() const = 0;
+        virtual glm::vec3 GetVertexPos(size_t vertexID) const = 0;
+        virtual glm::vec3 GetVertexPos(size_t faceID, unsigned short index) const = 0;
         virtual glm::vec3 ComputeFaceNormal(size_t faceID) const = 0;
         virtual GLfloat ComputeFaceArea(size_t faceID) const = 0;
     };
@@ -191,35 +191,35 @@ namespace sf
     {
         std::vector<Vertex> vertices;
         
-        bool isTexturable() const { return false; }
+        bool IsTexturable() const { return false; }
 
-        size_t getNumOfVertices() const { return vertices.size(); }
+        size_t GetNumOfVertices() const { return vertices.size(); }
 
-        void* getVertexDataPointer() const { return (void*)&vertices[0].pos.x; };
+        void* GetVertexDataPointer() const { return (void*)&vertices[0].pos.x; };
 
-        size_t getVertexSize() const { return sizeof(Vertex); }
+        size_t GetVertexSize() const { return sizeof(Vertex); }
 
-        glm::vec3 getVertexPos(size_t vertexID) const
+        glm::vec3 GetVertexPos(size_t vertexID) const
         {
             return vertices[vertexID].pos;
         }
 
-        glm::vec3 getVertexPos(size_t faceID, unsigned short index) const
+        glm::vec3 GetVertexPos(size_t faceID, unsigned short index) const
         {
             return vertices[faces[faceID].vertexID[index]].pos;
         }
 
         glm::vec3 ComputeFaceNormal(size_t faceID) const
         {
-            glm::vec3 v12 = getVertexPos(faceID, 1) - getVertexPos(faceID, 0);
-            glm::vec3 v13 = getVertexPos(faceID, 2) - getVertexPos(faceID, 0);
+            glm::vec3 v12 = GetVertexPos(faceID, 1) - GetVertexPos(faceID, 0);
+            glm::vec3 v13 = GetVertexPos(faceID, 2) - GetVertexPos(faceID, 0);
             return glm::normalize(glm::cross(v12,v13));
         }
         
         GLfloat ComputeFaceArea(size_t faceID) const
         {
-            glm::vec3 v12 = getVertexPos(faceID, 1) - getVertexPos(faceID, 0);
-            glm::vec3 v13 = getVertexPos(faceID, 2) - getVertexPos(faceID, 0);
+            glm::vec3 v12 = GetVertexPos(faceID, 1) - GetVertexPos(faceID, 0);
+            glm::vec3 v13 = GetVertexPos(faceID, 2) - GetVertexPos(faceID, 0);
             return glm::length(glm::cross(v12,v13))/2.f;
         }
 
@@ -243,35 +243,35 @@ namespace sf
     {
         std::vector<TexturableVertex> vertices;
         
-        bool isTexturable() const { return true; }
+        bool IsTexturable() const { return true; }
 
-        size_t getNumOfVertices() const { return vertices.size(); }
+        size_t GetNumOfVertices() const { return vertices.size(); }
 
-        void* getVertexDataPointer() const { return (void*)&vertices[0].pos.x; };
+        void* GetVertexDataPointer() const { return (void*)&vertices[0].pos.x; };
 
-        size_t getVertexSize() const { return sizeof(TexturableVertex); }
+        size_t GetVertexSize() const { return sizeof(TexturableVertex); }
 
-        glm::vec3 getVertexPos(size_t vertexID) const
+        glm::vec3 GetVertexPos(size_t vertexID) const
         {
             return vertices[vertexID].pos;
         }
 
-        glm::vec3 getVertexPos(size_t faceID, unsigned short index) const
+        glm::vec3 GetVertexPos(size_t faceID, unsigned short index) const
         {
             return vertices[faces[faceID].vertexID[index]].pos;
         }
 
         glm::vec3 ComputeFaceNormal(size_t faceID) const
         {
-            glm::vec3 v12 = getVertexPos(faceID, 1) - getVertexPos(faceID, 0);
-            glm::vec3 v13 = getVertexPos(faceID, 2) - getVertexPos(faceID, 0);
+            glm::vec3 v12 = GetVertexPos(faceID, 1) - GetVertexPos(faceID, 0);
+            glm::vec3 v13 = GetVertexPos(faceID, 2) - GetVertexPos(faceID, 0);
             return glm::normalize(glm::cross(v12,v13));
         }
         
         GLfloat ComputeFaceArea(size_t faceID) const
         {
-            glm::vec3 v12 = getVertexPos(faceID, 1) - getVertexPos(faceID, 0);
-            glm::vec3 v13 = getVertexPos(faceID, 2) - getVertexPos(faceID, 0);
+            glm::vec3 v12 = GetVertexPos(faceID, 1) - GetVertexPos(faceID, 0);
+            glm::vec3 v13 = GetVertexPos(faceID, 2) - GetVertexPos(faceID, 0);
             return glm::length(glm::cross(v12,v13))/2.f;
         }
 
@@ -374,7 +374,7 @@ namespace sf
         GLfloat gamma;          //Gamma correction for system
         
         //! A static method returning the sRGB color space structure.
-        static ColorSystem sRGB()
+        static ColorSystem SRgb()
         {
             ColorSystem cs;
             cs.xRed = 0.64f;
@@ -413,7 +413,7 @@ namespace sf
         }
 
         //! A method returning the color components converted to sRGB space.
-        glm::vec3 toSRGB()
+        glm::vec3 ToSrgb()
         {
             glm::bvec3 cutoff = glm::lessThan(rgb, glm::vec3(0.0031308f));
             glm::vec3 higher = glm::vec3(1.055f)*glm::pow(rgb, glm::vec3(1.f/2.4f)) - glm::vec3(0.055f);
@@ -466,15 +466,15 @@ namespace sf
         static Color BlackBody(GLfloat Kelvins)
         {
             GLfloat c1, c2, c3;
-            bbSpectrumToXYZ(Kelvins, c1, c2, c3);
-            xyzToRGB(c1, c2, c3, c1, c2, c3, ColorSystem::sRGB());
+            BbSpectrumToXyz(Kelvins, c1, c2, c3);
+            XyzToRgb(c1, c2, c3, c1, c2, c3, ColorSystem::SRgb());
             return Color(c1, c2, c3);
         }
         
     private:
-        static GLfloat bbSpectrum(GLfloat wavelength, GLfloat temperature);
-        static void bbSpectrumToXYZ(GLfloat temperature, GLfloat& x, GLfloat& y, GLfloat& z);
-        static void xyzToRGB(GLfloat x, GLfloat y, GLfloat z, GLfloat& r, GLfloat& g, GLfloat& b, ColorSystem cs);
+        static GLfloat BbSpectrum(GLfloat wavelength, GLfloat temperature);
+        static void BbSpectrumToXyz(GLfloat temperature, GLfloat& x, GLfloat& y, GLfloat& z);
+        static void XyzToRgb(GLfloat x, GLfloat y, GLfloat z, GLfloat& r, GLfloat& g, GLfloat& b, ColorSystem cs);
     };
     
     //! An enum used to designate type of helper object to be drawn.
@@ -539,12 +539,12 @@ namespace sf
             avel = glm::vec3(0.f);
         }
 
-        std::shared_ptr<std::vector<glm::vec3>> getDataAsPoints() const
+        std::shared_ptr<std::vector<glm::vec3>> GetDataAsPoints() const
         {
             return std::get<std::shared_ptr<std::vector<glm::vec3>>>(data);
         }
 
-        std::shared_ptr<std::vector<CableNode>> getDataAsCableNodes() const
+        std::shared_ptr<std::vector<CableNode>> GetDataAsCableNodes() const
         {
             return std::get<std::shared_ptr<std::vector<CableNode>>>(data);
         }

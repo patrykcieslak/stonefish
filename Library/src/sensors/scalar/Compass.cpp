@@ -40,24 +40,24 @@ void Compass::InternalUpdate(Scalar dt)
 {
     // Get angles
     Scalar yaw, pitch, roll;
-    getSensorFrame().getBasis().getEulerYPR(yaw, pitch, roll);
+    GetSensorFrame().getBasis().getEulerYPR(yaw, pitch, roll);
     
     // Record sample
     AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({yaw})));
 }
 
-void Compass::setNoise(Scalar headingStdDev)
+void Compass::SetNoise(Scalar headingStdDev)
 {
-    channels_[0].setStdDev(btClamped(headingStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[0].SetStdDev(btClamped(headingStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
 
-ScalarSensorType Compass::getScalarSensorType() const
+ScalarSensorType Compass::GetScalarSensorType() const
 {
     return ScalarSensorType::COMPASS;
 }
 
 
-ConstructInfo Compass::getConstructInfo()
+ConstructInfo Compass::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -90,7 +90,7 @@ std::unique_ptr<Compass> Compass::Construct(const std::string& uniqueName, Scala
     // Noise (optional)
     value = info.nodes.at("noise").attributes.at("heading");
     if (value.valid)
-        sensor->setNoise(std::get<Scalar>(value.value));
+        sensor->SetNoise(std::get<Scalar>(value.value));
 
     return sensor;
 }

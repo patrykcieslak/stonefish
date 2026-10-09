@@ -39,7 +39,7 @@ RealUSBL::RealUSBL(const std::string& uniqueName, uint64_t deviceId, Scalar minV
     blError_ = Scalar(0);
 }
     
-void RealUSBL::setNoise(Scalar timeDev, Scalar soundVelocityDev, Scalar phaseDev, Scalar baselineError, Scalar depthDev)
+void RealUSBL::SetNoise(Scalar timeDev, Scalar soundVelocityDev, Scalar phaseDev, Scalar baselineError, Scalar depthDev)
 {
     noiseTime_ = std::normal_distribution<Scalar>(Scalar(0), btFabs(timeDev));
     noiseSV_ = std::normal_distribution<Scalar>(Scalar(0), btFabs(soundVelocityDev));
@@ -61,11 +61,11 @@ void RealUSBL::ProcessMessages()
         if(msg->data == ackData)
         {  
             //Get message data
-            AcousticModem* cNode = getNode(msg->source);
+            AcousticModem* cNode = GetNode(msg->source);
             Vector3 cO = msg->txPosition;
-            Transform dT = getDeviceFrame();
+            Transform dT = GetDeviceFrame();
             Vector3 dO = dT.getOrigin();
-            Vector3 dir = getDeviceFrame().getBasis().inverse() * ((cO - dO).normalized()); //Direction in device frame
+            Vector3 dir = GetDeviceFrame().getBasis().inverse() * ((cO - dO).normalized()); //Direction in device frame
             Scalar slantRange = msg->travelled/Scalar(2); //Distance to node is half of the full travelled distance
             Scalar t = msg->timeStamp + slantRange/SOUND_VELOCITY_WATER;
             
@@ -122,7 +122,7 @@ Scalar RealUSBL::CalcModel(Scalar R, Scalar theta)
 
 // Statics
 
-ConstructInfo RealUSBL::getConstructInfo()
+ConstructInfo RealUSBL::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -181,7 +181,7 @@ std::unique_ptr<RealUSBL> RealUSBL::Construct(const std::string& uniqueName, uin
     ConstructInfoValue& value = info.nodes.at("connect").attributes.at("occlusion_test");
     if (value.valid)
         occlusionTest = std::get<bool>(value.value);
-    comm->setOcclusionTest(occlusionTest);
+    comm->SetOcclusionTest(occlusionTest);
     
     value = info.nodes.at("autoping").attributes.at("rate");
     if (value.valid)
@@ -214,7 +214,7 @@ std::unique_ptr<RealUSBL> RealUSBL::Construct(const std::string& uniqueName, uin
     if (value.valid)
         baselineErr = std::get<Scalar>(value.value);
 
-    comm->setNoise(tof, soundVelocity, phase, baselineErr, depth);
+    comm->SetNoise(tof, soundVelocity, phase, baselineErr, depth);
 
     return comm;
 }

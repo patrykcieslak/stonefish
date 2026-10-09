@@ -39,7 +39,7 @@ ConsoleSimulationApp::ConsoleSimulationApp(const std::string& title, const std::
     simulationThread_ = nullptr;
 }
 
-bool ConsoleSimulationApp::hasGraphics()
+bool ConsoleSimulationApp::HasGraphics()
 {
     return false;
 }
@@ -99,10 +99,10 @@ void ConsoleSimulationApp::StopSimulation()
 int ConsoleSimulationApp::RunSimulation(void* data)
 {
     ConsoleSimulationApp& simApp = static_cast<ConsoleSimulationThreadData*>(data)->app;
-    SimulationManager* simManager = simApp.getSimulationManager();
-    simManager->setCallSimulationStepCompleted(simApp.timeStep_ == Scalar(0));
+    SimulationManager* simManager = simApp.GetSimulationManager();
+    simManager->SetCallSimulationStepCompleted(simApp.timeStep_ == Scalar(0));
     
-    while(simApp.getState() == SimulationState::RUNNING)
+    while(simApp.GetState() == SimulationState::RUNNING)
     {
         simApp.StepSimulation();
     }

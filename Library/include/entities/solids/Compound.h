@@ -83,31 +83,31 @@ namespace sf
         /*!
          \param enabled a flag that informs if the internal parts should be displayed
          */
-        void setDisplayInternalParts(bool enabled);
+        void SetDisplayInternalParts(bool enabled);
         
         //! A method returning the mass or the sum of mass and added mass (depending on type of body).
-        Scalar getAugmentedMass() const;
+        Scalar GetAugmentedMass() const;
         
         //! A method returning the inertia or the sum of inertia and added mass (depending on type of body).
-        Vector3 getAugmentedInertia() const;
+        Vector3 GetAugmentedInertia() const;
         
         //! A method returning the material of the body.
         Material getMaterial(size_t partId) const;
         
         //! A method returning the part id for the collision shape id.
-        size_t getPartId(size_t collisionShapeId) const;
+        size_t GetPartId(size_t collisionShapeId) const;
 
         //! A method returning a pointer to one part of the compound body.
-        const CompoundPart& getPart(size_t partId) const;
+        const CompoundPart& GetPart(size_t partId) const;
 
         //! A method that returns the type of solid.
-        SolidType getSolidType() const;
+        SolidType GetSolidType() const;
         
         //! A method that returns a copy of all physics mesh vertices in body origin frame.
-        std::vector<Vector3> getMeshVertices() const;
+        std::vector<Vector3> GetMeshVertices() const;
         
         //! A method that informs if the internal parts of the body are displayed.
-        bool isDisplayingInternalParts();
+        bool IsDisplayingInternalParts();
         
         //! A method that constructs a collision shape for the body.
         std::unique_ptr<btCollisionShape> BuildCollisionShape();

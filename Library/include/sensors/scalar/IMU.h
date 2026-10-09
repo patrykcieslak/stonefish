@@ -55,7 +55,7 @@ namespace sf
          \param angularVelocityMax the maximum measured angular velocity for each axis [rad s^-1]
          \param linearAccelerationMax the maximum measured linear acceleration for each axis [m s^-2]
          */
-        void setRange(Vector3 angularVelocityMax, Vector3 linearAccelerationMax);
+        void SetRange(Vector3 angularVelocityMax, Vector3 linearAccelerationMax);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
@@ -64,13 +64,13 @@ namespace sf
          \param yawAngleDrift drift of the yaw angle measurement due to gyroscope bias [rad s^-1]
          \param linearAccelerationStdDev the standard deviation of the acceleration measurement for each axis
          */
-        void setNoise(Vector3 angleStdDev, Vector3 angularVelocityStdDev, Scalar yawAngleDrift, Vector3 linearAccelerationStdDev);
+        void SetNoise(Vector3 angleStdDev, Vector3 angularVelocityStdDev, Scalar yawAngleDrift, Vector3 linearAccelerationStdDev);
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const override;
+        ScalarSensorType GetScalarSensorType() const override;
 
         //! A method returning the construction info for the sensor.
-        static ConstructInfo getConstructInfo();
+        static ConstructInfo GetConstructInfo();
 
         //! A method constructing the sensor based on info structure.
         /*!

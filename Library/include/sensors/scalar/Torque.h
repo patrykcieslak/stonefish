@@ -51,19 +51,19 @@ namespace sf
         /*!
          \param torqueMax the maximum measured torque [Nm]
          */
-        void setRange(Scalar torqueMax);
+        void SetRange(Scalar torqueMax);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
          \param torqueStdDev standard deviation of torque measurement noise
          */
-        void setNoise(Scalar torqueStdDev);
+        void SetNoise(Scalar torqueStdDev);
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const override;
+        ScalarSensorType GetScalarSensorType() const override;
 
         //! A method returning the construction info for the sensor.
-        static ConstructInfo getConstructInfo();
+        static ConstructInfo GetConstructInfo();
 
         //! A method constructing the sensor based on info structure.
         /*!

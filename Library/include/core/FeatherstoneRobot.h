@@ -93,23 +93,23 @@ namespace sf
         void Respawn(SimulationManager* sm, const Transform& origin) override;
 
         //! A method returning the pose of the robot in the world frame.
-        Transform getTransform() const;
+        Transform GetTransform() const;
 
         //! A method returning the index of the link.
         /*!
          \param lname the name of the link
          \return index of the link
         */
-        int getLinkIndex(const std::string& lname) const;
+        int GetLinkIndex(const std::string& lname) const;
 
         //! A method returning type of algorithm used for the robot.
-        RobotType getType() const;
+        RobotType GetType() const;
 
         //! A method returning a point to the underlaying Featherstone entity.
-        FeatherstoneEntity* getDynamics();
+        FeatherstoneEntity* GetDynamics();
 
     private:
-        int getJoint(const std::string& jname);
+        int GetJoint(const std::string& jname);
 
         FeatherstoneEntity* dynamics_;
     };

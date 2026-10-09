@@ -45,16 +45,16 @@ SimpleThruster::SimpleThruster(const std::string& uniqueName, std::unique_ptr<So
     theta_ = Scalar(0);
     thrust_ = Scalar(0);
     torque_ = Scalar(0);
-    setThrustLimits(BT_LARGE_FLOAT, BT_LARGE_FLOAT); // No limits
-    setSetpoint(Scalar(0.), Scalar(0.));
+    SetThrustLimits(BT_LARGE_FLOAT, BT_LARGE_FLOAT); // No limits
+    SetSetpoint(Scalar(0.), Scalar(0.));
 }
 
-LinkActuatorType SimpleThruster::getLinkActuatorType() const
+LinkActuatorType SimpleThruster::GetLinkActuatorType() const
 {
     return LinkActuatorType::SIMPLE_THRUSTER;
 }
 
-void SimpleThruster::setSetpoint(Scalar thrust, Scalar torque)
+void SimpleThruster::SetSetpoint(Scalar thrust, Scalar torque)
 {
     sThrust_ = btClamped(thrust, -limits_.second, limits_.first);   
     sTorque_ = torque;
@@ -68,28 +68,28 @@ void SimpleThruster::setSetpoint(Scalar thrust, Scalar torque)
     ResetWatchdog();
 }
 
-void SimpleThruster::setThrustLimits(Scalar positive, Scalar negative)
+void SimpleThruster::SetThrustLimits(Scalar positive, Scalar negative)
 {
     limits_.first = btClamped(positive, Scalar(0), Scalar(BT_LARGE_FLOAT));
     limits_.second = btClamped(btFabs(negative), Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
 
-Scalar SimpleThruster::getAngle() const
+Scalar SimpleThruster::GetAngle() const
 {
     return theta_;
 }
 
-Scalar SimpleThruster::getThrustSetpoint() const
+Scalar SimpleThruster::GetThrustSetpoint() const
 {
     return sThrust_;
 }
 
-Scalar SimpleThruster::getThrust() const
+Scalar SimpleThruster::GetThrust() const
 {
     return thrust_;
 }
 
-Scalar SimpleThruster::getTorque() const
+Scalar SimpleThruster::GetTorque() const
 {
     return torque_;
 }
@@ -110,11 +110,11 @@ void SimpleThruster::Update(Scalar dt)
         theta_ += omega * dt; //Just for animation
     
         //Get transforms
-        Transform solidTrans = attach_->getCGTransform();
-        Transform thrustTrans = attach_->getOTransform() * o2a_;
+        Transform solidTrans = attach_->GetCgTransform();
+        Transform thrustTrans = attach_->GetOTransform() * o2a_;
         
         //Calculate thrust
-        Ocean* ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();
+        Ocean* ocn = SimulationApp::GetApp()->GetSimulationManager()->GetOcean();
         if(ocn != nullptr && ocn->IsInsideFluid(thrustTrans.getOrigin()))
         {
             thrust_ = sThrust_;
@@ -139,7 +139,7 @@ std::vector<Renderable> SimpleThruster::Render()
 {
     Transform thrustTrans = Transform::getIdentity();
     if(attach_ != nullptr)
-        thrustTrans = attach_->getOTransform() * o2a_;
+        thrustTrans = attach_->GetOTransform() * o2a_;
     else
         LinkActuator::Render();
     
@@ -150,15 +150,15 @@ std::vector<Renderable> SimpleThruster::Render()
     std::vector<Renderable> items(0);
     Renderable item;
     item.type = RenderableType::SOLID;
-    item.materialName = propeller_->getMaterial().name;
-    item.objectId = propeller_->getGraphicalObject();
-    item.lookId = dm_ == DisplayMode::GRAPHICAL ? propeller_->getLook() : -1;
+    item.materialName = propeller_->GetMaterial().name;
+    item.objectId = propeller_->GetGraphicalObject();
+    item.lookId = dm_ == DisplayMode::GRAPHICAL ? propeller_->GetLook() : -1;
 	item.model = glMatrixFromTransform(thrustTrans);
     items.push_back(item);
     
     item.type = RenderableType::ACTUATOR_LINES;
     item.data = std::make_shared<std::vector<glm::vec3>>();
-    auto points = item.getDataAsPoints();
+    auto points = item.GetDataAsPoints();
     points->push_back(glm::vec3(0,0,0));
     points->push_back(glm::vec3(0.1f*thrust_,0,0));
     items.push_back(item);
@@ -168,12 +168,12 @@ std::vector<Renderable> SimpleThruster::Render()
 
 void SimpleThruster::WatchdogTimeout()
 {
-    setSetpoint(Scalar(0), Scalar(0));
+    SetSetpoint(Scalar(0), Scalar(0));
 }
 
 // Statics
 
-ConstructInfo SimpleThruster::getConstructInfo()
+ConstructInfo SimpleThruster::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -246,7 +246,7 @@ std::unique_ptr<SimpleThruster> SimpleThruster::Construct(const std::string& uni
         meshScale, I4(), materialName, lookName);
         
     std::unique_ptr<SimpleThruster> actuator = std::make_unique<SimpleThruster>(uniqueName, std::move(mesh), right, inverted);
-    actuator->setThrustLimits(maxPositiveThrust, maxNegativeThrust);
+    actuator->SetThrustLimits(maxPositiveThrust, maxNegativeThrust);
 
     return actuator;
 }

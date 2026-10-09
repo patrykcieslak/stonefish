@@ -103,10 +103,10 @@ namespace sf
         void Switch(bool on);
 
 		//! A method returning actuator frame in the world frame.
-		Transform getActuatorFrame() const;
+		Transform GetActuatorFrame() const;
 		
         //! A method returning type of link actuator.
-        LinkActuatorType getLinkActuatorType() const override;
+        LinkActuatorType GetLinkActuatorType() const override;
         
     private:
         void InitGraphics();

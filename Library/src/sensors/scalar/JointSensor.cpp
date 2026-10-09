@@ -38,35 +38,35 @@ JointSensor::JointSensor(const std::string& uniqueName, Scalar frequency, int hi
     j_ = nullptr;
 }
 
-SensorType JointSensor::getType() const
+SensorType JointSensor::GetType() const
 {
     return SensorType::JOINT;
 }
 
-Transform JointSensor::getSensorFrame() const
+Transform JointSensor::GetSensorFrame() const
 {
     return I4();
 }
 
-void JointSensor::getSensorVelocity(Vector3& linear, Vector3& angular) const
+void JointSensor::GetSensorVelocity(Vector3& linear, Vector3& angular) const
 {
     linear = V0();
     angular = V0();
 }
 
-std::string JointSensor::getJointName() const
+std::string JointSensor::GetJointName() const
 {
     if(j_ != nullptr)
-        return j_->getName();
+        return j_->GetName();
     else if(fe_ != nullptr)
-        return fe_->getJointName(jId_);
+        return fe_->GetJointName(jId_);
     else
         return std::string("");
 }
 
 void JointSensor::AttachToJoint(FeatherstoneEntity* multibody, size_t jointId)
 {
-    if(multibody != nullptr && jointId < multibody->getNumOfJoints())
+    if(multibody != nullptr && jointId < multibody->GetNumOfJoints())
     {
         fe_ = multibody;
         jId_ = jointId;

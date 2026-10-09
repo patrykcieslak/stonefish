@@ -101,22 +101,22 @@ namespace sf
         glm::vec3 GetUpDirection() const;
         
         //! A method returning the type of the view.
-        ViewType getType() const override;
+        ViewType GetType() const override;
         
         //! A method to set a pointer to a camera sensor.
         /*!
          \param cam a pointer to a camera sensor
          */
-        void setCamera(EventBasedCamera* cam);
+        void SetCamera(EventBasedCamera* cam);
 
         //! A method to set the noise properties of the event based camera.
         /*!
          \param sigmaC the standard deviation of the contrast threshold
          */
-        void setNoise(glm::vec2 sigmaC);
+        void SetNoise(glm::vec2 sigmaC);
          
         //! A method that informs if the camera needs update.
-        bool needsUpdate();
+        bool NeedsUpdate();
 
         //! A static method to load shaders.
         static void Init();

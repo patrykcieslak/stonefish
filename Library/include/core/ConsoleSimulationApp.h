@@ -57,7 +57,7 @@ namespace sf
         void ResumeSimulation() override;
         
         //! A method informing if the application is graphical.
-        bool hasGraphics();
+        bool HasGraphics();
         
     protected:
         void Init();

@@ -55,7 +55,7 @@ namespace sf
          \param altitudeMin the minimum measured altitude (blanking) [m]
          \param altitudeMax the maximum measured altitude [m]
          */
-        void setRange(const Vector3& velocityMax, Scalar altitudeMin, Scalar altitudeMax);
+        void SetRange(const Vector3& velocityMax, Scalar altitudeMin, Scalar altitudeMax);
         
         //! A method used to set the water mass ping parameters.
         /*!
@@ -63,7 +63,7 @@ namespace sf
          \param nearBoundary the distance from the sensor to the near layer boundary [m]
          \param farBoundary the distance from the sensor to the far layer boundary [m]
          */
-        void setWaterLayer(Scalar minSize, Scalar nearBoundary, Scalar farBoundary);
+        void SetWaterLayer(Scalar minSize, Scalar nearBoundary, Scalar farBoundary);
 
         //! A method used to set the noise characteristics of the sensor.
         /*!
@@ -73,7 +73,7 @@ namespace sf
          \param waterVelPercent multiplicative water velocity mesurement noise factor as percent of water velocity
          \param waterVelStdDev standard deviation of the water velocity measurement noise
          */
-        void setNoise(Scalar velPercent, Scalar velStdDev, Scalar altitudeStdDev, Scalar waterVelPercent, Scalar waterVelStdDev);
+        void SetNoise(Scalar velPercent, Scalar velStdDev, Scalar altitudeStdDev, Scalar waterVelPercent, Scalar waterVelStdDev);
         
         //! A method that returns the measurement ranges of the DVL.
         /*!
@@ -81,19 +81,19 @@ namespace sf
          \param altitudeMin the output variable to store the minimum measured altitude (blanking) [m]
          \param altitudeMax the output variable to store the maximum measured altitude [m]
          */
-        void getRange(Vector3& velocityMax, Scalar& altitudeMin, Scalar& altitudeMax) const;
+        void GetRange(Vector3& velocityMax, Scalar& altitudeMin, Scalar& altitudeMax) const;
 
         //! A method that return the angle between the beams and the vertical axis.
-        Scalar getBeamAngle() const;
+        Scalar GetBeamAngle() const;
 
         //! A method rendering the sensor representation.
         std::vector<Renderable> Render();
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const override;
+        ScalarSensorType GetScalarSensorType() const override;
 
         //! A method returning the construction info for the sensor.
-        static ConstructInfo getConstructInfo();
+        static ConstructInfo GetConstructInfo();
 
         //! A method constructing the sensor based on info structure.
         /*!

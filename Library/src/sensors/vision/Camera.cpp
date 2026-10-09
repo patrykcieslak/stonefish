@@ -35,21 +35,21 @@ Camera::Camera(const std::string& uniqueName, unsigned int resolutionX, unsigned
     fovH_ = horizFOVDeg <= Scalar(0) ? Scalar(90) : (horizFOVDeg > Scalar(360) ? Scalar(360) : horizFOVDeg);
     resX_ = resolutionX > 0 ? (resolutionX + resolutionX % 2) : 2;
     resY_ = resolutionY > 0 ? (resolutionY + resolutionY % 2) : 2;
-    setDisplayOnScreen(false, 0, 0, 1.f);
+    SetDisplayOnScreen(false, 0, 0, 1.f);
 }
 
-Scalar Camera::getHorizontalFOV() const
+Scalar Camera::GetHorizontalFov() const
 {
     return fovH_;
 }
 
-void Camera::getResolution(unsigned int& x, unsigned int& y) const
+void Camera::GetResolution(unsigned int& x, unsigned int& y) const
 {
     x = resX_;
     y = resY_;
 }
 
-void Camera::setDisplayOnScreen(bool display, unsigned int x, unsigned int y, float scale)
+void Camera::SetDisplayOnScreen(bool display, unsigned int x, unsigned int y, float scale)
 {
     screen_ = display;
     screenX_ = x;
@@ -57,7 +57,7 @@ void Camera::setDisplayOnScreen(bool display, unsigned int x, unsigned int y, fl
     screenScale_ = scale;
 }
 
-bool Camera::getDisplayOnScreen(unsigned int& x, unsigned int& y, float& scale) const
+bool Camera::GetDisplayOnScreen(unsigned int& x, unsigned int& y, float& scale) const
 {
     x = screenX_;
     y = screenY_;
@@ -67,7 +67,7 @@ bool Camera::getDisplayOnScreen(unsigned int& x, unsigned int& y, float& scale) 
 
 void Camera::UpdateTransform()
 {
-    Transform cameraTransform_ = getSensorFrame();
+    Transform cameraTransform_ = GetSensorFrame();
     Vector3 eyePosition = cameraTransform_.getOrigin(); //O
     Vector3 direction = cameraTransform_.getBasis().getColumn(2); //Z
     Vector3 cameraUp = -cameraTransform_.getBasis().getColumn(1); //-Y
@@ -77,13 +77,13 @@ void Camera::UpdateTransform()
 std::vector<Renderable> Camera::Render()
 {
     std::vector<Renderable> items = Sensor::Render();
-    if(isRenderable())
+    if(IsRenderable())
     {
         Renderable item;
-        item.model = glMatrixFromTransform(getSensorFrame());
+        item.model = glMatrixFromTransform(GetSensorFrame());
         item.type = RenderableType::SENSOR_LINES;
         item.data = std::make_shared<std::vector<glm::vec3>>();
-        auto points = item.getDataAsPoints();
+        auto points = item.GetDataAsPoints();
         
         //Create camera dummy
         GLfloat iconSize = 0.5f;

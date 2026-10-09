@@ -81,10 +81,10 @@ namespace sf
         std::vector<Renderable> Render();
         
         //! A method returning the activity status.
-        bool isActive();
+        bool IsActive();
         
         //! A method returning the force field type.
-        ForcefieldType getForcefieldType();
+        ForcefieldType GetForcefieldType();
         
     private:
         bool active_;

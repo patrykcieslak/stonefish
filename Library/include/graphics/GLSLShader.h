@@ -250,10 +250,10 @@ namespace sf
         bool BindShaderStorageBlock(const std::string& name, GLuint bindingPoint);
 
         //! A method to check if the shader is valid.
-        bool isValid();
+        bool IsValid();
         
         //! A method used to get the OpenGL program handle
-        GLuint getProgramHandle();
+        GLuint GetProgramHandle();
         
         //! A static method to init shader environment.
         static bool Init();

@@ -45,37 +45,37 @@ OpticalFlowCamera::OpticalFlowCamera(const std::string& uniqueName, unsigned int
     glCamera_ = nullptr;
 }
 
-void OpticalFlowCamera::setNoise(float velocityXStdDev, float velocityYStdDev)
+void OpticalFlowCamera::SetNoise(float velocityXStdDev, float velocityYStdDev)
 {
     noiseStdDev_.x = velocityXStdDev > 0.f ? velocityXStdDev : 0.f;
     noiseStdDev_.y = velocityYStdDev > 0.f ? velocityYStdDev : 0.f;
     if(glCamera_ != nullptr)
-        glCamera_->setNoise(noiseStdDev_);
+        glCamera_->SetNoise(noiseStdDev_);
 }
 
-void OpticalFlowCamera::setDisplaySettings(GLfloat maxVelocity)
+void OpticalFlowCamera::SetDisplaySettings(GLfloat maxVelocity)
 {
     displayMaxVelocity_ = glm::abs(maxVelocity);
     if(glCamera_ != nullptr)
-        glCamera_->setMaxVelocity(displayMaxVelocity_);
+        glCamera_->SetMaxVelocity(displayMaxVelocity_);
 }
 
-void* OpticalFlowCamera::getImageDataPointer(unsigned int index)
+void* OpticalFlowCamera::GetImageDataPointer(unsigned int index)
 {
     return flowData_;
 }
 
-GLubyte* OpticalFlowCamera::getDisplayDataPointer()
+GLubyte* OpticalFlowCamera::GetDisplayDataPointer()
 {
     return displayData_.data();
 }
 
-VisionSensorType OpticalFlowCamera::getVisionSensorType() const
+VisionSensorType OpticalFlowCamera::GetVisionSensorType() const
 {
     return VisionSensorType::OPTICAL_FLOW_CAMERA;
 }
 
-OpenGLView* OpticalFlowCamera::getOpenGLView() const
+OpenGLView* OpticalFlowCamera::GetOpenGlView() const
 {
     return glCamera_;
 }
@@ -91,17 +91,17 @@ void OpticalFlowCamera::InitGraphics(bool& seesParticles)
 
     // Set up camera
     glCamera_ = glCamera.get();
-    glCamera_->setNoise(noiseStdDev_);
-    glCamera_->setMaxVelocity(displayMaxVelocity_);
-    glCamera_->setCamera(this);
+    glCamera_->SetNoise(noiseStdDev_);
+    glCamera_->SetMaxVelocity(displayMaxVelocity_);
+    glCamera_->SetCamera(this);
     UpdateTransform();
     glCamera_->UpdateTransform();
     InternalUpdate(0);
 
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glCamera));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->AddView(std::move(glCamera));
 
     unsigned int w, h;
-    getResolution(w, h);
+    GetResolution(w, h);
     displayData_.resize(w*h*3);
 }
 
@@ -125,7 +125,7 @@ void OpticalFlowCamera::NewDataReady(void* data, unsigned int index)
         if(index == 0)
         {
             unsigned int w, h;
-            getResolution(w, h);
+            GetResolution(w, h);
             memcpy(displayData_.data(), data, w*h*3);
         }
         else
@@ -144,7 +144,7 @@ void OpticalFlowCamera::InternalUpdate(Scalar dt)
 
 // Statics
 
-ConstructInfo OpticalFlowCamera::getConstructInfo()
+ConstructInfo OpticalFlowCamera::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -212,12 +212,12 @@ std::unique_ptr<OpticalFlowCamera> OpticalFlowCamera::Construct(const std::strin
     if (value.valid)
         velY = std::get<Scalar>(value.value);
 
-    sensor->setNoise(velX, velY);
+    sensor->SetNoise(velX, velY);
 
     // Display
     value = info.nodes.at("display").attributes.at("velocity_max");
     if (value.valid)
-        sensor->setDisplaySettings(std::get<Scalar>(value.value));
+        sensor->SetDisplaySettings(std::get<Scalar>(value.value));
 
     return sensor;
 }

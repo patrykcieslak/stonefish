@@ -47,17 +47,17 @@ ThermalCamera::ThermalCamera(const std::string& uniqueName, unsigned int resolut
     glCamera_ = nullptr;
 }
 
-void ThermalCamera::setNoise(GLfloat tempStdDev)
+void ThermalCamera::SetNoise(GLfloat tempStdDev)
 {
     if(tempStdDev >= 0.f && tempStdDev != noiseStdDev_)
     {
         noiseStdDev_ = tempStdDev;
         if(glCamera_ != nullptr)
-            glCamera_->setNoise(noiseStdDev_);
+            glCamera_->SetNoise(noiseStdDev_);
     }
 }
 
-void ThermalCamera:: setDisplaySettings(ColorMap cm, Scalar minTemp, Scalar maxTemp)
+void ThermalCamera:: SetDisplaySettings(ColorMap cm, Scalar minTemp, Scalar maxTemp)
 {
     colorMap_ = cm;
 
@@ -71,27 +71,27 @@ void ThermalCamera:: setDisplaySettings(ColorMap cm, Scalar minTemp, Scalar maxT
         
     if(glCamera_ != nullptr)
     {
-        glCamera_->setColorMap(colorMap_);
-        glCamera_->setDisplayRange(displayRange_);
+        glCamera_->SetColorMap(colorMap_);
+        glCamera_->SetDisplayRange(displayRange_);
     }
 }
 
-void* ThermalCamera::getImageDataPointer(unsigned int index)
+void* ThermalCamera::GetImageDataPointer(unsigned int index)
 {
     return temperatureData_;
 }
 
-GLubyte* ThermalCamera::getDisplayDataPointer()
+GLubyte* ThermalCamera::GetDisplayDataPointer()
 {
     return displayData_.data();
 }
 
-VisionSensorType ThermalCamera::getVisionSensorType() const
+VisionSensorType ThermalCamera::GetVisionSensorType() const
 {
     return VisionSensorType::THERMAL_CAMERA;
 }
 
-OpenGLView* ThermalCamera::getOpenGLView() const
+OpenGLView* ThermalCamera::GetOpenGlView() const
 {
     return glCamera_;
 }
@@ -107,18 +107,18 @@ void ThermalCamera::InitGraphics(bool& seesParticles)
 
     // Set up camera
     glCamera_ = glCamera.get();
-    glCamera_->setNoise(noiseStdDev_);
-    glCamera_->setColorMap(colorMap_);
-    glCamera_->setDisplayRange(displayRange_);
-    glCamera_->setCamera(this);
+    glCamera_->SetNoise(noiseStdDev_);
+    glCamera_->SetColorMap(colorMap_);
+    glCamera_->SetDisplayRange(displayRange_);
+    glCamera_->SetCamera(this);
     UpdateTransform();
     glCamera_->UpdateTransform();
     InternalUpdate(0);
 
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glCamera));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->AddView(std::move(glCamera));
 
     unsigned int w, h;
-    getResolution(w, h);
+    GetResolution(w, h);
     displayData_.resize(w*h*3);
 }
 
@@ -142,7 +142,7 @@ void ThermalCamera::NewDataReady(void* data, unsigned int index)
         if(index == 0)
         {
             unsigned int w, h;
-            getResolution(w, h);
+            GetResolution(w, h);
             memcpy(displayData_.data(), data, w*h*3);
         }
         else
@@ -161,7 +161,7 @@ void ThermalCamera::InternalUpdate(Scalar dt)
 
 // Static
 
-ConstructInfo ThermalCamera::getConstructInfo()
+ConstructInfo ThermalCamera::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -226,7 +226,7 @@ std::unique_ptr<ThermalCamera> ThermalCamera::Construct(const std::string& uniqu
     // Noise
     value = info.nodes.at("noise").attributes.at("temperature");
     if (value.valid)
-        sensor->setNoise(std::get<Scalar>(value.value));
+        sensor->SetNoise(std::get<Scalar>(value.value));
 
     // Display
     ColorMap cMap (ColorMap::JET);
@@ -243,7 +243,7 @@ std::unique_ptr<ThermalCamera> ThermalCamera::Construct(const std::string& uniqu
     if (value.valid)
         temperatureMax = std::get<Scalar>(value.value);
 
-    sensor->setDisplaySettings(cMap, temperatureMin, temperatureMax);
+    sensor->SetDisplaySettings(cMap, temperatureMin, temperatureMax);
 
     return sensor;
 }

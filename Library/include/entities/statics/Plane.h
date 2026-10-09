@@ -48,9 +48,9 @@ namespace sf
          \param min a point located at the minimum coordinate corner
          \param max a point located at the maximum coordinate corner
          */
-        void getAABB(Vector3& min, Vector3& max);
+        void GetAabb(Vector3& min, Vector3& max);
         
         //! A method returning the type of the static entity.
-        StaticEntityType getStaticType();
+        StaticEntityType GetStaticType();
     };
 }

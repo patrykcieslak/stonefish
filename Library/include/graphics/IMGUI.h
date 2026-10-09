@@ -93,16 +93,16 @@ namespace sf
         void End();
         
         //! A method that informs if any widget is currently active.
-        bool isAnyActive();
+        bool IsAnyActive();
         
         //! A method returning the width of the GUI.
-        int getWindowHeight();
+        int GetWindowHeight();
         
         //! A method returning the height of the GUI.
-        int getWindowWidth();
+        int GetWindowWidth();
         
         //! A method returning the id of a background texture.
-        GLuint getTranslucentTexture();
+        GLuint GetTranslucentTexture();
         
         //! A method servicing the mouse down event.
         /*!
@@ -263,18 +263,18 @@ namespace sf
         bool DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sensX, unsigned short dimX, ScalarSensor* sensY, unsigned short dimY, const std::string& title);
         
     private:
-        Uid getHot();
-        Uid getActive();
-        void setHot(Uid newHot);
-        void setActive(Uid newActive);
-        bool isHot(Uid id);
-        bool isActive(Uid id);
-        void clearActive();
-        void clearHot();
+        Uid GetHot();
+        Uid GetActive();
+        void SetHot(Uid newHot);
+        void SetActive(Uid newActive);
+        bool IsHot(Uid id);
+        bool IsActive(Uid id);
+        void ClearActive();
+        void ClearHot();
         bool MouseInRect(int x, int y, int w, int h);
         bool MouseIsDown(bool leftButton);
-        int getMouseX();
-        int getMouseY();
+        int GetMouseX();
+        int GetMouseY();
         
         void DrawPlainText(GLfloat x, GLfloat y, glm::vec4 color, const std::string& text, GLfloat scale = 1.f);
         GLfloat PlainTextLength(const std::string& text);

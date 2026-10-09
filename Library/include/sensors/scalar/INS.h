@@ -75,27 +75,27 @@ namespace sf
         /*!
          \param T a transformation from the device origin to the output frame
          */
-        void setOutputFrame(const Transform& T);
+        void SetOutputFrame(const Transform& T);
 
         //! A method used to set the range of the sensor.
         /*!
          \param angularVelocityMax the maximum measured angular velocity for each axis [rad s^-1]
          \param linearAccelerationMax the maximum measured linear acceleration for each axis [m s^-2]
          */
-        void setRange(Vector3 angularVelocityMax, Vector3 linearAccelerationMax);
+        void SetRange(Vector3 angularVelocityMax, Vector3 linearAccelerationMax);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
          \param angularVelocityStdDev standard deviation of the angular velocity measurement noise for each axis
          \param linearAccelerationStdDev the standard deviation of the acceleration measurement for each axis
          */
-        void setNoise(Vector3 angularVelocityStdDev, Vector3 linearAccelerationStdDev);
+        void SetNoise(Vector3 angularVelocityStdDev, Vector3 linearAccelerationStdDev);
         
         //! A method rendering the sensor representation.
         std::vector<Renderable> Render();
 
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const override;
+        ScalarSensorType GetScalarSensorType() const override;
 
         private:
             Scalar latitude_, longitude_, altitude_;

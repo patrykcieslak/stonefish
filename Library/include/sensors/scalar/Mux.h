@@ -58,13 +58,13 @@ namespace sf
          \param index an index of the mux channel
          \return a pointer to a mux component
          */
-        MuxComponent* getComponent(size_t index);
+        MuxComponent* GetComponent(size_t index);
         
         //! A method returning the last sample.
-        std::vector<Scalar> getLastSample();
+        std::vector<Scalar> GetLastSample();
         
         //! A method returning a number of channels of the mux.
-        size_t getNumOfComponents() const;
+        size_t GetNumOfComponents() const;
         
     private:
         std::vector<MuxComponent> components_;

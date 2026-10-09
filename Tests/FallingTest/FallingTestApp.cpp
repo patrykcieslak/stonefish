@@ -40,5 +40,5 @@ void FallingTestApp::DoHUD()
     sf::Uid slider;
     slider.owner = 10;
     slider.item = 0;
-    getSimulationManager()->setStepsPerSecond(getGUI()->DoSlider(slider, 180.f, 10.f, 120.f, 100.0, 2000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
+    GetSimulationManager()->SetStepsPerSecond(GetGui()->DoSlider(slider, 180.f, 10.f, 120.f, 100.0, 2000.0, GetSimulationManager()->GetStepsPerSecond(), "Steps/s"));
 }

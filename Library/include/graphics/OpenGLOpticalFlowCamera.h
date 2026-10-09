@@ -116,29 +116,29 @@ namespace sf
         void Update();
         
         //! A method that informs if the camera needs update.
-        bool needsUpdate();
+        bool NeedsUpdate();
         
         //! A method to set a pointer to a camera sensor.
         /*!
          \param cam a pointer to a camera sensor
          \param index the id of the OpenGL depth camera
          */
-        void setCamera(Camera* cam, unsigned int index = 0);
+        void SetCamera(Camera* cam, unsigned int index = 0);
         
         //! A method to set the noise properties of the optical flow camera.
         /*!
          \param velStdDev the standard deviation of the pixel velocity measurement
          */
-        void setNoise(glm::vec2 velStdDev);
+        void SetNoise(glm::vec2 velStdDev);
 
         //! A method to set the maximum velocity for the color mapped image.
         /*!
          \param v velocity magnitude
         */
-        void setMaxVelocity(GLfloat v);
+        void SetMaxVelocity(GLfloat v);
 
         //! A method returning the type of the view.
-        ViewType getType() const override;
+        ViewType GetType() const override;
         
         //! A static method to load shaders.
         static void Init();

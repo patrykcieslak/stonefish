@@ -37,7 +37,7 @@ public:
 
     void InternalUpdate(Scalar dt) override;
 
-    ScalarSensorType getScalarSensorType() const override;
+    ScalarSensorType GetScalarSensorType() const override;
 };
 
 extern "C" 

@@ -77,13 +77,13 @@ namespace sf
         void AddToSimulation(SimulationManager* sm, const Transform& origin);
 
         //! A method returning the pose of the robot in the world frame.
-        Transform getTransform() const;
+        Transform GetTransform() const;
 
         //! A method returning type of algorithm used for the robot.
-        RobotType getType() const;
+        RobotType GetType() const;
         
     private:
-        Joint* getJoint(const std::string& name);
+        Joint* GetJoint(const std::string& name);
         std::vector<Joint*> joints_;
         std::vector<std::pair<JointSensor*, std::string>> jsAttachments_;
         std::vector<std::pair<JointActuator*, std::string>> jaAttachments_;

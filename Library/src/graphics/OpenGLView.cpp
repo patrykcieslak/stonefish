@@ -43,27 +43,27 @@ OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height)
     ExtractFrustumFromVP(viewUBOData_.frustum, viewUBOData_.VP);
 }
 
-GLuint OpenGLView::getRenderFBO() const
+GLuint OpenGLView::GetRenderFbo() const
 {
     return renderFBO_;
 }
 
-const ViewUBO* OpenGLView::getViewUBOData() const
+const ViewUBO* OpenGLView::GetViewUboData() const
 {
 	return &viewUBOData_;
 }
 
-void OpenGLView::setEnabled(bool en)
+void OpenGLView::SetEnabled(bool en)
 {
     enabled_ = en;
 }
 
-bool OpenGLView::isEnabled()
+bool OpenGLView::IsEnabled()
 {
     return enabled_;
 }
 
-bool OpenGLView::isContinuous()
+bool OpenGLView::IsContinuous()
 {
 	return continuous_;
 }

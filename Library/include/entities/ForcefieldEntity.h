@@ -60,16 +60,16 @@ namespace sf
          \param min a point located at the minimum coordinate corner
          \param max a point located at the maximum coordinate corner
          */
-        virtual void getAABB(Vector3& min, Vector3& max);
+        virtual void GetAabb(Vector3& min, Vector3& max);
         
         //! A method returning the pair caching object for the force field.
-        btPairCachingGhostObject* getGhost();
+        btPairCachingGhostObject* GetGhost();
         
         //! A method returning the type of the force field.
-        virtual ForcefieldType getForcefieldType() = 0;
+        virtual ForcefieldType GetForcefieldType() = 0;
         
         //! A method returning the type of the entity.
-        EntityType getType() const;
+        EntityType GetType() const;
         
     protected:
         std::unique_ptr<btPairCachingGhostObject> ghost_;

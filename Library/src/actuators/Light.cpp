@@ -40,7 +40,7 @@ namespace sf
 Light::Light(const std::string& uniqueName, Scalar radius, Color color, Scalar lum) 
 	: LinkActuator(uniqueName), attach2_(nullptr), attach3_(nullptr), c_(color), coneAngle_(0), glLight_(nullptr)
 {
-    if(!SimulationApp::getApp()->hasGraphics())
+    if(!SimulationApp::GetApp()->HasGraphics())
         cCritical("Not possible to use lights in console simulation! Use graphical simulation if possible.");
     
 	R_ = radius < Scalar(0.01) ? Scalar(0.01) : radius;
@@ -53,19 +53,19 @@ Light::Light(const std::string& uniqueName, Scalar radius, Scalar coneAngleDeg, 
     coneAngle_ = coneAngleDeg > Scalar(0) ? coneAngleDeg : Scalar(45);
 }
     
-LinkActuatorType Light::getLinkActuatorType() const
+LinkActuatorType Light::GetLinkActuatorType() const
 {
     return LinkActuatorType::LIGHT;
 }
 
-Transform Light::getActuatorFrame() const
+Transform Light::GetActuatorFrame() const
 {
 	if(attach_ != nullptr)
-        return attach_->getOTransform() * o2a_; //Solid
+        return attach_->GetOTransform() * o2a_; //Solid
     else if(attach2_ != nullptr)
-		return attach2_->getTransform() * o2a_; //Static
+		return attach2_->GetTransform() * o2a_; //Static
 	else if(attach3_ != nullptr)
-        return attach3_->getOTransform() * o2a_; //Animated
+        return attach3_->GetOTransform() * o2a_; //Animated
     else
         return o2a_;
 }
@@ -131,7 +131,7 @@ void Light::InitGraphics()
     glLight_->UpdateTransform();
     glLight_->SwitchOn();
 
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->AddLight(std::move(light));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->AddLight(std::move(light));
 }
     
 void Light::Update(Scalar dt)
@@ -140,7 +140,7 @@ void Light::Update(Scalar dt)
 
 void Light::UpdateTransform()
 {
-    Transform lightTransform = getActuatorFrame();
+    Transform lightTransform = GetActuatorFrame();
     Vector3 pos = lightTransform.getOrigin();
     glm::vec3 glPos((GLfloat)pos.x(), (GLfloat)pos.y(), (GLfloat)pos.z());
     glLight_->UpdatePosition(glPos);
@@ -158,10 +158,10 @@ std::vector<Renderable> Light::Render()
     std::vector<Renderable> items(0);
     
     Renderable item;
-    item.model = glMatrixFromTransform(getActuatorFrame());
+    item.model = glMatrixFromTransform(GetActuatorFrame());
     item.type = RenderableType::ACTUATOR_LINES;
     item.data = std::make_shared<std::vector<glm::vec3>>();
-    auto points = item.getDataAsPoints();
+    auto points = item.GetDataAsPoints();
         
     GLfloat iconSize = 1.f;
     unsigned int div = 24;

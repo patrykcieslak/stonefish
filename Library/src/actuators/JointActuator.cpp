@@ -38,19 +38,19 @@ JointActuator::JointActuator(const std::string& uniqueName) : Actuator(uniqueNam
     j_ = nullptr;
 }
 
-const std::string& JointActuator::getJointName() const
+const std::string& JointActuator::GetJointName() const
 {
     if(fe_ != nullptr)
-        return fe_->getJointName(jId_);
+        return fe_->GetJointName(jId_);
     else if(j_ != nullptr)
-        return j_->getName();
+        return j_->GetName();
     else
-        throw std::runtime_error("Actuator '" + getName() + "' not connected to any joint!");
+        throw std::runtime_error("Actuator '" + GetName() + "' not connected to any joint!");
 }
 
 void JointActuator::AttachToJoint(FeatherstoneEntity* multibody, unsigned int jointId)
 {
-    if(multibody != nullptr && jointId < multibody->getNumOfJoints())
+    if(multibody != nullptr && jointId < multibody->GetNumOfJoints())
     {
         fe_ = multibody;
         jId_ = jointId;
@@ -63,7 +63,7 @@ void JointActuator::AttachToJoint(Joint* joint)
         j_ = joint;
 }
 
-ActuatorType JointActuator::getType() const
+ActuatorType JointActuator::GetType() const
 {
     return ActuatorType::JOINT;
 }

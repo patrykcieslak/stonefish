@@ -39,7 +39,7 @@ LinkSensorPlugin::~LinkSensorPlugin()
     printf("Sensor plugin destroyed!\n");
 }
 
-ScalarSensorType LinkSensorPlugin::getScalarSensorType() const
+ScalarSensorType LinkSensorPlugin::GetScalarSensorType() const
 {
     return ScalarSensorType::PLUGIN;
 }

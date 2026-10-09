@@ -58,39 +58,39 @@ Propeller::Propeller(const std::string& uniqueName, std::unique_ptr<SolidEntity>
     omegaLim_ = maxRPM/Scalar(60) * Scalar(2) * M_PI; //In rad/s
 }
 
-LinkActuatorType Propeller::getLinkActuatorType() const
+LinkActuatorType Propeller::GetLinkActuatorType() const
 {
     return LinkActuatorType::PROPELLER;
 }
 
-void Propeller::setSetpoint(Scalar s)
+void Propeller::SetSetpoint(Scalar s)
 {
     if (inv_) s *= Scalar(-1);
     setpoint_ = s < Scalar(-1) ? Scalar(-1) : (s > Scalar(1) ? Scalar(1) : s);
     ResetWatchdog();
 }
 
-Scalar Propeller::getSetpoint() const
+Scalar Propeller::GetSetpoint() const
 {
     return inv_ ? -setpoint_ : setpoint_;
 }
 
-Scalar Propeller::getAngle() const
+Scalar Propeller::GetAngle() const
 {
     return theta_;
 }
 
-Scalar Propeller::getOmega() const
+Scalar Propeller::GetOmega() const
 {
     return omega_;
 }
 
-Scalar Propeller::getThrust() const
+Scalar Propeller::GetThrust() const
 {
     return thrust_;
 }
 
-Scalar Propeller::getTorque() const
+Scalar Propeller::GetTorque() const
 {
     return torque_;
 }
@@ -112,12 +112,12 @@ void Propeller::Update(Scalar dt)
     if(attach_ != NULL)
     {
         //Get transforms
-        Transform solidTrans = attach_->getCGTransform();
-        Transform propTrans = attach_->getOTransform() * o2a_;
+        Transform solidTrans = attach_->GetCgTransform();
+        Transform propTrans = attach_->GetOTransform() * o2a_;
         Vector3 relPos = propTrans.getOrigin() - solidTrans.getOrigin();
-        Vector3 velocity = attach_->getLinearVelocityInLocalPoint(relPos);
+        Vector3 velocity = attach_->GetLinearVelocityInLocalPoint(relPos);
         
-        Atmosphere* atm = SimulationApp::getApp()->getSimulationManager()->getAtmosphere();
+        Atmosphere* atm = SimulationApp::GetApp()->GetSimulationManager()->GetAtmosphere();
         
         if(atm->IsInsideFluid(propTrans.getOrigin()))
         {
@@ -132,8 +132,8 @@ void Propeller::Update(Scalar dt)
             Scalar u = -propTrans.getBasis().getColumn(0).dot(atm->GetFluidVelocity(propTrans.getOrigin()) - velocity); //Incoming air velocity
             Scalar alpha(-0.095/0.8);
             //kT(J) = kT0 + alpha * J --> approximated with linear function
-            thrust_ = (RH_ ? Scalar(1) : Scalar(-1)) * atm->getGas().density * D_*D_*D_ * btFabs(n) * (D_*kT*n + alpha*u);
-            torque_ = -kQ0_ * atm->getGas().density * btFabs(n)*n * D_*D_*D_*D_*D_; //Torque is the loading of propeller due to drag
+            thrust_ = (RH_ ? Scalar(1) : Scalar(-1)) * atm->GetGas().density * D_*D_*D_ * btFabs(n) * (D_*kT*n + alpha*u);
+            torque_ = -kQ0_ * atm->GetGas().density * btFabs(n)*n * D_*D_*D_*D_*D_; //Torque is the loading of propeller due to drag
             
             //Apply forces and torques
             Vector3 thrustV(thrust_, 0, 0);
@@ -149,7 +149,7 @@ std::vector<Renderable> Propeller::Render()
 {
     Transform propTrans = Transform::getIdentity();
     if(attach_ != nullptr)
-        propTrans = attach_->getOTransform() * o2a_;
+        propTrans = attach_->GetOTransform() * o2a_;
     else
         LinkActuator::Render();
     
@@ -160,15 +160,15 @@ std::vector<Renderable> Propeller::Render()
     std::vector<Renderable> items(0);
     Renderable item;
     item.type = RenderableType::SOLID;
-    item.materialName = propeller_->getMaterial().name;
-    item.objectId = propeller_->getGraphicalObject();
-    item.lookId = dm_ == DisplayMode::GRAPHICAL ? propeller_->getLook() : -1;
+    item.materialName = propeller_->GetMaterial().name;
+    item.objectId = propeller_->GetGraphicalObject();
+    item.lookId = dm_ == DisplayMode::GRAPHICAL ? propeller_->GetLook() : -1;
 	item.model = glMatrixFromTransform(propTrans);
     items.push_back(item);
     
     item.type = RenderableType::ACTUATOR_LINES;
     item.data = std::make_shared<std::vector<glm::vec3>>();
-    auto points = item.getDataAsPoints();
+    auto points = item.GetDataAsPoints();
     points->push_back(glm::vec3(0,0,0));
     points->push_back(glm::vec3(0.1f*thrust_,0,0));
     items.push_back(item);
@@ -178,12 +178,12 @@ std::vector<Renderable> Propeller::Render()
     
 void Propeller::WatchdogTimeout()
 {
-    setSetpoint(Scalar(0));
+    SetSetpoint(Scalar(0));
 }
 
 // Statics
 
-ConstructInfo Propeller::getConstructInfo()
+ConstructInfo Propeller::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;

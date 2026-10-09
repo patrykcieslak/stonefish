@@ -65,10 +65,10 @@ void JointsTestManager::BuildScenario()
     CreateLook("green", sf::Color(0.5f,1.0f,0.4f), 0.5f);
     
     ////////OBJECTS
-    setSolverParams(0.25, 0.5, 0.25, 0.25, 0.0, -1.0, -1.0);
-    getAtmosphere()->SetSunPosition(0.0, 70.0);
-    static_cast<sf::GraphicalSimulationApp*>(sf::SimulationApp::getApp())->getTrackball()->MoveCenter(glm::vec3(1.f,3.f,0.f));
-    getNED()->Init(-10.0, -10.0, 0.0);
+    SetSolverParams(0.25, 0.5, 0.25, 0.25, 0.0, -1.0, -1.0);
+    GetAtmosphere()->SetSunPosition(0.0, 70.0);
+    static_cast<sf::GraphicalSimulationApp*>(sf::SimulationApp::GetApp())->GetTrackball()->MoveCenter(glm::vec3(1.f,3.f,0.f));
+    GetNed()->Init(-10.0, -10.0, 0.0);
     
     AddStaticEntity(std::make_unique<sf::Plane>("Floor", 1000.f, "Steel", "grid"), sf::I4());
     
@@ -165,15 +165,15 @@ void JointsTestManager::BuildScenario()
     robot->BuildKinematicStructure();
 
     std::unique_ptr<sf::Servo> srv1 = std::make_unique<sf::Servo>("Servo1", 1.0, 1.0, 1000.0);
-    srv1->setControlMode(sf::ServoControlMode::POSITION);
+    srv1->SetControlMode(sf::ServoControlMode::POSITION);
     robot->AddJointActuator(std::move(srv1), "joint1");
 
     std::unique_ptr<sf::Servo> srv2 = std::make_unique<sf::Servo>("Servo2", 1.0, 1.0, 1000.0);
-    srv2->setControlMode(sf::ServoControlMode::POSITION);
+    srv2->SetControlMode(sf::ServoControlMode::POSITION);
     robot->AddJointActuator(std::move(srv2), "joint2");
 
     std::unique_ptr<sf::Servo> srv3 = std::make_unique<sf::Servo>("Servo3", 1.0, 1.0, 1000.0);
-    srv3->setControlMode(sf::ServoControlMode::POSITION);
+    srv3->SetControlMode(sf::ServoControlMode::POSITION);
     robot->AddJointActuator(std::move(srv3), "joint3");
 
     robot->AddLinkActuator(std::make_unique<sf::SuctionCup>("Suction"), "Arm3", sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, 0.0)));

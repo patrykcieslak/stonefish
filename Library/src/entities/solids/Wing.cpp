@@ -116,7 +116,7 @@ Wing::Wing(const std::string& uniqueName, PhysicsSettings phy, Scalar baseChordL
     P_CB_ = Vector3(0,0,0);
 }
     
-SolidType Wing::getSolidType() const
+SolidType Wing::GetSolidType() const
 {
     return SolidType::WING;
 }
@@ -124,9 +124,9 @@ SolidType Wing::getSolidType() const
 std::unique_ptr<btCollisionShape> Wing::BuildCollisionShape()
 {
     std::unique_ptr<btConvexHullShape> convex = std::make_unique<btConvexHullShape>();
-    for(size_t i=0; i<phyMesh_->getNumOfVertices(); ++i)
+    for(size_t i=0; i<phyMesh_->GetNumOfVertices(); ++i)
     {
-        glm::vec3 pos = phyMesh_->getVertexPos(i);
+        glm::vec3 pos = phyMesh_->GetVertexPos(i);
         Vector3 v(pos.x, pos.y, pos.z);
         convex->addPoint(v);
     }

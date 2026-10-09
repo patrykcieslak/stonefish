@@ -115,8 +115,8 @@ void OpenGLOceanParticles::Draw(OpenGLView* view, OpenGLOcean* glOcn)
     renderShader->SetUniform("FC", view->GetLogDepthConstant());
     renderShader->SetUniform("eyePos", view->GetEyePosition());
     renderShader->SetUniform("viewDir", view->GetLookingDirection());
-    renderShader->SetUniform("cWater", glOcn->getLightAttenuation());
-    renderShader->SetUniform("bWater", glOcn->getLightScattering());
+    renderShader->SetUniform("cWater", glOcn->GetLightAttenuation());
+    renderShader->SetUniform("bWater", glOcn->GetLightScattering());
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBO_PARTICLE_POS, particlePosSSBO_);
     OpenGLState::BindTexture(TEX_MAT_ALBEDO, GL_TEXTURE_2D, flakeTexture);
     OpenGLState::EnableBlend();
@@ -152,7 +152,7 @@ void OpenGLOceanParticles::Init()
 {
     //Load shaders
 	std::vector<GLuint> precompiled;
-    precompiled.push_back(OpenGLAtmosphere::getAtmosphereAPI());
+    precompiled.push_back(OpenGLAtmosphere::GetAtmosphereApi());
     
 	std::vector<GLSLSource> sources;
     sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "oceanParticle.comp"));

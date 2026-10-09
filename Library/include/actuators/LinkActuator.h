@@ -61,16 +61,16 @@ namespace sf
         /*!
          \param origin a transformation from teh body origin to the actuator origin
          */
-        void setRelativeActuatorFrame(const Transform& origin);
+        void SetRelativeActuatorFrame(const Transform& origin);
         
         //! A method returning actuator frame in the world frame.
-        virtual Transform getActuatorFrame() const;
+        virtual Transform GetActuatorFrame() const;
 
         //! A method returning the type of the actuator.
-        ActuatorType getType() const override;
+        ActuatorType GetType() const override;
 
         //! A method returning type of link actuator.
-        virtual LinkActuatorType getLinkActuatorType() const = 0;
+        virtual LinkActuatorType GetLinkActuatorType() const = 0;
 
     protected:
         SolidEntity* attach_;

@@ -83,7 +83,7 @@ namespace sf
         virtual void SetupShader(LightUBO* ubo) = 0;
         
         //! A method returning the type of the light.
-        virtual LightType getType() const = 0;
+        virtual LightType GetType() const = 0;
         
         //! A method used to update position of light.
         /*!
@@ -101,25 +101,25 @@ namespace sf
         void SwitchOff();
         
         //! A method returning the color and intensity of the light.
-        glm::vec4 getColorLi();
+        glm::vec4 GetColorLi();
         
         //! A method returning the position of the light.
-        glm::vec3 getPosition();
+        glm::vec3 GetPosition();
 		
 		//! A method returning the radius of the light source.
-		GLfloat getSourceRadius();
+		GLfloat GetSourceRadius();
         
         //! A method returning the orientation of the light.
-        glm::quat getOrientation();
+        glm::quat GetOrientation();
 
         //! A method returning the model matrix of the light.
-        virtual glm::mat4 getTransform();
+        virtual glm::mat4 GetTransform();
 
         //! A method returning the light source object id.
-        int getSourceObject();
+        int GetSourceObject();
         
         //! A method informing if the light is active.
-        bool isActive();
+        bool IsActive();
         
         //! An operator used to sort lights by type.
         bool operator<(const OpenGLLight& l);

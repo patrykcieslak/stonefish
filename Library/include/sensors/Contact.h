@@ -102,7 +102,7 @@ namespace sf
         void MarkDataOld();
         
         //! A method to check if new data is available.
-        bool isNewDataAvailable() const;
+        bool IsNewDataAvailable() const;
         
         //! A method that implements rendering of the contact.
         std::vector<Renderable> Render();
@@ -111,19 +111,19 @@ namespace sf
         /*!
          \param mask an integer which defines the rendering style
          */
-        void setDisplayMask(int16_t mask);
+        void SetDisplayMask(int16_t mask);
         
         //! A method returning the sensor name.
-        const std::string& getName() const;
+        const std::string& GetName() const;
         
         //! A method returning a pointer to the first entity.
-        const Entity* getEntityA();
+        const Entity* GetEntityA();
         
         //! A method returning a pointer to the second entity.
-        const Entity* getEntityB();
+        const Entity* GetEntityB();
         
         //! A method returning the history of the contact.
-        const std::deque<ContactPoint>& getHistory();
+        const std::deque<ContactPoint>& GetHistory();
         
     private:
         std::string name_;

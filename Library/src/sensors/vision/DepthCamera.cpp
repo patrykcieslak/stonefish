@@ -45,32 +45,32 @@ DepthCamera::DepthCamera(const std::string& uniqueName, unsigned int resolutionX
     glCamera_ = nullptr;
 }
 
-void DepthCamera::setNoise(float depthStdDev)
+void DepthCamera::SetNoise(float depthStdDev)
 {
     if(depthStdDev >= 0.f && depthStdDev != noiseStdDev_)
     {
         noiseStdDev_ = depthStdDev;
         if(glCamera_ != nullptr)
-            glCamera_->setNoise(noiseStdDev_);
+            glCamera_->SetNoise(noiseStdDev_);
     }
 }
 
-void* DepthCamera::getImageDataPointer(unsigned int index)
+void* DepthCamera::GetImageDataPointer(unsigned int index)
 {
     return imageData_;
 }
 
-glm::vec2 DepthCamera::getDepthRange() const
+glm::vec2 DepthCamera::GetDepthRange() const
 {
     return depthRange_;
 }
     
-VisionSensorType DepthCamera::getVisionSensorType() const
+VisionSensorType DepthCamera::GetVisionSensorType() const
 {
     return VisionSensorType::DEPTH_CAMERA;
 }
 
-OpenGLView* DepthCamera::getOpenGLView() const
+OpenGLView* DepthCamera::GetOpenGlView() const
 {
     return glCamera_;
 }
@@ -88,13 +88,13 @@ void DepthCamera::InitGraphics(bool& seesParticles)
 
     // Set up camera
     glCamera_ = glCamera.get();
-    glCamera_->setNoise(noiseStdDev_);
-    glCamera_->setCamera(this);
+    glCamera_->SetNoise(noiseStdDev_);
+    glCamera_->SetCamera(this);
     UpdateTransform();
     glCamera_->UpdateTransform();
     InternalUpdate(0);
 
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glCamera));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->AddView(std::move(glCamera));
 }
 
 void DepthCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
@@ -127,7 +127,7 @@ void DepthCamera::InternalUpdate(Scalar dt)
 
 // Statics
 
-ConstructInfo DepthCamera::getConstructInfo()
+ConstructInfo DepthCamera::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -164,7 +164,7 @@ std::unique_ptr<DepthCamera> DepthCamera::Construct(const std::string& uniqueNam
     // Noise
     ConstructInfoValue& value = info.nodes.at("noise").attributes.at("depth");
     if (value.valid)
-        sensor->setNoise(std::get<Scalar>(value.value));
+        sensor->SetNoise(std::get<Scalar>(value.value));
 
     return sensor;
 }

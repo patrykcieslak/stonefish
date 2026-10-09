@@ -39,25 +39,25 @@ namespace sf
 //Static
 std::map<uint64_t, OpticalModem*> OpticalModem::nodes; 
 
-void OpticalModem::addNode(OpticalModem* node)
+void OpticalModem::AddNode(OpticalModem* node)
 {
-    if(node->getDeviceId() == 0)
+    if(node->GetDeviceId() == 0)
     {
         cError("Modem device ID=0 not allowed!");
         return;
     }
         
-    if(nodes.find(node->getDeviceId()) != nodes.end())
+    if(nodes.find(node->GetDeviceId()) != nodes.end())
     {
-        cError("Modem node with ID=%d already exists!", node->getDeviceId());
+        cError("Modem node with ID=%d already exists!", node->GetDeviceId());
     }
     else
     {
-        nodes[node->getDeviceId()] = node;
+        nodes[node->GetDeviceId()] = node;
     }
 }
 
-void OpticalModem::removeNode(uint64_t deviceId)
+void OpticalModem::RemoveNode(uint64_t deviceId)
 {
     if(deviceId == 0)
         return;
@@ -69,7 +69,7 @@ void OpticalModem::removeNode(uint64_t deviceId)
     }
 }
 
-OpticalModem* OpticalModem::getNode(uint64_t deviceId)
+OpticalModem* OpticalModem::GetNode(uint64_t deviceId)
 {
     if(deviceId == 0)
         return nullptr;
@@ -84,7 +84,7 @@ OpticalModem* OpticalModem::getNode(uint64_t deviceId)
     }
 } 
 
-std::vector<uint64_t> OpticalModem::getNodeIds()
+std::vector<uint64_t> OpticalModem::GetNodeIds()
 {
     std::vector<uint64_t> ids;
     for(auto it=nodes.begin(); it != nodes.end(); ++it)
@@ -98,7 +98,7 @@ std::vector<uint64_t> OpticalModem::getNodeIds()
 // based on a link_quality_factor (0.0 to 1.0).
 // A link_quality_factor of 1.0 means no errors (perfect quality).
 // A link_quality_factor of 0.0 means maximum errors (every byte potentially changed).
-std::vector<uint8_t> OpticalModem::introduceErrors(
+std::vector<uint8_t> OpticalModem::IntroduceErrors(
     const std::vector<uint8_t>& data, Scalar linkQuality) 
 {
     if (data.empty()) 
@@ -169,15 +169,15 @@ OpticalModem::OpticalModem(const std::string& uniqueName, uint64_t deviceId, Sca
     trueRange_ = maxRange_;
     receptionQuality_ = Scalar(1);
 
-    addNode(this);
+    AddNode(this);
 }
 
 OpticalModem::~OpticalModem()
 {
-    removeNode(this->getDeviceId());
+    RemoveNode(this->GetDeviceId());
 }
 
-bool OpticalModem::isReceptionPossible(Vector3 worldDir, Scalar distance)
+bool OpticalModem::IsReceptionPossible(Vector3 worldDir, Scalar distance)
 {
     // Check if modems are close enough
     if(distance > trueRange_) 
@@ -186,7 +186,7 @@ bool OpticalModem::isReceptionPossible(Vector3 worldDir, Scalar distance)
     }
         
     // Check if direction is in the FOV of the device
-    Vector3 dir = (getDeviceFrame().getBasis().inverse() * worldDir).safeNormalize();
+    Vector3 dir = (GetDeviceFrame().getBasis().inverse() * worldDir).safeNormalize();
     Scalar d {Vector3(dir.getX(), dir.getY(), Scalar(0)).safeNorm()};
     Scalar vAngle {M_PI_2}; // When dir.z == 0.0
     if(!btFuzzyZero(dir.getZ()))
@@ -197,12 +197,12 @@ bool OpticalModem::isReceptionPossible(Vector3 worldDir, Scalar distance)
     return possible;
 }
 
-Scalar OpticalModem::getReceptionQuality() const
+Scalar OpticalModem::GetReceptionQuality() const
 {
     return receptionQuality_;
 }
 
-CommType OpticalModem::getType() const
+CommType OpticalModem::GetType() const
 {
     return CommType::OPTICAL;
 }
@@ -211,7 +211,7 @@ void OpticalModem::MessageReceived(std::shared_ptr<CommDataFrame> message)
 {
     if(receptionQuality_ > Scalar(0))
     {
-        message->data = introduceErrors(message->data, receptionQuality_);
+        message->data = IntroduceErrors(message->data, receptionQuality_);
         Comm::MessageReceived(message);
     }
 }
@@ -219,28 +219,28 @@ void OpticalModem::MessageReceived(std::shared_ptr<CommDataFrame> message)
 void OpticalModem::InternalUpdate(Scalar dt)
 {
     // Check if connected to something
-    if(getConnectedId() <= 0) 
+    if(GetConnectedId() <= 0) 
     {
         receptionQuality_ = Scalar(0);
         return;
     }
 
     // Find devices
-    OpticalModem* connectedNode = getNode(getConnectedId());
+    OpticalModem* connectedNode = GetNode(GetConnectedId());
     if(connectedNode == nullptr)
     {
         receptionQuality_ = Scalar(0);
         return;
     }
 
-    Vector3 posRX {getDeviceFrame().getOrigin()};
-    Vector3 posTX {connectedNode->getDeviceFrame().getOrigin()};
+    Vector3 posRX {GetDeviceFrame().getOrigin()};
+    Vector3 posTX {connectedNode->GetDeviceFrame().getOrigin()};
     
     // Both devices have to be in the same medium
     bool underwater {false};
     bool receptionPossible {true};
 
-    Ocean* ocean = SimulationApp::getApp()->getSimulationManager()->getOcean();
+    Ocean* ocean = SimulationApp::GetApp()->GetSimulationManager()->GetOcean();
     if(ocean != nullptr)
     {
         Scalar depthRX {ocean->GetDepth(posRX)};
@@ -265,7 +265,7 @@ void OpticalModem::InternalUpdate(Scalar dt)
     // Update true operating range
     if (underwater)
     {
-        Scalar turbidity = ocean->getWaterType(); // 0.0 (clear) to 1.0 (very turbid)
+        Scalar turbidity = ocean->GetWaterType(); // 0.0 (clear) to 1.0 (very turbid)
         trueRange_ = maxRange_ * (Scalar(1) - turbidity);
     }
     else 
@@ -279,7 +279,7 @@ void OpticalModem::InternalUpdate(Scalar dt)
         Vector3 dir {posTX-posRX};
         Scalar distance {dir.safeNorm()};
     
-        receptionPossible = isReceptionPossible(dir, distance);
+        receptionPossible = IsReceptionPossible(dir, distance);
         
         // Check if there are obstacles between the devices 
         if (receptionPossible)
@@ -287,7 +287,7 @@ void OpticalModem::InternalUpdate(Scalar dt)
             btCollisionWorld::ClosestRayResultCallback closest(posRX, posTX);
             closest.m_collisionFilterGroup = MASK_DYNAMIC;
             closest.m_collisionFilterMask = MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING;
-            SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld()->rayTest(posRX, posTX, closest);
+            SimulationApp::GetApp()->GetSimulationManager()->GetDynamicsWorld()->rayTest(posRX, posTX, closest);
             if(closest.hasHit())
             {
                 receptionPossible = false;
@@ -305,7 +305,7 @@ void OpticalModem::InternalUpdate(Scalar dt)
     if (receptionPossible)
     {
         // Estimate light intensity factor based on the sun position
-        Atmosphere* atm = SimulationApp::getApp()->getSimulationManager()->getAtmosphere();
+        Atmosphere* atm = SimulationApp::GetApp()->GetSimulationManager()->GetAtmosphere();
         if (underwater)
         {
             Scalar az, alt;
@@ -314,19 +314,19 @@ void OpticalModem::InternalUpdate(Scalar dt)
             Scalar lightIntensity {Scalar(1) - btCos(btRadians(alt))};
 
             Scalar directionalFactor {  
-                (getDeviceFrame().getBasis().getColumn(2).dot(Vector3(0,0,-1)) // 1 if facing up, -1 when facing down
+                (GetDeviceFrame().getBasis().getColumn(2).dot(Vector3(0,0,-1)) // 1 if facing up, -1 when facing down
                 + Scalar(1)) // Offset to (0,2) range
                 * Scalar(0.5) // Scale to (0,1) range
             };
             Scalar depthRX {ocean->GetDepth(posRX)};
-            Scalar turbidity = ocean->getWaterType(); // 0.0 (clear) to 1.0 (very turbid)   
+            Scalar turbidity = ocean->GetWaterType(); // 0.0 (clear) to 1.0 (very turbid)   
             receptionQuality_ -= ambientLightSens_ * lightIntensity * directionalFactor * btExp(-turbidity * depthRX);
         }
         else
         {
             Vector3 sunDir = atm->GetSunDirection();
             Scalar lightIntensity {
-                (getDeviceFrame().getBasis().getColumn(2).dot(-sunDir) // 1 if facing sun, -1 when facing opposite
+                (GetDeviceFrame().getBasis().getColumn(2).dot(-sunDir) // 1 if facing sun, -1 when facing opposite
                 + Scalar(1)) // Offset to (0,2) range
                 * Scalar(0.5) // Scale to (0,1) range
             };
@@ -352,10 +352,10 @@ std::vector<Renderable> OpticalModem::Render()
     
     //Fov indicator
     Renderable item1;
-    item1.model = glMatrixFromTransform(getDeviceFrame());
+    item1.model = glMatrixFromTransform(GetDeviceFrame());
     item1.type = RenderableType::SENSOR_LINES;
     item1.data = std::make_shared<std::vector<glm::vec3>>();
-    auto points = item1.getDataAsPoints();
+    auto points = item1.GetDataAsPoints();
 
     GLfloat iconSize = 0.25f;
     unsigned int div = 24;
@@ -389,15 +389,15 @@ std::vector<Renderable> OpticalModem::Render()
     item3.type = RenderableType::SENSOR_LINES;
     item3.model = glm::mat4(1.f);
     item3.data = std::make_shared<std::vector<glm::vec3>>();
-    points = item3.getDataAsPoints();
+    points = item3.GetDataAsPoints();
 
-    if(getConnectedId() > 0)
+    if(GetConnectedId() > 0)
     {
-        OpticalModem* cNode = getNode(getConnectedId());
+        OpticalModem* cNode = GetNode(GetConnectedId());
         if(cNode != nullptr)
         {
-            points->push_back(glVectorFromVector(getDeviceFrame().getOrigin()));
-            points->push_back(glVectorFromVector(cNode->getDeviceFrame().getOrigin()));    
+            points->push_back(glVectorFromVector(GetDeviceFrame().getOrigin()));
+            points->push_back(glVectorFromVector(cNode->GetDeviceFrame().getOrigin()));    
         }
     }
     if(!points->empty())
@@ -408,7 +408,7 @@ std::vector<Renderable> OpticalModem::Render()
 
 // Statics
 
-ConstructInfo OpticalModem::getConstructInfo()
+ConstructInfo OpticalModem::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;

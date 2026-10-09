@@ -214,9 +214,9 @@ void OpenGLMSIS::UpdateTransform()
 
     //Update settings if necessary
     bool updateProjection = false;
-    glm::vec3 rangeGain((GLfloat)sonar_->getRangeMin(), (GLfloat)sonar_->getRangeMax(), (GLfloat)sonar_->getGain());
+    glm::vec3 rangeGain((GLfloat)sonar_->GetRangeMin(), (GLfloat)sonar_->GetRangeMax(), (GLfloat)sonar_->GetGain());
     Scalar rotL1, rotL2;
-    sonar_->getRotationLimits(rotL1, rotL2);
+    sonar_->GetRotationLimits(rotL1, rotL2);
     if(rotationLimits_.x != (GLfloat)rotL1 || rotationLimits_.y != (GLfloat)rotL2)
     {
         rotationLimits_.x = (GLfloat)rotL1;
@@ -296,17 +296,17 @@ void OpenGLMSIS::UpdateTransform()
     }
 
     //Update rotation
-    currentStep_ = sonar_->getCurrentRotationStep();
+    currentStep_ = sonar_->GetCurrentRotationStep();
     GLfloat rotAngle = currentStep_ * (2.f*M_PI/(GLfloat)nSteps_);
     beamRotation_ = glm::rotate(rotAngle, glm::vec3(0.f,1.f,0.f));
 }
 
-void OpenGLMSIS::setNoise(glm::vec2 signalStdDev)
+void OpenGLMSIS::SetNoise(glm::vec2 signalStdDev)
 {
     noise_ = signalStdDev;
 }
 
-void OpenGLMSIS::setSonar(MSIS* s)
+void OpenGLMSIS::SetSonar(MSIS* s)
 {
     sonar_ = s;
 
@@ -337,7 +337,7 @@ void OpenGLMSIS::setSonar(MSIS* s)
 
 void OpenGLMSIS::ComputeOutput(std::vector<Renderable>& objects)
 {  
-    OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
+    OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent();
     content->SetDrawingMode(DrawingMode::RAW);
     
     //Generate sonar input
@@ -358,10 +358,10 @@ void OpenGLMSIS::ComputeOutput(std::vector<Renderable>& objects)
     {
         if(objects[i].type != RenderableType::SOLID)
             continue;
-        const Object& obj = content->getObject(objects[i].objectId);
-        const Look& look = content->getLook(objects[i].lookId);
+        const Object& obj = content->GetObject(objects[i].objectId);
+        const Look& look = content->GetLook(objects[i].lookId);
         glm::mat4 M = objects[i].model;
-        Material mat = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(objects[i].materialName);
+        Material mat = SimulationApp::GetApp()->GetSimulationManager()->GetMaterialManager()->GetMaterial(objects[i].materialName);
         bool normalMapping = obj.texturable && (look.normalMap > 0);
         shader = normalMapping ? sonarInputShader_[1].get() : sonarInputShader_[0].get();
         shader->Use();
@@ -445,14 +445,14 @@ void OpenGLMSIS::DrawLDR(GLuint destinationFBO, bool updated)
     unsigned int dispX, dispY;
     GLfloat dispScale;
     if(sonar_ != nullptr)
-        display = sonar_->getDisplayOnScreen(dispX, dispY, dispScale);
+        display = sonar_->GetDisplayOnScreen(dispX, dispY, dispScale);
     
     //Draw on screen
     if(display)
     {
-        OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
-        int windowHeight = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowHeight();
-        int windowWidth = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowWidth();
+        OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent();
+        int windowHeight = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetWindowHeight();
+        int windowWidth = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetWindowWidth();
         OpenGLState::BindFramebuffer(destinationFBO);    
         content->SetViewportSize(windowWidth, windowHeight);
         OpenGLState::Viewport(0, 0, windowWidth, windowHeight);

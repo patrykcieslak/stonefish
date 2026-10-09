@@ -143,14 +143,14 @@ namespace sf
          \param name a name of the material
          \return a structure containing properties of the material
          */
-        Material getMaterial(const std::string& name);
+        Material GetMaterial(const std::string& name);
         
         //! A method returning material information.
         /*!
          \param index an id of the material
          \return a structure containing properties of the material
          */
-        Material getMaterial(int index);
+        Material GetMaterial(int index);
         
         //! A method that creates a new fluid.
         /*!
@@ -167,20 +167,20 @@ namespace sf
          \param name a name of the fluid
          \return a the fluid structure
          */
-        Fluid getFluid(const std::string& name);
+        Fluid GetFluid(const std::string& name);
         
         //! A method returning a fluid by id.
         /*!
          \param index an id of the fluid
          \return a the fluid structure
          */
-        Fluid getFluid(int index);
+        Fluid GetFluid(int index);
         
         //! A method that deletes all materials and fluids from the manager.
         void ClearMaterialsAndFluids();
         
     private:
-        int getMaterialIndex(const std::string& name);
+        int GetMaterialIndex(const std::string& name);
         
         std::vector<Material> materials_;
         std::unordered_map<MaterialPair, Friction, MaterialPairHash> interactions_;

@@ -65,74 +65,74 @@ namespace sf
         virtual std::vector<Renderable> Render() = 0;
 
         //! A method returning the type of the entity.
-        virtual EntityType getType() const = 0;
+        virtual EntityType GetType() const = 0;
         
         //! A method returning the pose of the body origin in the world frame.
-        virtual Transform getOTransform() const = 0;
+        virtual Transform GetOTransform() const = 0;
 
         //! A method returning the pose of the body in the world frame.
-        virtual Transform getCGTransform() const = 0;
+        virtual Transform GetCgTransform() const = 0;
         
         //! A method returning the linear velocity of the body.
-        virtual Vector3 getLinearVelocity() const = 0;
+        virtual Vector3 GetLinearVelocity() const = 0;
         
         //! A method returning the linear velocity of the body at the given point.
-        virtual Vector3 getLinearVelocityInLocalPoint(const Vector3& relPos) const = 0;
+        virtual Vector3 GetLinearVelocityInLocalPoint(const Vector3& relPos) const = 0;
         
         //! A method returning the angular velocity of the body.
-        virtual Vector3 getAngularVelocity() const = 0;
+        virtual Vector3 GetAngularVelocity() const = 0;
 
         //! A method returning the linear acceleration of the body.
-        virtual Vector3 getLinearAcceleration() const = 0;
+        virtual Vector3 GetLinearAcceleration() const = 0;
         
         //! A method returning the angular acceleration of the body.
-        virtual Vector3 getAngularAcceleration() const = 0;
+        virtual Vector3 GetAngularAcceleration() const = 0;
 
         //! A method setting the linear acceleration of the body.
         /*!
          \param a linear acceleration [m s^-2]
          */
-        void setLinearAcceleration(Vector3 a);
+        void SetLinearAcceleration(Vector3 a);
         
         //! A method setting the angular acceleration of the body.
         /*!
          \param epsilon angular acceleration [rad s^-2]
          */
-        void setAngularAcceleration(Vector3 epsilon);
+        void SetAngularAcceleration(Vector3 epsilon);
 
         //! A method returning the extents of the body axis alligned bounding box.
         /*!
          \param min a point located at the minimum coordinate corner
          \param max a point located at the maximum coordinate corner
          */
-        virtual void getAABB(Vector3& min, Vector3& max) = 0;
+        virtual void GetAabb(Vector3& min, Vector3& max) = 0;
         
         //! A method returning the material of the body.
-        Material getMaterial() const;
+        Material GetMaterial() const;
         
         //! A method used to change the rendering style of the object.
         /*!
          \param newLookId an index of the graphical material that should be used to render the body
          */
-        void setLook(int newLookId);
+        void SetLook(int newLookId);
         
         //! A method used to set display mode used for the body.
         /*!
          \param m flag defining the display mode
          */
-        void setDisplayMode(DisplayMode m);
+        void SetDisplayMode(DisplayMode m);
         
         //! A method returning the index of the graphical material used in rendering.
-        int getLook() const;
+        int GetLook() const;
         
         //! A method returning the index of the graphical object used in rendering.
-        int getGraphicalObject() const;
+        int GetGraphicalObject() const;
 
         //! A method returning the associated particles system.
-        const std::shared_ptr<OpenGLOceanParticles>& getOceanParticles();
+        const std::shared_ptr<OpenGLOceanParticles>& GetOceanParticles();
 
         //! A method returning the rigid body associated with the entity.
-        btRigidBody* getRigidBody();
+        btRigidBody* GetRigidBody();
         
     protected:
         //Body

@@ -129,13 +129,13 @@ namespace sf
         bool IsInsideFluid(const Vector3& point) const;
         
         //! A method returning a pointer to the gas filling the atmosphere.
-        Fluid getGas() const;
+        Fluid GetGas() const;
         
         //! A method returning the type of the force field.
-        ForcefieldType getForcefieldType();
+        ForcefieldType GetForcefieldType();
         
         //! A method returning a pointer to the OpenGL atmosphere object.
-        OpenGLAtmosphere* getOpenGLAtmosphere();
+        OpenGLAtmosphere* GetOpenGlAtmosphere();
         
         //! A static method to compute Julian day form time.
         /*!

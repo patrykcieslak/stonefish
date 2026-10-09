@@ -34,14 +34,14 @@
 namespace sf
 {
 
-void Comm::defaultDeleter(Comm* c)
+void Comm::DefaultDeleter(Comm* c)
 {
     delete c;
 }
 
 Comm::Comm(const std::string& uniqueName, uint64_t deviceId)
 {
-    name_ = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
+    name_ = SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->AddName(uniqueName);
     id_ = deviceId;
     cId_ = -1;
     renderable_ = false;
@@ -54,34 +54,34 @@ Comm::Comm(const std::string& uniqueName, uint64_t deviceId)
 
 Comm::~Comm()
 {
-    if(SimulationApp::getApp() != nullptr)
-        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name_);
+    if(SimulationApp::GetApp() != nullptr)
+        SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->RemoveName(name_);
     SDL_DestroyMutex(updateMutex_);
 }
 
-Transform Comm::getDeviceFrame()
+Transform Comm::GetDeviceFrame()
 {
     if(attach_ != nullptr)
     {
-        if(attach_->getType() == EntityType::STATIC)
-            return ((StaticEntity*)attach_)->getTransform() * o2c_;
-        else if(attach_->getType() == EntityType::SOLID || attach_->getType() == EntityType::ANIMATED)
-            return ((MovingEntity*)attach_)->getOTransform() * o2c_;
+        if(attach_->GetType() == EntityType::STATIC)
+            return ((StaticEntity*)attach_)->GetTransform() * o2c_;
+        else if(attach_->GetType() == EntityType::SOLID || attach_->GetType() == EntityType::ANIMATED)
+            return ((MovingEntity*)attach_)->GetOTransform() * o2c_;
     }
     return o2c_;
 }
 
-const std::string& Comm::getName() const
+const std::string& Comm::GetName() const
 {
     return name_;
 }
 
-uint64_t Comm::getDeviceId()
+uint64_t Comm::GetDeviceId()
 {
     return id_;
 }
 
-uint64_t Comm::getConnectedId()
+uint64_t Comm::GetConnectedId()
 {
     return cId_;
 }
@@ -91,27 +91,27 @@ void Comm::MarkDataOld()
     newDataAvailable_ = false;
 }
 
-size_t Comm::getRxBufferCount() const
+size_t Comm::GetRxBufferCount() const
 {
     return rxBuffer_.size();
 }
 
-size_t Comm::getTxBufferCount() const
+size_t Comm::GetTxBufferCount() const
 {
     return txBuffer_.size();
 }
 
-bool Comm::isNewDataAvailable()
+bool Comm::IsNewDataAvailable()
 {
     return newDataAvailable_;
 }
 
-void Comm::setRenderable(bool render)
+void Comm::SetRenderable(bool render)
 {
     renderable_ = render;
 }
 
-bool Comm::isRenderable()
+bool Comm::IsRenderable()
 {
     return renderable_;
 }
@@ -134,7 +134,7 @@ void Comm::SendMessage(const std::vector<uint8_t>& data)
         msg->seq = txSeq_++;
         msg->source = id_;
         msg->destination = cId_;
-        msg->timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true);
+        msg->timeStamp = SimulationApp::GetApp()->GetSimulationManager()->GetSimulationTime(true);
         msg->data = data;
         txBuffer_.push_back(msg);
     }
@@ -196,7 +196,7 @@ std::vector<Renderable> Comm::Render()
     
     Renderable item;
     item.type = RenderableType::SENSOR_CS;
-    item.model = glMatrixFromTransform(getDeviceFrame());
+    item.model = glMatrixFromTransform(GetDeviceFrame());
     items.push_back(item);
     
     return items;

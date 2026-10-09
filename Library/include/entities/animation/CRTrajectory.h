@@ -46,9 +46,9 @@ namespace sf
         void BuildGraphicalPath() override;
 
     private:
-        Vector3 catmullRom(Vector3 P0, Vector3 P1, Vector3 P2, Vector3 P3, 
+        Vector3 CatmullRom(Vector3 P0, Vector3 P1, Vector3 P2, Vector3 P3, 
                            Scalar t0, Scalar t1, Scalar t2, Scalar t3, Scalar t);
-        Vector3 catmullRomDerivative(Vector3 P0, Vector3 P1, Vector3 P2, Vector3 P3, 
+        Vector3 CatmullRomDerivative(Vector3 P0, Vector3 P1, Vector3 P2, Vector3 P3, 
                                      Scalar t0, Scalar t1, Scalar t2, Scalar t3, Scalar t);
     };
 }

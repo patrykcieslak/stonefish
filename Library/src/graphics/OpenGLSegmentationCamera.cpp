@@ -219,7 +219,7 @@ void OpenGLSegmentationCamera::Update()
     needsUpdate_ = true;
 }
 
-bool OpenGLSegmentationCamera::needsUpdate()
+bool OpenGLSegmentationCamera::NeedsUpdate()
 {
     if(needsUpdate_)
     {
@@ -230,7 +230,7 @@ bool OpenGLSegmentationCamera::needsUpdate()
         return false;
 }
 
-void OpenGLSegmentationCamera::setCamera(Camera* cam, unsigned int index)
+void OpenGLSegmentationCamera::SetCamera(Camera* cam, unsigned int index)
 {
     camera_ = cam;
 
@@ -245,14 +245,14 @@ void OpenGLSegmentationCamera::setCamera(Camera* cam, unsigned int index)
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 }
 
-ViewType OpenGLSegmentationCamera::getType() const
+ViewType OpenGLSegmentationCamera::GetType() const
 {
     return ViewType::SEGMENTATION_CAMERA;
 }
 
 void OpenGLSegmentationCamera::ComputeOutput(std::vector<Renderable>& objects, Ocean* ocean)
 {
-    OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
+    OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent();
     content->SetCurrentView(this);
     content->SetDrawingMode(DrawingMode::RAW);
     
@@ -278,7 +278,7 @@ void OpenGLSegmentationCamera::ComputeOutput(std::vector<Renderable>& objects, O
 
     if(ocean != nullptr && ocean->GetDepth(eye_) > 0.f)
     {
-        OpenGLOcean* glOcean = ocean->getOpenGLOcean();
+        OpenGLOcean* glOcean = ocean->GetOpenGlOcean();
         glOcean->DrawParticlesId(this, (GLushort)(UINT16_MAX-1));
     }
 
@@ -288,7 +288,7 @@ void OpenGLSegmentationCamera::ComputeOutput(std::vector<Renderable>& objects, O
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, renderSegTex_[0]);
     flipShader->Use();
     flipShader->SetUniform("texSource", TEX_POSTPROCESS1);
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->DrawSAQ();
     
     //Color mapped segmentation display
     OpenGLState::BindFramebuffer(displayFBO_);
@@ -313,14 +313,14 @@ void OpenGLSegmentationCamera::DrawLDR(GLuint destinationFBO, bool updated)
     unsigned int dispX, dispY;
     GLfloat dispScale;
     if(camera_ != nullptr)
-        display = camera_->getDisplayOnScreen(dispX, dispY, dispScale);
+        display = camera_->GetDisplayOnScreen(dispX, dispY, dispScale);
     
     //Draw on screen
     if(display)
     {
-        OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
-        int windowHeight = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowHeight();
-        int windowWidth = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowWidth();
+        OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent();
+        int windowHeight = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetWindowHeight();
+        int windowWidth = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetWindowWidth();
         OpenGLState::BindFramebuffer(destinationFBO);
         OpenGLState::Viewport(0, 0, windowWidth, windowHeight);
         OpenGLState::DisableCullFace();

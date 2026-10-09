@@ -40,22 +40,22 @@ TorusShape::TorusShape(Scalar majorRadius, Scalar minorRadius)
     m_shapeType = CUSTOM_CONVEX_SHAPE_TYPE;
 }
 
-Vector3 TorusShape::getHalfExtentsWithMargin() const
+Vector3 TorusShape::GetHalfExtentsWithMargin() const
 {
-    Vector3 halfExtents = getHalfExtentsWithoutMargin();
+    Vector3 halfExtents = GetHalfExtentsWithoutMargin();
     Vector3 margin(getMargin(),getMargin(),getMargin());
     halfExtents += margin;
     return halfExtents;
 }
 
-const Vector3& TorusShape::getHalfExtentsWithoutMargin() const
+const Vector3& TorusShape::GetHalfExtentsWithoutMargin() const
 {
     return m_implicitShapeDimensions;
 }
 
 void TorusShape::getAabb(const Transform& t, Vector3& aabbMin, Vector3& aabbMax) const
 {
-    btTransformAabb(getHalfExtentsWithoutMargin(), getMargin(), t, aabbMin, aabbMax);
+    btTransformAabb(GetHalfExtentsWithoutMargin(), getMargin(), t, aabbMin, aabbMax);
 }
     
 void TorusShape::calculateLocalInertia(Scalar mass, Vector3& inertia) const

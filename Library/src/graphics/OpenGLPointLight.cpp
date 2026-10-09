@@ -38,11 +38,11 @@ namespace sf
 OpenGLPointLight::OpenGLPointLight(glm::vec3 position, GLfloat radius, glm::vec3 color, GLfloat lum) : OpenGLLight(position, radius, color, lum)
 {
     colorLi_ = glm::vec4(color, (GLfloat)(lum/(4.f*M_PI)));
-	std::unique_ptr<Mesh> m = OpenGLContent::BuildSphere(getSourceRadius());
-	sourceObject_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(m.get());
+	std::unique_ptr<Mesh> m = OpenGLContent::BuildSphere(GetSourceRadius());
+	sourceObject_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BuildObject(m.get());
 }
 
-LightType OpenGLPointLight::getType() const
+LightType OpenGLPointLight::GetType() const
 {
     return LightType::POINT;
 }
@@ -50,8 +50,8 @@ LightType OpenGLPointLight::getType() const
 void OpenGLPointLight::SetupShader(LightUBO* ubo)
 {
     PointLightUBO* pointUbo = (PointLightUBO*)ubo;
-    pointUbo->position = getPosition();
-    pointUbo->radius = getSourceRadius();
+    pointUbo->position = GetPosition();
+    pointUbo->radius = GetSourceRadius();
     pointUbo->color = glm::vec3(colorLi_) * colorLi_.a; 
 }
    

@@ -53,8 +53,8 @@ void NED::Init(const Scalar lat, const Scalar lon, const Scalar height)
     // Compute ECEF to NED and NED to ECEF matrices
     Scalar phiP = btAtan2(initEcefZ_, btSqrt(initEcefX_*initEcefX_ + initEcefY_*initEcefY_));
 
-    ecef2NedMatrix_ = nRe(phiP, initLon_);
-    ned2EcefMatrix_ = nRe(initLat_, initLon_).transpose();
+    ecef2NedMatrix_ = NRe(phiP, initLon_);
+    ned2EcefMatrix_ = NRe(initLat_, initLon_).transpose();
 }
 
 void NED::Geodetic2Ecef(const Scalar lat, const Scalar lon, const Scalar height,
@@ -82,7 +82,7 @@ void NED::Ecef2Geodetic(const Scalar x, const Scalar y, const Scalar z,
     Scalar F = 54 * b * b * z * z;
     Scalar G = r * r + (1 - esq) * z * z - esq * Esq;
     Scalar C = (esq * esq * F * r * r) / btPow(G, 3);
-    Scalar S = cbrt(1 + C + btSqrt(C * C + 2 * C));
+    Scalar S = Cbrt(1 + C + btSqrt(C * C + 2 * C));
     Scalar P = F / (3 * btPow((S + 1 / S + 1), 2) * G * G);
     Scalar Q = btSqrt(1 + 2 * esq * esq * P);
     Scalar r_0 = -(P * esq * r) / (1 + Q) + btSqrt(0.5 * a * a * (1 + 1.0 / Q) - P * (1 - esq) * z * z / (Q * (1 + Q)) - 0.5 * P * r * r);
@@ -142,7 +142,7 @@ void NED::Ned2Geodetic(const Scalar north, const Scalar east, const Scalar depth
     Ecef2Geodetic(x, y, z, lat, lon, height);
 }
 
-Scalar NED::cbrt(const Scalar x) const
+Scalar NED::Cbrt(const Scalar x) const
 {
     if(x >= 0.0)
         return btPow(x, 1.0/3.0);
@@ -150,7 +150,7 @@ Scalar NED::cbrt(const Scalar x) const
         return -btPow(btFabs(x), 1.0/3.0);
 }
 
-Matrix3 NED::nRe(const Scalar lat_rad, const Scalar lon_rad) const
+Matrix3 NED::NRe(const Scalar lat_rad, const Scalar lon_rad) const
 {
     Scalar sLat = btSin(lat_rad);
     Scalar sLon = btSin(lon_rad);

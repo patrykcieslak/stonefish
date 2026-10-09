@@ -84,7 +84,7 @@ namespace sf
         virtual std::unique_ptr<btCollisionShape> BuildCollisionShape() = 0;
         
         //! A pure virtual method returning the type of the solid that the body represents.
-        virtual SolidType getSolidType() const = 0;
+        virtual SolidType GetSolidType() const = 0;
         
         //! A method updating the acceleration of the body.
         /*!
@@ -234,67 +234,67 @@ namespace sf
         void SetHydrodynamicCoefficients(const Vector3& Cd, const Vector3& Cf);
 
         //! A method to set the body pose in the world frame.
-        void setCGTransform(const Transform& trans);
+        void SetCgTransform(const Transform& trans);
         
         //! A method returning the type of the entity.
-        EntityType getType() const;
+        EntityType GetType() const;
 
         //! A method returning a pointer to the multibody link collider.
-        btMultiBodyLinkCollider* getMultiBodyLinkCollider() const;
+        btMultiBodyLinkCollider* GetMultiBodyLinkCollider() const;
         
         //! A method returning the transformation from the CG frame to the graphics mesh origin.
-        Transform getCG2GTransform() const;
+        Transform GetCG2GTransform() const;
         
         //! A method returning the transformation from the CG frame to the physics mesh origin.
-        Transform getCG2CTransform() const;
+        Transform GetCG2CTransform() const;
         
         //! A method returning the transformation from the CG frame to the body origin.
-        Transform getCG2OTransform() const;
+        Transform GetCG2OTransform() const;
         
         //! A method returning the position of the CB in the CG frame.
-        Vector3 getCB() const;
+        Vector3 GetCb() const;
         
         //! A method returning the transformation from body origin to the physics mesh origin.
-        Transform getO2CTransform() const;
+        Transform GetO2CTransform() const;
         
         //! A method returning the transformation from body origin to the graphics mesh origin.
-        Transform getO2GTransform() const;
+        Transform GetO2GTransform() const;
         
         //! A method returning the transformation from body origin to the geometry approximation origin.
-        Transform getO2HTransform() const;
+        Transform GetO2HTransform() const;
         
         //! A method returning the pose of the body in the world frame.
-        Transform getCGTransform() const;
+        Transform GetCgTransform() const;
         
         //! A method returning the pose of the graphics mesh in the world frame (rendering).
-        Transform getGTransform() const;
+        Transform GetGTransform() const;
         
         //! A method returning the pose of the physics mesh in the world frame (hydrodynamics).
-        Transform getCTransform() const;
+        Transform GetCTransform() const;
         
         //! A method returning the pose of the hydro proxy origin in the world frame.
-        Transform getHTransform() const;
+        Transform GetHTransform() const;
         
         //! A method returning the pose of the body origin in the world frame.
-        Transform getOTransform() const;
+        Transform GetOTransform() const;
         
         //! A method returning the linear velocity of the body.
-        Vector3 getLinearVelocity() const;
+        Vector3 GetLinearVelocity() const;
         
         //! A method returning the linear velocity of the body at the given point.
-        Vector3 getLinearVelocityInLocalPoint(const Vector3& relPos) const;
+        Vector3 GetLinearVelocityInLocalPoint(const Vector3& relPos) const;
         
         //! A method returning the angular velocity of the body.
-        Vector3 getAngularVelocity() const;
+        Vector3 GetAngularVelocity() const;
         
         //! A method returning the linear acceleration of the body.
-        Vector3 getLinearAcceleration() const;
+        Vector3 GetLinearAcceleration() const;
         
         //! A method returning the angular acceleration of the body.
-        Vector3 getAngularAcceleration() const;
+        Vector3 GetAngularAcceleration() const;
 
         //! A method returning the force applied to the body.
-        Vector3 getAppliedForce();
+        Vector3 GetAppliedForce();
 
         //! A method returning the hydrodynamic forces computed for the body.
         /*!
@@ -305,63 +305,63 @@ namespace sf
          \param Ff the skin friction force [N]
          \param Tf the skin friction induced torque [Nm]
          */
-        void getHydrodynamicForces(Vector3& Fb, Vector3& Tb, Vector3& Fd, Vector3& Td, Vector3& Ff, Vector3& Tf);
+        void GetHydrodynamicForces(Vector3& Fb, Vector3& Tb, Vector3& Fd, Vector3& Td, Vector3& Ff, Vector3& Tf);
         
         //! A method returning the hydrodynamic coefficents for the body.
         /*!
          \param Cd a vector of form quadratic drag (quadratic drag) coefficients 
          \param Cf a vector of skin friction (viscous drag) coefficients
          */
-        void getHydrodynamicCoefficients(Vector3& Cd, Vector3& Cf) const;
+        void GetHydrodynamicCoefficients(Vector3& Cd, Vector3& Cf) const;
 
         //! A method returning the wetted surface area of the body.
-        Scalar getWettedSurface() const;
+        Scalar GetWettedSurface() const;
 
         //! A method returning the submerged volume of the body.
-        Scalar getSubmergedVolume() const;
+        Scalar GetSubmergedVolume() const;
 
         //! A method returning the mass of the body.
-        Scalar getMass() const;
+        Scalar GetMass() const;
         
         //! A method returning the inertia of the body.
-        Vector3 getInertia() const;
+        Vector3 GetInertia() const;
         
         //! A method returning the mass or the sum of mass and added mass (depending on type of body).
-        virtual Scalar getAugmentedMass() const;
+        virtual Scalar GetAugmentedMass() const;
         
         //! A method returning the inertia or the sum of inertia and added mass (depending on type of body).
-        virtual Vector3 getAugmentedInertia() const;
+        virtual Vector3 GetAugmentedInertia() const;
       
 		//! A method returning the hydrodynamic added mass (diagonal elements).
-		Vector3 getAddedMass() const;
+		Vector3 GetAddedMass() const;
 	  
 		//! A method returning the hydrodynamic added inertia (diagonal elements).
-		Vector3 getAddedInertia() const;
+		Vector3 GetAddedInertia() const;
         
         //! A method returning the volume of the body.
-        Scalar getVolume() const;
+        Scalar GetVolume() const;
 
         //! A method returning the surface area of the body.
-        Scalar getSurface() const;
+        Scalar GetSurface() const;
         
         //! A method returning the parameters of the approximation of body shape
         /*!
          \param type the type of the approximation geometry
          \param params the parameters of the approximation geometry
         */
-        void getGeometryApprox(GeometryApproxType& type, std::vector<Scalar>& params) const;
+        void GetGeometryApprox(GeometryApproxType& type, std::vector<Scalar>& params) const;
         
         //! A method returning a pointer to the physics mesh.
-        const Mesh* getPhysicsMesh();
+        const Mesh* GetPhysicsMesh();
 
         //! A method that returns a copy of all physics mesh vertices in body origin frame.
-        virtual std::vector<Vector3> getMeshVertices() const;
+        virtual std::vector<Vector3> GetMeshVertices() const;
         
         //! A method informing if the body is using buoyancy computation.
-        bool isBuoyant() const;
+        bool IsBuoyant() const;
         
         //! A method informing what kind of physics computations are performed for the body.
-        PhysicsMode getPhysicsMode() const;
+        PhysicsMode GetPhysicsMode() const;
         
         //Rendering
         //! A method used to build the graphical representation of the body.
@@ -375,13 +375,13 @@ namespace sf
          \param min a point located at the minimum coordinate corner
          \param max a point located at the maximum coordinate corner
          */
-        void getAABB(Vector3& min, Vector3& max);
+        void GetAabb(Vector3& min, Vector3& max);
         
         //! A method used to set if the body CG should be rendered.
-        void setDisplayCoordSys(bool enabled);
+        void SetDisplayCoordSys(bool enabled);
         
         //! A method returning the index of the physical object used in rendering.
-        int getPhysicalObject() const;
+        int GetPhysicalObject() const;
         
     protected:
         BodyFluidPosition CheckBodyFluidPosition(Ocean* ocn);

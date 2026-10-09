@@ -136,12 +136,12 @@ inline void GetCWD(char* buffer, int length)
 
 inline std::string GetShaderPath()
 {
-    return static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getShaderPath();
+    return static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetShaderPath();
 }
 
 inline std::string GetDataPath()
 {
-    return SimulationApp::getApp()->getDataPath();
+    return SimulationApp::GetApp()->GetDataPath();
 }
 
 inline std::string GetFullPath(const std::string& path)

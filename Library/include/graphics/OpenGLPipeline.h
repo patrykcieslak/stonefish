@@ -90,22 +90,22 @@ namespace sf
         void PurgeSelectedDrawingQueue();
 
         //! A method that informs if the drawing queue is empty.
-        bool isDrawingQueueEmpty();
+        bool IsDrawingQueueEmpty();
         
         //! A method to get mutex of the drawing queue for thread safeness.
-        SDL_mutex* getDrawingQueueMutex();
+        SDL_mutex* GetDrawingQueueMutex();
         
         //! A method returning a copy of the render settings.
-        RenderSettings getRenderSettings() const;
+        RenderSettings GetRenderSettings() const;
         
         //! A method returning a reference to the helper object settings.
-        HelperSettings& getHelperSettings();
+        HelperSettings& GetHelperSettings();
 
         //! A method returning the screen texture, used for generating GUI background.
-        GLuint getScreenTexture();
+        GLuint GetScreenTexture();
         
         //! A method returning a pointer to the OpenGL content manager.
-        OpenGLContent* getContent();
+        OpenGLContent* GetContent();
         
     private:
         void PerformDrawingQueueCopy(SimulationManager* sim);

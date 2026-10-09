@@ -44,21 +44,21 @@ void JointsTestApp::DoHUD()
     id.owner = 10;
     id.item = 0;
 
-    sf::Servo* srv1 = (sf::Servo*)getSimulationManager()->getActuator("Servo1");
-    sf::Scalar sp = getGUI()->DoSlider(id, 180.f, 10.f, 150.f, sf::Scalar(-M_PI_2), sf::Scalar(M_PI_2), srv1->getDesiredPosition(), "Servo1");
-    srv1->setDesiredPosition(sp);
+    sf::Servo* srv1 = (sf::Servo*)GetSimulationManager()->GetActuator("Servo1");
+    sf::Scalar sp = GetGui()->DoSlider(id, 180.f, 10.f, 150.f, sf::Scalar(-M_PI_2), sf::Scalar(M_PI_2), srv1->GetDesiredPosition(), "Servo1");
+    srv1->SetDesiredPosition(sp);
 
     id.item = 1;
-    sf::Servo* srv2 = (sf::Servo*)getSimulationManager()->getActuator("Servo2");
-    sp = getGUI()->DoSlider(id, 180.f, 60.f, 150.f, sf::Scalar(-M_PI_2), sf::Scalar(M_PI_2), srv2->getDesiredPosition(), "Servo2");
-    srv2->setDesiredPosition(sp);
+    sf::Servo* srv2 = (sf::Servo*)GetSimulationManager()->GetActuator("Servo2");
+    sp = GetGui()->DoSlider(id, 180.f, 60.f, 150.f, sf::Scalar(-M_PI_2), sf::Scalar(M_PI_2), srv2->GetDesiredPosition(), "Servo2");
+    srv2->SetDesiredPosition(sp);
 
     id.item = 2;
-    sf::Servo* srv3 = (sf::Servo*)getSimulationManager()->getActuator("Servo3");
-    sp = getGUI()->DoSlider(id, 180.f, 110.f, 150.f, sf::Scalar(-M_PI_2), sf::Scalar(M_PI_2), srv3->getDesiredPosition(), "Servo3");
-    srv3->setDesiredPosition(sp);
+    sf::Servo* srv3 = (sf::Servo*)GetSimulationManager()->GetActuator("Servo3");
+    sp = GetGui()->DoSlider(id, 180.f, 110.f, 150.f, sf::Scalar(-M_PI_2), sf::Scalar(M_PI_2), srv3->GetDesiredPosition(), "Servo3");
+    srv3->SetDesiredPosition(sp);
 
     // id.item = 3;
-    // sf::SuctionCup* suction = (sf::SuctionCup*)getSimulationManager()->getActuator("Suction");
-    // suction->setPump(getGUI()->DoCheckBox(id, 180.f, 160.f, 150.f, suction->getPump(), "Vacuum Pump"));
+    // sf::SuctionCup* suction = (sf::SuctionCup*)GetSimulationManager()->GetActuator("Suction");
+    // suction->SetPump(GetGui()->DoCheckBox(id, 180.f, 160.f, 150.f, suction->GetPump(), "Vacuum Pump"));
 }

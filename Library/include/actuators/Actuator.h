@@ -62,22 +62,22 @@ namespace sf
         /*!
          \param m flag defining the display mode
          */
-        void setDisplayMode(DisplayMode m);
+        void SetDisplayMode(DisplayMode m);
 
         //! A method used to set the watchdog timeout.
         /*!
          \param timeout timeout of the watchdog [s]
         */
-        void setWatchdog(Scalar timeout);
+        void SetWatchdog(Scalar timeout);
 
         //! A method returning the name of the actuator.
-        const std::string& getName() const;
+        const std::string& GetName() const;
 
         //! A method returning the type of the actuator.
-        virtual ActuatorType getType() const = 0;
+        virtual ActuatorType GetType() const = 0;
 
         //! A deleter method required for the plugin architecture.
-        static void defaultDeleter(Actuator* a);
+        static void DefaultDeleter(Actuator* a);
     
     protected:
         virtual void WatchdogTimeout();

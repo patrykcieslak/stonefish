@@ -77,26 +77,26 @@ namespace sf
         virtual std::vector<Renderable> Render();
         
         //! A method returning the type of the joint.
-        virtual JointType getType() const = 0;
+        virtual JointType GetType() const = 0;
         
         //! A method returning the name of the joint.
-        const std::string& getName() const;
+        const std::string& GetName() const;
             
         //! A method returning joint feedback in the world frame.
         /*!
          \param dof degree of freedom for which the feedback is desired
          \return value of force/torque for the specified degree of freedom
          */
-        Scalar getFeedback(unsigned int dof);
+        Scalar GetFeedback(unsigned int dof);
         
         //! A method that informs if the joint is of multibody type.
-        bool isMultibodyJoint();
+        bool IsMultibodyJoint();
 
         //! A method returning the first body affected by the joint.
-        SolidEntity* getSolidA();
+        SolidEntity* GetSolidA();
 
         //! A method returning the second body affected by the joint.
-        SolidEntity* getSolidB();
+        SolidEntity* GetSolidB();
         
     protected:
         SolidEntity* jSolidA_;

@@ -54,7 +54,7 @@ namespace sf
          \param dispatcher a reference to the collision dispatcher
          \param dispatchInfo a reference to the collision dispatcher info structure
          */
-        static void myNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
+        static void MyNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
         
     private:
         bool inclusive_;

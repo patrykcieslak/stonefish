@@ -37,12 +37,12 @@ Current::Current(const std::string& uniqueName, Scalar frequency, int historyLen
     channels_.push_back(SensorChannel("Current", QuantityType::CURRENT));
 }
 
-Transform Current::getSensorFrame() const
+Transform Current::GetSensorFrame() const
 {
     return I4();
 }
 
-void Current::getSensorVelocity(Vector3& linear, Vector3& angular) const
+void Current::GetSensorVelocity(Vector3& linear, Vector3& angular) const
 {
     linear = V0();
     angular = V0();
@@ -59,18 +59,18 @@ void Current::InternalUpdate(Scalar dt)
     // Read current
     Scalar current = Scalar(0);
     if(motor_ != nullptr)
-        current = motor_->getCurrent();
+        current = motor_->GetCurrent();
     
     // Record sample
     AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({current})));
 }
 
-SensorType Current::getType() const
+SensorType Current::GetType() const
 {
     return SensorType::OTHER;
 }
 
-ScalarSensorType Current::getScalarSensorType() const
+ScalarSensorType Current::GetScalarSensorType() const
 {
     return ScalarSensorType::CURRENT;
 }

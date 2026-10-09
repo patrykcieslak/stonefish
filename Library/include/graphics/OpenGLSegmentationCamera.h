@@ -118,17 +118,17 @@ namespace sf
         void Update();
         
         //! A method that informs if the camera needs update.
-        bool needsUpdate();
+        bool NeedsUpdate();
         
         //! A method to set a pointer to a camera sensor.
         /*!
          \param cam a pointer to a camera sensor
          \param index the id of the OpenGL depth camera
          */
-        void setCamera(Camera* cam, unsigned int index = 0);
+        void SetCamera(Camera* cam, unsigned int index = 0);
         
         //! A method returning the type of the view.
-        ViewType getType() const override;
+        ViewType GetType() const override;
         
         //! A static method to load shaders.
         static void Init();

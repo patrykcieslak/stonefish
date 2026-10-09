@@ -56,7 +56,7 @@ Multibeam::Multibeam(const std::string& uniqueName, Scalar angleRangeDeg, unsign
 void Multibeam::InternalUpdate(Scalar dt)
 {
     //get sensor frame in world
-    Transform mbTrans = getSensorFrame();
+    Transform mbTrans = GetSensorFrame();
     
     //shoot rays
     for(unsigned int i=0; i<=angSteps_; ++i)
@@ -68,7 +68,7 @@ void Multibeam::InternalUpdate(Scalar dt)
         btCollisionWorld::ClosestRayResultCallback closest(from, to);
         closest.m_collisionFilterGroup = MASK_DYNAMIC;
         closest.m_collisionFilterMask = MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING;
-        SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld()->rayTest(from, to, closest);
+        SimulationApp::GetApp()->GetSimulationManager()->GetDynamicsWorld()->rayTest(from, to, closest);
         
         if(closest.hasHit())
         {
@@ -86,13 +86,13 @@ void Multibeam::InternalUpdate(Scalar dt)
 std::vector<Renderable> Multibeam::Render()
 {
     std::vector<Renderable> items = Sensor::Render();
-    if(isRenderable())
+    if(IsRenderable())
     {
         Renderable item;
         item.type = RenderableType::SENSOR_LINES;
-        item.model = glMatrixFromTransform(getSensorFrame());    
+        item.model = glMatrixFromTransform(GetSensorFrame());    
         item.data = std::make_shared<std::vector<glm::vec3>>();
-        auto points = item.getDataAsPoints();
+        auto points = item.GetDataAsPoints();
         for(unsigned int i=0; i <= angSteps_; ++i)
         {
             Vector3 dir = Vector3(1, 0, 0) * btCos(angles_[i]) + Vector3(0, 1, 0) * btSin(angles_[i]);
@@ -104,7 +104,7 @@ std::vector<Renderable> Multibeam::Render()
     return items;
 }
 
-void Multibeam::setRange(Scalar rangeMin, Scalar rangeMax)
+void Multibeam::SetRange(Scalar rangeMin, Scalar rangeMax)
 {
     btClamp(rangeMin, Scalar(0), Scalar(BT_LARGE_FLOAT));
     btClamp(rangeMax, Scalar(0), Scalar(BT_LARGE_FLOAT)); 
@@ -116,27 +116,27 @@ void Multibeam::setRange(Scalar rangeMin, Scalar rangeMax)
     }
 }
 
-void Multibeam::setNoise(Scalar rangeStdDev)
+void Multibeam::SetNoise(Scalar rangeStdDev)
 {
     btClamp(rangeStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT));
 
     for(unsigned int i=0; i<=angSteps_; ++i)
-        channels_[i].setStdDev(rangeStdDev);
+        channels_[i].SetStdDev(rangeStdDev);
 }
 
-ScalarSensorType Multibeam::getScalarSensorType() const
+ScalarSensorType Multibeam::GetScalarSensorType() const
 {
     return ScalarSensorType::MULTIBEAM;
 }
 
-Scalar Multibeam::getAngleRange() const
+Scalar Multibeam::GetAngleRange() const
 {
     return angRange_;
 }
 
 // Statics
 
-ConstructInfo Multibeam::getConstructInfo()
+ConstructInfo Multibeam::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -196,12 +196,12 @@ std::unique_ptr<Multibeam> Multibeam::Construct(const std::string& uniqueName, S
     if (value.valid)
         distanceMax = std::get<Scalar>(value.value);
 
-    sensor->setRange(distanceMin, distanceMax);
+    sensor->SetRange(distanceMin, distanceMax);
 
     // Noise (optional)
     value = info.nodes.at("noise").attributes.at("distance");
     if (value.valid)
-        sensor->setNoise(std::get<Scalar>(value.value));
+        sensor->SetNoise(std::get<Scalar>(value.value));
 
     return sensor;
 }

@@ -35,20 +35,20 @@ namespace sf
 Motor::Motor(const std::string& uniqueName) : JointActuator(uniqueName)
 {
     torque_ = Scalar(0);
-    setTorqueLimit(-1); // No limit
+    SetTorqueLimit(-1); // No limit
 }
 
-JointActuatorType Motor::getJointActuatorType() const
+JointActuatorType Motor::GetJointActuatorType() const
 {
     return JointActuatorType::MOTOR;
 }
 
-void Motor::setTorqueLimit(Scalar tau)
+void Motor::SetTorqueLimit(Scalar tau)
 {
     limit_ = tau;
 }
 
-void Motor::setTorque(Scalar tau)
+void Motor::SetTorque(Scalar tau)
 {
     if(limit_ > Scalar(0)) // Limitted
         torque_ = tau < -limit_ ? -limit_ : (tau > limit_ ? limit_ : tau);
@@ -57,22 +57,22 @@ void Motor::setTorque(Scalar tau)
     ResetWatchdog();
 }
 
-Scalar Motor::getTorque() const
+Scalar Motor::GetTorque() const
 {
     return torque_;
 }
 
-Scalar Motor::getAngle() const
+Scalar Motor::GetAngle() const
 {
-    if(j_ != nullptr && j_->getType() == JointType::REVOLUTE)
+    if(j_ != nullptr && j_->GetType() == JointType::REVOLUTE)
     {
-        return static_cast<RevoluteJoint*>(j_)->getAngle();
+        return static_cast<RevoluteJoint*>(j_)->GetAngle();
     }
     else if(fe_ != nullptr)
     {
         Scalar angle;
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
-        fe_->getJointPosition(jId_, angle, jt);
+        fe_->GetJointPosition(jId_, angle, jt);
         
         if(jt == btMultibodyLink::eRevolute)
             return angle;
@@ -83,17 +83,17 @@ Scalar Motor::getAngle() const
         return Scalar(0);
 }
 
-Scalar Motor::getAngularVelocity() const
+Scalar Motor::GetAngularVelocity() const
 {
-    if(j_ != nullptr && j_->getType() == JointType::REVOLUTE)
+    if(j_ != nullptr && j_->GetType() == JointType::REVOLUTE)
     {
-        return static_cast<RevoluteJoint*>(j_)->getAngularVelocity();
+        return static_cast<RevoluteJoint*>(j_)->GetAngularVelocity();
     }
     else if(fe_ != nullptr)
     {
         Scalar angularV;
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
-        fe_->getJointVelocity(jId_, angularV, jt);
+        fe_->GetJointVelocity(jId_, angularV, jt);
         
         if(jt == btMultibodyLink::eRevolute)
             return angularV;
@@ -108,7 +108,7 @@ void Motor::Update(Scalar dt)
 {
     Actuator::Update(dt);
 
-    if(j_ != nullptr && j_->getType() == JointType::REVOLUTE)
+    if(j_ != nullptr && j_->GetType() == JointType::REVOLUTE)
         static_cast<RevoluteJoint*>(j_)->ApplyTorque(torque_);
     else if(fe_ != nullptr)
         fe_->DriveJoint(jId_, torque_);
@@ -116,12 +116,12 @@ void Motor::Update(Scalar dt)
 
 void Motor::WatchdogTimeout()
 {
-    setTorque(Scalar(0));
+    SetTorque(Scalar(0));
 }
 
 // Statics
 
-ConstructInfo Motor::getConstructInfo()
+ConstructInfo Motor::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -144,7 +144,7 @@ std::unique_ptr<Motor> Motor::Construct(const std::string& uniqueName, Construct
 
     // Construct
     std::unique_ptr<Motor> actuator = std::make_unique<Motor>(uniqueName);
-    actuator->setTorqueLimit(maxTorque);
+    actuator->SetTorqueLimit(maxTorque);
 
     return actuator;
 }

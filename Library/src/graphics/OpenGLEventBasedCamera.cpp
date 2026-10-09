@@ -118,7 +118,7 @@ OpenGLEventBasedCamera::~OpenGLEventBasedCamera()
         glDeleteBuffers(1, &outputPBO_);    
 }
 
-ViewType OpenGLEventBasedCamera::getType() const
+ViewType OpenGLEventBasedCamera::GetType() const
 {
     return ViewType::EVENT_BASED_CAMERA;
 }
@@ -128,7 +128,7 @@ void OpenGLEventBasedCamera::Update()
     needsUpdate_ = true;
 }
 
-bool OpenGLEventBasedCamera::needsUpdate()
+bool OpenGLEventBasedCamera::NeedsUpdate()
 {
     if(needsUpdate_)
     {
@@ -139,7 +139,7 @@ bool OpenGLEventBasedCamera::needsUpdate()
         return false;
 }
 
-void OpenGLEventBasedCamera::setCamera(EventBasedCamera* cam)
+void OpenGLEventBasedCamera::SetCamera(EventBasedCamera* cam)
 {
     //Connect with camera sensor
     camera_ = cam;    
@@ -149,7 +149,7 @@ void OpenGLEventBasedCamera::setCamera(EventBasedCamera* cam)
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 }
 
-void OpenGLEventBasedCamera::setNoise(glm::vec2 sigmaC)
+void OpenGLEventBasedCamera::SetNoise(glm::vec2 sigmaC)
 {
     sigmaC_ = sigmaC;
 }
@@ -279,7 +279,7 @@ void OpenGLEventBasedCamera::DrawLDR(GLuint destinationFBO, bool updated)
     unsigned int dispX, dispY;
     GLfloat dispScale;
     if(camera_ != nullptr)
-        display = camera_->getDisplayOnScreen(dispX, dispY, dispScale);
+        display = camera_->GetDisplayOnScreen(dispX, dispY, dispScale);
     
     //Draw on screen
     if(display)
@@ -288,9 +288,9 @@ void OpenGLEventBasedCamera::DrawLDR(GLuint destinationFBO, bool updated)
         OpenGLCamera::DrawLDR(displayFBO_, updated);
 
         // Overlay event information
-        OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
-        int windowHeight = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowHeight();
-        int windowWidth = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowWidth();
+        OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent();
+        int windowHeight = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetWindowHeight();
+        int windowWidth = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetWindowWidth();
         
         glm::vec4 rect((GLfloat)dispX, (GLfloat)dispY, viewportWidth_*dispScale, viewportHeight_*dispScale);
         rect.y = windowHeight-rect.y-rect.w;

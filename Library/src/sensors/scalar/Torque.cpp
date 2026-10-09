@@ -46,30 +46,30 @@ void Torque::InternalUpdate(Scalar dt)
     //Scalar tau = torque.dot(axis);
     if(fe_ != nullptr)
     {
-        Scalar tau = fe_->getMotorForceTorque(jId_);
+        Scalar tau = fe_->GetMotorForceTorque(jId_);
         AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({tau})));
     }
 }
 
-void Torque::setRange(Scalar torqueMax)
+void Torque::SetRange(Scalar torqueMax)
 {
     channels_[0].rangeMin = -btClamped(torqueMax, Scalar(0), Scalar(BT_LARGE_FLOAT));
     channels_[0].rangeMax = btClamped(torqueMax, Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
 
-void Torque::setNoise(Scalar torqueStdDev)
+void Torque::SetNoise(Scalar torqueStdDev)
 {
-    channels_[0].setStdDev(btClamped(torqueStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[0].SetStdDev(btClamped(torqueStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
 
-ScalarSensorType Torque::getScalarSensorType() const
+ScalarSensorType Torque::GetScalarSensorType() const
 {
     return ScalarSensorType::TORQUE;
 }
 
 // Statics
 
-ConstructInfo Torque::getConstructInfo()
+ConstructInfo Torque::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -103,12 +103,12 @@ std::unique_ptr<Torque> Torque::Construct(const std::string& uniqueName, Scalar 
     // Range (optional)
     value = info.nodes.at("range").attributes.at("torque");
     if (value.valid)
-        sensor->setRange(std::get<Scalar>(value.value));
+        sensor->SetRange(std::get<Scalar>(value.value));
 
     // Noise (optional)
     value = info.nodes.at("noise").attributes.at("torque");
     if (value.valid)
-        sensor->setNoise(std::get<Scalar>(value.value));
+        sensor->SetNoise(std::get<Scalar>(value.value));
 
     return sensor;
 }

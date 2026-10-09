@@ -67,7 +67,7 @@ void SlidingTestManager::BuildScenario()
     
     std::unique_ptr<sf::Odometry> traj = std::make_unique<sf::Odometry>("Odometry", -1, 1000);
     traj->AttachToSolid(box, sf::I4());
-    traj->setRenderable(true);
+    traj->SetRenderable(true);
     AddSensor(std::move(traj));
     
     //////CAMERA & LIGHT//////

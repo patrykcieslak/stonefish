@@ -119,13 +119,13 @@ namespace sf
         glm::vec3 GetUpDirection() const override;
         
         //! A method returning the type of the view.
-        ViewType getType() const override;
+        ViewType GetType() const override;
         
         //! A method that informs if the camera needs update.
-        bool needsUpdate() override;
+        bool NeedsUpdate() override;
         
     private:
-        GLfloat calculateZ(GLfloat x, GLfloat y);
+        GLfloat CalculateZ(GLfloat x, GLfloat y);
         
         MovingEntity* holdingEntity_;
         

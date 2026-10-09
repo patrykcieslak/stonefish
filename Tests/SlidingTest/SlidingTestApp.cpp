@@ -45,6 +45,6 @@ void SlidingTestApp::DoHUD()
     dims.push_back(3);
     dims.push_back(4);
     dims.push_back(5);
-    getGUI()->DoTimePlot(plot, getWindowWidth()-310, getWindowHeight() - 240, 300, 200, 
-        static_cast<sf::ScalarSensor*>(getSimulationManager()->getSensor("Odometry")), dims, "Velocity");
+    GetGui()->DoTimePlot(plot, GetWindowWidth()-310, GetWindowHeight() - 240, 300, 200, 
+        static_cast<sf::ScalarSensor*>(GetSimulationManager()->GetSensor("Odometry")), dims, "Velocity");
 }

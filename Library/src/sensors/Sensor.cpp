@@ -37,15 +37,15 @@ namespace sf
 std::random_device Sensor::randomDevice;
 std::mt19937 Sensor::randomGenerator(randomDevice());
 
-void Sensor::defaultDeleter(Sensor* s)
+void Sensor::DefaultDeleter(Sensor* s)
 {
     delete s;
 }
 
 Sensor::Sensor(const std::string& uniqueName, Scalar frequency)
 {
-    name_ = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
-    setUpdateFrequency(frequency);
+    name_ = SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->AddName(uniqueName);
+    SetUpdateFrequency(frequency);
     eleapsedTime_ = Scalar(0);
     enabled_ = true;
     renderable_ = true;
@@ -57,32 +57,32 @@ Sensor::Sensor(const std::string& uniqueName, Scalar frequency)
 
 Sensor::~Sensor()
 {
-    if(SimulationApp::getApp() != NULL)
-        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name_);
+    if(SimulationApp::GetApp() != NULL)
+        SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->RemoveName(name_);
     SDL_DestroyMutex(updateMutex_);
 }
 
-const std::string& Sensor::getName() const
+const std::string& Sensor::GetName() const
 {
     return name_;
 }
 
-Scalar Sensor::getUpdateFrequency() const
+Scalar Sensor::GetUpdateFrequency() const
 {
     return freq_;
 }
 
-bool Sensor::isNewDataAvailable() const
+bool Sensor::IsNewDataAvailable() const
 {
     return newDataAvailable_;
 }
 
-bool Sensor::isRenderable() const
+bool Sensor::IsRenderable() const
 {
     return renderable_;
 }
 
-bool Sensor::isEnabled() const
+bool Sensor::IsEnabled() const
 {
     return enabled_;
 }
@@ -92,32 +92,32 @@ void Sensor::MarkDataOld()
     newDataAvailable_ = false;
 }
 
-void Sensor::setUpdateFrequency(Scalar f)
+void Sensor::SetUpdateFrequency(Scalar f)
 {
     freq_ = f;
 }
 
-void Sensor::setEnabled(bool en)
+void Sensor::SetEnabled(bool en)
 {
     enabled_ = en;
 }
 
-void Sensor::setRenderable(bool render)
+void Sensor::SetRenderable(bool render)
 {
     renderable_ = render;
 }
 
-void Sensor::setVisual(const std::string& meshFilename, Scalar scale, const std::string& look)
+void Sensor::SetVisual(const std::string& meshFilename, Scalar scale, const std::string& look)
 {
-    if(!SimulationApp::getApp()->hasGraphics())
+    if(!SimulationApp::GetApp()->HasGraphics())
         return;
 
     std::unique_ptr<Mesh> mesh = OpenGLContent::LoadMesh(meshFilename, scale, false);
     if(mesh == nullptr)
         return;
 
-    graObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh.get());
-    lookId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+    graObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BuildObject(mesh.get());
+    lookId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->GetLookId(look);
 }
 
 void Sensor::Reset()
@@ -164,7 +164,7 @@ std::vector<Renderable> Sensor::Render()
         item.materialName = "";
         item.objectId = graObjectId_;
         item.lookId = lookId_;
-        item.model = glMatrixFromTransform(getSensorFrame());
+        item.model = glMatrixFromTransform(GetSensorFrame());
         items.push_back(item);
     }
     return items;

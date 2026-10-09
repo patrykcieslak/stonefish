@@ -54,25 +54,25 @@ namespace sf
          \param rangeMin the minimum measured range [m]
          \param rangeMax the maximum measured range [m]
          */
-        void setRange(Scalar rangeMin, Scalar rangeMax);
+        void SetRange(Scalar rangeMin, Scalar rangeMax);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
          \param rangeStdDev standard deviation of the range measurement noise
          */
-        void setNoise(Scalar rangeStdDev);
+        void SetNoise(Scalar rangeStdDev);
         
         //! A method resetting the state of the sensor.
         std::vector<Renderable> Render();
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const override;
+        ScalarSensorType GetScalarSensorType() const override;
 
         //! A method returning the angleRangeDeg parameter
-        Scalar getAngleRange() const;
+        Scalar GetAngleRange() const;
         
         //! A method returning the construction info for the sensor.
-        static ConstructInfo getConstructInfo();
+        static ConstructInfo GetConstructInfo();
 
         //! A method constructing the sensor based on info structure.
         /*!

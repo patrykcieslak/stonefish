@@ -48,30 +48,30 @@ EventBasedCamera::EventBasedCamera(const std::string& uniqueName, unsigned int r
     glCamera_ = nullptr;
 }
 
-void EventBasedCamera::setNoise(float sigmaCp, float sigmaCm)
+void EventBasedCamera::SetNoise(float sigmaCp, float sigmaCm)
 {
     sigmaC_.x = glm::abs(sigmaCp);
     sigmaC_.y = glm::abs(sigmaCm);
     if(glCamera_ != nullptr)
-        glCamera_->setNoise(sigmaC_);
+        glCamera_->SetNoise(sigmaC_);
 }
 
-void* EventBasedCamera::getImageDataPointer(unsigned int index)
+void* EventBasedCamera::GetImageDataPointer(unsigned int index)
 {
     return imageData_;
 }
 
-unsigned int EventBasedCamera::getLastEventCount() const
+unsigned int EventBasedCamera::GetLastEventCount() const
 {
     return lastEventCount_;
 }
 
-VisionSensorType EventBasedCamera::getVisionSensorType() const
+VisionSensorType EventBasedCamera::GetVisionSensorType() const
 {
     return VisionSensorType::EVENT_BASED_CAMERA;
 }
 
-OpenGLView* EventBasedCamera::getOpenGLView() const
+OpenGLView* EventBasedCamera::GetOpenGlView() const
 {
     return glCamera_;
 }
@@ -88,13 +88,13 @@ void EventBasedCamera::InitGraphics(bool& seesParticles)
 
     // Setup camera
     glCamera_ = glCamera.get();
-    glCamera_->setNoise(sigmaC_);
-    glCamera_->setCamera(this);
+    glCamera_->SetNoise(sigmaC_);
+    glCamera_->SetCamera(this);
     UpdateTransform();
     glCamera_->UpdateTransform();
     InternalUpdate(0);
 
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glCamera));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->AddView(std::move(glCamera));
 }
 
 void EventBasedCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
@@ -146,7 +146,7 @@ void EventBasedCamera::InternalUpdate(Scalar dt)
 
 // Statics
 
-ConstructInfo EventBasedCamera::getConstructInfo()
+ConstructInfo EventBasedCamera::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -214,7 +214,7 @@ std::unique_ptr<EventBasedCamera> EventBasedCamera::Construct(const std::string&
     if (value.valid)
         sigmaCm = std::get<Scalar>(value.value);
 
-    sensor->setNoise(sigmaCp, sigmaCm);
+    sensor->SetNoise(sigmaCp, sigmaCm);
 
     return sensor;
 }

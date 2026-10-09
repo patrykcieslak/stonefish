@@ -73,16 +73,16 @@ namespace sf
          \param constantFactor a constant damping torque vector [Nm]
          \param viscousFactor a coefficient of viscous damping [Nm*s*rad^-1]
          */
-        void setDamping(Vector3 constantFactor, Vector3 viscousFactor);
+        void SetDamping(Vector3 constantFactor, Vector3 viscousFactor);
         
         //! A method to set the desired initial condition of the joint.
         /*!
          \param angles the initial angles of rotation the joint [rad]
          */
-        void setIC(Vector3 angles);
+        void SetIc(Vector3 angles);
         
         //! A method returning the type of the joint.
-        JointType getType() const;
+        JointType GetType() const;
         
     private:
         Vector3 sigDamping_;

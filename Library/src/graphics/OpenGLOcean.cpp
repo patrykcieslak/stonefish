@@ -171,7 +171,7 @@ OpenGLOcean::OpenGLOcean(GLfloat size)
 
     //Background
     std::vector<GLuint> precompiled;
-    precompiled.push_back(OpenGLAtmosphere::getAtmosphereAPI());
+    precompiled.push_back(OpenGLAtmosphere::GetAtmosphereApi());
     GLint compiled;
 	GLuint oceanOpticsFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "oceanOptics.frag", "", &compiled);
     precompiled.push_back(oceanOpticsFragment);
@@ -297,7 +297,7 @@ OpenGLOcean::OpenGLOcean(GLfloat size)
     f.vertexID[2] = 6;
     mesh.faces.push_back(f);
     
-    oceanBoxObj_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(&mesh);
+    oceanBoxObj_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BuildObject(&mesh);
 
     //Ocean currents
     oceanCurrentsUBOData_.numCurrents = 0;
@@ -335,7 +335,7 @@ OpenGLOcean::~OpenGLOcean()
     glDeleteBuffers(1, &oceanCurrentsUBO_);
 }
 
-void OpenGLOcean::setWaterType(GLfloat t)
+void OpenGLOcean::SetWaterType(GLfloat t)
 {
     t *= 63.f;
     float iPart;
@@ -350,32 +350,32 @@ void OpenGLOcean::setWaterType(GLfloat t)
     }
 }
 
-void OpenGLOcean::setWaterTemperature(GLfloat t)
+void OpenGLOcean::SetWaterTemperature(GLfloat t)
 {
     waterTemperature_ = t;
 }
 
-GLfloat OpenGLOcean::getWaterTemperature()
+GLfloat OpenGLOcean::GetWaterTemperature()
 {
     return waterTemperature_;
 }
     
-void OpenGLOcean::setParticles(bool enabled)
+void OpenGLOcean::SetParticles(bool enabled)
 {
     particlesEnabled_ = enabled;
 }
 
-bool OpenGLOcean::getParticlesEnabled()
+bool OpenGLOcean::GetParticlesEnabled()
 {
     return particlesEnabled_;
 }
 
-glm::vec3 OpenGLOcean::getLightAttenuation()
+glm::vec3 OpenGLOcean::GetLightAttenuation()
 {
-    return lightAbsorption_ + getLightScattering();
+    return lightAbsorption_ + GetLightScattering();
 }
 
-glm::vec3 OpenGLOcean::getLightScattering()
+glm::vec3 OpenGLOcean::GetLightScattering()
 {
     return lightScattering_;
 }
@@ -385,12 +385,12 @@ GLfloat OpenGLOcean::ComputeWaveHeight(GLfloat x, GLfloat y)
     return 0.f;
 }
 
-GLuint OpenGLOcean::getWaveTexture()
+GLuint OpenGLOcean::GetWaveTexture()
 {
     return oceanTextures_[3];
 }
 
-glm::vec4 OpenGLOcean::getWaveGridSizes()
+glm::vec4 OpenGLOcean::GetWaveGridSizes()
 {
     return params_.gridSizes;
 }
@@ -433,7 +433,7 @@ void OpenGLOcean::InitializeSimulation()
     {
         glFramebufferTexture3D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_3D, oceanTextures_[2], 0, layer);
         oceanShaders_["variance"]->SetUniform("c", (GLfloat)layer);
-        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+        static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->DrawSAQ();
     }
     
     OpenGLState::UnbindTexture(TEX_POSTPROCESS2);
@@ -446,7 +446,7 @@ void OpenGLOcean::Simulate(GLfloat dt)
     OpenGLState::DisableDepthTest();
     OpenGLState::DisableCullFace();
     
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BindBaseVertexArray();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BindBaseVertexArray();
     
     //Init -> one triangle -> multiple outputs
     OpenGLState::BindFramebuffer(oceanFBOs_[0]);
@@ -551,9 +551,9 @@ void OpenGLOcean::DrawUnderwaterMask(OpenGLView* view)
     oceanShaders_["mask_back"]->SetUniform("MVP", view->GetProjectionMatrix() * view->GetViewMatrix());
     oceanShaders_["mask_back"]->SetUniform("FC", view->GetLogDepthConstant());
     oceanShaders_["mask_back"]->SetUniform("size", oceanSize_*0.5f);
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->SetDrawingMode(DrawingMode::RAW);
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawObject(oceanBoxObj_, -1, glm::mat4(1.f));
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->SetDrawingMode(DrawingMode::UNDERWATER);
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->SetDrawingMode(DrawingMode::RAW);
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->DrawObject(oceanBoxObj_, -1, glm::mat4(1.f));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->SetDrawingMode(DrawingMode::UNDERWATER);
     OpenGLState::UseProgram(0);
 }
     
@@ -564,12 +564,12 @@ void OpenGLOcean::DrawBackground(OpenGLView* view)
     oceanShaders_["background"]->SetUniform("FC", view->GetLogDepthConstant());
     oceanShaders_["background"]->SetUniform("size", oceanSize_*0.5f);
     oceanShaders_["background"]->SetUniform("eyePos", view->GetEyePosition());
-    oceanShaders_["background"]->SetUniform("cWater", getLightAttenuation());
-    oceanShaders_["background"]->SetUniform("bWater", getLightScattering());
+    oceanShaders_["background"]->SetUniform("cWater", GetLightAttenuation());
+    oceanShaders_["background"]->SetUniform("bWater", GetLightScattering());
     glCullFace(GL_FRONT);
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->SetDrawingMode(DrawingMode::RAW);
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawObject(oceanBoxObj_, -1, glm::mat4(1.f));
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->SetDrawingMode(DrawingMode::UNDERWATER);
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->SetDrawingMode(DrawingMode::RAW);
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->DrawObject(oceanBoxObj_, -1, glm::mat4(1.f));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->SetDrawingMode(DrawingMode::UNDERWATER);
     glCullFace(GL_BACK);
     OpenGLState::UseProgram(0);
 }
@@ -692,7 +692,7 @@ void OpenGLOcean::DrawVelocityField(OpenGLView* view, GLfloat velocityMax)
     oceanShaders_["vectorfield"]->SetUniform("eyePos", frustum[0]);
     OpenGLState::EnableBlend();
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BindBaseVertexArray();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BindBaseVertexArray();
     glDrawArrays(GL_POINTS, 0, numPoints);
     OpenGLState::BindVertexArray(0);
     OpenGLState::UseProgram(0);
@@ -713,7 +713,7 @@ void OpenGLOcean::ApplySpecialEffects(OpenGLCamera* cam)
     oceanShaders["downsample"]->Use();
     oceanShaders["downsample"]->SetUniform("source", TEX_POSTPROCESS1);
     oceanShaders["downsample"]->SetUniform("srcViewport", glm::vec2((GLfloat)viewport[2], (GLfloat)viewport[3]));
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->getGLPipeline()->getContent()->DrawSAQ();
 
     //Blur
     oceanShaders["gaussian"]->Use();
@@ -723,12 +723,12 @@ void OpenGLOcean::ApplySpecialEffects(OpenGLCamera* cam)
         glDrawBuffer(GL_COLOR_ATTACHMENT1);
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cam->getQuaterPostprocessTexture(0));
         oceanShaders["gaussian"]->SetUniform("texelOffset", glm::vec2(4.f/(GLfloat)viewport[2], 0.f));
-        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+        static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->getGLPipeline()->getContent()->DrawSAQ();
         
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cam->getQuaterPostprocessTexture(1));
         oceanShaders["gaussian"]->SetUniform("texelOffset", glm::vec2(0.f, 4.f/(GLfloat)viewport[3]));
-        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+        static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->getGLPipeline()->getContent()->DrawSAQ();
     }
     OpenGLState::UseProgram(0);
     OpenGLState::BindFramebuffer(0);    
@@ -749,7 +749,7 @@ void OpenGLOcean::ApplySpecialEffects(OpenGLCamera* cam)
     oceanShaders["blur"]->SetUniform("texScene", TEX_POSTPROCESS1);
     oceanShaders["blur"]->SetUniform("texBlur", TEX_POSTPROCESS2);
     oceanShaders["blur"]->SetUniform("texLinearDepth", TEX_POSTPROCESS3);
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->getGLPipeline()->getContent()->DrawSAQ();
     OpenGLState::UseProgram(0);
     
     OpenGLState::UnbindTexture(TEX_POSTPROCESS3);
@@ -795,7 +795,7 @@ void OpenGLOcean::ShowSpectrum(glm::vec2 viewportSize, glm::vec4 rect)
     glBufferData(GL_ARRAY_BUFFER, sizeof(quadData), quadData, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
         
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BindBaseVertexArray();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BindBaseVertexArray();
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, quadBuf);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(GLfloat), (void*)0);
@@ -815,16 +815,16 @@ void OpenGLOcean::ShowTexture(int id, glm::vec4 rect)
     {
         case 0:
         case 1:
-            static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, oceanTextures_[id], glm::vec4(1e6f));
+            static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, oceanTextures_[id], glm::vec4(1e6f));
             break;
 
         case 5:
-            static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, oceanTextures_[id]);
+            static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, oceanTextures_[id]);
             break;
             
         case 3:
         case 4:
-            static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, oceanTextures_[id], 0, true);
+            static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, oceanTextures_[id], 0, true);
             break;
             
         case 30:
@@ -835,14 +835,14 @@ void OpenGLOcean::ShowTexture(int id, glm::vec4 rect)
         case 35:
         case 36:
         case 37:
-            //static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, oceanViewTextures[id-30], glm::vec4(1000.f));
+            //static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->getGLPipeline()->getContent()->DrawTexturedQuad(rect.x, rect.y, rect.z, rect.w, oceanViewTextures[id-30], glm::vec4(1000.f));
             break;
     }
     
     
 }
 
-int OpenGLOcean::bitReverse(int i, int N)
+int OpenGLOcean::BitReverse(int i, int N)
 {
     int j = i;
     int M = N;
@@ -859,7 +859,7 @@ int OpenGLOcean::bitReverse(int i, int N)
     return Sum;
 }
 
-void OpenGLOcean::computeWeight(int N, int k, float &Wr, float &Wi)
+void OpenGLOcean::ComputeWeight(int N, int k, float &Wr, float &Wi)
 {
     Wr = cosl(2.f * M_PI * k / float(N));
     Wi = sinl(2.f * M_PI * k / float(N));
@@ -882,8 +882,8 @@ std::vector<GLfloat> OpenGLOcean::ComputeButterflyLookupTable(unsigned int size,
                 {
                     i1 = j * nHInputs * 2 + k;
                     i2 = j * nHInputs * 2 + nHInputs + k;
-                    j1 = bitReverse(i1, size);
-                    j2 = bitReverse(i2, size);
+                    j1 = BitReverse(i1, size);
+                    j2 = BitReverse(i2, size);
                 }
                 else
                 {
@@ -894,7 +894,7 @@ std::vector<GLfloat> OpenGLOcean::ComputeButterflyLookupTable(unsigned int size,
                 }
 
                 float wr, wi;
-                computeWeight(size, k * nBlocks, wr, wi);
+                ComputeWeight(size, k * nBlocks, wr, wi);
 
                 int offset1 = 4 * (i1 + i * size);
                 data[offset1 + 0] = (j1 + 0.5) / size;
@@ -915,52 +915,52 @@ std::vector<GLfloat> OpenGLOcean::ComputeButterflyLookupTable(unsigned int size,
 }
 
 //Wave generation
-float OpenGLOcean::sqr(float x)
+float OpenGLOcean::Sqr(float x)
 {
     return x * x;
 }
 
-float OpenGLOcean::omega(float k)
+float OpenGLOcean::Omega(float k)
 {
-    return sqrt(9.81 * k * (1.0 + sqr(k / params_.km))); // Eq 24
+    return sqrt(9.81 * k * (1.0 + Sqr(k / params_.km))); // Eq 24
 }
 
 // 1/kx and 1/ky in meters
-float OpenGLOcean::spectrum(float kx, float ky, bool omnispectrum)
+float OpenGLOcean::Spectrum(float kx, float ky, bool omnispectrum)
 {
     float U10 = params_.wind;
-    float Omega = params_.omega;
+    float omega = params_.omega;
 
     // phase speed
     float k = sqrt(kx * kx + ky * ky);
-    float c = omega(k) / k;
+    float c = Omega(k) / k;
 
     // spectral peak
-    float kp = 9.81 * sqr(Omega / U10); // after Eq 3
-    float cp = omega(kp) / kp;
+    float kp = 9.81 * Sqr(omega / U10); // after Eq 3
+    float cp = Omega(kp) / kp;
 
     // friction velocity
-    float z0 = 3.7e-5 * sqr(U10) / 9.81 * pow(U10 / cp, 0.9f); // Eq 66
+    float z0 = 3.7e-5 * Sqr(U10) / 9.81 * pow(U10 / cp, 0.9f); // Eq 66
     float u_star = 0.41 * U10 / log(10.0 / z0); // Eq 60
 
-    float Lpm = exp(- 5.0 / 4.0 * sqr(kp / k)); // after Eq 3
-    float gamma = Omega < 1.0 ? 1.7 : 1.7 + 6.0 * log(Omega); // after Eq 3 // log10 or log??
-    float sigma = 0.08 * (1.0 + 4.0 / pow(Omega, 3.0f)); // after Eq 3
-    float Gamma = exp(-1.0 / (2.0 * sqr(sigma)) * sqr(sqrt(k / kp) - 1.0));
+    float Lpm = exp(- 5.0 / 4.0 * Sqr(kp / k)); // after Eq 3
+    float gamma = omega < 1.0 ? 1.7 : 1.7 + 6.0 * log(omega); // after Eq 3 // log10 or log??
+    float sigma = 0.08 * (1.0 + 4.0 / pow(omega, 3.0f)); // after Eq 3
+    float Gamma = exp(-1.0 / (2.0 * Sqr(sigma)) * Sqr(sqrt(k / kp) - 1.0));
     float Jp = pow(gamma, Gamma); // Eq 3
-    float Fp = Lpm * Jp * exp(- Omega / sqrt(10.0) * (sqrt(k / kp) - 1.0)); // Eq 32
-    float alphap = 0.006 * sqrt(Omega); // Eq 34
+    float Fp = Lpm * Jp * exp(- omega / sqrt(10.0) * (sqrt(k / kp) - 1.0)); // Eq 32
+    float alphap = 0.006 * sqrt(omega); // Eq 34
     float Bl = 0.5 * alphap * cp / c * Fp; // Eq 31
 
     float alpham = 0.01 * (u_star < params_.cm ? 1.0 + log(u_star / params_.cm) : 1.0 + 3.0 * log(u_star / params_.cm)); // Eq 44
-    float Fm = exp(-0.25 * sqr(k / params_.km - 1.0)); // Eq 41
+    float Fm = exp(-0.25 * Sqr(k / params_.km - 1.0)); // Eq 41
     float Bh = 0.5 * alpham * params_.cm / c * Fm; // Eq 40
 
     Bh *= Lpm; 
 
     if (omnispectrum)
     {
-        return params_.A * (Bl + Bh) / (k * sqr(k)); // Eq 30
+        return params_.A * (Bl + Bh) / (k * Sqr(k)); // Eq 30
     }
 
     float a0 = log(2.0) / 4.0;
@@ -986,7 +986,7 @@ float OpenGLOcean::spectrum(float kx, float ky, bool omnispectrum)
     // remove waves perpendicular to wind dir
     float tweak = sqrtf( std::max( kx/sqrtf(kx*kx+ky*ky), 0.f) );
     tweak = 1.0f;
-    return params_.A * (Bl + Bh) * (1.0 + Delta * cos(2.0 * phi)) / (2.0 * M_PI * sqr(sqr(k))) * tweak; // Eq 67
+    return params_.A * (Bl + Bh) * (1.0 + Delta * cos(2.0 * phi)) / (2.0 * M_PI * Sqr(Sqr(k))) * tweak; // Eq 67
 }
 
 void OpenGLOcean::GetSpectrumSample(int i, int j, float lengthScale, float kMin, float *result)
@@ -1002,7 +1002,7 @@ void OpenGLOcean::GetSpectrumSample(int i, int j, float lengthScale, float kMin,
     }
     else
     {
-        float S = spectrum(kx, ky);
+        float S = Spectrum(kx, ky);
         float h = sqrtf(S / 2.0) * dk;
         float phi = frandom(&seed) * 2.0 * M_PI;
         result[0] = h * cos(phi);
@@ -1054,7 +1054,7 @@ float OpenGLOcean::ComputeSlopeVariance()
     while (k < 1e3)
     {
         float nextK = k * 1.001;
-        theoreticSlopeVariance += k * k * spectrum(k, 0, true) * (nextK - k);
+        theoreticSlopeVariance += k * k * Spectrum(k, 0, true) * (nextK - k);
         k = nextK;
     }
 

@@ -51,16 +51,16 @@ namespace sf
         /*!
          \param nedDev standard deviation of the NED position measurement noise [m]
          */
-        void setNoise(Scalar nedDev);
+        void SetNoise(Scalar nedDev);
         
         //! A method that returns the standard deviation of position in meters.
-        Scalar getNoise() const;
+        Scalar GetNoise() const;
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const override;
+        ScalarSensorType GetScalarSensorType() const override;
         
         //! A method returning the construction info for the sensor.
-        static ConstructInfo getConstructInfo();
+        static ConstructInfo GetConstructInfo();
 
         //! A method constructing the sensor based on info structure.
         /*!

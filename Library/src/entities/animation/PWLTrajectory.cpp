@@ -94,16 +94,16 @@ void PWLTrajectory::Interpolate()
     {
         interpTrans_ = it->T;
         if(it == points_.begin()) //Time = 0
-            calculateVelocityShortestPath(it->T, (it+1)->T, (it+1)->t, interpVel_, interpAngVel_);
+            CalculateVelocityShortestPath(it->T, (it+1)->T, (it+1)->t, interpVel_, interpAngVel_);
         else
-            calculateVelocityShortestPath((it-1)->T, it->T, it->t-(it-1)->t, interpVel_, interpAngVel_);
+            CalculateVelocityShortestPath((it-1)->T, it->T, it->t-(it-1)->t, interpVel_, interpAngVel_);
     }
     else
     {
         Scalar alpha = (playTime_ - (it-1)->t)/(it->t - (it-1)->t);
         interpTrans_.setOrigin(lerp((it-1)->T.getOrigin(), it->T.getOrigin(), alpha));
         interpTrans_.setRotation(slerp((it-1)->T.getRotation(), it->T.getRotation(), alpha));
-        calculateVelocityShortestPath((it-1)->T, it->T, it->t-(it-1)->t, interpVel_, interpAngVel_);
+        CalculateVelocityShortestPath((it-1)->T, it->T, it->t-(it-1)->t, interpVel_, interpAngVel_);
     }
 
     if(!forward_)
@@ -115,11 +115,11 @@ void PWLTrajectory::Interpolate()
 
 void PWLTrajectory::BuildGraphicalPath()
 {
-    vis_[0].getDataAsPoints()->clear();
-    vis_[1].getDataAsPoints()->clear();
+    vis_[0].GetDataAsPoints()->clear();
+    vis_[1].GetDataAsPoints()->clear();
     for(size_t i=0; i<points_.size(); ++i)
-        vis_[0].getDataAsPoints()->push_back(glVectorFromVector(points_[i].T.getOrigin()));
-    *vis_[1].getDataAsPoints() = *vis_[0].getDataAsPoints();
+        vis_[0].GetDataAsPoints()->push_back(glVectorFromVector(points_[i].T.getOrigin()));
+    *vis_[1].GetDataAsPoints() = *vis_[0].GetDataAsPoints();
 }
 
 std::vector<Renderable> PWLTrajectory::Render()

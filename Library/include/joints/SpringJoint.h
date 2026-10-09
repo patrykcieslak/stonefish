@@ -69,7 +69,7 @@ namespace sf
         std::vector<Renderable> Render();
         
         //! A method returning the type of the joint.
-        JointType getType() const;
+        JointType GetType() const;
     };
 }
 

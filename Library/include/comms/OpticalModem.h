@@ -51,13 +51,13 @@ namespace sf
         std::vector<Renderable> Render();
         
         //! A method returnign the reception quality.
-        Scalar getReceptionQuality() const;
+        Scalar GetReceptionQuality() const;
 
         //! A method returning the type of the comm.
-        virtual CommType getType() const;
+        virtual CommType GetType() const;
 
         //! A method returning the construction info for the sensor.
-        static ConstructInfo getConstructInfo();
+        static ConstructInfo GetConstructInfo();
 
         //! A method constructing the sensor based on info structure.
         /*!
@@ -73,10 +73,10 @@ namespace sf
         virtual void InternalUpdate(Scalar dt) override;
 
         virtual void MessageReceived(std::shared_ptr<CommDataFrame> message);
-        bool isReceptionPossible(Vector3 worldDir, Scalar distance);
+        bool IsReceptionPossible(Vector3 worldDir, Scalar distance);
         
-        static OpticalModem* getNode(uint64_t deviceId);
-        static std::vector<uint8_t> introduceErrors(const std::vector<uint8_t>& data, Scalar linkQuality);
+        static OpticalModem* GetNode(uint64_t deviceId);
+        static std::vector<uint8_t> IntroduceErrors(const std::vector<uint8_t>& data, Scalar linkQuality);
         
     private:
         Scalar maxRange_;
@@ -85,9 +85,9 @@ namespace sf
         Scalar receptionQuality_;
         Scalar trueRange_;
         
-        static void addNode(OpticalModem* node);
-        static void removeNode(uint64_t deviceId);
-        static std::vector<uint64_t> getNodeIds();
+        static void AddNode(OpticalModem* node);
+        static void RemoveNode(uint64_t deviceId);
+        static std::vector<uint64_t> GetNodeIds();
 
         static std::map<uint64_t, OpticalModem*> nodes;
     };

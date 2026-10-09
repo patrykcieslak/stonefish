@@ -37,7 +37,7 @@ SimpleUSBL::SimpleUSBL(const std::string& uniqueName, uint64_t deviceId, Scalar 
     angleRes_ = Scalar(0);
 }
     
-void SimpleUSBL::setNoise(Scalar rangeDev, Scalar horizontalAngleDevDeg, Scalar verticalAngleDevDeg)
+void SimpleUSBL::SetNoise(Scalar rangeDev, Scalar horizontalAngleDevDeg, Scalar verticalAngleDevDeg)
 {
     noiseRange_ = std::normal_distribution<Scalar>(Scalar(0), btFabs(rangeDev));
     noiseHAngle_ = std::normal_distribution<Scalar>(Scalar(0), btFabs(horizontalAngleDevDeg)/Scalar(180)*M_PI);
@@ -45,7 +45,7 @@ void SimpleUSBL::setNoise(Scalar rangeDev, Scalar horizontalAngleDevDeg, Scalar 
     noise_ = true;
 }
 
-void SimpleUSBL::setResolution(Scalar range, Scalar angleDeg)
+void SimpleUSBL::SetResolution(Scalar range, Scalar angleDeg)
 {
     rangeRes_ = btFabs(range);
     angleRes_ = btFabs(angleDeg)/Scalar(180)*M_PI;
@@ -63,11 +63,11 @@ void SimpleUSBL::ProcessMessages()
         if(msg->data == ackData)
         {  
             //Get message data
-            AcousticModem* cNode = getNode(msg->source);
+            AcousticModem* cNode = GetNode(msg->source);
             Vector3 cO = msg->txPosition;
-            Transform dT = getDeviceFrame();
+            Transform dT = GetDeviceFrame();
             Vector3 dO = dT.getOrigin();
-            Vector3 dir = getDeviceFrame().getBasis().inverse() * ((cO - dO).normalized()); //Direction in device frame
+            Vector3 dir = GetDeviceFrame().getBasis().inverse() * ((cO - dO).normalized()); //Direction in device frame
             Scalar slantRange = msg->travelled/Scalar(2); //Distance to node is hald of the full travelled distance
             Scalar t = msg->timeStamp + slantRange/SOUND_VELOCITY_WATER;
             
@@ -126,7 +126,7 @@ void SimpleUSBL::ProcessMessages()
 
 // Statics
 
-ConstructInfo SimpleUSBL::getConstructInfo()
+ConstructInfo SimpleUSBL::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -185,7 +185,7 @@ std::unique_ptr<SimpleUSBL> SimpleUSBL::Construct(const std::string& uniqueName,
     ConstructInfoValue& value = info.nodes.at("connect").attributes.at("occlusion_test");
     if (value.valid)
         occlusionTest = std::get<bool>(value.value);
-    comm->setOcclusionTest(occlusionTest);
+    comm->SetOcclusionTest(occlusionTest);
     
     value = info.nodes.at("autoping").attributes.at("rate");
     if (value.valid)
@@ -208,7 +208,7 @@ std::unique_ptr<SimpleUSBL> SimpleUSBL::Construct(const std::string& uniqueName,
     if (value.valid)
         vAngleDev = std::get<Scalar>(value.value);
 
-    comm->setNoise(rangeDev, hAngleDev, vAngleDev);
+    comm->SetNoise(rangeDev, hAngleDev, vAngleDev);
 
     // Resolution (optional)
     Scalar rangeRes (0.);
@@ -222,7 +222,7 @@ std::unique_ptr<SimpleUSBL> SimpleUSBL::Construct(const std::string& uniqueName,
     if (value.valid)
         angleRes = std::get<Scalar>(value.value);
 
-    comm->setResolution(rangeRes, angleRes);
+    comm->SetResolution(rangeRes, angleRes);
 
     return comm;
 }

@@ -181,28 +181,28 @@ namespace sf
         /*!
          \param t type of water
          */
-        void setWaterType(GLfloat t);
+        void SetWaterType(GLfloat t);
 
         //! A method to set the temperature of the water.
         /*!
          \param t temperature of the water [degC]
          */
-        void setWaterTemperature(GLfloat t);
+        void SetWaterTemperature(GLfloat t);
 
         //! A method to get the temperature of the water.
         /*!
          \return temperature of the water [degC]
          */
-        GLfloat getWaterTemperature();
+        GLfloat GetWaterTemperature();
 
         //! A method to set if the particles should be rendered.
         /*!
          \param enabled a flag specifying if the particles should be rendered
          */
-        void setParticles(bool enabled);
+        void SetParticles(bool enabled);
 
         //! A method returning informing if the particles are enabled.
-        bool getParticlesEnabled();
+        bool GetParticlesEnabled();
 
         //! A method to get wave height at a specified coordinate.
         /*!
@@ -213,20 +213,20 @@ namespace sf
         virtual GLfloat ComputeWaveHeight(GLfloat x, GLfloat y);
 
         //! A method returning the id of the wave texture.
-        GLuint getWaveTexture();
+        GLuint GetWaveTexture();
 
         //! A method returning the vector of wave grid sizes.
-        glm::vec4 getWaveGridSizes();
+        glm::vec4 GetWaveGridSizes();
 
         //! A method returning calculated light attenuation coefficient.
-        glm::vec3 getLightAttenuation();
+        glm::vec3 GetLightAttenuation();
         	
         //! A method calculating Henyey-Greenstein scattering factor.
-        glm::vec3 getLightScattering();
+        glm::vec3 GetLightScattering();
         
     protected:
         virtual void InitializeSimulation();
-        float sqr(float x);
+        float Sqr(float x);
         
         std::map<OpenGLView*, std::shared_ptr<OpenGLOceanParticles>> oceanParticles_;
         glm::vec3 absorption_[64];
@@ -245,14 +245,14 @@ namespace sf
         
     private:
         std::vector<GLfloat> ComputeButterflyLookupTable(unsigned int size, unsigned int passes);
-        int bitReverse(int i, int N);
-        void computeWeight(int N, int k, float &Wr, float &Wi);
+        int BitReverse(int i, int N);
+        void ComputeWeight(int N, int k, float &Wr, float &Wi);
         float ComputeSlopeVariance();
         float GetSlopeVariance(float kx, float ky, float *spectrumSample);
         void GenerateWavesSpectrum();
         void GetSpectrumSample(int i, int j, float lengthScale, float kMin, float *result);
-        float spectrum(float kx, float ky, bool omnispectrum = false);
-        float omega(float k);
+        float Spectrum(float kx, float ky, bool omnispectrum = false);
+        float Omega(float k);
 
         int oceanBoxObj_;
         bool particlesEnabled_;

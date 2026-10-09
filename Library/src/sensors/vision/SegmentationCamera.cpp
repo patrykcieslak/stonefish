@@ -43,22 +43,22 @@ SegmentationCamera::SegmentationCamera(const std::string& uniqueName, unsigned i
     glCamera_ = nullptr;
 }
 
-void* SegmentationCamera::getImageDataPointer(unsigned int index)
+void* SegmentationCamera::GetImageDataPointer(unsigned int index)
 {
     return segmentationData_;
 }
 
-GLubyte* SegmentationCamera::getDisplayDataPointer()
+GLubyte* SegmentationCamera::GetDisplayDataPointer()
 {
     return displayData_.data();
 }
 
-VisionSensorType SegmentationCamera::getVisionSensorType() const
+VisionSensorType SegmentationCamera::GetVisionSensorType() const
 {
     return VisionSensorType::SEGMENTATION_CAMERA;
 }
 
-OpenGLView* SegmentationCamera::getOpenGLView() const
+OpenGLView* SegmentationCamera::GetOpenGlView() const
 {
     return glCamera_;
 }
@@ -74,15 +74,15 @@ void SegmentationCamera::InitGraphics(bool& seesParticles)
 
     // Set up camera
     glCamera_ = glCamera.get();
-    glCamera_->setCamera(this);
+    glCamera_->SetCamera(this);
     UpdateTransform();
     glCamera_->UpdateTransform();
     InternalUpdate(0);
 
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glCamera));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->AddView(std::move(glCamera));
 
     unsigned int w, h;
-    getResolution(w, h);
+    GetResolution(w, h);
     displayData_.resize(w*h*3);
 }
 
@@ -106,7 +106,7 @@ void SegmentationCamera::NewDataReady(void* data, unsigned int index)
         if(index == 0)
         {
             unsigned int w, h;
-            getResolution(w, h);
+            GetResolution(w, h);
             memcpy(displayData_.data(), data, w*h*3);
         }
         else
@@ -125,7 +125,7 @@ void SegmentationCamera::InternalUpdate(Scalar dt)
 
 // Statics
 
-ConstructInfo SegmentationCamera::getConstructInfo()
+ConstructInfo SegmentationCamera::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;

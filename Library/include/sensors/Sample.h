@@ -42,29 +42,29 @@ namespace sf
         Sample(const std::vector<Scalar>& data, bool invalid = false, size_t index = 0);
         
         //! A method returning the timestamp of the sample.
-        Scalar getTimestamp() const;
+        Scalar GetTimestamp() const;
         
         //! A method returning a value of the single dimension of the measurement.
         /*!
          \param dimension the index of the dimension
          \return the value of the measurement for the dimension
          */
-        Scalar getValue(size_t dimension) const;
+        Scalar GetValue(size_t dimension) const;
         
         //! A method returning the full data of the measurement.
-        std::vector<Scalar> getData() const;
+        std::vector<Scalar> GetData() const;
         
         //! A method returning the number of dimensions of the measurement.
-        size_t getNumOfDimensions() const;
+        size_t GetNumOfDimensions() const;
         
         //! A method returning a pointer to the sample data.
-        Scalar* getDataPointer();
+        Scalar* GetDataPointer();
 
         //! A method returning the id of the sample.
-        size_t getId() const;
+        size_t GetId() const;
 
         //! A method to set the id of the sample.
-        void setId(size_t id);
+        void SetId(size_t id);
         
     private:
         Scalar timestamp_;

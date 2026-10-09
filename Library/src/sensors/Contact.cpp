@@ -35,7 +35,7 @@ namespace sf
     
 Contact::Contact(const std::string& uniqueName, Entity* entityA, Entity* entityB, unsigned int inclusiveHistoryLength)
 {
-    name_ = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
+    name_ = SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->AddName(uniqueName);
     A_ = entityA;
     B_ = entityB;
     historyLen_ = inclusiveHistoryLength;
@@ -46,26 +46,26 @@ Contact::Contact(const std::string& uniqueName, Entity* entityA, Entity* entityB
 
 Contact::~Contact()
 {
-    if(SimulationApp::getApp() != nullptr)
-        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name_);
+    if(SimulationApp::GetApp() != nullptr)
+        SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->RemoveName(name_);
 }
 
-const std::string& Contact::getName() const
+const std::string& Contact::GetName() const
 {
     return name_;
 }
 
-const Entity* Contact::getEntityA()
+const Entity* Contact::GetEntityA()
 {
     return A_;
 }
 
-const Entity* Contact::getEntityB()
+const Entity* Contact::GetEntityB()
 {
     return B_;
 }
 
-void Contact::setDisplayMask(int16_t mask)
+void Contact::SetDisplayMask(int16_t mask)
 {
     displayMask_ = mask;
 }
@@ -75,7 +75,7 @@ void Contact::MarkDataOld()
     newDataAvailable_ = false;
 }
 
-bool Contact::isNewDataAvailable() const
+bool Contact::IsNewDataAvailable() const
 {
     return newDataAvailable_;
 }
@@ -113,7 +113,7 @@ void Contact::AddContactPoint(ContactPoint p)
     if(historyLen_ > 0 && points_.size() == historyLen_)
         points_.pop_front();
 
-    p.timeStamp = SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true);
+    p.timeStamp = SimulationApp::GetApp()->GetSimulationManager()->GetSimulationTime(true);
     points_.push_back(p);
     
     newDataAvailable_ = true;
@@ -124,7 +124,7 @@ void Contact::ClearHistory()
     points_.clear();
 }
 
-const std::deque<ContactPoint>& Contact::getHistory()
+const std::deque<ContactPoint>& Contact::GetHistory()
 {
     return points_;
 }
@@ -192,7 +192,7 @@ std::vector<Renderable> Contact::Render()
         item.model = glm::mat4(1.f);
         item.type = RenderableType::SENSOR_LINES;
         item.data = std::make_shared<std::vector<glm::vec3>>();
-        *item.getDataAsPoints() = vertices;
+        *item.GetDataAsPoints() = vertices;
         items.push_back(item);
     }
         
@@ -203,7 +203,7 @@ std::vector<Renderable> Contact::Render()
         item.model = glm::mat4(1.f);
         item.type = RenderableType::SENSOR_POINTS;
         item.data = std::make_shared<std::vector<glm::vec3>>();
-        auto itemPoints = item.getDataAsPoints();
+        auto itemPoints = item.GetDataAsPoints();
         
         for(size_t i = 0; i < points_.size(); ++i)
         {	
@@ -220,7 +220,7 @@ std::vector<Renderable> Contact::Render()
         item.model = glm::mat4(1.f);
         item.type = RenderableType::SENSOR_POINTS;
         item.data = std::make_shared<std::vector<glm::vec3>>();
-        auto itemPoints = item.getDataAsPoints();
+        auto itemPoints = item.GetDataAsPoints();
         
         for(size_t i = 0; i < points_.size(); ++i)
         {	

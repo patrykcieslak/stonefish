@@ -46,7 +46,7 @@ Lidar::Lidar(const std::string& uniqueName, unsigned int horizontalRes, unsigned
     rangeData_.resize(resX_*resY_); // Buffer for storing final data
 }
     
-void* Lidar::getImageDataPointer(unsigned int index)
+void* Lidar::GetImageDataPointer(unsigned int index)
 {
     if(cameras_.size() > index)
         return &imageData_[cameras_[index].dataOffset];
@@ -54,27 +54,27 @@ void* Lidar::getImageDataPointer(unsigned int index)
         return nullptr;
 }
     
-float* Lidar::getRangeDataPointer()
+float* Lidar::GetRangeDataPointer()
 {
     return rangeData_.data();
 }
     
-glm::vec2 Lidar::getRangeLimits() const
+glm::vec2 Lidar::GetRangeLimits() const
 {
     return range_;
 }
 
-Scalar Lidar::getVerticalFOV() const
+Scalar Lidar::GetVerticalFov() const
 {
     return fovV_;
 }
 
-VisionSensorType Lidar::getVisionSensorType() const
+VisionSensorType Lidar::GetVisionSensorType() const
 {
     return VisionSensorType::MULTIBEAM2;
 }
 
-OpenGLView* Lidar::getOpenGLView() const
+OpenGLView* Lidar::GetOpenGlView() const
 {
     if(cameras_.size() > 0)
         return cameras_[0].cam;
@@ -147,9 +147,9 @@ void Lidar::InitGraphics(bool& seesParticles)
         );
 
         cameras_[i].cam = camera.get();
-        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(camera));
+        static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->AddView(std::move(camera));
 
-        cameras_[i].cam->setCamera(this, (unsigned int)i);
+        cameras_[i].cam->SetCamera(this, (unsigned int)i);
         cameras_[i].dataOffset = accResX*resY_;
         accResX += cameras_[i].width;
     }
@@ -172,7 +172,7 @@ void Lidar::InternalUpdate(Scalar dt)
     
 void Lidar::UpdateTransform()
 {
-    Transform mbTransform = getSensorFrame();
+    Transform mbTransform = GetSensorFrame();
     Vector3 eyePosition = mbTransform.getOrigin(); //O
     Vector3 direction = mbTransform.getBasis().getColumn(2); //Z
     Vector3 cameraUp = -mbTransform.getBasis().getColumn(1); //-Y
@@ -213,7 +213,7 @@ void Lidar::NewDataReady(void* data, unsigned int index)
     if(index >= cameras_.size())
         return;
 
-    memcpy(getImageDataPointer(index), data, cameras_[index].width * resY_ * sizeof(GLfloat));
+    memcpy(GetImageDataPointer(index), data, cameras_[index].width * resY_ * sizeof(GLfloat));
     dataCounter_ += index;
     int lastIndex = (int)cameras_.size()-1;
     int nSum = lastIndex*(lastIndex+1)/2;
@@ -244,13 +244,13 @@ void Lidar::NewDataReady(void* data, unsigned int index)
 std::vector<Renderable> Lidar::Render()
 {
     std::vector<Renderable> items = Sensor::Render();
-    if(isRenderable())
+    if(IsRenderable())
     {
         Renderable item;
-        item.model = glMatrixFromTransform(getSensorFrame());
+        item.model = glMatrixFromTransform(GetSensorFrame());
         item.type = RenderableType::SENSOR_LINES;
         item.data = std::make_shared<std::vector<glm::vec3>>();
-        auto points = item.getDataAsPoints();
+        auto points = item.GetDataAsPoints();
         
         unsigned int div = (unsigned int)ceil(fovH_/5.0);
         GLfloat iconSize = 0.5f;
@@ -304,7 +304,7 @@ std::vector<Renderable> Lidar::Render()
 
 // Statics
 
-ConstructInfo Lidar::getConstructInfo()
+ConstructInfo Lidar::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;

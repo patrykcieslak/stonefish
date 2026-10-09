@@ -48,7 +48,7 @@ namespace sf
         void InternalUpdate(Scalar dt) override;
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const override;
+        ScalarSensorType GetScalarSensorType() const override;
     };
 }
 

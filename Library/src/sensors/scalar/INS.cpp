@@ -69,27 +69,27 @@ void INS::Reset()
     velocity_ = V0();
     altitude_ = 0.0;
     Scalar height;
-    SimulationApp::getApp()->getSimulationManager()->getNED()->Ned2Geodetic(0.0, 0.0, 0.0, latitude_, longitude_, height);
+    SimulationApp::GetApp()->GetSimulationManager()->GetNed()->Ned2Geodetic(0.0, 0.0, 0.0, latitude_, longitude_, height);
 }
 
 void INS::InternalUpdate(Scalar dt)
 {
-    Scalar now = SimulationApp::getApp()->getSimulationManager()->getSimulationTime(true);
+    Scalar now = SimulationApp::GetApp()->GetSimulationManager()->GetSimulationTime(true);
     
     //--- internal sensors
     //get sensor frame in world
-    Transform imuTrans = getSensorFrame();
-    Vector3 R = imuTrans.getOrigin() - attach_->getCGTransform().getOrigin();
+    Transform imuTrans = GetSensorFrame();
+    Vector3 R = imuTrans.getOrigin() - attach_->GetCgTransform().getOrigin();
     //get angular velocity
-    Vector3 av = imuTrans.getBasis().inverse() * attach_->getAngularVelocity();
+    Vector3 av = imuTrans.getBasis().inverse() * attach_->GetAngularVelocity();
     //get acceleration
     Vector3 acc = imuTrans.getBasis().inverse() * (
-                   attach_->getLinearAcceleration() 
-                   + attach_->getAngularAcceleration().cross(R)
-                   + attach_->getAngularVelocity().cross(attach_->getAngularVelocity().cross(R))
+                   attach_->GetLinearAcceleration() 
+                   + attach_->GetAngularAcceleration().cross(R)
+                   + attach_->GetAngularVelocity().cross(attach_->GetAngularVelocity().cross(R))
                 ); // NO GRAVITY
     //get angular acceleration
-    Vector3 aacc = imuTrans.getBasis().inverse() * attach_->getAngularAcceleration();
+    Vector3 aacc = imuTrans.getBasis().inverse() * attach_->GetAngularAcceleration();
 
     //noise
     if(imuNoise_)
@@ -107,19 +107,19 @@ void INS::InternalUpdate(Scalar dt)
     
     //--- external sensors
     DVL* dvl;
-    if(dvlName_ != "" && (dvl = (DVL*)SimulationApp::getApp()->getSimulationManager()->getSensor(dvlName_)) != nullptr) //Correct velocities
+    if(dvlName_ != "" && (dvl = (DVL*)SimulationApp::GetApp()->GetSimulationManager()->GetSensor(dvlName_)) != nullptr) //Correct velocities
     {
-        Sample s = dvl->getLastSample();
-        Scalar ts = s.getTimestamp();
+        Sample s = dvl->GetLastSample();
+        Scalar ts = s.GetTimestamp();
         if(ts >= 0.0 && now-ts <= dt) //Is DVL valid?
         {
-            Transform dvlTrans = dvl->getSensorFrame();
+            Transform dvlTrans = dvl->GetSensorFrame();
             Vector3 avv = imuTrans.getBasis() * av; // Includes noise
             velocity_ = imuTrans.getBasis().inverse()* (
-                       dvlTrans.getBasis() * Vector3(s.getValue(0), s.getValue(1), s.getValue(2)) // Pure linear velocity component
+                       dvlTrans.getBasis() * Vector3(s.GetValue(0), s.GetValue(1), s.GetValue(2)) // Pure linear velocity component
                        + avv.cross(imuTrans.getOrigin() - dvlTrans.getOrigin()) // Angular velocity component
                        ); 
-            altitude_ = s.getValue(3);
+            altitude_ = s.GetValue(3);
         }
     }
 
@@ -127,32 +127,32 @@ void INS::InternalUpdate(Scalar dt)
     ned_ += imuTrans.getBasis() * dp; //In NED frame
     
     GPS* gps;
-    if(gpsName_ != "" && (gps = (GPS*)SimulationApp::getApp()->getSimulationManager()->getSensor(gpsName_)) != nullptr) //Correct global position
+    if(gpsName_ != "" && (gps = (GPS*)SimulationApp::GetApp()->GetSimulationManager()->GetSensor(gpsName_)) != nullptr) //Correct global position
     {
-        Sample s = gps->getLastSample();
-        Scalar ts = s.getTimestamp();
-        if(ts >= 0.0 && now-ts <= dt && s.getValue(0) <= Scalar(90) && s.getValue(1) <= Scalar(180)) //Is GPS valid?
+        Sample s = gps->GetLastSample();
+        Scalar ts = s.GetTimestamp();
+        if(ts >= 0.0 && now-ts <= dt && s.GetValue(0) <= Scalar(90) && s.GetValue(1) <= Scalar(180)) //Is GPS valid?
         {
-            Vector3 trans = imuTrans.getOrigin() - gps->getSensorFrame().getOrigin();
-            ned_.setX(trans.x() + s.getValue(2));
-            ned_.setY(trans.y() + s.getValue(3));
+            Vector3 trans = imuTrans.getOrigin() - gps->GetSensorFrame().getOrigin();
+            ned_.setX(trans.x() + s.GetValue(2));
+            ned_.setY(trans.y() + s.GetValue(3));
         }
     }
 
     Pressure* press;
-    if(pressName_ != "" && (press = (Pressure*)SimulationApp::getApp()->getSimulationManager()->getSensor(pressName_)) != nullptr) //Correct depth
+    if(pressName_ != "" && (press = (Pressure*)SimulationApp::GetApp()->GetSimulationManager()->GetSensor(pressName_)) != nullptr) //Correct depth
     {
-        Sample s = press->getLastSample();
-        Scalar ts = s.getTimestamp();
+        Sample s = press->GetLastSample();
+        Scalar ts = s.GetTimestamp();
         if(ts >= 0.0 && now-ts <= dt) //Is pressure valid?
         {
-            Ocean* liq = SimulationApp::getApp()->getSimulationManager()->getOcean();
+            Ocean* liq = SimulationApp::GetApp()->GetSimulationManager()->GetOcean();
             if(liq != NULL)
             {
-                Scalar rho = liq->getLiquid().density;
-                Scalar g = SimulationApp::getApp()->getSimulationManager()->getGravity().z();
-                Scalar depth = s.getValue(0)/(rho*g);
-                ned_.setZ(depth + imuTrans.getOrigin().z() - press->getSensorFrame().getOrigin().z() ); //Depth at INS frame
+                Scalar rho = liq->GetLiquid().density;
+                Scalar g = SimulationApp::GetApp()->GetSimulationManager()->GetGravity().z();
+                Scalar depth = s.GetValue(0)/(rho*g);
+                ned_.setZ(depth + imuTrans.getOrigin().z() - press->GetSensorFrame().getOrigin().z() ); //Depth at INS frame
             }
         }
     }
@@ -165,7 +165,7 @@ void INS::InternalUpdate(Scalar dt)
     
     //compute geodetic position
     Scalar height;
-    SimulationApp::getApp()->getSimulationManager()->getNED()->Ned2Geodetic(nedo.x(), nedo.y(), nedo.z(), latitude_, longitude_, height);
+    SimulationApp::GetApp()->GetSimulationManager()->GetNed()->Ned2Geodetic(nedo.x(), nedo.y(), nedo.z(), latitude_, longitude_, height);
     
     //get angles
     Scalar yaw, pitch, roll;
@@ -196,12 +196,12 @@ void INS::ConnectPressure(const std::string& name)
     pressName_ = name;
 }
 
-void INS::setOutputFrame(const Transform& T)
+void INS::SetOutputFrame(const Transform& T)
 {
     out_ = T;
 }
 
-void INS::setRange(Vector3 angularVelocityMax, Vector3 linearAccelerationMax)
+void INS::SetRange(Vector3 angularVelocityMax, Vector3 linearAccelerationMax)
 {
     channels_[12].rangeMin = -btClamped(angularVelocityMax.x(), Scalar(0), Scalar(BT_LARGE_FLOAT));
     channels_[13].rangeMin = -btClamped(angularVelocityMax.y(), Scalar(0), Scalar(BT_LARGE_FLOAT));
@@ -217,7 +217,7 @@ void INS::setRange(Vector3 angularVelocityMax, Vector3 linearAccelerationMax)
     channels_[17].rangeMax = btClamped(linearAccelerationMax.z(), Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
     
-void INS::setNoise(Vector3 angularVelocityStdDev, Vector3 linearAccelerationStdDev)
+void INS::SetNoise(Vector3 angularVelocityStdDev, Vector3 linearAccelerationStdDev)
 {
     avNoiseX_ = std::normal_distribution<Scalar>(Scalar(0), btClamped(angularVelocityStdDev.x(), Scalar(0), BT_LARGE_FLOAT));
     avNoiseY_ = std::normal_distribution<Scalar>(Scalar(0), btClamped(angularVelocityStdDev.y(), Scalar(0), BT_LARGE_FLOAT));
@@ -230,7 +230,7 @@ void INS::setNoise(Vector3 angularVelocityStdDev, Vector3 linearAccelerationStdD
     imuNoise_ = true;
 }
 
-ScalarSensorType INS::getScalarSensorType() const
+ScalarSensorType INS::GetScalarSensorType() const
 {
     return ScalarSensorType::INS;
 }
@@ -238,18 +238,18 @@ ScalarSensorType INS::getScalarSensorType() const
 std::vector<Renderable> INS::Render()
 {
     std::vector<Renderable> items = LinkSensor::Render();
-    if(isRenderable())
+    if(IsRenderable())
     {
         Renderable item1;
         item1.type = RenderableType::SENSOR_CS;
-        item1.model = glMatrixFromTransform(getSensorFrame() * out_);
+        item1.model = glMatrixFromTransform(GetSensorFrame() * out_);
         items.push_back(item1);
 
         Renderable item2;
         item2.type = RenderableType::SENSOR_LINES;
-        item2.model = glMatrixFromTransform(getSensorFrame());
+        item2.model = glMatrixFromTransform(GetSensorFrame());
         item2.data = std::make_shared<std::vector<glm::vec3>>();
-        auto points = item2.getDataAsPoints();
+        auto points = item2.GetDataAsPoints();
         points->push_back(glm::vec3(0.f));
         points->push_back(glVectorFromVector(out_.getOrigin()));
         items.push_back(item2);

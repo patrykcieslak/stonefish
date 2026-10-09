@@ -78,10 +78,10 @@ namespace sf
         bool SaveToFile(std::string filename);
     
         //! A method that returns a pointer to the console data mutex.
-        SDL_mutex* getLinesMutex();
+        SDL_mutex* GetLinesMutex();
         
         //! A method that returns a copy of the console lines.
-        std::vector<ConsoleMessage> getLines();
+        std::vector<ConsoleMessage> GetLines();
         
     protected:
         bool stdoutEnabled_;

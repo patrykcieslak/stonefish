@@ -51,7 +51,7 @@ Profiler::Profiler(const std::string& uniqueName, Scalar angleRangeDeg, unsigned
     
 void Profiler::InternalUpdate(Scalar dt)
 {
-    Transform profTrans = getSensorFrame();
+    Transform profTrans = GetSensorFrame();
     Scalar currentAngle = currentAngStep_/(Scalar)angSteps_ * angRange_ - Scalar(0.5) * angRange_;
     
     //Simulate 1 beam rotating profiler
@@ -62,7 +62,7 @@ void Profiler::InternalUpdate(Scalar dt)
     btCollisionWorld::ClosestRayResultCallback closest(from, to);
     closest.m_collisionFilterGroup = MASK_DYNAMIC;
     closest.m_collisionFilterMask = MASK_STATIC | MASK_DYNAMIC | MASK_ANIMATED_COLLIDING;
-    SimulationApp::getApp()->getSimulationManager()->getDynamicsWorld()->rayTest(from, to, closest);
+    SimulationApp::GetApp()->GetSimulationManager()->GetDynamicsWorld()->rayTest(from, to, closest);
         
     if(closest.hasHit())
     {
@@ -103,16 +103,16 @@ void Profiler::InternalUpdate(Scalar dt)
 std::vector<Renderable> Profiler::Render()
 {
     std::vector<Renderable> items = Sensor::Render();
-    if(isRenderable())
+    if(IsRenderable())
     {
         Scalar currentAngle = currentAngStep_/(Scalar)angSteps_ * angRange_ - Scalar(0.5) * angRange_;
         Vector3 dir = Vector3(1, 0, 0) * btCos(currentAngle) + Vector3(0, 1, 0) * btSin(currentAngle);
         
         Renderable item;
         item.type = RenderableType::SENSOR_LINES;
-        item.model = glMatrixFromTransform(getSensorFrame());
+        item.model = glMatrixFromTransform(GetSensorFrame());
         item.data = std::make_shared<std::vector<glm::vec3>>();
-        auto points = item.getDataAsPoints();
+        auto points = item.GetDataAsPoints();
         points->push_back(glm::vec3(0,0,0));
         points->push_back(glm::vec3(dir.x()*distance_, dir.y()*distance_, dir.z()*distance_));
         items.push_back(item);
@@ -120,25 +120,25 @@ std::vector<Renderable> Profiler::Render()
     return items;
 }
 
-void Profiler::setRange(Scalar rangeMin, Scalar rangeMax)
+void Profiler::SetRange(Scalar rangeMin, Scalar rangeMax)
 {
     channels_[1].rangeMin = btClamped(rangeMin, Scalar(0), Scalar(BT_LARGE_FLOAT));
     channels_[1].rangeMax = btClamped(rangeMax, Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
 
-void Profiler::setNoise(Scalar rangeStdDev)
+void Profiler::SetNoise(Scalar rangeStdDev)
 {
-    channels_[1].setStdDev(btClamped(rangeStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[1].SetStdDev(btClamped(rangeStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
 
-ScalarSensorType Profiler::getScalarSensorType() const
+ScalarSensorType Profiler::GetScalarSensorType() const
 {
     return ScalarSensorType::PROFILER;
 }
 
 // Statics
 
-ConstructInfo Profiler::getConstructInfo()
+ConstructInfo Profiler::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -198,12 +198,12 @@ std::unique_ptr<Profiler> Profiler::Construct(const std::string& uniqueName, Sca
     if (value.valid)
         distanceMax = std::get<Scalar>(value.value);
 
-    sensor->setRange(distanceMin, distanceMax);
+    sensor->SetRange(distanceMin, distanceMax);
 
     // Noise (optional)
     value = info.nodes.at("noise").attributes.at("distance");
     if (value.valid)
-        sensor->setNoise(std::get<Scalar>(value.value));
+        sensor->SetNoise(std::get<Scalar>(value.value));
 
     return sensor;
 }

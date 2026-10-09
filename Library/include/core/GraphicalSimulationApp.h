@@ -146,47 +146,47 @@ namespace sf
         void CreateTrackball();
         
         //! A method returning a pointer to the OpenGL pipeline.
-        OpenGLPipeline* getGLPipeline();
+        OpenGLPipeline* GetGlPipeline();
         
         //! A method returning a pointer to the GUI.
-        IMGUI* getGUI();
+        IMGUI* GetGui();
 
         //! A method returning a pointer to the trackball.
-        OpenGLTrackball* getTrackball();
+        OpenGLTrackball* GetTrackball();
 
         //! A method returning a pointer to the selected entity.
-        std::pair<Entity*, int> getSelectedEntity();
+        std::pair<Entity*, int> GetSelectedEntity();
         
         //! A method informing if the application is graphical.
-        bool hasGraphics();
+        bool HasGraphics();
         
         //! A method returning a pointer to the joystick info structure.
-        SDL_Joystick* getJoystick();
+        SDL_Joystick* GetJoystick();
         
         //! A method returning the graphics rendering time in seconds.
         /*!
           \param max return maximum drawing time?
           \return moving average drawing time or maximum drawing time [ms]
         */
-        double getDrawingTime(bool max = false);
+        double GetDrawingTime(bool max = false);
         
         //! A method returning the width of the window.
-        int getWindowWidth();
+        int GetWindowWidth();
         
         //! A method returning the height of the window.
-        int getWindowHeight();
+        int GetWindowHeight();
         
         //! A method informing if the simulation is in the loading stage.
-        bool isLoading();
+        bool IsLoading();
         
         //! A method returning the path to the shader directory.
-        std::string getShaderPath();
+        std::string GetShaderPath();
         
         //! A method returning the current rendering settings.
-        RenderSettings getRenderSettings() const;
+        RenderSettings GetRenderSettings() const;
         
         //! A method returning a mutable reference to the helper object rendering settings.
-        HelperSettings& getHelperSettings();
+        HelperSettings& GetHelperSettings();
         
     protected:
         void Init();

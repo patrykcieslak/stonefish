@@ -117,8 +117,8 @@ namespace sf
                           Scalar& lat, Scalar& lon, Scalar& height) const;
         
     private:
-        Scalar cbrt(const Scalar x) const;
-        Matrix3 nRe(const Scalar lat_rad, const Scalar lon_rad) const;
+        Scalar Cbrt(const Scalar x) const;
+        Matrix3 NRe(const Scalar lat_rad, const Scalar lon_rad) const;
     
         Scalar initLat_;
         Scalar initLon_;

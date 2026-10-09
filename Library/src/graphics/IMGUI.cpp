@@ -45,7 +45,7 @@ IMGUI::IMGUI(GLint windowWidth, GLint windowHeight, GLfloat hue)
     mouseY_ = 0;
     mouseLeftDown_ = false;
     mouseRightDown_ = false;
-    clearActive();
+    ClearActive();
     guiVAO_ = 0;
     translucentFBO_ = 0;
     translucentTexture_[0] = 0;
@@ -154,72 +154,72 @@ IMGUI::~IMGUI()
         glDeleteFramebuffers(1, &translucentFBO_);
 }
 
-Uid IMGUI::getHot()
+Uid IMGUI::GetHot()
 {
     return hot_;
 }
 
-Uid IMGUI::getActive()
+Uid IMGUI::GetActive()
 {
     return active_;
 }
 
-void IMGUI::setHot(Uid newHot)
+void IMGUI::SetHot(Uid newHot)
 {
     hot_ = newHot;
 }
 
-void IMGUI::setActive(Uid newActive)
+void IMGUI::SetActive(Uid newActive)
 {
     active_ = newActive;
 }
 
-bool IMGUI::isHot(Uid id)
+bool IMGUI::IsHot(Uid id)
 {
     return (hot_.owner == id.owner && hot_.item == id.item && hot_.index == id.index);
 }
 
-bool IMGUI::isActive(Uid id)
+bool IMGUI::IsActive(Uid id)
 {
     return (active_.owner == id.owner && active_.item == id.item && active_.index == id.index);
 }
 
-bool IMGUI::isAnyActive()
+bool IMGUI::IsAnyActive()
 {
     return (active_.owner != -1);
 }
 
-void IMGUI::clearActive()
+void IMGUI::ClearActive()
 {
     active_.owner = -1;
 }
 
-void IMGUI::clearHot()
+void IMGUI::ClearHot()
 {
     hot_.owner = -1;
 }
 
-int IMGUI::getMouseX()
+int IMGUI::GetMouseX()
 {
     return mouseX_;
 }
 
-int IMGUI::getMouseY()
+int IMGUI::GetMouseY()
 {
     return mouseY_;
 }
 
-int IMGUI::getWindowHeight()
+int IMGUI::GetWindowHeight()
 {
     return windowH_;
 }
 
-int IMGUI::getWindowWidth()
+int IMGUI::GetWindowWidth()
 {
     return windowW_;
 }
 
-GLuint IMGUI::getTranslucentTexture()
+GLuint IMGUI::GetTranslucentTexture()
 {
     return translucentTexture_[0];
 }
@@ -228,11 +228,11 @@ void IMGUI::GenerateBackground()
 {
     OpenGLState::BindFramebuffer(translucentFBO_);
     OpenGLState::Viewport(0, 0, windowW_/4, windowH_/4);
-    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getScreenTexture());
+    OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetScreenTexture());
     downsampleShader_->Use();
     downsampleShader_->SetUniform("source", TEX_BASE);
     downsampleShader_->SetUniform("srcViewport", glm::vec2((GLfloat)windowW_, (GLfloat)windowH_));
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->DrawSAQ();
     
     gaussianShader_->Use();
     gaussianShader_->SetUniform("source", TEX_BASE);
@@ -241,12 +241,12 @@ void IMGUI::GenerateBackground()
         glDrawBuffer(GL_COLOR_ATTACHMENT1);
         OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, translucentTexture_[0]);
         gaussianShader_->SetUniform("texelOffset", glm::vec2(4.f/(GLfloat)windowW_, 0.f));
-        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+        static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->DrawSAQ();
         
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
         OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, translucentTexture_[1]);
         gaussianShader_->SetUniform("texelOffset", glm::vec2(0.f, 4.f/(GLfloat)windowH_));
-        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+        static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->DrawSAQ();
     }
     OpenGLState::UseProgram(0);
     OpenGLState::UnbindTexture(TEX_BASE);
@@ -255,7 +255,7 @@ void IMGUI::GenerateBackground()
 
 void IMGUI::Begin()
 {
-    clearHot();
+    ClearHot();
     
     OpenGLState::DisableDepthTest();
     OpenGLState::DisableCullFace();
@@ -264,7 +264,7 @@ void IMGUI::Begin()
     
     glScissor(0, 0, windowW_, windowH_);
     OpenGLState::Viewport(0, 0, windowW_, windowH_);
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->SetViewportSize(windowW_, windowH_);
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->SetViewportSize(windowW_, windowH_);
     OpenGLState::BindVertexArray(guiVAO_);
 }
 
@@ -275,7 +275,7 @@ void IMGUI::End()
     //draw logo on top
     GLfloat logoSize = 64.f;
     GLfloat logoMargin = 10.f;
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawTexturedQuad(windowW_ - logoSize - logoMargin, logoMargin, logoSize, logoSize, logoTexture_, glm::vec4(1.f,1.f,1.f,0.2f));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->DrawTexturedQuad(windowW_ - logoSize - logoMargin, logoMargin, logoSize, logoSize, logoTexture_, glm::vec4(1.f,1.f,1.f,0.2f));
    
     OpenGLState::EnableDepthTest();
     OpenGLState::EnableCullFace();
@@ -462,7 +462,7 @@ void IMGUI::DrawRoundedRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec
     
     //Get translucent texture
     OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, guiTexture_);
-    OpenGLState::BindTexture(TEX_GUI1, GL_TEXTURE_2D, getTranslucentTexture());
+    OpenGLState::BindTexture(TEX_GUI1, GL_TEXTURE_2D, GetTranslucentTexture());
     
     GLuint vbo;
     glGenBuffers(1, &vbo);
@@ -502,27 +502,27 @@ bool IMGUI::DoButton(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const s
     bool result = false;
     
     if(MouseInRect(x, y, w, h))
-        setHot(id);
+        SetHot(id);
     
-    if(isActive(id))
+    if(IsActive(id))
     {
         if(!MouseIsDown(true)) //mouse went up
         {
-            if(isHot(id))
+            if(IsHot(id))
                 result = true;
-            clearActive();
+            ClearActive();
         }
     }
-    else if(isHot(id))
+    else if(IsHot(id))
     {
         if(MouseIsDown(true)) //mouse went down
-            setActive(id);
+            SetActive(id);
     }
     
     //drawing
-    if(isActive(id))
+    if(IsActive(id))
         DrawRoundedRect(x, y, w, h, theme_[PUSHED_CONTROL_COLOR]);
-    else if(isHot(id))
+    else if(IsHot(id))
         DrawRoundedRect(x, y, w, h, theme_[HOT_CONTROL_COLOR]);
     else
         DrawRoundedRect(x, y, w, h, theme_[PANEL_COLOR]);
@@ -549,11 +549,11 @@ Scalar IMGUI::DoSlider(Uid id, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scal
     GLfloat sliderPosition = (value-min)/(max-min);
     
     if(MouseInRect(x + backgroundMargin_*2.f + sliderPosition * railW - sliderW/2.f, y + backgroundMargin_ + STANDARD_FONT_SIZE + 5.f, sliderW, sliderH))
-        setHot(id);
+        SetHot(id);
     
-    if(isActive(id))
+    if(IsActive(id))
     {
-        GLfloat mouseX = getMouseX();
+        GLfloat mouseX = GetMouseX();
         if(mouseX <= x + backgroundMargin_*2.f)
             sliderPosition = 0;
         else if(mouseX >= x + backgroundMargin_*2.f + railW)
@@ -564,12 +564,12 @@ Scalar IMGUI::DoSlider(Uid id, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scal
         result = min + sliderPosition * (max - min);
         
         if(!MouseIsDown(true)) //mouse went up
-            clearActive();
+            ClearActive();
     }
-    else if(isHot(id))
+    else if(IsHot(id))
     {
         if(MouseIsDown(true)) //mouse went down
-            setActive(id);
+            SetActive(id);
     }
     
     //Drawing
@@ -588,9 +588,9 @@ Scalar IMGUI::DoSlider(Uid id, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scal
     DrawRect(x+backgroundMargin_*2.f + sliderPosition * railW, y + backgroundMargin_+STANDARD_FONT_SIZE+5.f+sliderH/2.f-railH/2.f, railW - sliderPosition*railW, railH, theme_[EMPTY_COLOR]);
     
     //Slider
-    if(isActive(id))
+    if(IsActive(id))
         DrawRect(x+backgroundMargin_*2.f + sliderPosition * railW - sliderW/2.f, y+backgroundMargin_+STANDARD_FONT_SIZE+5.f, sliderW, sliderH, theme_[PUSHED_CONTROL_COLOR]);
-    else if(isHot(id))
+    else if(IsHot(id))
         DrawRect(x+backgroundMargin_*2.f + sliderPosition * railW - sliderW/2.f, y+backgroundMargin_+STANDARD_FONT_SIZE+5.f, sliderW, sliderH, theme_[HOT_CONTROL_COLOR]);
     else
         DrawRect(x+backgroundMargin_*2.f + sliderPosition * railW - sliderW/2.f, y+backgroundMargin_+STANDARD_FONT_SIZE+5.f, sliderW, sliderH, theme_[ACTIVE_CONTROL_COLOR]);
@@ -631,22 +631,22 @@ bool IMGUI::DoCheckBox(Uid id, GLfloat x, GLfloat y, GLfloat w, bool value, cons
     GLfloat h = size + 2.f * backgroundMargin_;
     
     if(MouseInRect(x + backgroundMargin_, y + backgroundMargin_, size, size))
-        setHot(id);
+        SetHot(id);
     
-    if(isActive(id))
+    if(IsActive(id))
     {
         if(!MouseIsDown(true)) //mouse went up
         {
-            if(isHot(id))
+            if(IsHot(id))
                 result = !result;
                 
-            clearActive();
+            ClearActive();
         }
     }
-    else if(isHot(id))
+    else if(IsHot(id))
     {
         if(MouseIsDown(true)) //mouse went down
-            setActive(id);
+            SetActive(id);
     }
     
     //drawing
@@ -654,9 +654,9 @@ bool IMGUI::DoCheckBox(Uid id, GLfloat x, GLfloat y, GLfloat w, bool value, cons
     DrawRoundedRect(x, y, w, h, theme_[PANEL_COLOR]);
     DrawPlainText(x + size + backgroundMargin_ + 5.f, y + backgroundMargin_ + size/2.f - textDim.y/2.f, theme_[ACTIVE_TEXT_COLOR], title);
     
-    if(isActive(id))
+    if(IsActive(id))
         DrawRect(x+backgroundMargin_, y+backgroundMargin_, size, size, theme_[PUSHED_CONTROL_COLOR]);
-    else if(isHot(id))
+    else if(IsHot(id))
         DrawRect(x+backgroundMargin_, y+backgroundMargin_, size, size, theme_[HOT_CONTROL_COLOR]);
     else
         DrawRect(x+backgroundMargin_, y+backgroundMargin_, size, size, theme_[ACTIVE_CONTROL_COLOR]);
@@ -719,12 +719,12 @@ unsigned int IMGUI::DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const st
     if(MouseInRect(x + backgroundMargin_ + comboW + 5.f, y + backgroundMargin_ + STANDARD_FONT_SIZE + 10.f, size, size))
     {
         id.index = 0;
-        setHot(id);
+        SetHot(id);
     }
     else if(MouseInRect(x + backgroundMargin_ + comboW + 5.f + size, y + backgroundMargin_ + STANDARD_FONT_SIZE + 10.f, size, size))
     {
         id.index = 1;
-        setHot(id);
+        SetHot(id);
     }
     
     int change = 0;
@@ -732,24 +732,24 @@ unsigned int IMGUI::DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const st
     //Arrow down
     id.index = 0;
     
-    if(isActive(id))
+    if(IsActive(id))
     {
         if(!MouseIsDown(true)) //mouse went up
         {
-            if(isHot(id))
+            if(IsHot(id))
                 change = 1;
-            clearActive();
+            ClearActive();
         }
     }
-    else if(isHot(id))
+    else if(IsHot(id))
     {
         if(MouseIsDown(true)) //mouse went down
-            setActive(id);
+            SetActive(id);
     }
     
-    if(isActive(id))
+    if(IsActive(id))
         DrawArrow(x + backgroundMargin_ + comboW + 5.f + size/2.f, y + backgroundMargin_ + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, false, theme_[PUSHED_CONTROL_COLOR]);
-    else if(isHot(id))
+    else if(IsHot(id))
         DrawArrow(x + backgroundMargin_ + comboW + 5.f + size/2.f, y + backgroundMargin_ + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, false, theme_[HOT_CONTROL_COLOR]);  
     else
         DrawArrow(x + backgroundMargin_ + comboW + 5.f + size/2.f, y + backgroundMargin_ + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, false, theme_[ACTIVE_CONTROL_COLOR]);
@@ -757,24 +757,24 @@ unsigned int IMGUI::DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const st
     //Arrow up
     id.index = 1;
     
-    if(isActive(id))
+    if(IsActive(id))
     {
         if(!MouseIsDown(true)) //mouse went up
         {
-            if(isHot(id))
+            if(IsHot(id))
                 change = -1;
-            clearActive();
+            ClearActive();
         }
     }
-    else if(isHot(id))
+    else if(IsHot(id))
     {
         if(MouseIsDown(true)) //mouse went down
-            setActive(id);
+            SetActive(id);
     }
     
-    if(isActive(id))
+    if(IsActive(id))
         DrawArrow(x + backgroundMargin_ + comboW + 5.f + size/2.f + size, y + backgroundMargin_ + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, true, theme_[PUSHED_CONTROL_COLOR]);
-    else if(isHot(id))
+    else if(IsHot(id))
         DrawArrow(x + backgroundMargin_ + comboW + 5.f + size/2.f + size, y + backgroundMargin_ + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, true, theme_[HOT_CONTROL_COLOR]);  
     else
         DrawArrow(x + backgroundMargin_ + comboW + 5.f + size/2.f + size, y + backgroundMargin_ + STANDARD_FONT_SIZE + 5.f + comboH/2.f, size, true, theme_[ACTIVE_CONTROL_COLOR]);
@@ -800,28 +800,28 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
     GLfloat pltMargin = 10.f/windowH_*2.f; 
     
     if(MouseInRect(x, y, w, h))
-        setHot(id);
+        SetHot(id);
     
-    if(isActive(id))
+    if(IsActive(id))
     {
         if(!MouseIsDown(true)) //mouse went up
         {
-            if(isHot(id))
+            if(IsHot(id))
                 result = true;
-            clearActive();
+            ClearActive();
         }
     }
-    else if(isHot(id))
+    else if(IsHot(id))
     {
         if(MouseIsDown(true)) //mouse went down
-            setActive(id);
+            SetActive(id);
     }
     
     //Drawing
     DrawRoundedRect(x, y, w, h, theme_[PLOT_COLOR]);
     
     //data
-    std::unique_ptr<std::vector<Sample>> data = sens->getHistory();
+    std::unique_ptr<std::vector<Sample>> data = sens->GetHistory();
     
     if(data->size() > 1)
     {
@@ -842,7 +842,7 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
             {
                 for(size_t n = 0; n < dims.size(); ++n)
                 {
-                    GLfloat value = (GLfloat)((*data)[i].getValue(dims[n]));
+                    GLfloat value = (GLfloat)((*data)[i].GetValue(dims[n]));
                     if(value > maxValue)
                         maxValue = value;
                     if(value < minValue)
@@ -877,7 +877,7 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
             std::vector<glm::vec2> points;
             for(size_t i = 0;  i < data->size(); ++i)
             {
-                GLfloat value = (GLfloat)((*data)[i].getValue(dims[n]));
+                GLfloat value = (GLfloat)((*data)[i].GetValue(dims[n]));
                 points.push_back(glm::vec2(pltX + dt*i, pltY - pltH + pltMargin + (value-minValue) * dy));
             }
             
@@ -934,7 +934,7 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
                 selectedDim = dims.size()-1;
             
             char buffer[64];
-            sprintf(buffer, "%1.6f", sens->getLastSample().getValue(dims[selectedDim]));
+            sprintf(buffer, "%1.6f", sens->GetLastSample().GetValue(dims[selectedDim]));
             DrawPlainText(x + backgroundMargin_, y + backgroundMargin_, theme_[PLOT_TEXT_COLOR], buffer);
         }
     }
@@ -995,21 +995,21 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, std::
     //Mouse events
     bool result = false;   
     if(MouseInRect(x, y, w, h))
-        setHot(id);
+        SetHot(id);
     
-    if(isActive(id))
+    if(IsActive(id))
     {
         if(!MouseIsDown(true)) //mouse went up
         {
-            if(isHot(id))
+            if(IsHot(id))
                 result = true;
-            clearActive();
+            ClearActive();
         }
     }
-    else if(isHot(id))
+    else if(IsHot(id))
     {
         if(MouseIsDown(true)) //mouse went down
-            setActive(id);
+            SetActive(id);
     }
     
     //Drawing
@@ -1106,21 +1106,21 @@ bool IMGUI::DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarS
     GLfloat pltY = (windowH_-y)/windowH_ * 2.f - 1.f;
     
     if(MouseInRect(x, y, w, h))
-        setHot(id);
+        SetHot(id);
     
-    if(isActive(id))
+    if(IsActive(id))
     {
         if(!MouseIsDown(true)) //mouse went up
         {
-            if(isHot(id))
+            if(IsHot(id))
                 result = true;
-            clearActive();
+            ClearActive();
         }
     }
-    else if(isHot(id))
+    else if(IsHot(id))
     {
         if(MouseIsDown(true)) //mouse went down
-            setActive(id);
+            SetActive(id);
     }
     
     //drawing
@@ -1128,8 +1128,8 @@ bool IMGUI::DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarS
     DrawRoundedRect(x, y, w, h, theme_[PLOT_COLOR]);
     
     //data
-    std::unique_ptr<std::vector<Sample>> dataX = sensX->getHistory();
-    std::unique_ptr<std::vector<Sample>> dataY = sensY->getHistory();
+    std::unique_ptr<std::vector<Sample>> dataX = sensX->GetHistory();
+    std::unique_ptr<std::vector<Sample>> dataY = sensY->GetHistory();
     
     if((dataX->size() > 1) && (dataY->size() > 1))
     {
@@ -1144,7 +1144,7 @@ bool IMGUI::DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarS
         
         for(size_t i = 0; i < dataCount; ++i)
         {
-            GLfloat value = (GLfloat)((*dataX)[i].getValue(dimX));
+            GLfloat value = (GLfloat)((*dataX)[i].GetValue(dimX));
             if(value > maxValueX)
                 maxValueX = value;
             if(value < minValueX)
@@ -1165,7 +1165,7 @@ bool IMGUI::DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarS
         
         for(size_t i = 0; i < dataCount; ++i)
         {
-            GLfloat value = (GLfloat)((*dataY)[i].getValue(dimY));
+            GLfloat value = (GLfloat)((*dataY)[i].GetValue(dimY));
             if(value > maxValueY)
                 maxValueY = value;
             if(value < minValueY)
@@ -1185,8 +1185,8 @@ bool IMGUI::DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarS
         
         for(size_t i = 0;  i < dataCount; ++i)
         {
-            GLfloat valueX = (GLfloat)((*dataX)[i].getValue(dimX));
-            GLfloat valueY = (GLfloat)((*dataY)[i].getValue(dimY));
+            GLfloat valueX = (GLfloat)((*dataX)[i].GetValue(dimX));
+            GLfloat valueY = (GLfloat)((*dataY)[i].GetValue(dimY));
             points.push_back(glm::vec2(pltX + (valueX - minValueX) * dx, pltY - pltH + (valueY - minValueY) * dy));
         }
         

@@ -60,7 +60,7 @@ namespace sf
         void SetupShader(LightUBO* ubo);
         
         //! A method returning the type of the light.
-        LightType getType() const;
+        LightType GetType() const;
     };
 }
 

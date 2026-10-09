@@ -59,24 +59,24 @@ namespace sf
         virtual std::vector<Renderable> Render() = 0;
 
         //! A method returning the current interpolated transform.
-        Transform getInterpolatedTransform() const;
+        Transform GetInterpolatedTransform() const;
 
         //! A method returning the current interpolated linear velocity.
-        Vector3 getInterpolatedLinearVelocity() const;
+        Vector3 GetInterpolatedLinearVelocity() const;
 
         //! A method returning the current interpolated angular velocity.
-        Vector3 getInterpolatedAngularVelocity() const;
+        Vector3 GetInterpolatedAngularVelocity() const;
 
         //! A method returning the current interpolated linear acceleration.
-        Vector3 getInterpolatedLinearAcceleration() const;
+        Vector3 GetInterpolatedLinearAcceleration() const;
 
         //! A method returning the current playback time.
-        Scalar getPlaybackTime() const;
+        Scalar GetPlaybackTime() const;
 
         //! A method returning the current playback iteration.
-        unsigned int getPlaybackIteration() const;
+        unsigned int GetPlaybackIteration() const;
 
-        static void calculateVelocityShortestPath(const Transform &transform0, const Transform &transform1, Scalar timeStep, Vector3 &linVel, Vector3 &angVel);
+        static void CalculateVelocityShortestPath(const Transform &transform0, const Transform &transform1, Scalar timeStep, Vector3 &linVel, Vector3 &angVel);
     
     protected:
         PlaybackMode playMode_;

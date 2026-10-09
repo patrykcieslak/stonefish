@@ -45,37 +45,37 @@ FeatherstoneRobot::FeatherstoneRobot(const std::string& uniqueName, bool fixedBa
     dynamics_ = nullptr;
 }
 
-RobotType FeatherstoneRobot::getType() const
+RobotType FeatherstoneRobot::GetType() const
 {
     return RobotType::FEATHERSTONE;    
 }
 
-int FeatherstoneRobot::getJoint(const std::string& jname)
+int FeatherstoneRobot::GetJoint(const std::string& jname)
 {
     if(dynamics_ == nullptr)
         cCritical("Robot links not defined!");
     
-    for(size_t i=0; i<dynamics_->getNumOfJoints(); ++i)
-        if(dynamics_->getJointName(i) == jname) return i;
+    for(size_t i=0; i<dynamics_->GetNumOfJoints(); ++i)
+        if(dynamics_->GetJointName(i) == jname) return i;
     
     return -1;
 }
 
-Transform FeatherstoneRobot::getTransform() const
+Transform FeatherstoneRobot::GetTransform() const
 {
     if(dynamics_ != nullptr)
-        return dynamics_->getLink(0).solid->getOTransform();
+        return dynamics_->GetLink(0).solid->GetOTransform();
     else
         return Transform::getIdentity();
 }
 
-int FeatherstoneRobot::getLinkIndex(const std::string& lname) const
+int FeatherstoneRobot::GetLinkIndex(const std::string& lname) const
 {
     int index = -2;
     if(dynamics_ != nullptr)
     {
-        for(int i=0; i<(int)dynamics_->getNumOfLinks(); ++i)
-            if(dynamics_->getLink(i).solid->getName() == lname)
+        for(int i=0; i<(int)dynamics_->GetNumOfLinks(); ++i)
+            if(dynamics_->GetLink(i).solid->GetName() == lname)
             {
                 index = i-1;
                 break;
@@ -84,7 +84,7 @@ int FeatherstoneRobot::getLinkIndex(const std::string& lname) const
     return index;
 }
 
-FeatherstoneEntity* FeatherstoneRobot::getDynamics()
+FeatherstoneEntity* FeatherstoneRobot::GetDynamics()
 {
     return dynamics_;
 }
@@ -99,12 +99,12 @@ void FeatherstoneRobot::DefineLinks(std::unique_ptr<SolidEntity> baseLink, std::
 
     // This is later encapsulated in a unique_ptr
     dynamics_ = new FeatherstoneEntity(name_ + "_Dynamics", (unsigned short)detachedLinks_.size() + 1, std::move(baseLink), fixed_);
-    dynamics_->setSelfCollision(selfCollision);
+    dynamics_->SetSelfCollision(selfCollision);
 }
 
 void FeatherstoneRobot::BuildKinematicStructure()
 {
-    cInfo("Building kinematic tree of robot '%s', consisting of %d links and %d joints.", getName().c_str(), detachedLinks_.size()+1, jointsData_.size());
+    cInfo("Building kinematic tree of robot '%s', consisting of %d links and %d joints.", GetName().c_str(), detachedLinks_.size()+1, jointsData_.size());
     
     //Sort joints
     std::vector<JointData> sortedJoints;
@@ -112,7 +112,7 @@ void FeatherstoneRobot::BuildKinematicStructure()
     //---Add joints connected to base
     for(int i=(int)jointsData_.size()-1; i>=0; --i)
     {
-        if(jointsData_[i].parent == links_[0]->getName())
+        if(jointsData_[i].parent == links_[0]->GetName())
         {
             sortedJoints.push_back(jointsData_[i]);
             jointsData_.erase(jointsData_.begin() + i);
@@ -156,27 +156,27 @@ void FeatherstoneRobot::BuildKinematicStructure()
         // Check if connected links are already part of the model (parallel mechanisms)
         unsigned int parentId = UINT32_MAX;
         unsigned int childId = UINT32_MAX;
-        for(size_t h=0; h<dynamics_->getNumOfLinks(); ++h)
+        for(size_t h=0; h<dynamics_->GetNumOfLinks(); ++h)
         {
-            if(dynamics_->getLink(h).solid->getName() == jointsData_[i].parent)
+            if(dynamics_->GetLink(h).solid->GetName() == jointsData_[i].parent)
                 parentId = h;
-            else if(dynamics_->getLink(h).solid->getName() == jointsData_[i].child)
+            else if(dynamics_->GetLink(h).solid->GetName() == jointsData_[i].child)
                 childId = h;
         }
 
-        if(parentId < dynamics_->getNumOfLinks() 
-            && childId < dynamics_->getNumOfLinks()) // Kinematic loop
+        if(parentId < dynamics_->GetNumOfLinks() 
+            && childId < dynamics_->GetNumOfLinks()) // Kinematic loop
         {
             cCritical("Featherstone's algorithm does not support kinematic loops!");
         }
         else // Standard joint
         {
-            if(parentId >= dynamics_->getNumOfLinks())
+            if(parentId >= dynamics_->GetNumOfLinks())
                 cCritical("Parent link '%s' not yet joined with robot!", jointsData_[i].parent.c_str());
 
             // Find child link
             for(size_t h=0; h<detachedLinks_.size(); ++h)
-                if(detachedLinks_[h]->getName() == jointsData_[i].child)
+                if(detachedLinks_[h]->GetName() == jointsData_[i].child)
                 childId = h;
 
             if(childId >= detachedLinks_.size())
@@ -185,11 +185,11 @@ void FeatherstoneRobot::BuildKinematicStructure()
             }
             
             // Add link
-            linkTrans = dynamics_->getLinkTransform(parentId) * dynamics_->getLink(parentId).solid->getCG2OTransform() * jointsData_[i].origin;
+            linkTrans = dynamics_->GetLinkTransform(parentId) * dynamics_->GetLink(parentId).solid->GetCG2OTransform() * jointsData_[i].origin;
             links_.push_back(detachedLinks_[childId].get()); // Save pointer to child link
             dynamics_->AddLink(std::move(detachedLinks_[childId]), linkTrans);
             detachedLinks_.erase(detachedLinks_.begin()+childId);
-            childId = dynamics_->getNumOfLinks()-1;
+            childId = dynamics_->GetNumOfLinks()-1;
         }
 
         // Add joint
@@ -204,11 +204,11 @@ void FeatherstoneRobot::BuildKinematicStructure()
             case JointType::REVOLUTE:
             {
                 dynamics_->AddRevoluteJoint(jointsData_[i].name, parentId, childId, linkTrans.getOrigin(), linkTrans.getBasis() * jointsData_[i].axis);
-                dynamics_->AddJointLimit(dynamics_->getNumOfJoints()-1, jointsData_[i].posLim.first, jointsData_[i].posLim.second);
+                dynamics_->AddJointLimit(dynamics_->GetNumOfJoints()-1, jointsData_[i].posLim.first, jointsData_[i].posLim.second);
         
                 if(jointsData_[i].damping > Scalar(0))
                 {
-                    dynamics_->setJointDamping(dynamics_->getNumOfJoints()-1, 0.0, jointsData_[i].damping);
+                    dynamics_->SetJointDamping(dynamics_->GetNumOfJoints()-1, 0.0, jointsData_[i].damping);
                 }
             }
                 break;
@@ -216,11 +216,11 @@ void FeatherstoneRobot::BuildKinematicStructure()
             case JointType::PRISMATIC:
             {
                 dynamics_->AddPrismaticJoint(jointsData_[i].name, parentId, childId, linkTrans.getBasis() * jointsData_[i].axis);
-                dynamics_->AddJointLimit(dynamics_->getNumOfJoints()-1, jointsData_[i].posLim.first, jointsData_[i].posLim.second);
+                dynamics_->AddJointLimit(dynamics_->GetNumOfJoints()-1, jointsData_[i].posLim.first, jointsData_[i].posLim.second);
 
                 if(jointsData_[i].damping > Scalar(0))
                 {
-                    dynamics_->setJointDamping(dynamics_->getNumOfJoints()-1, 0.0, jointsData_[i].damping);
+                    dynamics_->SetJointDamping(dynamics_->GetNumOfJoints()-1, 0.0, jointsData_[i].damping);
                 }
             }
                 break;
@@ -247,13 +247,13 @@ void FeatherstoneRobot::Respawn(SimulationManager* sm, const Transform& origin)
 
 JointSensor* FeatherstoneRobot::AddJointSensor(std::unique_ptr<Sensor, SensorDeleter> s, const std::string& monitoredJointName)
 {
-    if (s == nullptr || s->getType() != SensorType::JOINT)
+    if (s == nullptr || s->GetType() != SensorType::JOINT)
     {
         cCritical("Sensor does not exist or is not a joint sensor!");
         return nullptr;
     }
 
-    int jointId = getJoint(monitoredJointName);
+    int jointId = GetJoint(monitoredJointName);
     if(jointId > -1)
     {
         static_cast<JointSensor*>(s.get())->AttachToJoint(dynamics_, jointId);
@@ -263,25 +263,25 @@ JointSensor* FeatherstoneRobot::AddJointSensor(std::unique_ptr<Sensor, SensorDel
     }
     else
     {
-        cCritical("Joint '%s' doesn't exist. Sensor '%s' cannot be attached!", monitoredJointName.c_str(), s->getName().c_str());
+        cCritical("Joint '%s' doesn't exist. Sensor '%s' cannot be attached!", monitoredJointName.c_str(), s->GetName().c_str());
         return nullptr;
     }
 }
 
 JointSensor* FeatherstoneRobot::AddJointSensor(std::unique_ptr<Sensor> s, const std::string& monitoredJointName)
 {
-    return AddJointSensor(std::unique_ptr<Sensor, SensorDeleter>(s.release(), Sensor::defaultDeleter), monitoredJointName);
+    return AddJointSensor(std::unique_ptr<Sensor, SensorDeleter>(s.release(), Sensor::DefaultDeleter), monitoredJointName);
 }
 
 JointActuator* FeatherstoneRobot::AddJointActuator(std::unique_ptr<Actuator, ActuatorDeleter> a, const std::string& actuatedJointName)
 {
-    if (a == nullptr || a->getType() != ActuatorType::JOINT)
+    if (a == nullptr || a->GetType() != ActuatorType::JOINT)
     {
         cCritical("Actuator does not exist or is not a joint actuator!");
         return nullptr;
     }
 
-    int jointId = getJoint(actuatedJointName);
+    int jointId = GetJoint(actuatedJointName);
     if(jointId > -1)
     {
         static_cast<JointActuator*>(a.get())->AttachToJoint(dynamics_, jointId);
@@ -291,37 +291,37 @@ JointActuator* FeatherstoneRobot::AddJointActuator(std::unique_ptr<Actuator, Act
     }
     else
     {
-        cCritical("Joint '%s' doesn't exist. Actuator '%s' cannot be attached!", actuatedJointName.c_str(), a->getName().c_str());
+        cCritical("Joint '%s' doesn't exist. Actuator '%s' cannot be attached!", actuatedJointName.c_str(), a->GetName().c_str());
         return nullptr;
     }
 }
 
 JointActuator* FeatherstoneRobot::AddJointActuator(std::unique_ptr<Actuator> a, const std::string& actuatedJointName)
 {
-    return AddJointActuator(std::unique_ptr<Actuator, ActuatorDeleter>(a.release(), Actuator::defaultDeleter), actuatedJointName);
+    return AddJointActuator(std::unique_ptr<Actuator, ActuatorDeleter>(a.release(), Actuator::DefaultDeleter), actuatedJointName);
 }
 
 LinkActuator* FeatherstoneRobot::AddLinkActuator(std::unique_ptr<Actuator, ActuatorDeleter> a, const std::string& actuatedLinkName, const Transform& origin)
 {
-    if (a == nullptr || a->getType() != ActuatorType::LINK)
+    if (a == nullptr || a->GetType() != ActuatorType::LINK)
     {
         cCritical("Actuator does not exist or is not a link actuator!");
         return nullptr;
     }
 
-    int linkId = getLinkIndex(actuatedLinkName);
+    int linkId = GetLinkIndex(actuatedLinkName);
     if(linkId < -1)
     {
-        cCritical("Link '%s' doesn't exist. Actuator '%s' cannot be attached!", actuatedLinkName.c_str(), a->getName().c_str());
+        cCritical("Link '%s' doesn't exist. Actuator '%s' cannot be attached!", actuatedLinkName.c_str(), a->GetName().c_str());
         return nullptr;
     }
-    if(static_cast<LinkActuator*>(a.get())->getLinkActuatorType() == LinkActuatorType::SUCTION_CUP) // Special case
+    if(static_cast<LinkActuator*>(a.get())->GetLinkActuatorType() == LinkActuatorType::SUCTION_CUP) // Special case
     {
-        static_cast<SuctionCup*>(a.get())->AttachToLink(getDynamics(), linkId);
+        static_cast<SuctionCup*>(a.get())->AttachToLink(GetDynamics(), linkId);
     }
     else
     {
-        static_cast<LinkActuator*>(a.get())->AttachToSolid(getLink(actuatedLinkName), origin);
+        static_cast<LinkActuator*>(a.get())->AttachToSolid(GetLink(actuatedLinkName), origin);
     }
     detachedActuators_.push_back(std::move(a));
     actuators_.push_back(detachedActuators_.back().get());
@@ -330,7 +330,7 @@ LinkActuator* FeatherstoneRobot::AddLinkActuator(std::unique_ptr<Actuator, Actua
 
 LinkActuator* FeatherstoneRobot::AddLinkActuator(std::unique_ptr<Actuator> a, const std::string& actuatedLinkName, const Transform& origin)
 {
-    return AddLinkActuator(std::unique_ptr<Actuator, ActuatorDeleter>(a.release(), Actuator::defaultDeleter), actuatedLinkName, origin);
+    return AddLinkActuator(std::unique_ptr<Actuator, ActuatorDeleter>(a.release(), Actuator::DefaultDeleter), actuatedLinkName, origin);
 }
 
 }

@@ -41,16 +41,16 @@ GPS::GPS(const std::string& uniqueName, Scalar frequency, int historyLength) : L
     channels_.push_back(SensorChannel("Longitude", QuantityType::ANGLE));
     channels_.push_back(SensorChannel("North", QuantityType::LENGTH));
     channels_.push_back(SensorChannel("East", QuantityType::LENGTH));
-    setNoise(Scalar(0));
+    SetNoise(Scalar(0));
 }
 
 void GPS::InternalUpdate(Scalar dt)
 {
     //get sensor frame in world
-    Transform gpsTrans = getSensorFrame();
+    Transform gpsTrans = GetSensorFrame();
     
     //GPS not updating underwater
-    Ocean* liq = SimulationApp::getApp()->getSimulationManager()->getOcean();
+    Ocean* liq = SimulationApp::GetApp()->GetSimulationManager()->GetOcean();
     if(liq != nullptr && liq->IsInsideFluid(gpsTrans.getOrigin()))
     {
         AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({BT_LARGE_FLOAT, BT_LARGE_FLOAT, Scalar(0), Scalar(0)})));
@@ -70,32 +70,32 @@ void GPS::InternalUpdate(Scalar dt)
         double latitude;
         double longitude;
         double height;
-        SimulationApp::getApp()->getSimulationManager()->getNED()->Ned2Geodetic(gpsPos.x(), gpsPos.y(), 0.0, latitude, longitude, height);
+        SimulationApp::GetApp()->GetSimulationManager()->GetNed()->Ned2Geodetic(gpsPos.x(), gpsPos.y(), 0.0, latitude, longitude, height);
         
         //record sample
         AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({latitude, longitude, gpsPos.x(), gpsPos.y()})));
     }
 }
 
-void GPS::setNoise(Scalar nedDev)
+void GPS::SetNoise(Scalar nedDev)
 {
     nedStdDev_ = btClamped(nedDev, Scalar(0), Scalar(BT_LARGE_FLOAT));
     noise_ = std::normal_distribution<Scalar>(Scalar(0), nedStdDev_);
 }
 
-Scalar GPS::getNoise() const
+Scalar GPS::GetNoise() const
 {
     return nedStdDev_;
 }
 
-ScalarSensorType GPS::getScalarSensorType() const
+ScalarSensorType GPS::GetScalarSensorType() const
 {
     return ScalarSensorType::GPS;
 }
 
 // Statics
 
-ConstructInfo GPS::getConstructInfo()
+ConstructInfo GPS::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -128,7 +128,7 @@ std::unique_ptr<GPS> GPS::Construct(const std::string& uniqueName, Scalar freque
     // Noise (optional)
     value = info.nodes.at("noise").attributes.at("ned_position");
     if (value.valid)
-        sensor->setNoise(std::get<Scalar>(value.value));
+        sensor->SetNoise(std::get<Scalar>(value.value));
 
     return sensor;
 }

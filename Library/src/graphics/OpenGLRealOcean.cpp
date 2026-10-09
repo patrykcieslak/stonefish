@@ -73,7 +73,7 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
     GLint compiled;
     GLuint pcssFragment = GLSLShader::LoadShader(GL_FRAGMENT_SHADER, "lighting.frag", "", &compiled);
     std::vector<GLuint> precompiled;
-    precompiled.push_back(OpenGLAtmosphere::getAtmosphereAPI());
+    precompiled.push_back(OpenGLAtmosphere::GetAtmosphereApi());
     precompiled.push_back(pcssFragment);
 
     //Surface rendering
@@ -199,8 +199,8 @@ OpenGLRealOcean::OpenGLRealOcean(GLfloat size, GLfloat state, SDL_mutex* hydrody
     //Quad tree buffers
     glGenBuffers(2, oceanBuffers_);
 	//Grid vertex data (ARRAY) x2
-	size_t vertices_byte_size = sizeof(glm::vec2) * sqr(qtGridTessFactor_);
-	size_t indexes_byte_size = sizeof(uint16_t) * sqr(qtGridTessFactor_ - 1) * 4;
+	size_t vertices_byte_size = sizeof(glm::vec2) * Sqr(qtGridTessFactor_);
+	size_t indexes_byte_size = sizeof(uint16_t) * Sqr(qtGridTessFactor_ - 1) * 4;
 	glm::vec2 *vertices = (glm::vec2*)malloc(vertices_byte_size);
 	uint16_t *indexes = (uint16_t*)malloc(indexes_byte_size);
 	int i, j;
@@ -264,7 +264,7 @@ OpenGLRealOcean::~OpenGLRealOcean()
     }
 }
 
-void OpenGLRealOcean::setWireframe(bool enabled)
+void OpenGLRealOcean::SetWireframe(bool enabled)
 {
     wireframe_ = enabled;
 }
@@ -555,8 +555,8 @@ void OpenGLRealOcean::DrawBacksurface(OpenGLView* view)
     oceanShaders_["backsurface"]->SetUniform("texSlopeVariance", TEX_POSTPROCESS2);
     oceanShaders_["backsurface"]->SetUniform("u_scene_size", oceanSize_);
     oceanShaders_["backsurface"]->SetUniform("u_gpu_tess_factor", (GLfloat)qtGPUTessFactor_);
-    oceanShaders_["backsurface"]->SetUniform("cWater", getLightAttenuation());
-    oceanShaders_["backsurface"]->SetUniform("bWater", getLightScattering());
+    oceanShaders_["backsurface"]->SetUniform("cWater", GetLightAttenuation());
+    oceanShaders_["backsurface"]->SetUniform("bWater", GetLightScattering());
     OpenGLState::BindVertexArray(vao_);
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, tree.patchDEI);
     glCullFace(GL_FRONT);

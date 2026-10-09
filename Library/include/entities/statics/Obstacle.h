@@ -102,7 +102,7 @@ namespace sf
         std::vector<Renderable> Render();
         
         //! A method that returns the static body type.
-        StaticEntityType getStaticType();
+        StaticEntityType GetStaticType();
         
     private:
         void BuildGraphicalObject();

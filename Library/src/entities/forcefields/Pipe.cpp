@@ -39,17 +39,17 @@ Pipe::Pipe(const Vector3& point1, const Vector3& point2, Scalar radius1, Scalar 
     gamma_ = exponent;
 }
 
-VelocityFieldType Pipe::getType() const
+VelocityFieldType Pipe::GetType() const
 {
     return VelocityFieldType::PIPE;
 }
 
-void Pipe::setInletVelocity(Scalar v)
+void Pipe::SetInletVelocity(Scalar v)
 {
     vin_ = v;
 }
 
-Scalar Pipe::getInletVelocity() const
+Scalar Pipe::GetInletVelocity() const
 {
     return vin_;
 }
@@ -96,20 +96,20 @@ std::vector<Renderable> Pipe::Render(VelocityFieldUBO& ubo)
     inlet.type = RenderableType::HYDRO_LINE_STRIP;
     inlet.model = model;
     inlet.data = std::make_shared<std::vector<glm::vec3>>();
-    auto inletPoints = inlet.getDataAsPoints();
+    auto inletPoints = inlet.GetDataAsPoints();
     
     Renderable outlet;
     outlet.type = RenderableType::HYDRO_LINE_STRIP;
     outlet.model = model;
     outlet.data = std::make_shared<std::vector<glm::vec3>>();
-    auto outletPoints = outlet.getDataAsPoints();
+    auto outletPoints = outlet.GetDataAsPoints();
     
     //Pipe
     Renderable pipe;
     pipe.type = RenderableType::HYDRO_LINES;
     pipe.model = model;
     pipe.data = std::make_shared<std::vector<glm::vec3>>();
-    auto pipePoints = pipe.getDataAsPoints();
+    auto pipePoints = pipe.GetDataAsPoints();
     
     pipePoints->push_back(glm::vec3(0, 0, 0));
     pipePoints->push_back(glm::vec3(0, 0, l_));

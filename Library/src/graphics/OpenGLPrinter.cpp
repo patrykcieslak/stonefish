@@ -174,7 +174,7 @@ void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GL
     {
         glActiveTexture(GL_TEXTURE0 + TEX_GUI1);
         glBindTexture(GL_TEXTURE_2D, fontTexture_);
-        glUseProgram(printShader->getProgramHandle());
+        glUseProgram(printShader->GetProgramHandle());
     }
     else
     {

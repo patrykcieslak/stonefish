@@ -41,31 +41,31 @@ namespace sf
 
 Robot::Robot(const std::string& uniqueName, bool fixedBase)
 {
-    name_ = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
+    name_ = SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->AddName(uniqueName);
     fixed_ = fixedBase;
 }
 
 Robot::~Robot()
 {
-    if(SimulationApp::getApp() != nullptr)
-        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name_);
+    if(SimulationApp::GetApp() != nullptr)
+        SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->RemoveName(name_);
 }
 
-const std::string& Robot::getName() const
+const std::string& Robot::GetName() const
 {
     return name_;
 }
 
-SolidEntity* Robot::getLink(const std::string& lname)
+SolidEntity* Robot::GetLink(const std::string& lname)
 {
-    auto it = std::find_if(links_.begin(), links_.end(), [&lname](SolidEntity* link) { return link->getName() == lname; });
+    auto it = std::find_if(links_.begin(), links_.end(), [&lname](SolidEntity* link) { return link->GetName() == lname; });
     if(it != links_.end())
         return *it;
     else
         return nullptr;
 }
 
-SolidEntity* Robot::getLink(size_t index)
+SolidEntity* Robot::GetLink(size_t index)
 {
     if(index < links_.size())
         return links_[index];
@@ -73,16 +73,16 @@ SolidEntity* Robot::getLink(size_t index)
         return nullptr;
 }
     
-Actuator* Robot::getActuator(const std::string& aname)
+Actuator* Robot::GetActuator(const std::string& aname)
 {
-    auto it = std::find_if(actuators_.begin(), actuators_.end(), [&aname](Actuator* act) { return act->getName() == aname; });
+    auto it = std::find_if(actuators_.begin(), actuators_.end(), [&aname](Actuator* act) { return act->GetName() == aname; });
     if(it != actuators_.end())
         return *it;
     else
         return nullptr;
 }
 
-Actuator* Robot::getActuator(size_t index)
+Actuator* Robot::GetActuator(size_t index)
 {
     if(index < actuators_.size())
         return actuators_[index];
@@ -90,16 +90,16 @@ Actuator* Robot::getActuator(size_t index)
         return nullptr;
 }
     
-Sensor* Robot::getSensor(const std::string& sname)
+Sensor* Robot::GetSensor(const std::string& sname)
 {
-    auto it = std::find_if(sensors_.begin(), sensors_.end(), [&sname](Sensor* sens) { return sens->getName() == sname; });
+    auto it = std::find_if(sensors_.begin(), sensors_.end(), [&sname](Sensor* sens) { return sens->GetName() == sname; });
     if(it != sensors_.end())
         return *it;
     else
         return nullptr;
 }
 
-Sensor* Robot::getSensor(size_t index)
+Sensor* Robot::GetSensor(size_t index)
 {
     if(index < sensors_.size())
         return sensors_[index];
@@ -107,16 +107,16 @@ Sensor* Robot::getSensor(size_t index)
         return nullptr;
 }
 
-Comm* Robot::getComm(const std::string& cname)
+Comm* Robot::GetComm(const std::string& cname)
 {
-    auto it = std::find_if(comms_.begin(), comms_.end(), [&cname](Comm* comm) { return comm->getName() == cname; });
+    auto it = std::find_if(comms_.begin(), comms_.end(), [&cname](Comm* comm) { return comm->GetName() == cname; });
     if(it != comms_.end())
         return *it;
     else
         return nullptr;
 }
 
-Comm* Robot::getComm(size_t index)
+Comm* Robot::GetComm(size_t index)
 {
     if(index < comms_.size())
         return comms_[index];
@@ -124,7 +124,7 @@ Comm* Robot::getComm(size_t index)
         return nullptr;
 }
 
-SolidEntity* Robot::getBaseLink()
+SolidEntity* Robot::GetBaseLink()
 {
     return links_[0];
 }
@@ -172,13 +172,13 @@ void Robot::DefineFixedJoint(const std::string& jointName, const std::string& pa
 
 LinkSensor* Robot::AddLinkSensor(std::unique_ptr<Sensor, SensorDeleter> s, const std::string& monitoredLinkName, const Transform& origin)
 {
-    if (s == nullptr || s->getType() != SensorType::LINK)
+    if (s == nullptr || s->GetType() != SensorType::LINK)
     {
         cCritical("Sensor does not exist or is not a link sensor!");
         return nullptr;
     }
 
-    SolidEntity* link = getLink(monitoredLinkName);
+    SolidEntity* link = GetLink(monitoredLinkName);
     if(link != nullptr)
     {
         static_cast<LinkSensor*>(s.get())->AttachToSolid(link, origin);
@@ -188,25 +188,25 @@ LinkSensor* Robot::AddLinkSensor(std::unique_ptr<Sensor, SensorDeleter> s, const
     }
     else
     {
-        cCritical("Link '%s' doesn't exist. Sensor '%s' cannot be attached!", monitoredLinkName.c_str(), s->getName().c_str());
+        cCritical("Link '%s' doesn't exist. Sensor '%s' cannot be attached!", monitoredLinkName.c_str(), s->GetName().c_str());
         return nullptr;
     }
 }
 
 LinkSensor* Robot::AddLinkSensor(std::unique_ptr<Sensor> s, const std::string& monitoredLinkName, const Transform& origin)
 {
-    return AddLinkSensor(std::unique_ptr<Sensor, SensorDeleter>(s.release(), Sensor::defaultDeleter), monitoredLinkName, origin);
+    return AddLinkSensor(std::unique_ptr<Sensor, SensorDeleter>(s.release(), Sensor::DefaultDeleter), monitoredLinkName, origin);
 }
 
 VisionSensor* Robot::AddVisionSensor(std::unique_ptr<Sensor, SensorDeleter> s, const std::string& attachmentLinkName, const Transform& origin)
 {
-    if (s == nullptr || s->getType() != SensorType::VISION)
+    if (s == nullptr || s->GetType() != SensorType::VISION)
     {
         cCritical("Sensor does not exist or is not a vision sensor!");
         return nullptr;
     }
 
-    SolidEntity* link = getLink(attachmentLinkName);
+    SolidEntity* link = GetLink(attachmentLinkName);
     if(link != nullptr)
     {
         static_cast<VisionSensor*>(s.get())->AttachToSolid(link, origin);
@@ -216,25 +216,25 @@ VisionSensor* Robot::AddVisionSensor(std::unique_ptr<Sensor, SensorDeleter> s, c
     }
     else
     {
-        cCritical("Link '%s' doesn't exist. Sensor '%s' cannot be attached!", attachmentLinkName.c_str(), s->getName().c_str());
+        cCritical("Link '%s' doesn't exist. Sensor '%s' cannot be attached!", attachmentLinkName.c_str(), s->GetName().c_str());
         return nullptr;
     }
 }
 
 VisionSensor* Robot::AddVisionSensor(std::unique_ptr<Sensor> s, const std::string& attachmentLinkName, const Transform& origin)
 {
-    return AddVisionSensor(std::unique_ptr<Sensor, SensorDeleter>(s.release(), Sensor::defaultDeleter), attachmentLinkName, origin);
+    return AddVisionSensor(std::unique_ptr<Sensor, SensorDeleter>(s.release(), Sensor::DefaultDeleter), attachmentLinkName, origin);
 }
 
 LinkActuator* Robot::AddLinkActuator(std::unique_ptr<Actuator, ActuatorDeleter> a, const std::string& actuatedLinkName, const Transform& origin)
 {
-    if (a == nullptr || a->getType() != ActuatorType::LINK)
+    if (a == nullptr || a->GetType() != ActuatorType::LINK)
     {
         cCritical("Actuator does not exist or is not a link actuator!");
         return nullptr;
     }
 
-    SolidEntity* link = getLink(actuatedLinkName);
+    SolidEntity* link = GetLink(actuatedLinkName);
     if(link != nullptr)
     {
         static_cast<LinkActuator*>(a.get())->AttachToSolid(link, origin);
@@ -244,19 +244,19 @@ LinkActuator* Robot::AddLinkActuator(std::unique_ptr<Actuator, ActuatorDeleter> 
     }
     else
     {
-        cCritical("Link '%s' doesn't exist. Actuator '%s' cannot be attached!", actuatedLinkName.c_str(), a->getName().c_str());
+        cCritical("Link '%s' doesn't exist. Actuator '%s' cannot be attached!", actuatedLinkName.c_str(), a->GetName().c_str());
         return nullptr;
     }
 }
 
 LinkActuator* Robot::AddLinkActuator(std::unique_ptr<Actuator> a, const std::string& actuatedLinkName, const Transform& origin)
 {
-    return AddLinkActuator(std::unique_ptr<Actuator, ActuatorDeleter>(a.release(), Actuator::defaultDeleter), actuatedLinkName, origin);
+    return AddLinkActuator(std::unique_ptr<Actuator, ActuatorDeleter>(a.release(), Actuator::DefaultDeleter), actuatedLinkName, origin);
 }
 
 Comm* Robot::AddComm(std::unique_ptr<Comm, CommDeleter> c, const std::string& attachmentLinkName, const Transform& origin)
 {
-    SolidEntity* link = getLink(attachmentLinkName);
+    SolidEntity* link = GetLink(attachmentLinkName);
     if(link != nullptr)
     {
         c->AttachToSolid(link, origin);
@@ -266,14 +266,14 @@ Comm* Robot::AddComm(std::unique_ptr<Comm, CommDeleter> c, const std::string& at
     }
     else
     {
-        cCritical("Link '%s' doesn't exist. Communication device '%s' cannot be attached!", attachmentLinkName.c_str(), c->getName().c_str());
+        cCritical("Link '%s' doesn't exist. Communication device '%s' cannot be attached!", attachmentLinkName.c_str(), c->GetName().c_str());
         return nullptr;
     }
 }
 
 Comm* Robot::AddComm(std::unique_ptr<Comm> c, const std::string& attachmentLinkName, const Transform& origin)
 {
-    return AddComm(std::unique_ptr<Comm, CommDeleter>(c.release(), Comm::defaultDeleter), attachmentLinkName, origin);
+    return AddComm(std::unique_ptr<Comm, CommDeleter>(c.release(), Comm::DefaultDeleter), attachmentLinkName, origin);
 }
 
 void Robot::AddToSimulation(SimulationManager* sm, const Transform& origin)

@@ -31,13 +31,13 @@
 namespace sf
 {
 
-GLfloat Color::bbSpectrum(GLfloat wavelength, GLfloat temperature)
+GLfloat Color::BbSpectrum(GLfloat wavelength, GLfloat temperature)
 {
     double wlm = wavelength * 1e-9;   /* Wavelength in meters */
     return (3.74183e-16 * pow(wlm, -5.0)) / (exp(1.4388e-2 / (wlm * temperature)) - 1.0);
 }
 
-void Color::bbSpectrumToXYZ(GLfloat temperature, GLfloat& x, GLfloat& y, GLfloat& z)
+void Color::BbSpectrumToXyz(GLfloat temperature, GLfloat& x, GLfloat& y, GLfloat& z)
 {
     GLfloat X = 0, Y = 0, Z = 0, XYZ;
     
@@ -74,7 +74,7 @@ void Color::bbSpectrumToXYZ(GLfloat temperature, GLfloat& x, GLfloat& y, GLfloat
     for (int i=0, lambda=380; lambda<780.1; i++,lambda+=5)
     {
         GLfloat Me;
-        Me = bbSpectrum(lambda, temperature);
+        Me = BbSpectrum(lambda, temperature);
         X += Me * cie_colour_match[i][0];
         Y += Me * cie_colour_match[i][1];
         Z += Me * cie_colour_match[i][2];
@@ -86,7 +86,7 @@ void Color::bbSpectrumToXYZ(GLfloat temperature, GLfloat& x, GLfloat& y, GLfloat
     z = Z / XYZ;
 }
 
-void Color::xyzToRGB(GLfloat x, GLfloat y, GLfloat z, GLfloat& r, GLfloat& g, GLfloat& b, ColorSystem cs)
+void Color::XyzToRgb(GLfloat x, GLfloat y, GLfloat z, GLfloat& r, GLfloat& g, GLfloat& b, ColorSystem cs)
 {
     GLfloat xr, yr, zr, xg, yg, zg, xb, yb, zb;
     GLfloat xw, yw, zw;

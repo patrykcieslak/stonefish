@@ -90,15 +90,15 @@ void CRTrajectory::Interpolate()
         }
         else
         {
-            interpTrans_.setOrigin(catmullRom(T0.getOrigin(), T1.getOrigin(), T2.getOrigin(), T3.getOrigin(),
+            interpTrans_.setOrigin(CatmullRom(T0.getOrigin(), T1.getOrigin(), T2.getOrigin(), T3.getOrigin(),
                                                                                     t0, t1, t2, t3, playTime_));
-            interpVel_ = catmullRomDerivative(T0.getOrigin(), T1.getOrigin(), T2.getOrigin(), T3.getOrigin(),
+            interpVel_ = CatmullRomDerivative(T0.getOrigin(), T1.getOrigin(), T2.getOrigin(), T3.getOrigin(),
                                                                                     t0, t1, t2, t3, playTime_);        
         }
         //Angular quantities
         Vector3 dummy;
         interpTrans_.setRotation(slerp(T1.getRotation(), T2.getRotation(), (playTime_-t1)/(t2-t1)));
-        calculateVelocityShortestPath(T1, T2, t2-t1, dummy, interpAngVel_);
+        CalculateVelocityShortestPath(T1, T2, t2-t1, dummy, interpAngVel_);
 
         if(!forward_)
         {
@@ -114,7 +114,7 @@ void CRTrajectory::BuildGraphicalPath()
 
     if(points_.size() >= 3)
     {
-        vis_[1].getDataAsPoints()->clear();
+        vis_[1].GetDataAsPoints()->clear();
         for(size_t i=0; i<points_.size()-1; ++i)
         {
             Vector3 P1 = points_[i].T.getOrigin();
@@ -152,13 +152,13 @@ void CRTrajectory::BuildGraphicalPath()
 
             Scalar dt = (t2-t1)/Scalar(100.0);
             for(Scalar t=t1; t<t2; t+=dt)
-                vis_[1].getDataAsPoints()->push_back(glVectorFromVector(catmullRom(P0, P1, P2, P3, t0, t1, t2, t3, t)));    
+                vis_[1].GetDataAsPoints()->push_back(glVectorFromVector(CatmullRom(P0, P1, P2, P3, t0, t1, t2, t3, t)));    
         }
-        vis_[1].getDataAsPoints()->push_back(glVectorFromVector(points_.back().T.getOrigin()));
+        vis_[1].GetDataAsPoints()->push_back(glVectorFromVector(points_.back().T.getOrigin()));
     }
 }
 
-Vector3 CRTrajectory::catmullRom(Vector3 P0, Vector3 P1, Vector3 P2, Vector3 P3, 
+Vector3 CRTrajectory::CatmullRom(Vector3 P0, Vector3 P1, Vector3 P2, Vector3 P3, 
                                  Scalar t0, Scalar t1, Scalar t2, Scalar t3, Scalar t)
 {
     Vector3 A1 = (t1-t)/(t1-t0)*P0 + (t-t0)/(t1-t0)*P1;
@@ -170,7 +170,7 @@ Vector3 CRTrajectory::catmullRom(Vector3 P0, Vector3 P1, Vector3 P2, Vector3 P3,
     return C;
 }
 
-Vector3 CRTrajectory::catmullRomDerivative(Vector3 P0, Vector3 P1, Vector3 P2, Vector3 P3, 
+Vector3 CRTrajectory::CatmullRomDerivative(Vector3 P0, Vector3 P1, Vector3 P2, Vector3 P3, 
                                            Scalar t0, Scalar t1, Scalar t2, Scalar t3, Scalar t)
 {
     Vector3 A1 = (t1-t)/(t1-t0)*P0 + (t-t0)/(t1-t0)*P1;

@@ -61,13 +61,13 @@ namespace sf
         /*!
          \param x new outlet velocity [m/s]
          */
-        void setOutletVelocity(Scalar x);
+        void SetOutletVelocity(Scalar x);
 
         //! A method to get the flow velocity.
-        Scalar getOutletVelocity() const;
+        Scalar GetOutletVelocity() const;
 
          //! A method returning the type of the velocity field.
-        VelocityFieldType getType() const;
+        VelocityFieldType GetType() const;
         
     private:
         Vector3 c_, n_;

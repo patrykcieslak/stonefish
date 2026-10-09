@@ -36,20 +36,20 @@ LinkActuator::LinkActuator(const std::string& uniqueName) : Actuator(uniqueName)
     o2a_ = I4();
 }
 
-void LinkActuator::setRelativeActuatorFrame(const Transform& origin)
+void LinkActuator::SetRelativeActuatorFrame(const Transform& origin)
 {
     o2a_ = origin;
 }
 
-Transform LinkActuator::getActuatorFrame() const
+Transform LinkActuator::GetActuatorFrame() const
 {
     if(attach_ != nullptr)
-        return attach_->getOTransform() * o2a_;
+        return attach_->GetOTransform() * o2a_;
     else
         return o2a_;
 }
 
-ActuatorType LinkActuator::getType() const
+ActuatorType LinkActuator::GetType() const
 {
     return ActuatorType::LINK;
 }
@@ -69,7 +69,7 @@ std::vector<Renderable> LinkActuator::Render()
 
     Renderable item;
     item.type = RenderableType::SENSOR_CS;
-    item.model = glMatrixFromTransform(getActuatorFrame());
+    item.model = glMatrixFromTransform(GetActuatorFrame());
     items.push_back(item);
 
     return items;

@@ -107,19 +107,19 @@ namespace sf
         void Update();
         
         //! A method that informs if the sonar needs update.
-        bool needsUpdate() override;
+        bool NeedsUpdate() override;
         
         //! A method to set the color map used during sonar data visulization.
         /*!
          \param cm the color map to be used
          */
-        void setColorMap(ColorMap cm);
+        void SetColorMap(ColorMap cm);
         
         //! A method return output format of the sonar.
-        SonarOutputFormat getOutputFormat() const;
+        SonarOutputFormat GetOutputFormat() const;
 
         //! A method returning the type of the view.
-        ViewType getType() const override;
+        ViewType GetType() const override;
         
         //! A static method to load shaders.
         static void Init();

@@ -54,7 +54,7 @@
 #include <sensors/Contact.h>
 #include <sensors/vision/ColorCamera.h>
 #include <sensors/vision/DepthCamera.h>
-#include <sensors/vision/Multibeam2.h>
+#include <sensors/vision/Lidar.h>
 #include <sensors/vision/FLS.h>
 #include <sensors/vision/SSS.h>
 #include <sensors/vision/MSIS.h>
@@ -113,12 +113,12 @@ void UnderwaterTestManager::BuildScenario()
     ////////OBJECTS    
     //Create environment
     EnableOcean(0.0);
-    getOcean()->setWaterType(0.2);
-    getOcean()->AddVelocityField(std::make_unique<sf::Jet>(sf::Vector3(0,0,1.0), sf::VY(), 0.3, 5.0));
-    getOcean()->AddVelocityField(std::make_unique<sf::Uniform>(sf::Vector3(1.0,0.0,0.0)));
-    getOcean()->EnableVelocityFields();
-    getAtmosphere()->SetSunPosition(0.0, 60.0);
-    getNED()->Init(41.77737, 3.03376, 0.0);
+    GetOcean()->SetWaterType(0.2);
+    GetOcean()->AddVelocityField(std::make_unique<sf::Jet>(sf::Vector3(0,0,1.0), sf::VY(), 0.3, 5.0));
+    GetOcean()->AddVelocityField(std::make_unique<sf::Uniform>(sf::Vector3(1.0,0.0,0.0)));
+    GetOcean()->EnableVelocityFields();
+    GetAtmosphere()->SetSunPosition(0.0, 60.0);
+    GetNed()->Init(41.77737, 3.03376, 0.0);
     
     AddStaticEntity(std::make_unique<sf::Terrain>("Seabed", sf::GetDataPath() + "terrain.png", 1.0, 1.0, 5.0, "Rock", "seabed", 5.f),
         sf::Transform(sf::IQ(), sf::Vector3(0,0,15.0)));
@@ -175,7 +175,7 @@ void UnderwaterTestManager::BuildScenario()
     vehicle->AddInternalPart(std::move(portCyl), sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0.0,-0.35,-0.7)));
     vehicle->AddInternalPart(std::move(starboardCyl), sf::Transform(sf::Quaternion(0,M_PI_2,0), sf::Vector3(0.0,0.35,-0.7)));
     
-    vehicle->setDisplayInternalParts(false);
+    vehicle->SetDisplayInternalParts(false);
     
     //Manipulator bodies
     std::unique_ptr<sf::Polyhedron> baseLink = std::make_unique<sf::Polyhedron>("ArmBaseLink", phy, sf::GetDataPath() + "base_link_uji_hydro.obj", sf::Scalar(1), sf::I4(), "Dummy", "manipulator");
@@ -214,7 +214,7 @@ void UnderwaterTestManager::BuildScenario()
         std::unique_ptr<sf::MechanicalPI> rotorDynamics;
         rotorDynamics = std::make_unique<sf::MechanicalPI>(1.0, 10.0, 5.0, 5.0);
         std::unique_ptr<sf::FDThrust> thrustModel;
-        thrustModel = std::make_unique<sf::FDThrust>(0.18, 0.48, 0.48, 0.05, true, getOcean()->getLiquid().density);
+        thrustModel = std::make_unique<sf::FDThrust>(0.18, 0.48, 0.48, 0.05, true, GetOcean()->GetLiquid().density);
         thrusters[i] = std::make_unique<sf::Thruster>(thrusterNames[i], std::move(propeller), std::move(rotorDynamics), std::move(thrustModel), 0.18, true, 105.0, true, true);
     }
 
@@ -228,41 +228,41 @@ void UnderwaterTestManager::BuildScenario()
     std::unique_ptr<sf::Odometry> odom = std::make_unique<sf::Odometry>("Odom");
     
     std::unique_ptr<sf::Pressure> press = std::make_unique<sf::Pressure>("Pressure");
-    press->setNoise(1.0);
+    press->SetNoise(1.0);
     
     std::unique_ptr<sf::DVL> dvl = std::make_unique<sf::DVL>("DVL", 30.0, false);
-    dvl->setNoise(0.0, 0.02, 0.05, 0.0, 0.02);
+    dvl->SetNoise(0.0, 0.02, 0.05, 0.0, 0.02);
     
     std::unique_ptr<sf::IMU> imu = std::make_unique<sf::IMU>("IMU");
-    imu->setNoise(sf::V0(), sf::Vector3(0.05, 0.05, 0.1), 0.0, sf::Vector3(0.01, 0.01, 0.02));
+    imu->SetNoise(sf::V0(), sf::Vector3(0.05, 0.05, 0.1), 0.0, sf::Vector3(0.01, 0.01, 0.02));
     
     std::unique_ptr<sf::Compass> fog = std::make_unique<sf::Compass>("FOG");
-    fog->setNoise(0.01);
+    fog->SetNoise(0.01);
     
     std::unique_ptr<sf::GPS> gps = std::make_unique<sf::GPS>("GPS");
-    gps->setNoise(0.5);
+    gps->SetNoise(0.5);
     
-    //std::unique_ptr<sf::Multibeam2> mb = std::make_unique<sf::Multibeam2>("Multibeam", 1000, 300, 50.0, 40.0, 0.1, 10.0, 10.0);
-    //mb->setDisplayOnScreen(true);
+    //std::unique_ptr<sf::Lidar> mb = std::make_unique<sf::Lidar>("Multibeam", 1000, 300, 50.0, 40.0, 0.1, 10.0, 10.0);
+    //mb->SetDisplayOnScreen(true);
     
     //std::unique_ptr<sf::DepthCamera> dc = std::make_unique<sf::DepthCamera>("DepthCam", 1000, 350, 50.0, 0.1, 10.0, 10.0);
-    //dc->setDisplayOnScreen(true);
+    //dc->SetDisplayOnScreen(true);
     
-    std::unique_ptr<sf::FLS> fls = std::make_unique<sf::FLS>("FLS", 256, 500, 150.0, 30.0, 1.0, 20.0, sf::ColorMap::GREEN_BLUE, sf::SonarOutputFormat::U8);
-    fls->setNoise(0.05, 0.05);
-    fls->setDisplayOnScreen(true, 800, 250, 0.4f);
+    std::unique_ptr<sf::FLS> fls = std::make_unique<sf::FLS>("FLS", 256, 500, 150.0, 30.0, 1.0, 20.0, sf::SonarOutputFormat::U8);
+    fls->SetNoise(0.05, 0.05);
+    fls->SetDisplayOnScreen(true, 800, 250, 0.4f);
     //fls->InstallNewDataHandler(std::bind(&UnderwaterTestManager::FLSDataCallback, this, std::placeholders::_1));
 
-    std::unique_ptr<sf::MSIS> msis = std::make_unique<sf::MSIS>("MSIS", 1.5, 500, 2.0, 30.0, -50, 50, 1.0, 100.0, sf::ColorMap::GREEN_BLUE, sf::SonarOutputFormat::U8);
-    msis->setDisplayOnScreen(true, 880, 455, 0.6f);
+    std::unique_ptr<sf::MSIS> msis = std::make_unique<sf::MSIS>("MSIS", 1.5, 500, 2.0, 30.0, -50, 50, 1.0, 100.0, sf::SonarOutputFormat::U8);
+    msis->SetDisplayOnScreen(true, 880, 455, 0.6f);
     //msis->InstallNewDataHandler(std::bind(&UnderwaterTestManager::MSISDataCallback, this, std::placeholders::_1));
     
-    std::unique_ptr<sf::SSS> sss = std::make_unique<sf::SSS>("SSS", 800, 400, 70.0, 1.5, 50.0, 1.0, 100.0, sf::ColorMap::GREEN_BLUE, sf::SonarOutputFormat::U8);
-    sss->setDisplayOnScreen(true, 710, 5, 0.6f);
+    std::unique_ptr<sf::SSS> sss = std::make_unique<sf::SSS>("SSS", 800, 400, 70.0, 1.5, 50.0, 1.0, 100.0, sf::SonarOutputFormat::U8);
+    sss->SetDisplayOnScreen(true, 710, 5, 0.6f);
     //sss->InstallNewDataHandler(std::bind(&UnderwaterTestManager::SSSDataCallback, this, std::placeholders::_1));
     
     //std::unique_ptr<sf::ColorCamera> cam = std::make_unique<sf::ColorCamera>("Cam", 300, 200, 60.0, 10.0);
-    //cam->setDisplayOnScreen(true);
+    //cam->SetDisplayOnScreen(true);
     
     //std::unique_ptr<sf::ColorCamera> cam2 = std::make_unique<sf::ColorCamera>("Cam", 300, 200, 60.0);
     
@@ -318,37 +318,37 @@ void UnderwaterTestManager::SimulationStepCompleted(sf::Scalar timeStep)
     if(false)
     {
 #ifdef PARSED_SCENARIO
-        sf::Thruster* th = dynamic_cast<sf::Thruster*>(getRobot("GIRONA500")->getActuator("GIRONA500/ThrusterSurgePort"));
+        sf::Thruster* th = dynamic_cast<sf::Thruster*>(GetRobot("GIRONA500")->GetActuator("GIRONA500/ThrusterSurgePort"));
 #else
-        sf::Thruster* th = dynamic_cast<sf::Thruster*>(getRobot("GIRONA500")->getActuator("ThrusterSurgePort"));
+        sf::Thruster* th = dynamic_cast<sf::Thruster*>(GetRobot("GIRONA500")->GetActuator("ThrusterSurgePort"));
 #endif
         if (th)
         {
-            double rpm = th->getOmega() * sf::Scalar(60.0) / sf::Scalar(2.0 * M_PI);
-            std::cout << std::setprecision(3) << "[" << th->getName() << "] RPM: " << rpm << ", Thrust: " << th->getThrust() << std::endl;
+            double rpm = th->GetOmega() * sf::Scalar(60.0) / sf::Scalar(2.0 * M_PI);
+            std::cout << std::setprecision(3) << "[" << th->GetName() << "] RPM: " << rpm << ", Thrust: " << th->GetThrust() << std::endl;
         }
     }
 }
 
 void UnderwaterTestManager::FLSDataCallback(sf::FLS* fls)
 {
-    auto format = fls->getOutputFormat();
+    auto format = fls->GetOutputFormat();
     switch (format)
     {
         case sf::SonarOutputFormat::U8:
-            PrintData<GLubyte>(fls->getImageDataPointer(), 10);
+            PrintData<GLubyte>(fls->GetImageDataPointer(), 10);
             break;
 
         case sf::SonarOutputFormat::U16:
-            PrintData<GLushort>(fls->getImageDataPointer(), 10);
+            PrintData<GLushort>(fls->GetImageDataPointer(), 10);
             break;
 
         case sf::SonarOutputFormat::U32:
-            PrintData<GLuint>(fls->getImageDataPointer(), 10);
+            PrintData<GLuint>(fls->GetImageDataPointer(), 10);
             break;
 
         case sf::SonarOutputFormat::F32:
-            PrintData<GLfloat>(fls->getImageDataPointer(), 10);
+            PrintData<GLfloat>(fls->GetImageDataPointer(), 10);
             break;
     }
     std::cout << std::endl;
@@ -356,23 +356,23 @@ void UnderwaterTestManager::FLSDataCallback(sf::FLS* fls)
 
 void UnderwaterTestManager::MSISDataCallback(sf::MSIS* msis)
 {
-    auto format = msis->getOutputFormat();
+    auto format = msis->GetOutputFormat();
     switch (format)
     {
         case sf::SonarOutputFormat::U8:
-            PrintData<GLubyte>(msis->getImageDataPointer(), 1000);
+            PrintData<GLubyte>(msis->GetImageDataPointer(), 1000);
             break;
 
         case sf::SonarOutputFormat::U16:
-            PrintData<GLushort>(msis->getImageDataPointer(), 1000);
+            PrintData<GLushort>(msis->GetImageDataPointer(), 1000);
             break;
 
         case sf::SonarOutputFormat::U32:
-            PrintData<GLuint>(msis->getImageDataPointer(), 1000);
+            PrintData<GLuint>(msis->GetImageDataPointer(), 1000);
             break;
 
         case sf::SonarOutputFormat::F32:
-            PrintData<GLfloat>(msis->getImageDataPointer(), 1000);
+            PrintData<GLfloat>(msis->GetImageDataPointer(), 1000);
             break;
     }
     std::cout << std::endl;
@@ -380,23 +380,23 @@ void UnderwaterTestManager::MSISDataCallback(sf::MSIS* msis)
 
 void UnderwaterTestManager::SSSDataCallback(sf::SSS* sss)
 {
-    auto format = sss->getOutputFormat();
+    auto format = sss->GetOutputFormat();
     switch (format)
     {
         case sf::SonarOutputFormat::U8:
-            PrintData<GLubyte>(sss->getImageDataPointer(), 100);
+            PrintData<GLubyte>(sss->GetImageDataPointer(), 100);
             break;
 
         case sf::SonarOutputFormat::U16:
-            PrintData<GLushort>(sss->getImageDataPointer(), 100);
+            PrintData<GLushort>(sss->GetImageDataPointer(), 100);
             break;
 
         case sf::SonarOutputFormat::U32:
-            PrintData<GLuint>(sss->getImageDataPointer(), 100);
+            PrintData<GLuint>(sss->GetImageDataPointer(), 100);
             break;
 
         case sf::SonarOutputFormat::F32:
-            PrintData<GLfloat>(sss->getImageDataPointer(), 100);
+            PrintData<GLfloat>(sss->GetImageDataPointer(), 100);
             break;
     }
     std::cout << std::endl;

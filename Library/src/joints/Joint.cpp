@@ -34,7 +34,7 @@ namespace sf
 
 Joint::Joint(const std::string& uniqueName, bool collideLinkedEntities)
 {
-    name_ = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
+    name_ = SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->AddName(uniqueName);
     collisionEnabled_ = collideLinkedEntities;
     jSolidA_ = nullptr;
     jSolidB_ = nullptr;
@@ -42,21 +42,21 @@ Joint::Joint(const std::string& uniqueName, bool collideLinkedEntities)
 
 Joint::~Joint()
 {
-    if(SimulationApp::getApp() != nullptr)
-        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name_);
+    if(SimulationApp::GetApp() != nullptr)
+        SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->RemoveName(name_);
 }
 
-bool Joint::isMultibodyJoint()
+bool Joint::IsMultibodyJoint()
 {
     return (constraint_ == nullptr) && (mbConstraint_ != nullptr);
 }
 
-const std::string& Joint::getName() const
+const std::string& Joint::GetName() const
 {
     return name_;
 }
 
-Scalar Joint::getFeedback(unsigned int dof)
+Scalar Joint::GetFeedback(unsigned int dof)
 {
     if(dof > 5)
         return Scalar(0);
@@ -77,12 +77,12 @@ Scalar Joint::getFeedback(unsigned int dof)
         return Scalar(0);
 }
 
-SolidEntity* Joint::getSolidA()
+SolidEntity* Joint::GetSolidA()
 {
     return jSolidA_;
 }
 
-SolidEntity* Joint::getSolidB()
+SolidEntity* Joint::GetSolidB()
 {
     return jSolidB_;
 }
@@ -101,7 +101,7 @@ void Joint::AddToSimulation(SimulationManager* sm)
 
         //Solver setup
         Scalar erp, stopErp;
-        sm->getJointErp(erp, stopErp);
+        sm->GetJointErp(erp, stopErp);
 
         if(constraint_->getConstraintType() == D6_SPRING_2_CONSTRAINT_TYPE)
         {
@@ -131,16 +131,16 @@ void Joint::AddToSimulation(SimulationManager* sm)
         }
     
         //Add joint to dynamics world
-        sm->getDynamicsWorld()->addConstraint(constraint_.get(), !collisionEnabled_);
+        sm->GetDynamicsWorld()->addConstraint(constraint_.get(), !collisionEnabled_);
     }
     else if(mbConstraint_ != nullptr)
     {
         Scalar erp, stopErp;
-        sm->getJointErp(erp, stopErp);
+        sm->GetJointErp(erp, stopErp);
         mbConstraint_->setErp(erp);
-        sm->getDynamicsWorld()->addMultiBodyConstraint(mbConstraint_.get());
+        sm->GetDynamicsWorld()->addMultiBodyConstraint(mbConstraint_.get());
         if(!collisionEnabled_)
-            SimulationApp::getApp()->getSimulationManager()->DisableCollision(jSolidA_, jSolidB_);
+            SimulationApp::GetApp()->GetSimulationManager()->DisableCollision(jSolidA_, jSolidB_);
     }
 }
 
@@ -149,13 +149,13 @@ void Joint::RemoveFromSimulation(SimulationManager* sm)
     if(constraint_ != nullptr)
     {
         delete constraint_->getJointFeedback();
-        sm->getDynamicsWorld()->removeConstraint(constraint_.get());
+        sm->GetDynamicsWorld()->removeConstraint(constraint_.get());
     }
     else if(mbConstraint_ != nullptr)
     {
-        sm->getDynamicsWorld()->removeMultiBodyConstraint(mbConstraint_.get());
+        sm->GetDynamicsWorld()->removeMultiBodyConstraint(mbConstraint_.get());
         if(!collisionEnabled_)
-            SimulationApp::getApp()->getSimulationManager()->EnableCollision(jSolidA_, jSolidB_);
+            SimulationApp::GetApp()->GetSimulationManager()->EnableCollision(jSolidA_, jSolidB_);
     }
 }
 

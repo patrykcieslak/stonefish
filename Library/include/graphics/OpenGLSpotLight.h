@@ -97,19 +97,19 @@ namespace sf
         void UpdateTransform();
         
         //! A method returning the type of the light.
-        LightType getType() const;
+        LightType GetType() const;
         
         //! A method returning the direction vector of the light.
-        glm::vec3 getDirection();
+        glm::vec3 GetDirection();
         
         //! A method returning light clip space information.
-        glm::mat4 getClipSpace();
+        glm::mat4 GetClipSpace();
 
         //! A method returning the model matrix of the light.
-        glm::mat4 getTransform();
+        glm::mat4 GetTransform();
         
         //! A method returning the spot light cone angle.
-        GLfloat getAngle();
+        GLfloat GetAngle();
         
     private:
         glm::vec3 dir_;

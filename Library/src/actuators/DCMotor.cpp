@@ -49,40 +49,40 @@ DCMotor::DCMotor(const std::string& uniqueName, Scalar motorR, Scalar motorL, Sc
     V_ = Scalar(0.);
     lastVoverL_ = Scalar(0.);
     torque_ = Scalar(0.);
-    setVoltageLimit(-1); // No limit
+    SetVoltageLimit(-1); // No limit
 }
 
-JointActuatorType DCMotor::getJointActuatorType() const
+JointActuatorType DCMotor::GetJointActuatorType() const
 {
     return JointActuatorType::DCMOTOR;
 }
 
-Scalar DCMotor::getKe() const
+Scalar DCMotor::GetKe() const
 {
     return Ke_;
 }
 
-Scalar DCMotor::getKt() const
+Scalar DCMotor::GetKt() const
 {
     return Kt_;
 }
 
-Scalar DCMotor::getR() const
+Scalar DCMotor::GetR() const
 {
     return R_;
 }
 
-Scalar DCMotor::getL() const
+Scalar DCMotor::GetL() const
 {
     return L_;
 }
 
-Scalar DCMotor::getGearRatio() const
+Scalar DCMotor::GetGearRatio() const
 {
     return gearRatio_;
 }
 
-void DCMotor::setVoltage(Scalar v)
+void DCMotor::SetVoltage(Scalar v)
 {
     if(limit_ > Scalar(0)) // Limitted
         V_ = v < -limit_ ? -limit_ : (v > limit_ ? limit_ : v);
@@ -91,37 +91,37 @@ void DCMotor::setVoltage(Scalar v)
     ResetWatchdog();
 }
 
-void DCMotor::setVoltageLimit(Scalar v)
+void DCMotor::SetVoltageLimit(Scalar v)
 {
     limit_ = v;
 }
 
-Scalar DCMotor::getVoltage() const
+Scalar DCMotor::GetVoltage() const
 {
     return V_;
 }
 
-Scalar DCMotor::getTorque() const
+Scalar DCMotor::GetTorque() const
 {
     return torque_;
 }
 
-Scalar DCMotor::getCurrent() const
+Scalar DCMotor::GetCurrent() const
 {
     return I_;
 }
 
-Scalar DCMotor::getAngle() const
+Scalar DCMotor::GetAngle() const
 {
-    if(j_ != nullptr && j_->getType() == JointType::REVOLUTE)
+    if(j_ != nullptr && j_->GetType() == JointType::REVOLUTE)
     {
-        return static_cast<RevoluteJoint*>(j_)->getAngle() * gearRatio_;
+        return static_cast<RevoluteJoint*>(j_)->GetAngle() * gearRatio_;
     }
     else if(fe_ != nullptr)
     {
         Scalar angle;
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
-        fe_->getJointPosition(jId_, angle, jt);
+        fe_->GetJointPosition(jId_, angle, jt);
         
         if(jt == btMultibodyLink::eRevolute)
             return angle * gearRatio_;
@@ -132,17 +132,17 @@ Scalar DCMotor::getAngle() const
         return Scalar(0);
 }
 
-Scalar DCMotor::getAngularVelocity() const
+Scalar DCMotor::GetAngularVelocity() const
 {
-    if(j_ != nullptr && j_->getType() == JointType::REVOLUTE)
+    if(j_ != nullptr && j_->GetType() == JointType::REVOLUTE)
     {
-        return static_cast<RevoluteJoint*>(j_)->getAngularVelocity() * gearRatio_;
+        return static_cast<RevoluteJoint*>(j_)->GetAngularVelocity() * gearRatio_;
     }
     else if(fe_ != nullptr)
     {
         Scalar angularV;
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
-        fe_->getJointVelocity(jId_, angularV, jt);
+        fe_->GetJointVelocity(jId_, angularV, jt);
         
         if(jt == btMultibodyLink::eRevolute)
             return angularV * gearRatio_;
@@ -158,7 +158,7 @@ void DCMotor::Update(Scalar dt)
     Actuator::Update(dt);
 
     //Get joint angular velocity in radians
-    Scalar aVelocity = getAngularVelocity();
+    Scalar aVelocity = GetAngularVelocity();
     
     //Calculate internal state and output
     torque_ = (I_ * Kt_ - aVelocity * B_) * gearRatio_ * gearEff_;
@@ -173,7 +173,7 @@ void DCMotor::Update(Scalar dt)
     //lastVoverL = VoverL;
     
 	//Drive the joint    
-    if(j_ != nullptr && j_->getType() == JointType::REVOLUTE)
+    if(j_ != nullptr && j_->GetType() == JointType::REVOLUTE)
         static_cast<RevoluteJoint*>(j_)->ApplyTorque(torque_);
     else if(fe_ != nullptr)
         fe_->DriveJoint(jId_, torque_);
@@ -188,12 +188,12 @@ void DCMotor::SetupGearbox(bool enable, Scalar ratio, Scalar efficiency)
 
 void DCMotor::WatchdogTimeout()
 {
-    setVoltage(Scalar(0.));
+    SetVoltage(Scalar(0.));
 }
 
 // Statics
 
-ConstructInfo DCMotor::getConstructInfo()
+ConstructInfo DCMotor::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -233,7 +233,7 @@ std::unique_ptr<DCMotor> DCMotor::Construct(const std::string& uniqueName, Const
 
     // Construct
     std::unique_ptr<DCMotor> actuator = std::make_unique<DCMotor>(uniqueName, R, L, ke, kt, b);
-    actuator->setVoltageLimit(maxVoltage);
+    actuator->SetVoltageLimit(maxVoltage);
 
     return actuator;
 }

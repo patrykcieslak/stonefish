@@ -105,12 +105,12 @@ GLSLShader::~GLSLShader()
         glDeleteProgram(program_);
 }
 
-bool GLSLShader::isValid()
+bool GLSLShader::IsValid()
 {
     return valid_;
 }
 
-GLuint GLSLShader::getProgramHandle()
+GLuint GLSLShader::GetProgramHandle()
 {
     return program_;
 }

@@ -84,7 +84,7 @@ namespace sf
 
         //! A method used to add tasks to the queue.
         template <class F, class... Args>
-        auto enqueue(F &&f, Args &&...args)
+        auto Enqueue(F &&f, Args &&...args)
             -> std::future<std::invoke_result_t<F, Args...>>
         {
 
@@ -111,13 +111,13 @@ namespace sf
         }
 
         //! A non-blocking method that returns true if no tasks are queued or running.
-        bool isIdle() const
+        bool IsIdle() const
         {
             return activeTasks_ == 0;
         }
 
         //! A blocking method that halts the caller thread until all current tasks are finished.
-        void waitAll()
+        void WaitAll()
         {
             std::unique_lock<std::mutex> lock(queueMutex_);
             waitCondition_.wait(lock, [this]{ return activeTasks_ == 0; });

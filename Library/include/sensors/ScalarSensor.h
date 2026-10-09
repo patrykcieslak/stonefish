@@ -72,7 +72,7 @@ namespace sf
         /*!
          \param sd the value of the standard deviation
          */
-        void setStdDev(Scalar sd)
+        void SetStdDev(Scalar sd)
         {
             if(sd > Scalar(0))
             {
@@ -112,13 +112,13 @@ namespace sf
         void SaveMeasurementsToTextFile(const std::string& path, bool includeTime = true, size_t fixedPrecision = 6);
         
         //! A method returning the number of channels of the sensor.
-        size_t getNumOfChannels() const;
+        size_t GetNumOfChannels() const;
         
         //! A method returning the last sample.
-        const Sample& getLastSample() const;
+        const Sample& GetLastSample() const;
         
         //! A method returing a pointer to a copy of the history of sensor measurements.
-        std::unique_ptr<std::vector<Sample>> getHistory();
+        std::unique_ptr<std::vector<Sample>> GetHistory();
         
         //! A method returning the value of the measurement.
         /*!
@@ -126,24 +126,24 @@ namespace sf
          \param channel the index of the channel
          \return value of the measurement
          */
-        Scalar getValue(size_t index, size_t channel) const;
+        Scalar GetValue(size_t index, size_t channel) const;
         
         //! A method returning the last value of the measurement.
         /*!
          \param channel the index of the channel
          \return last value of the measurement
          */
-        Scalar getLastValue(size_t channel) const;
+        Scalar GetLastValue(size_t channel) const;
         
         //! A method returning the description of a specified channel.
         /*!
          \param channel the infdex of the channel
          \return a structure discribing the channel
          */
-        SensorChannel getSensorChannelDescription(size_t channel) const;
+        SensorChannel GetSensorChannelDescription(size_t channel) const;
         
         //! A method returning the type of scalar sensor.
-        virtual ScalarSensorType getScalarSensorType() const = 0;
+        virtual ScalarSensorType GetScalarSensorType() const = 0;
         
     protected:
         void AddSampleToHistory(std::unique_ptr<Sample> s);

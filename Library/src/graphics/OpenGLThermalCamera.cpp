@@ -215,7 +215,7 @@ void OpenGLThermalCamera::Update()
     needsUpdate_ = true;
 }
 
-bool OpenGLThermalCamera::needsUpdate()
+bool OpenGLThermalCamera::NeedsUpdate()
 {
     if(needsUpdate_)
     {
@@ -226,7 +226,7 @@ bool OpenGLThermalCamera::needsUpdate()
         return false;
 }
 
-void OpenGLThermalCamera::setCamera(Camera* cam, unsigned int index)
+void OpenGLThermalCamera::SetCamera(Camera* cam, unsigned int index)
 {
     camera_ = cam;
 
@@ -241,22 +241,22 @@ void OpenGLThermalCamera::setCamera(Camera* cam, unsigned int index)
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 }
 
-void OpenGLThermalCamera::setNoise(GLfloat temperatureStdDev)
+void OpenGLThermalCamera::SetNoise(GLfloat temperatureStdDev)
 {
     temperatureNoise_ = temperatureStdDev;
 }
 
-void OpenGLThermalCamera::setDisplayRange(glm::vec2 tempRange)
+void OpenGLThermalCamera::SetDisplayRange(glm::vec2 tempRange)
 {
     displayRange_ = tempRange;
 }
 
-void OpenGLThermalCamera::setColorMap(ColorMap cm)
+void OpenGLThermalCamera::SetColorMap(ColorMap cm)
 {
     colorMap_ = cm;
 }
 
-ViewType OpenGLThermalCamera::getType() const
+ViewType OpenGLThermalCamera::GetType() const
 {
     return ViewType::THERMAL_CAMERA;
 }
@@ -272,7 +272,7 @@ void OpenGLThermalCamera::ComputeOutput()
     thermalOutputShader->SetUniform("temperatureRange", temperatureRange_);
     thermalOutputShader->SetUniform("noiseSeed", glm::vec3(randDist_(randGen_), randDist_(randGen_), randDist_(randGen_)));
     thermalOutputShader->SetUniform("noiseStddev", temperatureNoise_);
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->DrawSAQ();
     
     //Color mapped temperature display
     OpenGLState::BindFramebuffer(displayFBO_);
@@ -299,14 +299,14 @@ void OpenGLThermalCamera::DrawLDR(GLuint destinationFBO, bool updated)
     unsigned int dispX, dispY;
     GLfloat dispScale;
     if(camera_ != nullptr)
-        display = camera_->getDisplayOnScreen(dispX, dispY, dispScale);
+        display = camera_->GetDisplayOnScreen(dispX, dispY, dispScale);
     
     //Draw on screen
     if(display)
     {
-        OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
-        int windowHeight = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowHeight();
-        int windowWidth = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowWidth();
+        OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent();
+        int windowHeight = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetWindowHeight();
+        int windowWidth = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetWindowWidth();
         OpenGLState::BindFramebuffer(destinationFBO);
         content->SetViewportSize(windowWidth, windowHeight);
         OpenGLState::Viewport(0, 0, windowWidth, windowHeight);

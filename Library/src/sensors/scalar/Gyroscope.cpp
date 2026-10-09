@@ -43,10 +43,10 @@ Gyroscope::Gyroscope(const std::string& uniqueName, Scalar frequency, int histor
 void Gyroscope::InternalUpdate(Scalar dt)
 {
     //calculate transformation from global to gyro frame
-    Matrix3 toGyroFrame = getSensorFrame().getBasis().inverse();
+    Matrix3 toGyroFrame = GetSensorFrame().getBasis().inverse();
     
     //get angular velocity
-    Vector3 omega = toGyroFrame * attach_->getAngularVelocity();
+    Vector3 omega = toGyroFrame * attach_->GetAngularVelocity();
 
     //add bias error
     omega += bias_;
@@ -55,7 +55,7 @@ void Gyroscope::InternalUpdate(Scalar dt)
     AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({omega.x(), omega.y(), omega.z()})));
 }
 
-void Gyroscope::setRange(Vector3 angularVelocityMax)
+void Gyroscope::SetRange(Vector3 angularVelocityMax)
 {
     channels_[0].rangeMin = -btClamped(angularVelocityMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
     channels_[1].rangeMin = -btClamped(angularVelocityMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
@@ -65,22 +65,22 @@ void Gyroscope::setRange(Vector3 angularVelocityMax)
     channels_[2].rangeMax = btClamped(angularVelocityMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
 
-void Gyroscope::setNoise(Vector3 angularVelocityStdDev, Vector3 angularVelocityBias)
+void Gyroscope::SetNoise(Vector3 angularVelocityStdDev, Vector3 angularVelocityBias)
 {
-    channels_[0].setStdDev(btClamped(angularVelocityStdDev.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels_[1].setStdDev(btClamped(angularVelocityStdDev.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels_[2].setStdDev(btClamped(angularVelocityStdDev.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[0].SetStdDev(btClamped(angularVelocityStdDev.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[1].SetStdDev(btClamped(angularVelocityStdDev.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[2].SetStdDev(btClamped(angularVelocityStdDev.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
     bias_ = angularVelocityBias;
 }
 
-ScalarSensorType Gyroscope::getScalarSensorType() const
+ScalarSensorType Gyroscope::GetScalarSensorType() const
 {
     return ScalarSensorType::GYRO;
 }
 
 // Statics
 
-ConstructInfo Gyroscope::getConstructInfo()
+ConstructInfo Gyroscope::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -120,7 +120,7 @@ std::unique_ptr<Gyroscope> Gyroscope::Construct(const std::string& uniqueName, S
     // Range (optional)
     value = info.nodes.at("range").attributes.at("angular_velocity");
     if (value.valid)
-        sensor->setRange(std::get<Vector3>(value.value));
+        sensor->SetRange(std::get<Vector3>(value.value));
 
     // Noise (optional)
     Vector3 noise = V0();
@@ -131,7 +131,7 @@ std::unique_ptr<Gyroscope> Gyroscope::Construct(const std::string& uniqueName, S
     value = info.nodes.at("noise").attributes.at("bias");
     if (value.valid)
         bias = std::get<Vector3>(value.value);
-    sensor->setNoise(noise, bias);
+    sensor->SetNoise(noise, bias);
 
     return sensor;
 }

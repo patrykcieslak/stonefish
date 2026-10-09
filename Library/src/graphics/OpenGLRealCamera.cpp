@@ -66,7 +66,7 @@ OpenGLRealCamera::~OpenGLRealCamera()
     }
 }
 
-ViewType OpenGLRealCamera::getType() const
+ViewType OpenGLRealCamera::GetType() const
 {
     return ViewType::CAMERA;
 }
@@ -76,7 +76,7 @@ void OpenGLRealCamera::Update()
     needsUpdate_ = true;
 }
 
-bool OpenGLRealCamera::needsUpdate()
+bool OpenGLRealCamera::NeedsUpdate()
 {
     if(needsUpdate_)
     {
@@ -87,7 +87,7 @@ bool OpenGLRealCamera::needsUpdate()
         return false;
 }
 
-void OpenGLRealCamera::setCamera(ColorCamera* cam)
+void OpenGLRealCamera::SetCamera(ColorCamera* cam)
 {
     //Connect with camera sensor
     camera_ = cam;
@@ -178,7 +178,7 @@ void OpenGLRealCamera::DrawLDR(GLuint destinationFBO, bool updated)
         OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, cameraColorTex_[0]);
         shaders["flip"]->Use();
         shaders["flip"]->SetUniform("texSource", TEX_POSTPROCESS1);
-        static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->DrawSAQ();
+        static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->DrawSAQ();
         OpenGLState::UseProgram(0);
         OpenGLState::BindFramebuffer(0);
 
@@ -195,14 +195,14 @@ void OpenGLRealCamera::DrawLDR(GLuint destinationFBO, bool updated)
     unsigned int dispX, dispY;
     GLfloat dispScale;
     if(camera_ != nullptr)
-        display = camera_->getDisplayOnScreen(dispX, dispY, dispScale);
+        display = camera_->GetDisplayOnScreen(dispX, dispY, dispScale);
     
     //Draw on screen
     if(display)
     {
-        OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent();
-        int windowHeight = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowHeight();
-        int windowWidth = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getWindowWidth();
+        OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent();
+        int windowHeight = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetWindowHeight();
+        int windowWidth = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetWindowWidth();
         OpenGLState::BindFramebuffer(destinationFBO);
         OpenGLState::DisableCullFace();
         OpenGLState::Viewport(0, 0, windowWidth, windowHeight);

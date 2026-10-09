@@ -54,9 +54,9 @@ Obstacle::Obstacle(const std::string& uniqueName,
     if(convexHull) // Convex approximation
     {
         std::unique_ptr<btConvexHullShape> shape = std::make_unique<btConvexHullShape>();
-        for(size_t i=0; i<phyMesh_->getNumOfVertices(); ++i)
+        for(size_t i=0; i<phyMesh_->GetNumOfVertices(); ++i)
         {
-            glm::vec3 pos = phyMesh_->getVertexPos(i);
+            glm::vec3 pos = phyMesh_->GetVertexPos(i);
             Vector3 v(pos.x, pos.y, pos.z);
             shape->addPoint(v);
         }
@@ -66,12 +66,12 @@ Obstacle::Obstacle(const std::string& uniqueName,
     }
     else // Non-convex (arbitrary triangle mesh)
     {
-        Scalar* vertices = new Scalar[phyMesh_->getNumOfVertices() * 3];
+        Scalar* vertices = new Scalar[phyMesh_->GetNumOfVertices() * 3];
         int* indices = new int[phyMesh_->faces.size()*3];
         
-        for(size_t i=0; i<phyMesh_->getNumOfVertices(); ++i)
+        for(size_t i=0; i<phyMesh_->GetNumOfVertices(); ++i)
         {
-            glm::vec3 pos = phyMesh_->getVertexPos(i);
+            glm::vec3 pos = phyMesh_->GetVertexPos(i);
             vertices[i*3+0] = pos.x;
             vertices[i*3+1] = pos.y;
             vertices[i*3+2] = pos.z;
@@ -85,7 +85,7 @@ Obstacle::Obstacle(const std::string& uniqueName,
         }
         
         btTriangleIndexVertexArray* triangleArray = new btTriangleIndexVertexArray((int)phyMesh_->faces.size(), indices, 3*sizeof(int),
-                                                                                (int)phyMesh_->getNumOfVertices(), vertices, 3*sizeof(Scalar));
+                                                                                (int)phyMesh_->GetNumOfVertices(), vertices, 3*sizeof(Scalar));
         std::unique_ptr<btBvhTriangleMeshShape> shape = std::make_unique<btBvhTriangleMeshShape>(triangleArray, true);
         shape->setMargin(0);
         collisionShape_ = std::move(shape);
@@ -187,25 +187,25 @@ Obstacle::~Obstacle()
     }
 }
 
-StaticEntityType Obstacle::getStaticType()
+StaticEntityType Obstacle::GetStaticType()
 {
     return StaticEntityType::OBSTACLE;
 }
     
 void Obstacle::BuildGraphicalObject()
 {
-    if(graMesh_ == nullptr || !SimulationApp::getApp()->hasGraphics())
+    if(graMesh_ == nullptr || !SimulationApp::GetApp()->HasGraphics())
         return;
         
-    graObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(graMesh_.get());
-    phyObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh_.get());
+    graObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BuildObject(graMesh_.get());
+    phyObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BuildObject(phyMesh_.get());
 }
 
 std::vector<Renderable> Obstacle::Render()
 {
     std::vector<Renderable> items(0);
 	
-    if(rigidBody_ != nullptr && isRenderable())
+    if(rigidBody_ != nullptr && IsRenderable())
     {
         Renderable item;
         item.type = RenderableType::SOLID;
@@ -215,14 +215,14 @@ std::vector<Renderable> Obstacle::Render()
         { 
             item.objectId = graObjectId_;
             item.lookId = lookId_;
-            item.model = glMatrixFromTransform(getTransform());
+            item.model = glMatrixFromTransform(GetTransform());
             items.push_back(item);
         }
         else if(dm_ == DisplayMode::PHYSICAL && phyObjectId_ >= 0)
         {
             item.objectId = phyObjectId_;
             item.lookId = -1;
-            item.model = glMatrixFromTransform(getTransform());
+            item.model = glMatrixFromTransform(GetTransform());
             items.push_back(item);
         }
     }

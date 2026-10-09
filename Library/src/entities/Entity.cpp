@@ -34,27 +34,27 @@ namespace sf
 
 Entity::Entity(const std::string& uniqueName)
 {
-    name_ = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
+    name_ = SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->AddName(uniqueName);
     renderable_ = true;
 }
 
 Entity::~Entity()
 {
-    if(SimulationApp::getApp() != nullptr)
-        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name_);
+    if(SimulationApp::GetApp() != nullptr)
+        SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->RemoveName(name_);
 }
 
-void Entity::setRenderable(bool render)
+void Entity::SetRenderable(bool render)
 {
     renderable_ = render;
 }
 
-bool Entity::isRenderable() const
+bool Entity::IsRenderable() const
 {
     return renderable_;
 }
 
-const std::string& Entity::getName() const
+const std::string& Entity::GetName() const
 {
     return name_;
 }

@@ -275,7 +275,7 @@ std::unique_ptr<Mesh> LoadOBJ(const std::string& path, GLfloat scale)
     int64_t end = GetTimeInMicroseconds();
     
 #ifdef DEBUG
-    printf("Loaded: %ld Generated: %ld\n", genVStart, mesh->getNumOfVertices()-genVStart);
+    printf("Loaded: %ld Generated: %ld\n", genVStart, mesh->GetNumOfVertices()-genVStart);
     printf("Total time: %ld\n", (long int)(end-start));
 #endif
     cInfo("Loaded mesh with %ld faces in %ld ms.", mesh->faces.size(), (end-start)/1000);
@@ -346,9 +346,9 @@ void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar densit
         for(size_t i=0; i<mesh->faces.size(); ++i)
         {
             //Get triangle, convert from OpenGL to physics
-            glm::vec3 v1gl = mesh->getVertexPos(i, 0);
-            glm::vec3 v2gl = mesh->getVertexPos(i, 1);
-            glm::vec3 v3gl = mesh->getVertexPos(i, 2);
+            glm::vec3 v1gl = mesh->GetVertexPos(i, 0);
+            glm::vec3 v2gl = mesh->GetVertexPos(i, 1);
+            glm::vec3 v3gl = mesh->GetVertexPos(i, 2);
             Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
             Vector3 v2(v2gl.x,v2gl.y,v2gl.z);
             Vector3 v3(v3gl.x,v3gl.y,v3gl.z);
@@ -373,9 +373,9 @@ void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar densit
         for(size_t i=0; i<mesh->faces.size(); ++i)
         {
             //Get triangle, convert from OpenGL to physics
-            glm::vec3 v1gl = mesh->getVertexPos(i, 0);
-            glm::vec3 v2gl = mesh->getVertexPos(i, 1);
-            glm::vec3 v3gl = mesh->getVertexPos(i, 2);
+            glm::vec3 v1gl = mesh->GetVertexPos(i, 0);
+            glm::vec3 v2gl = mesh->GetVertexPos(i, 1);
+            glm::vec3 v3gl = mesh->GetVertexPos(i, 2);
             Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
             Vector3 v2(v2gl.x,v2gl.y,v2gl.z);
             Vector3 v3(v3gl.x,v3gl.y,v3gl.z);
@@ -419,9 +419,9 @@ void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar densit
         for(size_t i=0; i<mesh->faces.size(); ++i)
         {
             //Triangle verticies with respect to CG
-            glm::vec3 v1gl = mesh->getVertexPos(i, 0);
-            glm::vec3 v2gl = mesh->getVertexPos(i, 1);
-            glm::vec3 v3gl = mesh->getVertexPos(i, 2);
+            glm::vec3 v1gl = mesh->GetVertexPos(i, 0);
+            glm::vec3 v2gl = mesh->GetVertexPos(i, 1);
+            glm::vec3 v3gl = mesh->GetVertexPos(i, 2);
             
             Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
             Vector3 v2(v2gl.x,v2gl.y,v2gl.z);
@@ -461,9 +461,9 @@ void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar densit
         for(unsigned int i=0; i<mesh->faces.size(); ++i)
         {
             //Triangle verticies with respect to CG
-            glm::vec3 v1gl = mesh->getVertexPos(i, 0);
-            glm::vec3 v2gl = mesh->getVertexPos(i, 1);
-            glm::vec3 v3gl = mesh->getVertexPos(i, 2);
+            glm::vec3 v1gl = mesh->GetVertexPos(i, 0);
+            glm::vec3 v2gl = mesh->GetVertexPos(i, 1);
+            glm::vec3 v3gl = mesh->GetVertexPos(i, 2);
             
             Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
             Vector3 v2(v2gl.x,v2gl.y,v2gl.z);
@@ -504,9 +504,9 @@ void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar densit
         for(size_t i=0; i<mesh->faces.size(); ++i)
         {
             //Triangle verticies with respect to CG
-            glm::vec3 v1gl = mesh->getVertexPos(i, 0);
-            glm::vec3 v2gl = mesh->getVertexPos(i, 1);
-            glm::vec3 v3gl = mesh->getVertexPos(i, 2);
+            glm::vec3 v1gl = mesh->GetVertexPos(i, 0);
+            glm::vec3 v2gl = mesh->GetVertexPos(i, 1);
+            glm::vec3 v3gl = mesh->GetVertexPos(i, 2);
             
             Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
             Vector3 v2(v2gl.x,v2gl.y,v2gl.z);

@@ -56,13 +56,13 @@ namespace sf
         /*!
          \param x new velocity [m/s]
          */
-        void setVelocity(const Vector3& x);
+        void SetVelocity(const Vector3& x);
 
         //! A method to get the flow velocity.
-        Vector3 getVelocity() const;
+        Vector3 GetVelocity() const;
 
         //! A method returning the type of the velocity field.
-        VelocityFieldType getType() const;
+        VelocityFieldType GetType() const;
         
     private:
         Vector3 v_;

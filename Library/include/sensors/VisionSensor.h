@@ -85,26 +85,26 @@ namespace sf
         /*!
          \param origin a tranformation from the body frame to the sensor frame
          */
-        void setRelativeSensorFrame(const Transform& origin);
+        void SetRelativeSensorFrame(const Transform& origin);
 
         //! A method returning the type of the sensor.
-        SensorType getType() const override;
+        SensorType GetType() const override;
 
         //! A method returning the sensor measurement frame.
-        Transform getSensorFrame() const override;
+        Transform GetSensorFrame() const override;
 
         //! A method returning the velocity of the sensor measurement frame.
         /*!
          \param linear output of the linear velocity of the sensor measurement frame [m/s]
          \param angular output of the angular velocity of the sensor measurement frame [rad/s]
          */
-        void getSensorVelocity(Vector3& linear, Vector3& angular) const override;
+        void GetSensorVelocity(Vector3& linear, Vector3& angular) const override;
         
         //! A method returning the type of the vision sensor.
-        virtual VisionSensorType getVisionSensorType() const = 0;
+        virtual VisionSensorType GetVisionSensorType() const = 0;
 
         //! A method returning a pointer to the underlaying OpenGLView object.
-        virtual OpenGLView* getOpenGLView() const = 0;
+        virtual OpenGLView* GetOpenGlView() const = 0;
         
     protected:
         virtual void InitGraphics(bool& seesParticles) = 0;

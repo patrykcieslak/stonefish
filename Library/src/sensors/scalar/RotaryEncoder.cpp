@@ -59,15 +59,15 @@ void RotaryEncoder::AttachToThruster(Thruster* th)
 
 Scalar RotaryEncoder::GetRawAngle()
 {
-    if(j_ != nullptr && j_->getType() == JointType::REVOLUTE)
+    if(j_ != nullptr && j_->GetType() == JointType::REVOLUTE)
     {
-        return ((RevoluteJoint*)j_)->getAngle();
+        return ((RevoluteJoint*)j_)->GetAngle();
     }
     else if(fe_ != nullptr)
     {
         Scalar mbAngle;
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
-        fe_->getJointPosition(jId_, mbAngle, jt);
+        fe_->GetJointPosition(jId_, mbAngle, jt);
         
         if(jt == btMultibodyLink::eRevolute)
             return mbAngle;
@@ -76,11 +76,11 @@ Scalar RotaryEncoder::GetRawAngle()
     }
     else if(motor_ != nullptr)
     {
-        return motor_->getAngle();
+        return motor_->GetAngle();
     }
     else if(thrust_ != nullptr)
     {
-        return thrust_->getAngle();
+        return thrust_->GetAngle();
     }
     else
         return Scalar(0);
@@ -88,15 +88,15 @@ Scalar RotaryEncoder::GetRawAngle()
 
 Scalar RotaryEncoder::GetRawAngularVelocity()
 {
-    if(j_ != nullptr && j_->getType() == JointType::REVOLUTE)
+    if(j_ != nullptr && j_->GetType() == JointType::REVOLUTE)
     {
-        return ((RevoluteJoint*)j_)->getAngularVelocity();
+        return ((RevoluteJoint*)j_)->GetAngularVelocity();
     }
     else if(fe_ != nullptr)
     {
         Scalar mbAV;
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
-        fe_->getJointVelocity(jId_, mbAV, jt);
+        fe_->GetJointVelocity(jId_, mbAV, jt);
         
         if(jt == btMultibodyLink::eRevolute)
             return mbAV;
@@ -105,11 +105,11 @@ Scalar RotaryEncoder::GetRawAngularVelocity()
     }
     else if(motor_ != nullptr)
     {
-        return motor_->getAngularVelocity();
+        return motor_->GetAngularVelocity();
     }
     else if(thrust_ != nullptr)
     {
-        return thrust_->getOmega();
+        return thrust_->GetOmega();
     }
     else
         return Scalar(0);
@@ -152,14 +152,14 @@ void RotaryEncoder::Reset()
     ScalarSensor::Reset();
 }
 
-ScalarSensorType RotaryEncoder::getScalarSensorType() const
+ScalarSensorType RotaryEncoder::GetScalarSensorType() const
 {
     return ScalarSensorType::ENCODER;
 }
 
 // Statics
 
-ConstructInfo RotaryEncoder::getConstructInfo()
+ConstructInfo RotaryEncoder::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;

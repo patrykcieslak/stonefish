@@ -32,8 +32,8 @@ namespace sf
 
 PrismaticJoint::PrismaticJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& axis, bool collideLinked) : Joint(uniqueName, collideLinked)
 {
-    btRigidBody* bodyA = solidA->getRigidBody();
-    btRigidBody* bodyB = solidB->getRigidBody();
+    btRigidBody* bodyA = solidA->GetRigidBody();
+    btRigidBody* bodyB = solidB->GetRigidBody();
     
     Vector3 sliderAxis = axis.normalized();
     Vector3 v2;
@@ -61,13 +61,13 @@ PrismaticJoint::PrismaticJoint(const std::string& uniqueName, SolidEntity* solid
     displacementIC_ = Scalar(0);
 }
 
-void PrismaticJoint::setDamping(Scalar constantFactor, Scalar viscousFactor)
+void PrismaticJoint::SetDamping(Scalar constantFactor, Scalar viscousFactor)
 {
     sigDamping_ = constantFactor > Scalar(0) ? constantFactor : Scalar(0);
     velDamping_ = viscousFactor > Scalar(0) ? viscousFactor : Scalar(0);
 }
 
-void PrismaticJoint::setLimits(Scalar min, Scalar max)
+void PrismaticJoint::SetLimits(Scalar min, Scalar max)
 {
     btSliderConstraint* slider = static_cast<btSliderConstraint*>(constraint_.get());
     if(min > max) // No limit
@@ -82,12 +82,12 @@ void PrismaticJoint::setLimits(Scalar min, Scalar max)
     }
 }
 
-void PrismaticJoint::setIC(Scalar displacement)
+void PrismaticJoint::SetIc(Scalar displacement)
 {
     displacementIC_ = displacement;
 }
 
-JointType PrismaticJoint::getType() const
+JointType PrismaticJoint::GetType() const
 {
     return JointType::PRISMATIC;
 }
@@ -130,7 +130,7 @@ std::vector<Renderable> PrismaticJoint::Render()
     item.model = glm::mat4(1.f);
     item.type = RenderableType::JOINT_LINES;
     item.data = std::make_shared<std::vector<glm::vec3>>();
-    auto points = item.getDataAsPoints();
+    auto points = item.GetDataAsPoints();
     
     Vector3 A = constraint_->getRigidBodyA().getCenterOfMassPosition();
     Vector3 B = constraint_->getRigidBodyB().getCenterOfMassPosition();

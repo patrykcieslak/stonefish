@@ -38,10 +38,10 @@ struct LearningThreadData
 int learning(void* data)
 {
     sf::SimulationApp& simApp = static_cast<LearningThreadData*>(data)->sim;
-    sf::SimulationManager* simManager = simApp.getSimulationManager();
+    sf::SimulationManager* simManager = simApp.GetSimulationManager();
 
     // Wait for app to be ready
-    while(simApp.getState() == sf::SimulationState::NOT_READY)
+    while(simApp.GetState() == sf::SimulationState::NOT_READY)
     {
         SDL_Delay(10);
     }
@@ -50,20 +50,20 @@ int learning(void* data)
     simApp.StartSimulation();
     
     // Repeatedly step the simulation
-    while(simApp.getState() != sf::SimulationState::FINISHED)
+    while(simApp.GetState() != sf::SimulationState::FINISHED)
     {
         // Step simulation
         simApp.StepSimulation();
 
         // Get the observations
-        sf::Scalar angle1 = static_cast<sf::RotaryEncoder*>(simManager->getSensor("Encoder1"))->getLastSample().getValue(0);
-        sf::Scalar angle2 = static_cast<sf::RotaryEncoder*>(simManager->getSensor("Encoder2"))->getLastSample().getValue(0);
+        sf::Scalar angle1 = static_cast<sf::RotaryEncoder*>(simManager->GetSensor("Encoder1"))->GetLastSample().GetValue(0);
+        sf::Scalar angle2 = static_cast<sf::RotaryEncoder*>(simManager->GetSensor("Encoder2"))->GetLastSample().GetValue(0);
 
         // Compute command
         sf::Scalar command = btCos(angle1 * angle2) * 15;
 
         // Apply actuator commands
-        static_cast<sf::Motor*>(simManager->getActuator("Motor"))->setCommand(command);
+        static_cast<sf::Motor*>(simManager->GetActuator("Motor"))->SetTorque(command);
     }
     
     return 0;
@@ -108,4 +108,3 @@ int main(int argc, const char * argv[])
     SDL_WaitThread(learningThread, &status);
     return status;
 }
-

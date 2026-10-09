@@ -119,32 +119,32 @@ namespace sf
         /*!
          \param temperature the air temperature at sea level [degC]
          */
-        void setAirTemperature(GLfloat temperature);
+        void SetAirTemperature(GLfloat temperature);
 
         //! A method to get the air temperature at sea level.
         /*!
          \return the air temperature at sea level [degC]
          */
-        GLfloat getAirTemperature();
+        GLfloat GetAirTemperature();
 
         //! A method to set the air humidity at sea level.
         /*!
          \param humidity the air relative humidity at sea level [0-1]
          */
-        void setAirHumidity(GLfloat humidity);
+        void SetAirHumidity(GLfloat humidity);
 
         //! A method to get the air humidity at sea level.
         /*!
          \return the air relative humidity at sea level [0-1]
          */
-        GLfloat getAirHumidity();
+        GLfloat GetAirHumidity();
 
         //! A method returning the OpenGL id of a texture.
         /*!
          \param id the atmosphere texture to get id for
          \return OpenGL id of the requested texture
          */
-        GLuint getAtmosphereTexture(AtmosphereTextures id);
+        GLuint GetAtmosphereTexture(AtmosphereTextures id);
         
         //! A method returning the sun direction.
         glm::vec3 GetSunDirection();
@@ -161,7 +161,7 @@ namespace sf
         static void Init();
         
         //! A static method returning the OpenGL id of the compiled API shader.
-        static GLuint getAtmosphereAPI();
+        static GLuint GetAtmosphereApi();
         
     private:
         //Data

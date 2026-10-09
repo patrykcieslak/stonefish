@@ -44,12 +44,12 @@ namespace sf
         
         virtual void getInfo1(btConstraintInfo1 *_info)
         {
-            this->_getInfo1NonVirtual(_info);
+            this->GetInfo1NonVirtual(_info);
         }
         
         virtual void getInfo2(btConstraintInfo2 *_info)
         {
-            this->_getInfo2NonVirtual(_info,
+            this->GetInfo2NonVirtual(_info,
                                       m_rbA.getCenterOfMassTransform(),
                                       m_rbB.getCenterOfMassTransform(),
                                       m_rbA.getLinearVelocity(),
@@ -57,23 +57,23 @@ namespace sf
                                       m_rbA.getInvMass(), m_rbB.getInvMass());
         }
         
-        void _getInfo1NonVirtual(btConstraintInfo1* info);
+        void GetInfo1NonVirtual(btConstraintInfo1* info);
         
-        void _getInfo2NonVirtual(btConstraintInfo2* info, const Transform& transA, const Transform& transB, const Vector3& linVelA, const Vector3& linVelB, Scalar rbAinvMass, Scalar rbBinvMass);
+        void GetInfo2NonVirtual(btConstraintInfo2* info, const Transform& transA, const Transform& transB, const Vector3& linVelA, const Vector3& linVelB, Scalar rbAinvMass, Scalar rbBinvMass);
         
-        Scalar getLinearPosition();
-        Scalar getAngularPosition();
+        Scalar GetLinearPosition();
+        Scalar GetAngularPosition();
         
         // needed non-const version for SetForce
         btRigidBody& getRigidBodyA();
         btRigidBody& getRigidBodyB();
         
-        virtual void setThreadPitch(double _threadPitch)
+        virtual void SetThreadPitch(double _threadPitch)
         {
             this->threadPitch_ = -_threadPitch;
         }
         
-        virtual double getThreadPitch() const
+        virtual double GetThreadPitch() const
         {
             return -this->threadPitch_;
         }

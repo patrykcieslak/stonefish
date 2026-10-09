@@ -47,11 +47,11 @@ void UnderwaterTestApp::DoHUD()
 {
     GraphicalSimulationApp::DoHUD();
 #ifdef PARSED_SCENARIO
-    sf::Thruster* th1 = dynamic_cast<sf::Thruster*>(getSimulationManager()->getRobot("GIRONA500")->getActuator("GIRONA500/ThrusterSurgePort"));
-    sf::Thruster* th2 = dynamic_cast<sf::Thruster*>(getSimulationManager()->getRobot("GIRONA500")->getActuator("GIRONA500/ThrusterSurgeStarboard"));
+    sf::Thruster* th1 = dynamic_cast<sf::Thruster*>(GetSimulationManager()->GetRobot("GIRONA500")->GetActuator("GIRONA500/ThrusterSurgePort"));
+    sf::Thruster* th2 = dynamic_cast<sf::Thruster*>(GetSimulationManager()->GetRobot("GIRONA500")->GetActuator("GIRONA500/ThrusterSurgeStarboard"));
 #else
-    sf::Thruster* th1 = dynamic_cast<sf::Thruster*>(getSimulationManager()->getRobot("GIRONA500")->getActuator("ThrusterSurgePort"));
-    sf::Thruster* th2 = dynamic_cast<sf::Thruster*>(getSimulationManager()->getRobot("GIRONA500")->getActuator("ThrusterSurgeStarboard"));
+    sf::Thruster* th1 = dynamic_cast<sf::Thruster*>(GetSimulationManager()->GetRobot("GIRONA500")->GetActuator("ThrusterSurgePort"));
+    sf::Thruster* th2 = dynamic_cast<sf::Thruster*>(GetSimulationManager()->GetRobot("GIRONA500")->GetActuator("ThrusterSurgeStarboard"));
 #endif
     if (th1 && th2)
     {
@@ -59,12 +59,12 @@ void UnderwaterTestApp::DoHUD()
         id.owner = 10;
         
         id.item = 0;
-        surge_ = getGUI()->DoSlider(id, 180.f, 10.f, 250.f, sf::Scalar(-1), sf::Scalar(1), surge_, "Surge");
+        surge_ = GetGui()->DoSlider(id, 180.f, 10.f, 250.f, sf::Scalar(-1), sf::Scalar(1), surge_, "Surge");
 
         id.item = 1;
-        yaw_ = getGUI()->DoSlider(id, 180.f, 65.f, 250.f, sf::Scalar(-1), sf::Scalar(1), yaw_, "Yaw");
+        yaw_ = GetGui()->DoSlider(id, 180.f, 65.f, 250.f, sf::Scalar(-1), sf::Scalar(1), yaw_, "Yaw");
 
-        th1->setSetpoint(-surge_ - yaw_);
-        th2->setSetpoint(-surge_ + yaw_);
+        th1->SetSetpoint(-surge_ - yaw_);
+        th2->SetSetpoint(-surge_ + yaw_);
     }
 }

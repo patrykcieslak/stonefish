@@ -28,7 +28,7 @@
 namespace sf
 {
 
-Scalar ScrewConstraint::getAngularPosition()
+Scalar ScrewConstraint::GetAngularPosition()
 {
     this->calculateTransforms(m_rbA.getCenterOfMassTransform(), m_rbB.getCenterOfMassTransform());
     const Vector3 axisA0 = m_calculatedTransformA.getBasis().getColumn(1);
@@ -38,7 +38,7 @@ Scalar ScrewConstraint::getAngularPosition()
 }
 
 //////////////////////////////////////////////////
-Scalar ScrewConstraint::getLinearPosition()
+Scalar ScrewConstraint::GetLinearPosition()
 {
     this->calculateTransforms(m_rbA.getCenterOfMassTransform(), m_rbB.getCenterOfMassTransform());
     return this->m_depth[0];
@@ -57,7 +57,7 @@ btRigidBody& ScrewConstraint::getRigidBodyB()
 }
 
 //////////////////////////////////////////////////
-void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const Transform& transA, const Transform& transB,
+void ScrewConstraint::GetInfo2NonVirtual(btConstraintInfo2* info, const Transform& transA, const Transform& transB,
                                           const Vector3& linVelA, const Vector3& linVelB, Scalar rbAinvMass, Scalar rbBinvMass)
 {
     /// This is a copy of btSliderConstraint::getInfo2NonVirtual(...)
@@ -303,7 +303,7 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const Transfo
         // correction
         // rhs = k * ax1.dot(ofs);  // from hinge constraint
         Scalar lin_disp = ax1.dot(ofs);
-        Scalar ang_pos = this->getAngularPosition();
+        Scalar ang_pos = this->GetAngularPosition();
         info->m_constraintError[srow] =
         -k * (lin_disp * this->threadPitch_ - ang_pos);
         info->cfm[srow] = -m_cfmOrthoLin;
@@ -593,7 +593,7 @@ void ScrewConstraint::_getInfo2NonVirtual(btConstraintInfo2* info, const Transfo
     // line above is the end of if angular limit or powered
 }
 
-void ScrewConstraint::_getInfo1NonVirtual(btConstraintInfo1* info)
+void ScrewConstraint::GetInfo1NonVirtual(btConstraintInfo1* info)
 {
     /// this is a modified version of
     /// void btSliderConstraint::getInfo1(btConstraintInfo1* info)

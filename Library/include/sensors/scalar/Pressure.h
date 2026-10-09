@@ -51,19 +51,19 @@ namespace sf
         /*!
          \param max the maximum measured pressure [Pa]
          */
-        void setRange(Scalar max);
+        void SetRange(Scalar max);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
          \param pressureStdDev standard deviation of the pressure measurement noise
          */
-        void setNoise(Scalar pressureStdDev);
+        void SetNoise(Scalar pressureStdDev);
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const override;
+        ScalarSensorType GetScalarSensorType() const override;
 
         //! A method returning the construction info for the sensor.
-        static ConstructInfo getConstructInfo();
+        static ConstructInfo GetConstructInfo();
 
         //! A method constructing the sensor based on info structure.
         /*!

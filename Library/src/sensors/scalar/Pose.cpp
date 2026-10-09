@@ -44,7 +44,7 @@ Pose::Pose(const std::string& uniqueName, Scalar frequency, int historyLength) :
 void Pose::InternalUpdate(Scalar dt)
 {
     //get angles
-    Transform trajFrame = getSensorFrame();
+    Transform trajFrame = GetSensorFrame();
     Scalar yaw, pitch, roll;
     trajFrame.getBasis().getEulerYPR(yaw, pitch, roll);
     
@@ -54,7 +54,7 @@ void Pose::InternalUpdate(Scalar dt)
     ));
 }
 
-ScalarSensorType Pose::getScalarSensorType() const
+ScalarSensorType Pose::GetScalarSensorType() const
 {
     return ScalarSensorType::POSE;
 }

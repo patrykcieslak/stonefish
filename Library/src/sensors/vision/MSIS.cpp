@@ -43,10 +43,10 @@ MSIS::MSIS(const std::string& uniqueName, Scalar stepAngleDeg, unsigned int numO
     noise_ = glm::vec2(0.f);
     fullRotation_ = false;
     stepSize_ = btRadians(btScalar(360)/ceil(Scalar(360)/stepAngleDeg)); //Corrected step angle in radians
-    setRotationLimits(minRotationDeg, maxRotationDeg);
-    setRangeMax(maxRange);
-    setRangeMin(minRange);
-    setGain(1);
+    SetRotationLimits(minRotationDeg, maxRotationDeg);
+    SetRangeMax(maxRange);
+    SetRangeMin(minRange);
+    SetGain(1);
     fovV_ = verticalBeamWidthDeg <= Scalar(0) ? Scalar(20) : (verticalBeamWidthDeg > Scalar(179) ? Scalar(179) : verticalBeamWidthDeg);
     cMap_ = ColorMap::GREEN_BLUE;
     outputFormat_ = outputFormat;
@@ -55,7 +55,7 @@ MSIS::MSIS(const std::string& uniqueName, Scalar stepAngleDeg, unsigned int numO
     glMSIS_ = nullptr;
 }
 
-void MSIS::setRotationLimits(Scalar l1Deg, Scalar l2Deg)
+void MSIS::SetRotationLimits(Scalar l1Deg, Scalar l2Deg)
 {
     if(l1Deg == l2Deg) //Same
         return;
@@ -79,12 +79,12 @@ void MSIS::setRotationLimits(Scalar l1Deg, Scalar l2Deg)
     cw_ = true;
 }
 
-void MSIS::setRangeMin(Scalar r)
+void MSIS::SetRangeMin(Scalar r)
 {
     range_.x = r < Scalar(0.02) ? 0.02f : (r < Scalar(range_.y) ? (GLfloat)r : range_.x);
 }
 
-void MSIS::setRangeMax(Scalar r)
+void MSIS::SetRangeMax(Scalar r)
 {
     range_.y = r > Scalar(range_.x) ? (GLfloat)r : range_.x;
     Scalar pulseTime = (Scalar(2)*range_.y/SOUND_VELOCITY_WATER) * Scalar(1.1);
@@ -92,89 +92,89 @@ void MSIS::setRangeMax(Scalar r)
         freq_ = Scalar(1)/pulseTime;
 }
 
-void MSIS::setGain(Scalar g)
+void MSIS::SetGain(Scalar g)
 {
     gain_ = g > Scalar(0) ? g : Scalar(1);
 }
 
-void MSIS::setNoise(float multiplicativeStdDev, float additiveStdDev)
+void MSIS::SetNoise(float multiplicativeStdDev, float additiveStdDev)
 {
     if(multiplicativeStdDev >= 0.f)
         noise_.x = multiplicativeStdDev;
     if(additiveStdDev >= 0.f)
         noise_.y = additiveStdDev;
     if(glMSIS_ != nullptr)
-        glMSIS_->setNoise(noise_);
+        glMSIS_->SetNoise(noise_);
 }
 
-void MSIS::setDisplaySettings(ColorMap cm)
+void MSIS::SetDisplaySettings(ColorMap cm)
 {
     cMap_ = cm;
 }
 
-void* MSIS::getImageDataPointer(unsigned int index)
+void* MSIS::GetImageDataPointer(unsigned int index)
 {
     return sonarData_;
 }
 
-void MSIS::getDisplayResolution(unsigned int& x, unsigned int& y) const
+void MSIS::GetDisplayResolution(unsigned int& x, unsigned int& y) const
 {
-    getResolution(x, y);
+    GetResolution(x, y);
     x = y; //numOfBins x numOfBins
 }
 
-GLubyte* MSIS::getDisplayDataPointer()
+GLubyte* MSIS::GetDisplayDataPointer()
 {
     return displayData_.data();
 }
 
-void MSIS::getRotationLimits(Scalar& l1Deg, Scalar& l2Deg) const
+void MSIS::GetRotationLimits(Scalar& l1Deg, Scalar& l2Deg) const
 {
     l1Deg = btDegrees(Scalar(roi_.x) * stepSize_);
     l2Deg = btDegrees(Scalar(roi_.y) * stepSize_);
 }
 
-Scalar MSIS::getRotationStepAngle() const
+Scalar MSIS::GetRotationStepAngle() const
 {
     return btDegrees(stepSize_);
 }
 
-int MSIS::getCurrentRotationStep() const
+int MSIS::GetCurrentRotationStep() const
 {
     return currentStep_;
 }
 
-GLuint MSIS::getCurrentBeamIndex() const
+GLuint MSIS::GetCurrentBeamIndex() const
 {
     return (GLuint)(currentStep_ + (GLint)(resX_/2));
 }
 
-Scalar MSIS::getRangeMin() const
+Scalar MSIS::GetRangeMin() const
 {
     return Scalar(range_.x);
 }
 
-Scalar MSIS::getRangeMax() const
+Scalar MSIS::GetRangeMax() const
 {
     return Scalar(range_.y);
 }
 
-Scalar MSIS::getGain() const
+Scalar MSIS::GetGain() const
 {
     return gain_;
 }
 
-SonarOutputFormat MSIS::getOutputFormat() const
+SonarOutputFormat MSIS::GetOutputFormat() const
 {
     return outputFormat_;
 }
     
-VisionSensorType MSIS::getVisionSensorType() const
+VisionSensorType MSIS::GetVisionSensorType() const
 {
     return VisionSensorType::MSIS;
 }
 
-OpenGLView* MSIS::getOpenGLView() const
+OpenGLView* MSIS::GetOpenGlView() const
 {
     return glMSIS_;
 }
@@ -191,17 +191,17 @@ void MSIS::InitGraphics(bool& seesParticles)
 
     // Set up sonar
     glMSIS_ = glMSIS.get();
-    glMSIS_->setNoise(noise_);
-    glMSIS_->setSonar(this);
-    glMSIS_->setColorMap(cMap_);
+    glMSIS_->SetNoise(noise_);
+    glMSIS_->SetSonar(this);
+    glMSIS_->SetColorMap(cMap_);
     UpdateTransform();
     glMSIS_->UpdateTransform();
     InternalUpdate(0);
 
-    static_cast<GraphicalSimulationApp*>(SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(std::move(glMSIS));
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->AddView(std::move(glMSIS));
 
     unsigned int w, h;
-    getDisplayResolution(w, h);
+    GetDisplayResolution(w, h);
     displayData_.resize(w*h*3);
 }
 
@@ -225,7 +225,7 @@ void MSIS::NewDataReady(void* data, unsigned int index)
         if(index == 0)
         {
             unsigned int w, h;
-            getDisplayResolution(w, h);
+            GetDisplayResolution(w, h);
             memcpy(displayData_.data(), data, w*h*3);
         }
         else
@@ -266,18 +266,18 @@ void MSIS::InternalUpdate(Scalar dt)
 std::vector<Renderable> MSIS::Render()
 {
     std::vector<Renderable> items = Sensor::Render();
-    if(isRenderable())
+    if(IsRenderable())
     {
         Renderable item;
-        item.model = glMatrixFromTransform(getSensorFrame());
+        item.model = glMatrixFromTransform(GetSensorFrame());
         item.type = RenderableType::SENSOR_LINES;    
         item.data = std::make_shared<std::vector<glm::vec3>>();
-        auto points = item.getDataAsPoints();
+        auto points = item.GetDataAsPoints();
         
         //Create sonar dummy
         int div = 24;
         Scalar l1Deg, l2Deg;
-        getRotationLimits(l1Deg, l2Deg);
+        GetRotationLimits(l1Deg, l2Deg);
         GLfloat fovStep = fullRotation_ ? 2.f*M_PI/(GLfloat)div : glm::radians(l2Deg-l1Deg)/(GLfloat)div;
         //Arcs min
         GLfloat cosVAngle = cosf(glm::radians(fovV_)/2.f) * range_.x;
@@ -367,7 +367,7 @@ std::vector<Renderable> MSIS::Render()
 
 // Statics
 
-ConstructInfo MSIS::getConstructInfo()
+ConstructInfo MSIS::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -443,7 +443,7 @@ std::unique_ptr<MSIS> MSIS::Construct(const std::string& uniqueName, Scalar freq
     // Construct
     std::unique_ptr<MSIS> sensor = std::make_unique<MSIS>(uniqueName, step, bins, hFov, vFov, rotationMin, rotationMax, 
         rangeMin, rangeMax, outputFormat, frequency);
-    sensor->setGain(gain);
+    sensor->SetGain(gain);
 
     // Noise
     Scalar multiplicative {0.025};
@@ -457,12 +457,12 @@ std::unique_ptr<MSIS> MSIS::Construct(const std::string& uniqueName, Scalar freq
     if (value.valid)
         additive = std::get<Scalar>(value.value);
 
-    sensor->setNoise(multiplicative, additive);
+    sensor->SetNoise(multiplicative, additive);
 
     // Display
     value = info.nodes.at("display").attributes.at("colormap");
     if (value.valid)
-        sensor->setDisplaySettings(std::get<ColorMap>(value.value));
+        sensor->SetDisplaySettings(std::get<ColorMap>(value.value));
 
     return sensor;
 }

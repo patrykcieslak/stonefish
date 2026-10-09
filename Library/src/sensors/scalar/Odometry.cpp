@@ -54,16 +54,16 @@ Odometry::Odometry(const std::string& uniqueName, Scalar frequency, int historyL
 void Odometry::InternalUpdate(Scalar dt)
 {
     //Calculate transformation from global to imu frame
-    Transform odomTrans = getSensorFrame();
+    Transform odomTrans = GetSensorFrame();
     
     Vector3 pos = odomTrans.getOrigin();
-    Vector3 v = odomTrans.getBasis().inverse() * attach_->getLinearVelocityInLocalPoint(odomTrans.getOrigin() - attach_->getCGTransform().getOrigin());
+    Vector3 v = odomTrans.getBasis().inverse() * attach_->GetLinearVelocityInLocalPoint(odomTrans.getOrigin() - attach_->GetCgTransform().getOrigin());
     
     Quaternion orn = odomTrans.getRotation();
     Scalar angle = orn.getAngle() + ornNoise_(randomGenerator);
     orn = Quaternion(orn.getAxis(), angle);
 
-    Vector3 av = odomTrans.getBasis().inverse() * attach_->getAngularVelocity();
+    Vector3 av = odomTrans.getBasis().inverse() * attach_->GetAngularVelocity();
     
     //Record sample
     AddSampleToHistory(std::make_unique<Sample>(
@@ -71,29 +71,29 @@ void Odometry::InternalUpdate(Scalar dt)
     ));
 }
    
-void Odometry::setNoise(Scalar positionStdDev, Scalar velocityStdDev, Scalar angleStdDev, Scalar angularVelocityStdDev)
+void Odometry::SetNoise(Scalar positionStdDev, Scalar velocityStdDev, Scalar angleStdDev, Scalar angularVelocityStdDev)
 {
-    channels_[0].setStdDev(btClamped(positionStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels_[1].setStdDev(btClamped(positionStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels_[2].setStdDev(btClamped(positionStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels_[3].setStdDev(btClamped(velocityStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels_[4].setStdDev(btClamped(velocityStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels_[5].setStdDev(btClamped(velocityStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels_[10].setStdDev(btClamped(angularVelocityStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels_[11].setStdDev(btClamped(angularVelocityStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels_[12].setStdDev(btClamped(angularVelocityStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[0].SetStdDev(btClamped(positionStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[1].SetStdDev(btClamped(positionStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[2].SetStdDev(btClamped(positionStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[3].SetStdDev(btClamped(velocityStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[4].SetStdDev(btClamped(velocityStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[5].SetStdDev(btClamped(velocityStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[10].SetStdDev(btClamped(angularVelocityStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[11].SetStdDev(btClamped(angularVelocityStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[12].SetStdDev(btClamped(angularVelocityStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
     ornStdDev_ = btClamped(angleStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT));
     ornNoise_ = std::normal_distribution<Scalar>(Scalar(0), ornStdDev_);
 }
 
-ScalarSensorType Odometry::getScalarSensorType() const
+ScalarSensorType Odometry::GetScalarSensorType() const
 {
     return ScalarSensorType::ODOM;
 }
 
 // Statics
 
-ConstructInfo Odometry::getConstructInfo()
+ConstructInfo Odometry::GetConstructInfo()
 {
     ConstructInfo info;
     ConstructInfoNode node;
@@ -148,7 +148,7 @@ std::unique_ptr<Odometry> Odometry::Construct(const std::string& uniqueName, Sca
     if (value.valid)
         angularVelocity = std::get<Scalar>(value.value);
 
-    sensor->setNoise(position, velocity, angle, angularVelocity);
+    sensor->SetNoise(position, velocity, angle, angularVelocity);
 
     return sensor;
 }

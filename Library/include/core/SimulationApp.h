@@ -30,10 +30,10 @@
 #include "utils/ThreadPool.hpp"
 
 //Console output aliases
-#define cInfo(format, ...)     sf::SimulationApp::getApp()->getConsole()->Print(sf::MessageType::INFO, format, ##__VA_ARGS__)
-#define cWarning(format, ...)  sf::SimulationApp::getApp()->getConsole()->Print(sf::MessageType::WARNING, format, ##__VA_ARGS__)
-#define cError(format, ...)    sf::SimulationApp::getApp()->getConsole()->Print(sf::MessageType::ERROR, format, ##__VA_ARGS__)
-#define cCritical(format, ...) {sf::SimulationApp::getApp()->getConsole()->Print(sf::MessageType::CRITICAL, format, ##__VA_ARGS__);abort();}
+#define cInfo(format, ...)     sf::SimulationApp::GetApp()->GetConsole()->Print(sf::MessageType::INFO, format, ##__VA_ARGS__)
+#define cWarning(format, ...)  sf::SimulationApp::GetApp()->GetConsole()->Print(sf::MessageType::WARNING, format, ##__VA_ARGS__)
+#define cError(format, ...)    sf::SimulationApp::GetApp()->GetConsole()->Print(sf::MessageType::ERROR, format, ##__VA_ARGS__)
+#define cCritical(format, ...) {sf::SimulationApp::GetApp()->GetConsole()->Print(sf::MessageType::CRITICAL, format, ##__VA_ARGS__);abort();}
 
 namespace sf
 {
@@ -89,40 +89,40 @@ namespace sf
         /*!
          \param n number of threads
          */
-        void setMaxPhysicsThreads(unsigned int n);
+        void SetMaxPhysicsThreads(unsigned int n);
         
         //! A method returning simulation state.
-        SimulationState getState() const;
+        SimulationState GetState() const;
 
         //! A method returning a pointer to the simulation manager.
-        SimulationManager* getSimulationManager();
+        SimulationManager* GetSimulationManager();
         
         //! A method returning the physics computation time.
-        double getPhysicsTime();
+        double GetPhysicsTime();
           
         //! A method returning the path to the directory containing simulation data.
-        const std::string& getDataPath() const;
+        const std::string& GetDataPath() const;
         
         //! A method returning the name of the application.
-        const std::string& getName() const;
+        const std::string& GetName() const;
         
         //! A method returning a pointer to the console associated with the application.
-        Console* getConsole();
+        Console* GetConsole();
 
         //! A method returning the maximum allowed parallel threads for physics computation.
-        unsigned int getMaxPhysicsThreads() const;
+        unsigned int GetMaxPhysicsThreads() const;
 
         //! A method returning the physics thread pool.
-        ThreadPool* getPhysicsThreadPool();
+        ThreadPool* GetPhysicsThreadPool();
 
         //! A method returning the plugin handle.
-        void* getPluginHandle(const std::string& name);
+        void* GetPluginHandle(const std::string& name);
 
         //! A method informing if the application is graphical.
-        virtual bool hasGraphics() = 0;
+        virtual bool HasGraphics() = 0;
 
         //! A static method returning the pointer to the currently running application.
-        static SimulationApp* getApp();
+        static SimulationApp* GetApp();
         
     protected:
         void Loop();

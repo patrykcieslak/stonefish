@@ -179,68 +179,68 @@ namespace sf
          \param aname the name of the actuator
          \return a pointer to the actuator object
          */
-        Actuator* getActuator(const std::string& aname);
+        Actuator* GetActuator(const std::string& aname);
         
         //! A method returning a pointer to the actuator by index.
         /*!
          \param index the id of the actuator
          \return a pointer to the actuator object
          */
-        Actuator* getActuator(size_t index);
+        Actuator* GetActuator(size_t index);
         
         //! A method returning a pointer to the sensor with a given name.
         /*!
          \param sname the name of the sensor
          \return a pointer to the sensor object
          */
-        Sensor* getSensor(const std::string& sname);
+        Sensor* GetSensor(const std::string& sname);
         
         //! A method returning a pointer to the sensor by index.
         /*!
          \param index the id of the sensor
          \return a pointer to the sensor object
          */
-        Sensor* getSensor(size_t index);
+        Sensor* GetSensor(size_t index);
         
         //! A method returning a pointer to the communication device with a given name.
         /*!
          \param cname the name of the communication device
          \return a pointer to the comm object
          */
-        Comm* getComm(const std::string& cname);
+        Comm* GetComm(const std::string& cname);
         
         //! A method returning a pointer to the communication device by index.
         /*!
          \param index the id of the communication device
          \return a pointer to the comm object
          */
-        Comm* getComm(size_t index);
+        Comm* GetComm(size_t index);
         
         //! A method returning a pointer to the base link solid.
-        SolidEntity* getBaseLink();
+        SolidEntity* GetBaseLink();
         
         //! A method returning a pointer to the link.
         /*!
          \param lname a name of the link
          \return a pointer to the link solid
          */
-        SolidEntity* getLink(const std::string& lname);
+        SolidEntity* GetLink(const std::string& lname);
 
         //! A method returning a pointer to the link by index.
         /*!
          \param index the id of the link
          \return a pointer to the link solid
          */
-        SolidEntity* getLink(size_t index);
+        SolidEntity* GetLink(size_t index);
         
         //! A method returning the pose of the robot in the world frame.
-        virtual Transform getTransform() const = 0;
+        virtual Transform GetTransform() const = 0;
         
         //! A method returning the name of the robot.
-        const std::string& getName() const;
+        const std::string& GetName() const;
 
         //! A method returning type of algorithm used for the robot.
-        virtual RobotType getType() const = 0;
+        virtual RobotType GetType() const = 0;
         
     protected:
         // For construction (temp)

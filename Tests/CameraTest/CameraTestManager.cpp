@@ -49,8 +49,8 @@ CameraTestManager::CameraTestManager(sf::Scalar stepsPerSecond)
 void CameraTestManager::BuildScenario()
 {
     EnableOcean();
-    getAtmosphere()->SetConditions(20.0, 101300.0, 0.7);
-    getOcean()->SetConditions(15.0);
+    GetAtmosphere()->SetConditions(20.0, 101300.0, 0.7);
+    GetOcean()->SetConditions(15.0);
 
     ///////MATERIALS////////
     CreateMaterial("Ground", 1000.0, 1.0);
@@ -106,33 +106,33 @@ void CameraTestManager::BuildScenario()
     sf::AnimatedEntity* camFrame = AddAnimatedEntity(std::make_unique<sf::AnimatedEntity>("CamFrame", std::move(camTraj)));
 
     std::unique_ptr<sf::ColorCamera> cCam = std::make_unique<sf::ColorCamera>("ColorCamera", 400, 300, sf::Scalar(90.0));
-    cCam->setDisplayOnScreen(true, 200, 0, 1.0);
+    cCam->SetDisplayOnScreen(true, 200, 0, 1.0);
     cCam->AttachToSolid(camFrame, sf::Transform(sf::Quaternion(-M_PI_2, 0.0, M_PI_2), sf::Vector3(0,0,0)));
     AddSensor(std::move(cCam));
 
 #ifdef TEST_THERMAL_CAMERA
     std::unique_ptr<sf::ThermalCamera> tCam = std::make_unique<sf::ThermalCamera>("ThermalCamera", 400, 300, sf::Scalar(90.0), -100.f, 100.f); 
-    tCam->setNoise(0.2);
-    tCam->setDisplaySettings(sf::ColorMap::JET, 5.0, 50.0);
-    tCam->setDisplayOnScreen(true, 600, 0, 1.0);
+    tCam->SetNoise(0.2);
+    tCam->SetDisplaySettings(sf::ColorMap::JET, 5.0, 50.0);
+    tCam->SetDisplayOnScreen(true, 600, 0, 1.0);
     tCam->AttachToSolid(camFrame, sf::Transform(sf::Quaternion(-M_PI_2, 0.0, M_PI_2), sf::Vector3(0,0,0)));
     AddSensor(std::move(tCam));
 #else
     std::unique_ptr<sf::DepthCamera> dCam = std::make_unique<sf::DepthCamera>("DepthCamera", 400, 300, sf::Scalar(90), sf::Scalar(0.01), sf::Scalar(10.0));
-    dCam->setNoise(0.01);
-    dCam->setDisplayOnScreen(true, 200, 300, 1.0);
+    dCam->SetNoise(0.01);
+    dCam->SetDisplayOnScreen(true, 200, 300, 1.0);
     dCam->AttachToSolid(camFrame, sf::Transform(sf::Quaternion(-M_PI_2, 0.0, M_PI_2), sf::Vector3(0,0,0)));
     AddSensor(std::move(dCam));
 
     std::unique_ptr<sf::OpticalFlowCamera> ofCam = std::make_unique<sf::OpticalFlowCamera>("OpticalFlowCamera", 400, 300, sf::Scalar(90));
-    ofCam->setDisplayOnScreen(true, 600, 0, 1.0);
-    ofCam->setDisplaySettings(800.0);
+    ofCam->SetDisplayOnScreen(true, 600, 0, 1.0);
+    ofCam->SetDisplaySettings(800.0);
     ofCam->AttachToSolid(camFrame, sf::Transform(sf::Quaternion(-M_PI_2, 0.0, M_PI_2), sf::Vector3(0,0,0)));
     AddSensor(std::move(ofCam));
 
     std::unique_ptr<sf::EventBasedCamera> evbCam = std::make_unique<sf::EventBasedCamera>("EventBasedCamera", 400, 300, sf::Scalar(90.0), 0.1f, 0.1f, 1000, 10.0);
-    evbCam->setNoise(0.03, 0.03);
-    evbCam->setDisplayOnScreen(true, 600, 300, 1.0);
+    evbCam->SetNoise(0.03, 0.03);
+    evbCam->SetDisplayOnScreen(true, 600, 300, 1.0);
     evbCam->AttachToSolid(camFrame, sf::Transform(sf::Quaternion(-M_PI_2, 0.0, M_PI_2), sf::Vector3(0,0,0)));
 #ifdef DEBUG
     evbCam->InstallNewDataHandler([this](sf::EventBasedCamera* cam)
@@ -143,7 +143,7 @@ void CameraTestManager::BuildScenario()
     AddSensor(std::move(evbCam));
 #endif
     std::unique_ptr<sf::SegmentationCamera> sCam = std::make_unique<sf::SegmentationCamera>("SegmentationCamera", 400, 300, sf::Scalar(90.0));
-    sCam->setDisplayOnScreen(true, 200, 600, 1.0);
+    sCam->SetDisplayOnScreen(true, 200, 600, 1.0);
     sCam->AttachToSolid(camFrame, sf::Transform(sf::Quaternion(-M_PI_2, 0.0, M_PI_2), sf::Vector3(0,0,0)));
     AddSensor(std::move(sCam));
 }
