@@ -44,7 +44,7 @@ namespace sf
          \param axis a vector parallel to the joint axis
          \param collideLinked a flag that sets if the bodies connected by the joint should coliide
         */
-        RevoluteJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB,
+        RevoluteJoint(std::string_view uniqueName, SolidEntity* solidA, SolidEntity* solidB,
                       const Vector3& pivot, const Vector3& axis, bool collideLinked = true);
         
         //! A constructor (a revolute joint attaching a solid to the world).
@@ -54,7 +54,7 @@ namespace sf
          \param pivot a point where the axis of joint is located
          \param axis a vector parallel to the joint axis
          */
-        RevoluteJoint(const std::string& uniqueName, SolidEntity* solid, const Vector3& pivot, const Vector3& axis);
+        RevoluteJoint(std::string_view uniqueName, SolidEntity* solid, const Vector3& pivot, const Vector3& axis);
         
         //! A method used to apply torque to the joint.
         /*!

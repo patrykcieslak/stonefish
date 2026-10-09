@@ -40,16 +40,16 @@ NameManager::~NameManager()
     names_.clear();
 }
 
-std::string NameManager::AddName(const std::string& proposedName)
+std::string NameManager::AddName(std::string_view proposedName)
 {
-    std::string goodName = proposedName;
+    std::string goodName{proposedName};
     int number = 1;
     
 checkname:
     auto it = std::find(names_.begin(), names_.end(), goodName);
     if (it != names_.end())
     {
-        goodName = proposedName + std::to_string(number);
+        goodName = std::string(proposedName) + std::to_string(number);
         ++number;
         goto checkname;
     }
@@ -58,7 +58,7 @@ checkname:
     return goodName;
 }
 
-void NameManager::RemoveName(const std::string& name)
+void NameManager::RemoveName(std::string_view name)
 {
     auto it = std::find(names_.begin(), names_.end(), name);
     if (it != names_.end())

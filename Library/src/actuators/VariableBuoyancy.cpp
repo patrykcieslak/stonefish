@@ -35,7 +35,7 @@
 namespace sf 
 {
     
-VariableBuoyancy::VariableBuoyancy(const std::string& uniqueName, const std::vector<std::string>& volumeMeshPaths, Scalar initialVolume) : LinkActuator(uniqueName)
+VariableBuoyancy::VariableBuoyancy(std::string_view uniqueName, const std::vector<std::string>& volumeMeshPaths, Scalar initialVolume) : LinkActuator(uniqueName)
 {
     if(volumeMeshPaths.size() < 2)
         cCritical("VBS volume definition requires loading at least two meshes - for the full/empty states!");
@@ -194,7 +194,7 @@ ConstructInfo VariableBuoyancy::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<VariableBuoyancy> VariableBuoyancy::Construct(const std::string& uniqueName, ConstructInfo& info)
+std::unique_ptr<VariableBuoyancy> VariableBuoyancy::Construct(std::string_view uniqueName, ConstructInfo& info)
 {
     // Required
     Scalar initialVolume = std::get<Scalar>(info.nodes.at("volume").attributes.at("initial").value);

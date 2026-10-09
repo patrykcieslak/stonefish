@@ -33,7 +33,7 @@
 namespace sf
 {
 
-RevoluteJoint::RevoluteJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, const Vector3& axis, bool collideLinked) : Joint(uniqueName, collideLinked)
+RevoluteJoint::RevoluteJoint(std::string_view uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, const Vector3& axis, bool collideLinked) : Joint(uniqueName, collideLinked)
 {
     Vector3 hingeAxis = axis.normalized();
     btRigidBody* bodyA = solidA->GetRigidBody();
@@ -50,11 +50,11 @@ RevoluteJoint::RevoluteJoint(const std::string& uniqueName, SolidEntity* solidA,
     velDamping_ = Scalar(0);
     constraint_ = std::move(hinge);
     
-    cInfo("Created revolute joint '%s'. Offset: %lf rad.", uniqueName.c_str(), angleOffset_);
+    cInfo("Created revolute joint '%s'. Offset: %lf rad.", std::string(uniqueName).c_str(), angleOffset_);
     SetIc(Scalar(0));
 }
 
-RevoluteJoint::RevoluteJoint(const std::string& uniqueName, SolidEntity* solid, const Vector3& pivot, const Vector3& axis) : Joint(uniqueName, false)
+RevoluteJoint::RevoluteJoint(std::string_view uniqueName, SolidEntity* solid, const Vector3& pivot, const Vector3& axis) : Joint(uniqueName, false)
 {
     btRigidBody* body = solid->GetRigidBody();
     Vector3 hingeAxis = axis.normalized();
@@ -68,7 +68,7 @@ RevoluteJoint::RevoluteJoint(const std::string& uniqueName, SolidEntity* solid, 
     velDamping_ = Scalar(0);
     constraint_ = std::move(hinge);
     
-    cInfo("Created revolute joint '%s'. Offset: %lf rad.", uniqueName.c_str(), angleOffset_);
+    cInfo("Created revolute joint '%s'. Offset: %lf rad.", std::string(uniqueName).c_str(), angleOffset_);
     SetIc(Scalar(0));
 }
 

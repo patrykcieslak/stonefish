@@ -45,7 +45,7 @@ void OpenGLPrinter::SetWindowSize(GLuint width, GLuint height)
     windowH = height;
 }
 
-OpenGLPrinter::OpenGLPrinter(const std::string& fontPath, GLuint size)
+OpenGLPrinter::OpenGLPrinter(std::string_view fontPath, GLuint size)
 {
     initialized_ = false;
     fontVBO_ = 0;
@@ -61,14 +61,14 @@ OpenGLPrinter::OpenGLPrinter(const std::string& fontPath, GLuint size)
     else
     {
 #ifdef EMBEDDED_RESOURCES
-        ResourceHandle rh(fontPath);
+        ResourceHandle rh(std::string(fontPath));
         error = FT_New_Memory_Face(ft, rh.data(), rh.size(), 0, &face);
 #else
-        error = FT_New_Face(ft, fontPath.c_str(), 0, &face);
+        error = FT_New_Face(ft, std::string(fontPath).c_str(), 0, &face);
 #endif
         if(error)
         {
-            printf("Freetype: Could not load font from: %s!\n", fontPath.c_str());
+            printf("Freetype: Could not load font from: %s!\n", std::string(fontPath).c_str());
             FT_Done_FreeType(ft);
         }
     }
@@ -147,7 +147,7 @@ OpenGLPrinter::~OpenGLPrinter()
         glDeleteBuffers(1, &fontVBO_);
 }
 
-void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GLuint y, GLfloat size, bool raw)
+void OpenGLPrinter::Print(std::string_view text, glm::vec4 color, GLuint x, GLuint y, GLfloat size, bool raw)
 {
     if(!initialized_)
         return;
@@ -158,9 +158,10 @@ void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GL
         GLfloat y;
         GLfloat s;
         GLfloat t;
-    } coords[6 * text.length()];
-    
-    memset(coords, 0, sizeof coords);
+    };
+
+    std::vector<Point> coords;
+    coords.reserve(6 * text.length());
     
     unsigned int n = 0;
     
@@ -185,10 +186,12 @@ void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GL
     printShader->SetUniform("color", color);
     printShader->SetUniform("tex", TEX_GUI1);
 
-    const char* ctext = text.c_str();
-    for(const char *c = ctext; *c; ++c)
+    for(char ch_char : text)
     {
-        Character ch = chars_[*c-32];
+        unsigned char uc = static_cast<unsigned char>(ch_char);
+        if (uc < 32) continue;
+
+        Character ch = chars_[uc - 32];
         GLfloat x2 = xf + ch.bearing.x * scale * sx;
         GLfloat y2 = -yf - ch.bearing.y * scale * sy;
         GLfloat w = ch.size.x * scale * sx;
@@ -199,17 +202,21 @@ void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GL
         if(!w || !h)
             continue;
         
-        coords[n++] = (Point){x2, -y2,     ch.offset, 0};
-        coords[n++] = (Point){x2+w, -y2,   ch.offset + ch.size.x/texWidth_, 0};
-        coords[n++] = (Point){x2, -y2-h,   ch.offset, ch.size.y/texHeight_};
-        coords[n++] = (Point){x2+w, -y2,   ch.offset + ch.size.x/texWidth_, 0};
-        coords[n++] = (Point){x2, -y2-h,   ch.offset, ch.size.y/texHeight_};
-        coords[n++] = (Point){x2+w, -y2-h, ch.offset + ch.size.x/texWidth_, ch.size.y/texHeight_};
+        coords.push_back({x2, -y2,     ch.offset, 0});
+        coords.push_back({x2+w, -y2,   ch.offset + ch.size.x/texWidth_, 0});
+        coords.push_back({x2, -y2-h,   ch.offset, ch.size.y/texHeight_});
+        coords.push_back({x2+w, -y2,   ch.offset + ch.size.x/texWidth_, 0});
+        coords.push_back({x2, -y2-h,   ch.offset, ch.size.y/texHeight_});
+        coords.push_back({x2+w, -y2-h, ch.offset + ch.size.x/texWidth_, ch.size.y/texHeight_});
+
+        n += 6;
     }
     
+    if (n == 0) return;
+
     glBindBuffer(GL_ARRAY_BUFFER, fontVBO_);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
-    glBufferData(GL_ARRAY_BUFFER, sizeof coords, coords, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, coords.size()*sizeof(Point), coords.data(), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
  
     glDrawArrays(GL_TRIANGLES, 0, n);
@@ -226,16 +233,19 @@ void OpenGLPrinter::Print(const std::string& text, glm::vec4 color, GLuint x, GL
     }
 }
 
-GLuint OpenGLPrinter::TextLength(const std::string& text)
+GLuint OpenGLPrinter::TextLength(std::string_view text)
 {
     GLuint length = 0;
-    const char* ctext = text.c_str();
-    for(const char *c = ctext; *c; ++c)
-        length += chars_[*c-32].advance.x + chars_[*c-32].bearing.x;
+    for(char ch_char : text)
+    {    
+        unsigned char uc = static_cast<unsigned char>(ch_char);
+        if (uc >= 32)
+            length += chars_[uc - 32].advance.x + chars_[uc - 32].bearing.x;
+    }
     return length;
 }
 
-glm::ivec2 OpenGLPrinter::TextDimensions(const std::string& text)
+glm::ivec2 OpenGLPrinter::TextDimensions(std::string_view text)
 {
     return glm::ivec2(TextLength(text), nativeFontSize_);
 }

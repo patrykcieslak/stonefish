@@ -34,7 +34,7 @@
 namespace sf
 {
 
-ForceTorque::ForceTorque(const std::string& uniqueName, SolidEntity* attachment, const Transform& origin, Scalar frequency, int historyLength)
+ForceTorque::ForceTorque(std::string_view uniqueName, SolidEntity* attachment, const Transform& origin, Scalar frequency, int historyLength)
     : JointSensor(uniqueName, frequency, historyLength)
 {
     attach_ = attachment;
@@ -49,7 +49,7 @@ ForceTorque::ForceTorque(const std::string& uniqueName, SolidEntity* attachment,
     channels_.push_back(SensorChannel("Torque Z", QuantityType::TORQUE));
 }
 
-ForceTorque::ForceTorque(const std::string& uniqueName, const Transform& origin, Scalar frequency, int historyLength) 
+ForceTorque::ForceTorque(std::string_view uniqueName, const Transform& origin, Scalar frequency, int historyLength) 
     : ForceTorque(uniqueName, nullptr, origin, frequency, historyLength)
 {
 }
@@ -177,7 +177,7 @@ ConstructInfo ForceTorque::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<ForceTorque> ForceTorque::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+std::unique_ptr<ForceTorque> ForceTorque::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
 {
     // History (optional)
     int history = -1;

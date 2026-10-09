@@ -31,7 +31,7 @@
 namespace sf
 {
 
-JointActuator::JointActuator(const std::string& uniqueName) : Actuator(uniqueName)
+JointActuator::JointActuator(std::string_view uniqueName) : Actuator(uniqueName)
 {
     fe_ = nullptr;
     jId_ = 0;

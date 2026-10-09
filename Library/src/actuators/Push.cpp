@@ -32,7 +32,7 @@
 namespace sf
 {
 
-Push::Push(const std::string& uniqueName, bool inverted) : LinkActuator(uniqueName)
+Push::Push(std::string_view uniqueName, bool inverted) : LinkActuator(uniqueName)
 {
     setpoint_ = Scalar(0);
     inv_ = inverted;
@@ -128,7 +128,7 @@ ConstructInfo Push::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<Push> Push::Construct(const std::string& uniqueName, ConstructInfo& info)
+std::unique_ptr<Push> Push::Construct(std::string_view uniqueName, ConstructInfo& info)
 {
     bool inverted = false;
     ConstructInfoValue& value = info.nodes.at("specs").attributes.at("inverted");

@@ -41,7 +41,7 @@ namespace sf
         /*!
          \param uniqueName a name for the suction cup actuator
         */
-        SuctionCup(const std::string& uniqueName);
+        SuctionCup(std::string_view uniqueName);
 
         //! A method used to attach the actuator to a specified rigid body.
         /*!
@@ -82,7 +82,7 @@ namespace sf
         /*!
          \param info a construction info structure
         */
-        static std::unique_ptr<SuctionCup> Construct(const std::string& uniqueName, ConstructInfo& info);
+        static std::unique_ptr<SuctionCup> Construct(std::string_view uniqueName, ConstructInfo& info);
         
     private:
         bool pump_;

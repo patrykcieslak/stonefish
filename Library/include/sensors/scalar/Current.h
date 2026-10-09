@@ -41,7 +41,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        Current(const std::string& uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
+        Current(std::string_view uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
         
         //! A method performing internal sensor state update.
         /*!

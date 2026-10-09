@@ -28,7 +28,7 @@
 #include <sensors/ScalarSensor.h>
 #include <graphics/IMGUI.h>
 
-FallingTestApp::FallingTestApp(const std::string& dataDirPath, sf::RenderSettings s, sf::HelperSettings h, std::unique_ptr<FallingTestManager> sim)
+FallingTestApp::FallingTestApp(std::string_view dataDirPath, sf::RenderSettings s, sf::HelperSettings h, std::unique_ptr<FallingTestManager> sim)
     : sf::GraphicalSimulationApp("Falling Test", dataDirPath, s, h, std::move(sim))
 {
 }

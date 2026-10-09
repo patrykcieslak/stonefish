@@ -32,7 +32,7 @@
 namespace sf
 {
 
-Entity::Entity(const std::string& uniqueName)
+Entity::Entity(std::string_view uniqueName)
 {
     name_ = SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->AddName(uniqueName);
     renderable_ = true;

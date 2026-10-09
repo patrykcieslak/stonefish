@@ -30,7 +30,7 @@
 namespace sf
 {
 
-PrismaticJoint::PrismaticJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& axis, bool collideLinked) : Joint(uniqueName, collideLinked)
+PrismaticJoint::PrismaticJoint(std::string_view uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& axis, bool collideLinked) : Joint(uniqueName, collideLinked)
 {
     btRigidBody* bodyA = solidA->GetRigidBody();
     btRigidBody* bodyB = solidB->GetRigidBody();

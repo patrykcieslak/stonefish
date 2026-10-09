@@ -42,7 +42,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        RotaryEncoder(const std::string& uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
+        RotaryEncoder(std::string_view uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
         
         //! A method used to attach the encoder to a motor.
         /*!
@@ -75,7 +75,7 @@ namespace sf
         /*!
          \param info a construction info structure
         */
-        static std::unique_ptr<RotaryEncoder> Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info);
+        static std::unique_ptr<RotaryEncoder> Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info);
         
     protected:
         Scalar GetRawAngle();

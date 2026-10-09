@@ -36,7 +36,7 @@
 namespace sf
 {
 
-Multibeam::Multibeam(const std::string& uniqueName, Scalar angleRangeDeg, unsigned int angleSteps, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Multibeam::Multibeam(std::string_view uniqueName, Scalar angleRangeDeg, unsigned int angleSteps, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     angRange_ = UnitSystem::Angle(true, angleRangeDeg);
     angSteps_ = angleSteps;
@@ -169,7 +169,7 @@ ConstructInfo Multibeam::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<Multibeam> Multibeam::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+std::unique_ptr<Multibeam> Multibeam::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
 {
     // History (optional)
     int history = -1;

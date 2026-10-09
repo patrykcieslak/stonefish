@@ -46,7 +46,7 @@ namespace sf
          \param uniqueName a name for the joint
          \param collideLinked a flag that sets if the bodies connected by the joint should coliide
          */
-        Joint(const std::string& uniqueName, bool collideLinked = true);
+        Joint(std::string_view uniqueName, bool collideLinked = true);
         
         //! A destructor.
         virtual ~Joint();

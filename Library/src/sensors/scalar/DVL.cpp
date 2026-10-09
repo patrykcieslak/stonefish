@@ -36,7 +36,7 @@
 namespace sf
 {
 
-DVL::DVL(const std::string& uniqueName, Scalar beamAngleDeg, bool beamPositiveZ, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+DVL::DVL(std::string_view uniqueName, Scalar beamAngleDeg, bool beamPositiveZ, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     range_[0] = range_[1] = range_[2] = range_[3] = Scalar(0.);
     beamAngle_ = btRadians(beamAngleDeg);
@@ -382,7 +382,7 @@ ConstructInfo DVL::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<DVL> DVL::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+std::unique_ptr<DVL> DVL::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
 {
     // History (optional)
     int history = -1;

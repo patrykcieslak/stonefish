@@ -39,7 +39,7 @@ void Comm::DefaultDeleter(Comm* c)
     delete c;
 }
 
-Comm::Comm(const std::string& uniqueName, uint64_t deviceId)
+Comm::Comm(std::string_view uniqueName, uint64_t deviceId)
 {
     name_ = SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->AddName(uniqueName);
     id_ = deviceId;
@@ -121,7 +121,7 @@ void Comm::Connect(uint64_t deviceId)
     cId_ = deviceId;
 }
 
-void Comm::SendMessage(const std::string& data)
+void Comm::SendMessage(std::string_view data)
 {
     SendMessage(std::vector<uint8_t>(data.begin(), data.end()));
 }

@@ -42,7 +42,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        INS(const std::string& uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
+        INS(std::string_view uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
     
         //! A method performing internal sensor state update.
         /*!
@@ -57,19 +57,19 @@ namespace sf
         /*!
          \param name a unique name identifying the sensor
          */
-        void ConnectGPS(const std::string& name);
+        void ConnectGPS(std::string_view name);
 
         //! A method used to connect a pressure sensor to the INS.
         /*!
          \param name a unique name identifying the sensor
          */
-        void ConnectPressure(const std::string& name);
+        void ConnectPressure(std::string_view name);
 
         //! A method used to connect a DVL to the INS.
         /*!
          \param name a unique name identifying the sensor
          */
-        void ConnectDVL(const std::string& name);
+        void ConnectDVL(std::string_view name);
 
         //! A method used to set the output frame (in device frame).
         /*!

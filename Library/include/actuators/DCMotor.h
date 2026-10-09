@@ -42,7 +42,7 @@ namespace sf
          \param motorKt the torque constant of the motor [Nm/A]
          \param friction the friction coefficient
          */
-        DCMotor(const std::string& uniqueName, Scalar motorR, Scalar motorL, Scalar motorKe, 
+        DCMotor(std::string_view uniqueName, Scalar motorR, Scalar motorL, Scalar motorKe, 
             Scalar motorKt, Scalar friction);
         
         //! A method used to update the internal state of the motor.
@@ -111,7 +111,7 @@ namespace sf
         /*!
          \param info a construction info structure
         */
-        static std::unique_ptr<DCMotor> Construct(const std::string& uniqueName, ConstructInfo& info);
+        static std::unique_ptr<DCMotor> Construct(std::string_view uniqueName, ConstructInfo& info);
         
     private:
         void WatchdogTimeout() override;

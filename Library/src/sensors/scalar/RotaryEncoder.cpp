@@ -36,7 +36,7 @@
 namespace sf
 {
 
-RotaryEncoder::RotaryEncoder(const std::string& uniqueName, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
+RotaryEncoder::RotaryEncoder(std::string_view uniqueName, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
 {
     angle_ = lastAngle_ = Scalar(0);
     motor_ = nullptr;
@@ -172,7 +172,7 @@ ConstructInfo RotaryEncoder::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<RotaryEncoder> RotaryEncoder::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+std::unique_ptr<RotaryEncoder> RotaryEncoder::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
 {
     // History (optional)
     int history = -1;

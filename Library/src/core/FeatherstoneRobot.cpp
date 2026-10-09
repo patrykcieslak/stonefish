@@ -40,7 +40,7 @@
 namespace sf
 {
 
-FeatherstoneRobot::FeatherstoneRobot(const std::string& uniqueName, bool fixedBase) : Robot(uniqueName, fixedBase)
+FeatherstoneRobot::FeatherstoneRobot(std::string_view uniqueName, bool fixedBase) : Robot(uniqueName, fixedBase)
 {
     dynamics_ = nullptr;
 }
@@ -50,7 +50,7 @@ RobotType FeatherstoneRobot::GetType() const
     return RobotType::FEATHERSTONE;    
 }
 
-int FeatherstoneRobot::GetJoint(const std::string& jname)
+int FeatherstoneRobot::GetJoint(std::string_view jname)
 {
     if(dynamics_ == nullptr)
         cCritical("Robot links not defined!");
@@ -69,7 +69,7 @@ Transform FeatherstoneRobot::GetTransform() const
         return Transform::getIdentity();
 }
 
-int FeatherstoneRobot::GetLinkIndex(const std::string& lname) const
+int FeatherstoneRobot::GetLinkIndex(std::string_view lname) const
 {
     int index = -2;
     if(dynamics_ != nullptr)
@@ -245,7 +245,7 @@ void FeatherstoneRobot::Respawn(SimulationManager* sm, const Transform& origin)
     dynamics_->Respawn(origin);
 }
 
-JointSensor* FeatherstoneRobot::AddJointSensor(std::unique_ptr<Sensor, SensorDeleter> s, const std::string& monitoredJointName)
+JointSensor* FeatherstoneRobot::AddJointSensor(std::unique_ptr<Sensor, SensorDeleter> s, std::string_view monitoredJointName)
 {
     if (s == nullptr || s->GetType() != SensorType::JOINT)
     {
@@ -263,17 +263,17 @@ JointSensor* FeatherstoneRobot::AddJointSensor(std::unique_ptr<Sensor, SensorDel
     }
     else
     {
-        cCritical("Joint '%s' doesn't exist. Sensor '%s' cannot be attached!", monitoredJointName.c_str(), s->GetName().c_str());
+        cCritical("Joint '%s' doesn't exist. Sensor '%s' cannot be attached!", std::string(monitoredJointName).c_str(), s->GetName().c_str());
         return nullptr;
     }
 }
 
-JointSensor* FeatherstoneRobot::AddJointSensor(std::unique_ptr<Sensor> s, const std::string& monitoredJointName)
+JointSensor* FeatherstoneRobot::AddJointSensor(std::unique_ptr<Sensor> s, std::string_view monitoredJointName)
 {
     return AddJointSensor(std::unique_ptr<Sensor, SensorDeleter>(s.release(), Sensor::DefaultDeleter), monitoredJointName);
 }
 
-JointActuator* FeatherstoneRobot::AddJointActuator(std::unique_ptr<Actuator, ActuatorDeleter> a, const std::string& actuatedJointName)
+JointActuator* FeatherstoneRobot::AddJointActuator(std::unique_ptr<Actuator, ActuatorDeleter> a, std::string_view actuatedJointName)
 {
     if (a == nullptr || a->GetType() != ActuatorType::JOINT)
     {
@@ -291,17 +291,17 @@ JointActuator* FeatherstoneRobot::AddJointActuator(std::unique_ptr<Actuator, Act
     }
     else
     {
-        cCritical("Joint '%s' doesn't exist. Actuator '%s' cannot be attached!", actuatedJointName.c_str(), a->GetName().c_str());
+        cCritical("Joint '%s' doesn't exist. Actuator '%s' cannot be attached!", std::string(actuatedJointName).c_str(), a->GetName().c_str());
         return nullptr;
     }
 }
 
-JointActuator* FeatherstoneRobot::AddJointActuator(std::unique_ptr<Actuator> a, const std::string& actuatedJointName)
+JointActuator* FeatherstoneRobot::AddJointActuator(std::unique_ptr<Actuator> a, std::string_view actuatedJointName)
 {
     return AddJointActuator(std::unique_ptr<Actuator, ActuatorDeleter>(a.release(), Actuator::DefaultDeleter), actuatedJointName);
 }
 
-LinkActuator* FeatherstoneRobot::AddLinkActuator(std::unique_ptr<Actuator, ActuatorDeleter> a, const std::string& actuatedLinkName, const Transform& origin)
+LinkActuator* FeatherstoneRobot::AddLinkActuator(std::unique_ptr<Actuator, ActuatorDeleter> a, std::string_view actuatedLinkName, const Transform& origin)
 {
     if (a == nullptr || a->GetType() != ActuatorType::LINK)
     {
@@ -312,7 +312,7 @@ LinkActuator* FeatherstoneRobot::AddLinkActuator(std::unique_ptr<Actuator, Actua
     int linkId = GetLinkIndex(actuatedLinkName);
     if(linkId < -1)
     {
-        cCritical("Link '%s' doesn't exist. Actuator '%s' cannot be attached!", actuatedLinkName.c_str(), a->GetName().c_str());
+        cCritical("Link '%s' doesn't exist. Actuator '%s' cannot be attached!", std::string(actuatedLinkName).c_str(), a->GetName().c_str());
         return nullptr;
     }
     if(static_cast<LinkActuator*>(a.get())->GetLinkActuatorType() == LinkActuatorType::SUCTION_CUP) // Special case
@@ -328,7 +328,7 @@ LinkActuator* FeatherstoneRobot::AddLinkActuator(std::unique_ptr<Actuator, Actua
     return static_cast<LinkActuator*>(actuators_.back());
 }
 
-LinkActuator* FeatherstoneRobot::AddLinkActuator(std::unique_ptr<Actuator> a, const std::string& actuatedLinkName, const Transform& origin)
+LinkActuator* FeatherstoneRobot::AddLinkActuator(std::unique_ptr<Actuator> a, std::string_view actuatedLinkName, const Transform& origin)
 {
     return AddLinkActuator(std::unique_ptr<Actuator, ActuatorDeleter>(a.release(), Actuator::DefaultDeleter), actuatedLinkName, origin);
 }

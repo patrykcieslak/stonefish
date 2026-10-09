@@ -37,7 +37,7 @@ namespace sf
         /*!
          \param uniqueName a name for the motor
          */
-        Motor(const std::string& uniqueName);
+        Motor(std::string_view uniqueName);
         
         //! A destructor.
         virtual ~Motor() = default;
@@ -79,7 +79,7 @@ namespace sf
         /*!
          \param info a construction info structure
         */
-        static std::unique_ptr<Motor> Construct(const std::string& uniqueName, ConstructInfo& info);
+        static std::unique_ptr<Motor> Construct(std::string_view uniqueName, ConstructInfo& info);
         
     private:
         void WatchdogTimeout() override;

@@ -36,7 +36,7 @@
 namespace sf
 {
 
-Profiler::Profiler(const std::string& uniqueName, Scalar angleRangeDeg, unsigned int angleSteps, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Profiler::Profiler(std::string_view uniqueName, Scalar angleRangeDeg, unsigned int angleSteps, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     angRange_ = UnitSystem::Angle(true, angleRangeDeg);
     angSteps_ = angleSteps;
@@ -171,7 +171,7 @@ ConstructInfo Profiler::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<Profiler> Profiler::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+std::unique_ptr<Profiler> Profiler::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
 {
     // History (optional)
     int history = -1;

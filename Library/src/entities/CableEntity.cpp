@@ -37,8 +37,8 @@
 namespace sf
 {
 
-CableEntity::CableEntity(const std::string& uniqueName, PhysicsSettings phy, Vector3 firstEnd, Vector3 secondEnd, 
-    size_t numSegments, Scalar diameter, const std::string& material, const std::string& look, Scalar stretching, float uvScale) : Entity(uniqueName), phy_(phy)
+CableEntity::CableEntity(std::string_view uniqueName, PhysicsSettings phy, Vector3 firstEnd, Vector3 secondEnd, 
+    size_t numSegments, Scalar diameter, std::string_view material, std::string_view look, Scalar stretching, float uvScale) : Entity(uniqueName), phy_(phy)
 {
     SimulationManager* sm = SimulationApp::GetApp()->GetSimulationManager();
 

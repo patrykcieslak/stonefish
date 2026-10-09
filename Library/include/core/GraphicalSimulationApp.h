@@ -50,7 +50,7 @@ namespace sf
          \param h a structure containing the helper objects display settings
          \param sim a pointer to the simulation manager
          */
-        GraphicalSimulationApp(const std::string& title, const std::string& dataDirPath, RenderSettings s, HelperSettings h, std::unique_ptr<SimulationManager> sim);
+        GraphicalSimulationApp(std::string_view title, std::string_view dataDirPath, RenderSettings s, HelperSettings h, std::unique_ptr<SimulationManager> sim);
 
         //! A destructor.
         virtual ~GraphicalSimulationApp() = default;

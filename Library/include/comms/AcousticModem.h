@@ -48,7 +48,7 @@ namespace sf
          \param maxVerticalFOVDeg the maximum vertical angle of radiation pattern [deg]
          \param operatingRange the operating range [m]
          */
-        AcousticModem(const std::string& uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange);
+        AcousticModem(std::string_view uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange);
         
         //! A destructor.
         virtual ~AcousticModem();
@@ -99,7 +99,7 @@ namespace sf
         /*!
          \param info a construction info structure
         */
-        static std::unique_ptr<AcousticModem> Construct(const std::string& uniqueName, uint64_t deviceId, ConstructInfo& info);
+        static std::unique_ptr<AcousticModem> Construct(std::string_view uniqueName, uint64_t deviceId, ConstructInfo& info);
         
     protected:
         //! A method performing internal comm state update.

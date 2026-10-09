@@ -49,7 +49,7 @@ namespace sf
          \param firstExternalPart a pointer to the first external rigid body
          \param origin a transformation from the compound body origin to the first part origin
          */
-        Compound(const std::string& uniqueName, PhysicsSettings phy, std::unique_ptr<SolidEntity> firstExternalPart, const Transform& origin);
+        Compound(std::string_view uniqueName, PhysicsSettings phy, std::unique_ptr<SolidEntity> firstExternalPart, const Transform& origin);
         
         //! A method adding new internal rigid body to the compound body.
         /*!

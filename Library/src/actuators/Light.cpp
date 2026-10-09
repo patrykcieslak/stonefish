@@ -37,7 +37,7 @@
 namespace sf
 {
 
-Light::Light(const std::string& uniqueName, Scalar radius, Color color, Scalar lum) 
+Light::Light(std::string_view uniqueName, Scalar radius, Color color, Scalar lum) 
 	: LinkActuator(uniqueName), attach2_(nullptr), attach3_(nullptr), c_(color), coneAngle_(0), glLight_(nullptr)
 {
     if(!SimulationApp::GetApp()->HasGraphics())
@@ -47,7 +47,7 @@ Light::Light(const std::string& uniqueName, Scalar radius, Color color, Scalar l
     Fi_ = lum < Scalar(0) ? Scalar(0) : lum;
 }
 
-Light::Light(const std::string& uniqueName, Scalar radius, Scalar coneAngleDeg, Color color, Scalar lum) 
+Light::Light(std::string_view uniqueName, Scalar radius, Scalar coneAngleDeg, Color color, Scalar lum) 
 	: Light(uniqueName, radius, color, lum)
 {
     coneAngle_ = coneAngleDeg > Scalar(0) ? coneAngleDeg : Scalar(45);

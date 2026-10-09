@@ -34,17 +34,17 @@
 namespace sf
 {
 
-Terrain::Terrain(const std::string& uniqueName, const std::string& pathToHeightmap, Scalar scaleX, Scalar scaleY, Scalar height, const std::string& material, const std::string& look, float uvScale) 
+Terrain::Terrain(std::string_view uniqueName, std::string_view pathToHeightmap, Scalar scaleX, Scalar scaleY, Scalar height, std::string_view material, std::string_view look, float uvScale) 
     : StaticEntity(uniqueName, material, look)
 {
     //Load heightmap data
     int w, h, ch;
     
-    if(stbi_is_16_bit(pathToHeightmap.c_str())) //16 bit image
+    if(stbi_is_16_bit(std::string(pathToHeightmap).c_str())) //16 bit image
     {
-        stbi_us* data = stbi_load_16(pathToHeightmap.c_str(), &w, &h, &ch, 1);
+        stbi_us* data = stbi_load_16(std::string(pathToHeightmap).c_str(), &w, &h, &ch, 1);
         if(data == nullptr) 
-            cCritical("Failed to load heightmap from file '%s'!", pathToHeightmap.c_str());
+            cCritical("Failed to load heightmap from file '%s'!", std::string(pathToHeightmap).c_str());
 
         heightfield_.resize(w*h);
         for(size_t i=0; i<(size_t)h; ++i)
@@ -55,9 +55,9 @@ Terrain::Terrain(const std::string& uniqueName, const std::string& pathToHeightm
     }
     else //8 bit image
     {
-        stbi_uc* data = stbi_load(pathToHeightmap.c_str(), &w, &h, &ch, 1);
+        stbi_uc* data = stbi_load(std::string(pathToHeightmap).c_str(), &w, &h, &ch, 1);
         if(data == nullptr) 
-            cCritical("Failed to load heightmap from file '%s'!", pathToHeightmap.c_str());
+            cCritical("Failed to load heightmap from file '%s'!", std::string(pathToHeightmap).c_str());
         
         heightfield_.resize(w*h);
         for(size_t i=0; i<(size_t)h; ++i)

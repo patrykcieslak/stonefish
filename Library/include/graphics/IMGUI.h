@@ -156,7 +156,7 @@ namespace sf
          \param color the color of the text
          \param scale the font scaling factor
          */
-        void DoLabel(GLfloat x, GLfloat y, const std::string& text, glm::vec4 color = glm::vec4(-1.f), GLfloat scale = 1.f);
+        void DoLabel(GLfloat x, GLfloat y, std::string_view text, glm::vec4 color = glm::vec4(-1.f), GLfloat scale = 1.f);
         
         //! A method used to create a progress bar widget.
         /*!
@@ -166,7 +166,7 @@ namespace sf
          \param progress the value of the progress
          \param title the title string
          */
-        void DoProgressBar(GLfloat x, GLfloat y, GLfloat w, Scalar progress, const std::string& title);
+        void DoProgressBar(GLfloat x, GLfloat y, GLfloat w, Scalar progress, std::string_view title);
         
         //! A method used to create the button widget.
         /*!
@@ -178,7 +178,7 @@ namespace sf
          \param title the title string
          \return button status
          */
-        bool DoButton(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const std::string& title);
+        bool DoButton(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, std::string_view title);
         
         //! A method used to create a slider widget.
         /*!
@@ -193,7 +193,7 @@ namespace sf
          \param decimalPlaces a display precision of the current slider value 
          \return new value
          */
-        Scalar DoSlider(Uid id, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scalar max, Scalar value, const std::string& title, unsigned int decimalPlaces = 2);
+        Scalar DoSlider(Uid id, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scalar max, Scalar value, std::string_view title, unsigned int decimalPlaces = 2);
         
         //! A method used to create a checkbox widget.
         /*!
@@ -205,7 +205,7 @@ namespace sf
          \param title the title string
          \return new checkbox status
          */
-        bool DoCheckBox(Uid id, GLfloat x, GLfloat y, GLfloat w, bool value, const std::string& title);
+        bool DoCheckBox(Uid id, GLfloat x, GLfloat y, GLfloat w, bool value, std::string_view title);
         
         //! A method used to create a combo box.
         /*!
@@ -218,7 +218,7 @@ namespace sf
          \param title the title string
          \return new combobox value
          */
-        unsigned int DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const std::vector<std::string>& options, unsigned int value, const std::string& title);
+        unsigned int DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const std::vector<std::string>& options, unsigned int value, std::string_view title);
         
         //! A method used to create a time plot widget for a sensor.
         /*!
@@ -232,7 +232,7 @@ namespace sf
          \param title the title string
          \param fixedRange a range of the Y axis (if NULL the plot adjusts automatically)
          */
-        bool DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sens, std::vector<unsigned short>& dims, const std::string& title, Scalar fixedRange[2] = NULL);
+        bool DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sens, std::vector<unsigned short>& dims, std::string_view title, Scalar fixedRange[2] = NULL);
         
         //! A method used to create a time plot widget for and arbitrary array od data.
         /*!
@@ -245,7 +245,7 @@ namespace sf
          \param title the title string
          \param fixedRange a range of the Y axis (if NULL the plot adjusts automatically)
          */        
-        bool DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, std::vector<std::vector<GLfloat> >& data, const std::string& title, Scalar fixedRange[2] = NULL);
+        bool DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, std::vector<std::vector<GLfloat> >& data, std::string_view title, Scalar fixedRange[2] = NULL);
 
         //! A method used to create a XY plot widget.
         /*!
@@ -260,7 +260,7 @@ namespace sf
          \param dimY the id of the sensor dimension used as data source
          \param title a pointer to the XY plot title
          */
-        bool DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sensX, unsigned short dimX, ScalarSensor* sensY, unsigned short dimY, const std::string& title);
+        bool DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sensX, unsigned short dimX, ScalarSensor* sensY, unsigned short dimY, std::string_view title);
         
     private:
         Uid GetHot();
@@ -276,9 +276,9 @@ namespace sf
         int GetMouseX();
         int GetMouseY();
         
-        void DrawPlainText(GLfloat x, GLfloat y, glm::vec4 color, const std::string& text, GLfloat scale = 1.f);
-        GLfloat PlainTextLength(const std::string& text);
-        glm::vec2 PlainTextDimensions(const std::string& text);
+        void DrawPlainText(GLfloat x, GLfloat y, glm::vec4 color, std::string_view text, GLfloat scale = 1.f);
+        GLfloat PlainTextLength(std::string_view text);
+        glm::vec2 PlainTextDimensions(std::string_view text);
         void DrawRoundedRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec4 color = glm::vec4(1));
         void DrawRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec4 color = glm::vec4(1));
         void DrawArrow(GLfloat x, GLfloat y, GLfloat h, bool up, glm::vec4 color = glm::vec4(1));

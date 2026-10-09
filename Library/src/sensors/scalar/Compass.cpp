@@ -31,7 +31,7 @@
 namespace sf
 {
 
-Compass::Compass(const std::string& uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Compass::Compass(std::string_view uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels_.push_back(SensorChannel("Heading", QuantityType::ANGLE));
 }
@@ -76,7 +76,7 @@ ConstructInfo Compass::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<Compass> Compass::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+std::unique_ptr<Compass> Compass::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
 {
     // History (optional)
     int history = -1;

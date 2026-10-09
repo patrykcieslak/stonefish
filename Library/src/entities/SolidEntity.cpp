@@ -38,7 +38,7 @@
 namespace sf
 {
 
-SolidEntity::SolidEntity(const std::string& uniqueName, PhysicsSettings phy, const std::string& material, const std::string& look, Scalar thickness) 
+SolidEntity::SolidEntity(std::string_view uniqueName, PhysicsSettings phy, std::string_view material, std::string_view look, Scalar thickness) 
     : MovingEntity(uniqueName, material, look), thick_(thickness), phy_(phy)
 {
     //Check if ocean is enabled and change physics mode accordingly

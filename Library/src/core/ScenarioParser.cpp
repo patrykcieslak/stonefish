@@ -1690,7 +1690,7 @@ bool ScenarioParser::ParseCable(XMLElement* element)
     sm_->AddEntity(std::move(cable));
 
     //---- Anchors ----
-    auto parseAnchor = [&](XMLElement* anchorItem, const std::string& anchorTypeStr, sf::CableEnds anchorEnd) -> bool
+    auto parseAnchor = [&](XMLElement* anchorItem, std::string_view anchorTypeStr, sf::CableEnds anchorEnd) -> bool
     {
         if (anchorTypeStr == "world")
         {
@@ -2581,7 +2581,7 @@ bool ScenarioParser::ParseSensor(XMLElement* element, Entity* ent)
     return true;
 }
 
-std::unique_ptr<Actuator, ActuatorDeleter> ScenarioParser::ParseActuator(XMLElement* element, const std::string& namePrefix)
+std::unique_ptr<Actuator, ActuatorDeleter> ScenarioParser::ParseActuator(XMLElement* element, std::string_view namePrefix)
 {
     //---- Common ----
     const char* name = nullptr;
@@ -2589,12 +2589,12 @@ std::unique_ptr<Actuator, ActuatorDeleter> ScenarioParser::ParseActuator(XMLElem
     
     if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
     {
-        log.Print(MessageType::ERROR, "Actuator name missing (namespace '%s')!", namePrefix.c_str());   
+        log.Print(MessageType::ERROR, "Actuator name missing (namespace '%s')!", std::string(namePrefix).c_str());   
         return {nullptr, nullptr};
     }
     std::string actuatorName = std::string(name);
     if(namePrefix != "")
-        actuatorName = namePrefix + "/" + actuatorName;
+        actuatorName = std::string(namePrefix) + "/" + actuatorName;
 
     log.Print(MessageType::INFO, "Parsing actuator '%s'.", actuatorName.c_str());
 
@@ -2621,7 +2621,7 @@ std::unique_ptr<Actuator, ActuatorDeleter> ScenarioParser::ParseActuator(XMLElem
         return {nullptr, nullptr};
 }
 
-std::unique_ptr<Sensor, SensorDeleter> ScenarioParser::ParseSensor(XMLElement* element, const std::string& namePrefix)
+std::unique_ptr<Sensor, SensorDeleter> ScenarioParser::ParseSensor(XMLElement* element, std::string_view namePrefix)
 {
     //---- Common ----
     std::unique_ptr<Sensor, SensorDeleter> sens {nullptr, nullptr};
@@ -2632,12 +2632,12 @@ std::unique_ptr<Sensor, SensorDeleter> ScenarioParser::ParseSensor(XMLElement* e
     
     if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
     {
-        log.Print(MessageType::ERROR, "Sensor name missing (namespace '%s')!", namePrefix.c_str());
+        log.Print(MessageType::ERROR, "Sensor name missing (namespace '%s')!", std::string(namePrefix).c_str());
         return {nullptr, nullptr};
     }
     std::string sensorName = std::string(name);
     if(namePrefix != "")
-        sensorName = namePrefix + "/" + sensorName;
+        sensorName = std::string(namePrefix) + "/" + sensorName;
     
     log.Print(MessageType::INFO, "Parsing sensor '%s'.", sensorName.c_str());
 
@@ -2723,7 +2723,7 @@ std::unique_ptr<Sensor, SensorDeleter> ScenarioParser::ParseSensor(XMLElement* e
     return sens;
 }
 
-std::unique_ptr<Light> ScenarioParser::ParseLight(XMLElement* element, const std::string& namePrefix)
+std::unique_ptr<Light> ScenarioParser::ParseLight(XMLElement* element, std::string_view namePrefix)
 {
     if(!IsGraphicalSim())
     {
@@ -2734,13 +2734,13 @@ std::unique_ptr<Light> ScenarioParser::ParseLight(XMLElement* element, const std
     const char* name = nullptr;
     if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
     {
-        log.Print(MessageType::ERROR, "Light name missing (namespace '%s')!", namePrefix.c_str());
+        log.Print(MessageType::ERROR, "Light name missing (namespace '%s')!", std::string(namePrefix).c_str());
         return nullptr;
     }
 
     std::string lightName = std::string(name);
     if(namePrefix != "")
-        lightName = namePrefix + "/" + lightName;
+        lightName = std::string(namePrefix) + "/" + lightName;
     
     log.Print(MessageType::INFO, "Parsing light '%s'.", lightName.c_str());    
 
@@ -2777,7 +2777,7 @@ std::unique_ptr<Light> ScenarioParser::ParseLight(XMLElement* element, const std
         return std::make_unique<Light>(lightName, radius, color, illu);
 }
 
-std::unique_ptr<Comm, CommDeleter> ScenarioParser::ParseComm(XMLElement* element, const std::string& namePrefix)
+std::unique_ptr<Comm, CommDeleter> ScenarioParser::ParseComm(XMLElement* element, std::string_view namePrefix)
 {
     // ---- Common ----
     const char* name = nullptr;
@@ -2786,12 +2786,12 @@ std::unique_ptr<Comm, CommDeleter> ScenarioParser::ParseComm(XMLElement* element
     
     if(element->QueryStringAttribute("name", &name) != XML_SUCCESS)
     {
-        log.Print(MessageType::ERROR, "Communication device name missing (namespace '%s')!", namePrefix.c_str());
+        log.Print(MessageType::ERROR, "Communication device name missing (namespace '%s')!", std::string(namePrefix).c_str());
         return {nullptr, nullptr};
     }
     std::string commName = std::string(name);
     if(namePrefix != "")
-        commName = namePrefix + "/" + commName;
+        commName = std::string(namePrefix) + "/" + commName;
 
     log.Print(MessageType::INFO, "Parsing communication device '%s'.", commName.c_str());
 
@@ -3177,10 +3177,10 @@ bool ScenarioParser::ParseColorMap(XMLElement* element, ColorMap& cm)
 
 bool ScenarioParser::ParseConstructInfo(XMLElement* element, ConstructInfo& info)
 {
-    std::function<bool(XMLElement*, const std::string&, ConstructInfoNode&)> parseNode = 
-    [&](XMLElement* e, const std::string& name, ConstructInfoNode& node) 
+    std::function<bool(XMLElement*, std::string_view, ConstructInfoNode&)> parseNode = 
+    [&](XMLElement* e, std::string_view name, ConstructInfoNode& node) 
     {
-        XMLElement* item = e->FirstChildElement(name.c_str());
+        XMLElement* item = e->FirstChildElement(std::string(name).c_str());
         if (item != nullptr)
         {
             // Parse all attributes
@@ -3199,7 +3199,7 @@ bool ScenarioParser::ParseConstructInfo(XMLElement* element, ConstructInfo& info
                         else if (!attribute.second.optional) // && !XML_SUCCESS
                         {
                             log.Print(MessageType::ERROR, "Required attribute '%s' of element '%s' not defined or wrong type!",
-                                attribute.first.c_str(), name.c_str());
+                                attribute.first.c_str(), std::string(name).c_str());
                             return false;
                         }
                     }
@@ -3216,7 +3216,7 @@ bool ScenarioParser::ParseConstructInfo(XMLElement* element, ConstructInfo& info
                         else if (!attribute.second.optional) // && !XML_SUCCESS
                         {
                             log.Print(MessageType::ERROR, "Required attribute '%s' of element '%s' not defined or wrong type!",
-                                attribute.first.c_str(), name.c_str());
+                                attribute.first.c_str(), std::string(name).c_str());
                             return false;
                         }
                     }
@@ -3233,7 +3233,7 @@ bool ScenarioParser::ParseConstructInfo(XMLElement* element, ConstructInfo& info
                         else if (!attribute.second.optional) // && !XML_SUCCESS
                         {
                             log.Print(MessageType::ERROR, "Required attribute '%s' of element '%s' not defined or wrong type!",
-                                attribute.first.c_str(), name.c_str());
+                                attribute.first.c_str(), std::string(name).c_str());
                             return false;
                         }
                     }
@@ -3252,7 +3252,7 @@ bool ScenarioParser::ParseConstructInfo(XMLElement* element, ConstructInfo& info
                         else if (!attribute.second.optional) // && !XML_SUCCESS
                         {
                             log.Print(MessageType::ERROR, "Required attribute '%s' of element '%s' not defined or wrong type!",
-                                attribute.first.c_str(), name.c_str());
+                                attribute.first.c_str(), std::string(name).c_str());
                             return false;
                         }
                     }
@@ -3269,7 +3269,7 @@ bool ScenarioParser::ParseConstructInfo(XMLElement* element, ConstructInfo& info
                         }
                         else if (!attribute.second.optional) // && !XML_SUCCESS
                         {
-                            log.Print(MessageType::ERROR, "Required transform '%s' not defined or wrong format!", name.c_str());
+                            log.Print(MessageType::ERROR, "Required transform '%s' not defined or wrong format!", std::string(name).c_str());
                             return false;
                         }
                     }
@@ -3286,7 +3286,7 @@ bool ScenarioParser::ParseConstructInfo(XMLElement* element, ConstructInfo& info
                         else if (!attribute.second.optional) // && !XML_SUCCESS
                         {
                             log.Print(MessageType::ERROR, "Required attribute '%s' of element '%s' not defined or wrong type!",
-                                attribute.first.c_str(), name.c_str());
+                                attribute.first.c_str(), std::string(name).c_str());
                             return false;
                         }
                     }
@@ -3303,7 +3303,7 @@ bool ScenarioParser::ParseConstructInfo(XMLElement* element, ConstructInfo& info
                         }
                         else if (!attribute.second.optional) // && !XML_SUCCESS
                         {
-                            log.Print(MessageType::ERROR, "Required colormap '%s' not defined or wrong format!", name.c_str());
+                            log.Print(MessageType::ERROR, "Required colormap '%s' not defined or wrong format!", std::string(name).c_str());
                             return false;
                         }
                     }
@@ -3320,7 +3320,7 @@ bool ScenarioParser::ParseConstructInfo(XMLElement* element, ConstructInfo& info
         }
         else if (!node.optional) // && item == nullptr
         {
-            log.Print(MessageType::ERROR, "Required element '%s' not defined!", name.c_str());
+            log.Print(MessageType::ERROR, "Required element '%s' not defined!", std::string(name).c_str());
             return false;
         }
       

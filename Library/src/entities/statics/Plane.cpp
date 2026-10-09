@@ -31,7 +31,7 @@
 namespace sf
 {
 
-Plane::Plane(const std::string& uniqueName, Scalar planeSize, const std::string& material, const std::string& look, float uvScale) : StaticEntity(uniqueName, material, look)
+Plane::Plane(std::string_view uniqueName, Scalar planeSize, std::string_view material, std::string_view look, float uvScale) : StaticEntity(uniqueName, material, look)
 {
     phyMesh_ = OpenGLContent::BuildPlane(planeSize/2.f, uvScale > 0.f ? uvScale : 1.f);
     std::unique_ptr<btStaticPlaneShape> shape = std::make_unique<btStaticPlaneShape>(Vector3(0,0,-1), 0);

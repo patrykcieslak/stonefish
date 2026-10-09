@@ -66,7 +66,7 @@ namespace sf
 struct SensorFactoryEntry
 {
     std::function<ConstructInfo()> GetConstructInfo;
-    std::function<std::unique_ptr<Sensor>(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)> construct; 
+    std::function<std::unique_ptr<Sensor>(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)> construct; 
 };
 
 class SensorFactory
@@ -74,11 +74,11 @@ class SensorFactory
 public:
     static SensorFactory& Instance() { static SensorFactory f; return f; }
 
-    void Register(const std::string& typeName, SensorFactoryEntry e) { registry_[typeName] = std::move(e); }
+    void Register(std::string_view typeName, SensorFactoryEntry e) { registry_[std::string(typeName)] = std::move(e); }
 
-    const SensorFactoryEntry* Find(const std::string& typeName) const
+    const SensorFactoryEntry* Find(std::string_view typeName) const
     {
-        auto it = registry_.find(typeName);
+        auto it = registry_.find(std::string(typeName));
         return it != registry_.end() ? &it->second : nullptr;
     }
 
@@ -89,7 +89,7 @@ private:
 struct ActuatorFactoryEntry
 {
     std::function<ConstructInfo()> GetConstructInfo;
-    std::function<std::unique_ptr<Actuator>(const std::string& uniqueName, ConstructInfo& info)> construct; 
+    std::function<std::unique_ptr<Actuator>(std::string_view uniqueName, ConstructInfo& info)> construct; 
 };
 
 class ActuatorFactory
@@ -97,11 +97,11 @@ class ActuatorFactory
 public:
     static ActuatorFactory& Instance() { static ActuatorFactory f; return f; }
 
-    void Register(const std::string& typeName, ActuatorFactoryEntry e) { registry_[typeName] = std::move(e); }
+    void Register(std::string_view typeName, ActuatorFactoryEntry e) { registry_[std::string(typeName)] = std::move(e); }
 
-    const ActuatorFactoryEntry* Find(const std::string& typeName) const
+    const ActuatorFactoryEntry* Find(std::string_view typeName) const
     {
-        auto it = registry_.find(typeName);
+        auto it = registry_.find(std::string(typeName));
         return it != registry_.end() ? &it->second : nullptr;
     }
 
@@ -112,7 +112,7 @@ private:
 struct CommFactoryEntry
 {
     std::function<ConstructInfo()> GetConstructInfo;
-    std::function<std::unique_ptr<Comm>(const std::string& uniqueName, uint64_t deviceId, ConstructInfo& info)> construct; 
+    std::function<std::unique_ptr<Comm>(std::string_view uniqueName, uint64_t deviceId, ConstructInfo& info)> construct; 
 };
 
 class CommFactory
@@ -120,11 +120,11 @@ class CommFactory
 public:
     static CommFactory& Instance() { static CommFactory f; return f; }
 
-    void Register(const std::string& typeName, CommFactoryEntry e) { registry_[typeName] = std::move(e); }
+    void Register(std::string_view typeName, CommFactoryEntry e) { registry_[std::string(typeName)] = std::move(e); }
 
-    const CommFactoryEntry* Find(const std::string& typeName) const
+    const CommFactoryEntry* Find(std::string_view typeName) const
     {
-        auto it = registry_.find(typeName);
+        auto it = registry_.find(std::string(typeName));
         return it != registry_.end() ? &it->second : nullptr;
     }
 

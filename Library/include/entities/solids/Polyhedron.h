@@ -48,10 +48,10 @@ namespace sf
          \param thickness defines the thickness of the physics geometry walls, if higher than zero the mesh is considered a shell
          \param approx defines what type of approximation of the body shape should be used in the fluid dynamics computation
          */
-        Polyhedron(const std::string& uniqueName, PhysicsSettings phy, 
-                   const std::string& graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
-                   const std::string& physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
-                   const std::string& material, const std::string& look, Scalar thickness = Scalar(-1), GeometryApproxType approx = GeometryApproxType::AUTO);
+        Polyhedron(std::string_view uniqueName, PhysicsSettings phy, 
+                   std::string_view graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
+                   std::string_view physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
+                   std::string_view material, std::string_view look, Scalar thickness = Scalar(-1), GeometryApproxType approx = GeometryApproxType::AUTO);
         
         //! A constructor.
         /*!
@@ -65,8 +65,8 @@ namespace sf
          \param thickness defines the thickness of the model walls, if higher than zero the mesh is considered a shell
          \param approx defines what type of approximation of the body shape should be used in the fluid dynamics computation
          */
-        Polyhedron(const std::string& uniqueName, PhysicsSettings phy, const std::string& modelFilename, Scalar scale, const Transform& origin,
-                   const std::string& material, const std::string& look, Scalar thickness = Scalar(-1), GeometryApproxType approx =  GeometryApproxType::AUTO);
+        Polyhedron(std::string_view uniqueName, PhysicsSettings phy, std::string_view modelFilename, Scalar scale, const Transform& origin,
+                   std::string_view material, std::string_view look, Scalar thickness = Scalar(-1), GeometryApproxType approx =  GeometryApproxType::AUTO);
         
         //! A method that returns the type of solid.
         SolidType GetSolidType() const;

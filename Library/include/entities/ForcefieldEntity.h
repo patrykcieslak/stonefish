@@ -41,7 +41,7 @@ namespace sf
         /*!
          \param uniqueName a name for the force field
          */
-        ForcefieldEntity(const std::string& uniqueName);
+        ForcefieldEntity(std::string_view uniqueName);
         
         //! A destructor.
         virtual ~ForcefieldEntity() = default;

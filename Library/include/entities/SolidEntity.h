@@ -56,7 +56,7 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param thickness if positive the body is considered a shell instead of a solid
          */
-        SolidEntity(const std::string& uniqueName, PhysicsSettings phy, const std::string& material, const std::string& look, Scalar thickness);
+        SolidEntity(std::string_view uniqueName, PhysicsSettings phy, std::string_view material, std::string_view look, Scalar thickness);
         
         //! A destructor.
         virtual ~SolidEntity();

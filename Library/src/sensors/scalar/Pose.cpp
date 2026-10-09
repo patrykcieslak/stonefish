@@ -31,7 +31,7 @@
 namespace sf
 {
 
-Pose::Pose(const std::string& uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Pose::Pose(std::string_view uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels_.push_back(SensorChannel("Coordinate X", QuantityType::LENGTH));
     channels_.push_back(SensorChannel("Coordinate Y", QuantityType::LENGTH));

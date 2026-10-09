@@ -51,7 +51,7 @@ namespace sf
          \param outputFormat the output format of the sensor data
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated based on maximum range)
          */
-        MSIS(const std::string& uniqueName, Scalar stepAngleDeg, unsigned int numOfBins, Scalar horizontalBeamWidthDeg, Scalar verticalBeamWidthDeg,
+        MSIS(std::string_view uniqueName, Scalar stepAngleDeg, unsigned int numOfBins, Scalar horizontalBeamWidthDeg, Scalar verticalBeamWidthDeg,
              Scalar minRotationDeg, Scalar maxRotationDeg, Scalar minRange, Scalar maxRange,
              SonarOutputFormat outputFormat = SonarOutputFormat::U8, Scalar frequency = Scalar(-1));
         
@@ -180,7 +180,7 @@ namespace sf
         /*!
          \param info a construction info structure
         */
-        static std::unique_ptr<MSIS> Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info);
+        static std::unique_ptr<MSIS> Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info);
         
     private:
         void InitGraphics(bool& seesParticles);

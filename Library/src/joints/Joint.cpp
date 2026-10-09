@@ -32,7 +32,7 @@
 namespace sf
 {
 
-Joint::Joint(const std::string& uniqueName, bool collideLinkedEntities)
+Joint::Joint(std::string_view uniqueName, bool collideLinkedEntities)
 {
     name_ = SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->AddName(uniqueName);
     collisionEnabled_ = collideLinkedEntities;

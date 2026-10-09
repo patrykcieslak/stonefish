@@ -43,7 +43,7 @@ namespace sf
          \param velocityGain a gain factor used in velocity control
          \param maxTorque the maximum torque that the motor can generate [Nm]
          */
-        Servo(const std::string& uniqueName, Scalar positionGain, Scalar velocityGain, Scalar maxTorque);
+        Servo(std::string_view uniqueName, Scalar positionGain, Scalar velocityGain, Scalar maxTorque);
         
         //! A method used to attach the actuator to the specified joint of a rigid multibody.
         /*!
@@ -119,7 +119,7 @@ namespace sf
         /*!
          \param info a construction info structure
         */
-        static std::unique_ptr<Servo> Construct(const std::string& uniqueName, ConstructInfo& info);
+        static std::unique_ptr<Servo> Construct(std::string_view uniqueName, ConstructInfo& info);
         
     private:
         void WatchdogTimeout() override;

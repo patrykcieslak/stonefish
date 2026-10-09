@@ -272,8 +272,8 @@ namespace sf
          \param albedoTexturePath a path to the texture file specifying albedo color
          \return the actual name of the created look
          */
-        std::string CreateSimpleLook(const std::string& name, glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, 
-            GLfloat reflectivity = 0.f, const std::string& albedoTexturePath = "");
+        std::string CreateSimpleLook(std::string_view name, glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, 
+            GLfloat reflectivity = 0.f, std::string_view albedoTexturePath = "");
         
         //! A method to create a new physical look.
         /*!
@@ -288,9 +288,9 @@ namespace sf
          \param temperatureRange a pair of values specifying the temperature range represented by the thermal map
          \return the actual name of the created look
          */
-        std::string CreatePhysicalLook(const std::string& name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness = 0.f, 
-            GLfloat reflectivity = 0.f, const std::string& albedoTexturePath = "", const std::string& normalMapPath = "", 
-            const std::string& temperatureMapPath = "", glm::vec2 temperatureRange = glm::vec2(20.f));
+        std::string CreatePhysicalLook(std::string_view name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness = 0.f, 
+            GLfloat reflectivity = 0.f, std::string_view albedoTexturePath = "", std::string_view normalMapPath = "", 
+            std::string_view temperatureMapPath = "", glm::vec2 temperatureRange = glm::vec2(20.f));
         
         //! A method to use a look.
         /*!
@@ -335,7 +335,7 @@ namespace sf
          \param name the name of the look
          \return the id of the corresponding look structure
          */
-        int GetLookId(const std::string& name);
+        int GetLookId(std::string_view name);
 
         //! A method returning a reference to the object structure.
         /*!
@@ -358,7 +358,7 @@ namespace sf
          \param internal a flag to indicate if the texture is an internal resource
          \return the id of the loaded texture
          */
-        static GLuint LoadTexture(const std::string& filename, bool srgb = true, bool alpha = false, 
+        static GLuint LoadTexture(std::string_view filename, bool srgb = true, bool alpha = false, 
             GLfloat anisotropy = 0.f, bool internal = false);
         
         //! A static method to load an internal texture.
@@ -369,7 +369,7 @@ namespace sf
          \param anisotropy defines maximum anisotropic filtering
          \return the id of the loaded texture
          */
-        static GLuint LoadInternalTexture(const std::string& filename, bool srgb = true, bool alpha = false, 
+        static GLuint LoadInternalTexture(std::string_view filename, bool srgb = true, bool alpha = false, 
             GLfloat anisotropy = 0.f);
         
         //! A static method to generate a new texture.
@@ -402,7 +402,7 @@ namespace sf
          \param smooth a flag to decide if model normals should be smoothed after loading
          \return a pointer to the allocated mesh structure
          */
-        static std::unique_ptr<Mesh> LoadMesh(const std::string& filename, GLfloat scale, bool smooth);
+        static std::unique_ptr<Mesh> LoadMesh(std::string_view filename, GLfloat scale, bool smooth);
         
         //! A static method to build a graphical plane object.
         /*!

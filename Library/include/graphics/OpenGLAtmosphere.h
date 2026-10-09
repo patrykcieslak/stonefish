@@ -68,7 +68,7 @@ namespace sf
          \param modelFilename a path to the atmosphere model file
          \param shadow a rendering quality od the shadow
          */
-        OpenGLAtmosphere(const std::string& modelFilename, RenderQuality shadow);
+        OpenGLAtmosphere(std::string_view modelFilename, RenderQuality shadow);
         
         //! A destructor.
         ~OpenGLAtmosphere();
@@ -77,7 +77,7 @@ namespace sf
         /*!
          \param filename a path to the model data file
          */
-        void LoadAtmosphereData(const std::string& filename);
+        void LoadAtmosphereData(std::string_view filename);
         
         //! A method that draws the sky and sun.
         /*!

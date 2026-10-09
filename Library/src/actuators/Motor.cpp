@@ -32,7 +32,7 @@
 namespace sf
 {
 
-Motor::Motor(const std::string& uniqueName) : JointActuator(uniqueName)
+Motor::Motor(std::string_view uniqueName) : JointActuator(uniqueName)
 {
     torque_ = Scalar(0);
     SetTorqueLimit(-1); // No limit
@@ -134,7 +134,7 @@ ConstructInfo Motor::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<Motor> Motor::Construct(const std::string& uniqueName, ConstructInfo& info)
+std::unique_ptr<Motor> Motor::Construct(std::string_view uniqueName, ConstructInfo& info)
 {
     // Optional
     Scalar maxTorque(-1.);

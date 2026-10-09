@@ -34,7 +34,7 @@
 namespace sf
 {
 
-EventBasedCamera::EventBasedCamera(const std::string& uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, 
+EventBasedCamera::EventBasedCamera(std::string_view uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, 
     float Cp, float Cm, uint32_t Tref, Scalar frequency, Scalar near, Scalar far) 
     : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
 {
@@ -178,7 +178,7 @@ ConstructInfo EventBasedCamera::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<EventBasedCamera> EventBasedCamera::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+std::unique_ptr<EventBasedCamera> EventBasedCamera::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
 {
     // Specs
     int resolutionX = std::get<int>(info.nodes.at("specs").attributes.at("resolution_x").value);

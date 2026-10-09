@@ -45,7 +45,7 @@ namespace sf
          \param material the name of the material the entity is made of
          \param look the name of the graphical material used for rendering
          */
-        StaticEntity(const std::string& uniqueName, const std::string& material, const std::string& look);
+        StaticEntity(std::string_view uniqueName, std::string_view material, std::string_view look);
         
         //! A destructor.
         virtual ~StaticEntity() = default;

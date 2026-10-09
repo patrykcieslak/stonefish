@@ -40,7 +40,7 @@ namespace sf
          \param uniqueName a name for the robot
          \param fixedBase is the robot fixed to the world?
          */
-        FeatherstoneRobot(const std::string& uniqueName, bool fixedBase = false);
+        FeatherstoneRobot(std::string_view uniqueName, bool fixedBase = false);
         
         //! A method used to define a list of rigid bodies constituting the mechanical part of the robot (dynamic tree).
         /*!
@@ -58,16 +58,16 @@ namespace sf
          \param s a pointer to a joint sensor object
          \param monitoredJointName a name of the joint at which the sensor is attached
          */
-        JointSensor* AddJointSensor(std::unique_ptr<Sensor> s, const std::string& monitoredJointName) override;
-        JointSensor* AddJointSensor(std::unique_ptr<Sensor, SensorDeleter> s, const std::string& monitoredJointName) override;
+        JointSensor* AddJointSensor(std::unique_ptr<Sensor> s, std::string_view monitoredJointName) override;
+        JointSensor* AddJointSensor(std::unique_ptr<Sensor, SensorDeleter> s, std::string_view monitoredJointName) override;
 
         //! A method used to attach an actuator to a specified joint of the robot.
         /*!
          \param a a pointer to a joint actuator object
          \param actuatedJointName a name of the joint which is to be driven
          */
-        JointActuator* AddJointActuator(std::unique_ptr<Actuator> a, const std::string& actuatedJointName) override;
-        JointActuator* AddJointActuator(std::unique_ptr<Actuator, ActuatorDeleter> a, const std::string& actuatedJointName) override;
+        JointActuator* AddJointActuator(std::unique_ptr<Actuator> a, std::string_view actuatedJointName) override;
+        JointActuator* AddJointActuator(std::unique_ptr<Actuator, ActuatorDeleter> a, std::string_view actuatedJointName) override;
 
         //! A method used to attach an actuator to a specified link of the robot.
         /*!
@@ -75,8 +75,8 @@ namespace sf
          \param actuatedLinkName a name of the link which is to be actuated
          \param origin a transformation from the link origin to the actuator frame
          */
-        LinkActuator* AddLinkActuator(std::unique_ptr<Actuator> a, const std::string& actuatedLinkName, const Transform& origin) override;
-        LinkActuator* AddLinkActuator(std::unique_ptr<Actuator, ActuatorDeleter> a, const std::string& actuatedLinkName, const Transform& origin) override;
+        LinkActuator* AddLinkActuator(std::unique_ptr<Actuator> a, std::string_view actuatedLinkName, const Transform& origin) override;
+        LinkActuator* AddLinkActuator(std::unique_ptr<Actuator, ActuatorDeleter> a, std::string_view actuatedLinkName, const Transform& origin) override;
 
         //! A method adding the robot to the simulation world (includes consistency checking).
         /*!
@@ -100,7 +100,7 @@ namespace sf
          \param lname the name of the link
          \return index of the link
         */
-        int GetLinkIndex(const std::string& lname) const;
+        int GetLinkIndex(std::string_view lname) const;
 
         //! A method returning type of algorithm used for the robot.
         RobotType GetType() const;
@@ -109,7 +109,7 @@ namespace sf
         FeatherstoneEntity* GetDynamics();
 
     private:
-        int GetJoint(const std::string& jname);
+        int GetJoint(std::string_view jname);
 
         FeatherstoneEntity* dynamics_;
     };

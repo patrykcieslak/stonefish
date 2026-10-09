@@ -33,7 +33,7 @@
 namespace sf
 {
 
-Pressure::Pressure(const std::string& uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Pressure::Pressure(std::string_view uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels_.push_back(SensorChannel("Pressure", QuantityType::PRESSURE));
 }
@@ -88,7 +88,7 @@ ConstructInfo Pressure::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<Pressure> Pressure::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+std::unique_ptr<Pressure> Pressure::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
 {
     // History (optional)
     int history = -1;

@@ -44,7 +44,7 @@ namespace sf
          \param maxAngle the maximum angle of the rudder [rad]
          \param inverted a flag to indicate if the setpoint is inverted (positive value results in left-handed rotation)
         */
-        Rudder(const std::string& uniqueName, std::unique_ptr<SolidEntity> rudder, Scalar area, Scalar liftCoeff, Scalar dragCoeff, Scalar stallAngle, 
+        Rudder(std::string_view uniqueName, std::unique_ptr<SolidEntity> rudder, Scalar area, Scalar liftCoeff, Scalar dragCoeff, Scalar stallAngle, 
             Scalar maxAngle, bool inverted = false, Scalar maxAngularRate = Scalar(0));
         
         //! A method used to update the internal state of the rudder.
@@ -78,7 +78,7 @@ namespace sf
         /*!
          \param info a construction info structure
         */
-        static std::unique_ptr<Rudder> Construct(const std::string& uniqueName, ConstructInfo& info);
+        static std::unique_ptr<Rudder> Construct(std::string_view uniqueName, ConstructInfo& info);
         
     private:
         //Params

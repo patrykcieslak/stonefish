@@ -130,7 +130,7 @@ namespace sf
      \param scale a scale to apply to the data
      \return a pointer to an allocated mesh structure
      */
-    std::unique_ptr<Mesh> LoadGeometryFromFile(const std::string& path, GLfloat scale);
+    std::unique_ptr<Mesh> LoadGeometryFromFile(std::string_view path, GLfloat scale);
     
     //! A function to load geometry from a STL file.
     /*!
@@ -138,7 +138,7 @@ namespace sf
      \param scale a scale to apply to the data
      \return a pointer to an allocated mesh structure
      */
-    std::unique_ptr<Mesh> LoadSTL(const std::string& path, GLfloat scale);
+    std::unique_ptr<Mesh> LoadSTL(std::string_view path, GLfloat scale);
     
     //! A function to load geometry from an OBJ file.
     /*!
@@ -146,7 +146,7 @@ namespace sf
      \param scale a scale to apply to the data
      \return a pointer to an allocated mesh structure
      */
-    std::unique_ptr<Mesh> LoadOBJ(const std::string& path, GLfloat scale);
+    std::unique_ptr<Mesh> LoadOBJ(std::string_view path, GLfloat scale);
 
     //! A function to compute all physical properties of a mesh.
     /*!

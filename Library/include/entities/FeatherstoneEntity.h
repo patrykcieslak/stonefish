@@ -61,7 +61,7 @@ namespace sf
          \param p the id of the parent link
          \param c the id of the child link
          */
-        FeatherstoneJoint(const std::string& n, btMultibodyLink::eFeatherstoneJointType t, size_t p, size_t c)
+        FeatherstoneJoint(std::string_view n, btMultibodyLink::eFeatherstoneJointType t, size_t p, size_t c)
         : name(n), type(t), parent(p), child(c), sigDamping(0), velDamping(0), lowerLimit(10e9), upperLimit(-10e9) {}
         
         std::string name;
@@ -91,7 +91,7 @@ namespace sf
          \param baseSolid a pointer to the rigid body constituting the base of the multibody
          \param fixedBase a flag to designate if the multibody is fixed to the world or mobile
          */
-        FeatherstoneEntity(const std::string& uniqueName, size_t totalNumOfLinks, std::unique_ptr<SolidEntity> baseSolid, bool fixedBase = false);
+        FeatherstoneEntity(std::string_view uniqueName, size_t totalNumOfLinks, std::unique_ptr<SolidEntity> baseSolid, bool fixedBase = false);
 
         //! A method to define a new multibody link.
         /*!
@@ -110,7 +110,7 @@ namespace sf
          \param collide a flag to decide if the links connected by the joint should collide
          \return id of the joint
          */
-        int AddRevoluteJoint(const std::string& name, size_t parent, size_t child, const Vector3& pivot, const Vector3& axis, bool collide = false);
+        int AddRevoluteJoint(std::string_view name, size_t parent, size_t child, const Vector3& pivot, const Vector3& axis, bool collide = false);
         
         //! A method to define a new prismatic joint.
         /*!
@@ -121,7 +121,7 @@ namespace sf
          \param collide a flag to decide if the links conneted by the joint should collide
          \return id of the joint
          */
-        int AddPrismaticJoint(const std::string& name, size_t parent, size_t child, const Vector3& axis, bool collide = false);
+        int AddPrismaticJoint(std::string_view name, size_t parent, size_t child, const Vector3& axis, bool collide = false);
         
         //! A method to define a new fixed joint.
         /*!
@@ -131,7 +131,7 @@ namespace sf
          \param pivot the position of the joint pivot point
          \return id of the joint
          */
-        int AddFixedJoint(const std::string& name, size_t parent, size_t child, const Vector3& pivot);
+        int AddFixedJoint(std::string_view name, size_t parent, size_t child, const Vector3& pivot);
         
         //! A Method to add a joint motor.
         /*!

@@ -31,7 +31,7 @@ namespace sf
 class LinkSensorPlugin : public LinkSensor
 {
 public:
-    LinkSensorPlugin(const std::string& uniqueName, Scalar frequency, int historyLength);
+    LinkSensorPlugin(std::string_view uniqueName, Scalar frequency, int historyLength);
 
     ~LinkSensorPlugin() override;
 
@@ -44,7 +44,7 @@ extern "C"
 {
     Sensor* create(const char* uniqueName, Scalar frequency)
     {
-        return new LinkSensorPlugin(std::string(uniqueName), frequency, -1);
+        return new LinkSensorPlugin(uniqueName, frequency, -1);
     }
 
     void destroy(Sensor* sensor) 

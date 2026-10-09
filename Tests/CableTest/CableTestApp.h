@@ -31,7 +31,7 @@
 class CableTestApp : public sf::GraphicalSimulationApp
 {
 public:
-    CableTestApp(const std::string& dataDirPath, sf::RenderSettings s, sf::HelperSettings h, std::unique_ptr<CableTestManager> sim);
+    CableTestApp(std::string_view dataDirPath, sf::RenderSettings s, sf::HelperSettings h, std::unique_ptr<CableTestManager> sim);
     
     void DoHUD();
 };

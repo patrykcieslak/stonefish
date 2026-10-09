@@ -30,7 +30,7 @@
 namespace sf
 {
 
-RealUSBL::RealUSBL(const std::string& uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange,
+RealUSBL::RealUSBL(std::string_view uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange,
              Scalar carrierFrequency, Scalar baseline) 
            : USBL(uniqueName, deviceId, minVerticalFOVDeg, maxVerticalFOVDeg, operatingRange)
 {
@@ -162,7 +162,7 @@ ConstructInfo RealUSBL::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<RealUSBL> RealUSBL::Construct(const std::string& uniqueName, uint64_t deviceId, ConstructInfo& info)
+std::unique_ptr<RealUSBL> RealUSBL::Construct(std::string_view uniqueName, uint64_t deviceId, ConstructInfo& info)
 {
     // Required
     Scalar minVerticalFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("min_vertical_fov").value);

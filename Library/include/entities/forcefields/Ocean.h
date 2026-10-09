@@ -52,7 +52,7 @@ namespace sf
          \param waves the state of the ocean (waves enabled when >0)
          \param l a pointer to the liquid that is filling the ocean (normally water)
          */
-        Ocean(const std::string& uniqueName, Scalar waves, Fluid l);
+        Ocean(std::string_view uniqueName, Scalar waves, Fluid l);
 
         //! A method to set the environmental conditions.
         /*!

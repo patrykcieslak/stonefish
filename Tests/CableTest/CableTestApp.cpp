@@ -31,7 +31,7 @@
 #include <core/Robot.h>
 #include <entities/forcefields/Uniform.h>
 
-CableTestApp::CableTestApp(const std::string& dataDirPath, sf::RenderSettings s, sf::HelperSettings h, std::unique_ptr<CableTestManager> sim)
+CableTestApp::CableTestApp(std::string_view dataDirPath, sf::RenderSettings s, sf::HelperSettings h, std::unique_ptr<CableTestManager> sim)
     : sf::GraphicalSimulationApp("CableTest", dataDirPath, s, h, std::move(sim))
 {
 }

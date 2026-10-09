@@ -33,10 +33,10 @@
 namespace sf
 {
 
-Polyhedron::Polyhedron(const std::string& uniqueName, PhysicsSettings phy, 
-                       const std::string& graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
-                       const std::string& physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
-                       const std::string& material, const std::string& look, Scalar thickness, GeometryApproxType approx)
+Polyhedron::Polyhedron(std::string_view uniqueName, PhysicsSettings phy, 
+                       std::string_view graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
+                       std::string_view physicsFilename, Scalar physicsScale, const Transform& physicsOrigin,
+                       std::string_view material, std::string_view look, Scalar thickness, GeometryApproxType approx)
                         : SolidEntity(uniqueName, phy, material, look, thickness)
 {
     //1.Load geometry from file
@@ -71,9 +71,9 @@ Polyhedron::Polyhedron(const std::string& uniqueName, PhysicsSettings phy,
     P_CB_ = Vector3(0,0,0);
 }
     
-Polyhedron::Polyhedron(const std::string& uniqueName, PhysicsSettings phy, 
-                       const std::string& modelFilename, Scalar scale, const Transform& origin,
-                       const std::string& material, const std::string& look, Scalar thickness, GeometryApproxType approx)
+Polyhedron::Polyhedron(std::string_view uniqueName, PhysicsSettings phy, 
+                       std::string_view modelFilename, Scalar scale, const Transform& origin,
+                       std::string_view material, std::string_view look, Scalar thickness, GeometryApproxType approx)
                         : Polyhedron(uniqueName, phy, modelFilename, scale, origin, "", scale, origin, material, look, thickness, approx)
 {
 }

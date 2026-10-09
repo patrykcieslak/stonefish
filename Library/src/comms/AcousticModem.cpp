@@ -35,7 +35,7 @@
 namespace sf
 {
  
-AcousticModem::AcousticModem(const std::string& uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange)
+AcousticModem::AcousticModem(std::string_view uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange)
     : Comm(uniqueName, deviceId)
 {
     btClamp(maxVerticalFOVDeg, Scalar(0), Scalar(360));
@@ -437,7 +437,7 @@ ConstructInfo AcousticModem::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<AcousticModem> AcousticModem::Construct(const std::string& uniqueName, uint64_t deviceId, ConstructInfo& info)
+std::unique_ptr<AcousticModem> AcousticModem::Construct(std::string_view uniqueName, uint64_t deviceId, ConstructInfo& info)
 {
     // Required
     Scalar minVerticalFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("min_vertical_fov").value);

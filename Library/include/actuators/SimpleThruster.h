@@ -39,7 +39,7 @@ namespace sf
          \param propeller a pointer to a rigid body representing the propeller
          \param rightHand a flag to indicate if the propeller is right hand (clockwise rotation)
         */
-        SimpleThruster(const std::string& uniqueName, std::unique_ptr<SolidEntity> propeller, bool rightHand, bool inverted = false);
+        SimpleThruster(std::string_view uniqueName, std::unique_ptr<SolidEntity> propeller, bool rightHand, bool inverted = false);
         
         //! A method used to update the internal state of the thruster.
         /*!
@@ -86,7 +86,7 @@ namespace sf
         /*!
          \param info a construction info structure
         */
-        static std::unique_ptr<SimpleThruster> Construct(const std::string& uniqueName, ConstructInfo& info);
+        static std::unique_ptr<SimpleThruster> Construct(std::string_view uniqueName, ConstructInfo& info);
         
     private:
         void WatchdogTimeout() override;

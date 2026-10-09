@@ -81,7 +81,7 @@ GLSLShader::GLSLShader(const std::vector<GLuint>& precompiled)
         valid_ = true;
 }
 
-GLSLShader::GLSLShader(const std::string& fragment, const std::string& vertex)
+GLSLShader::GLSLShader(std::string_view fragment, std::string_view vertex)
 {
     valid_ = false;
     GLint compiled = 0;
@@ -125,14 +125,14 @@ void GLSLShader::Use()
 #endif
 }
 
-bool GLSLShader::AddAttribute(const std::string& name, ParameterType type)
+bool GLSLShader::AddAttribute(std::string_view name, ParameterType type)
 {
     GLSLAttribute att;
     att.name = name;
     att.type = type;
     
     Use();
-    att.index = glGetAttribLocation(program_, name.c_str());
+    att.index = glGetAttribLocation(program_, std::string(name).c_str());
     OpenGLState::UseProgram(0);
     
     if(att.index < 0)
@@ -142,20 +142,20 @@ bool GLSLShader::AddAttribute(const std::string& name, ParameterType type)
     return true;
 }
 
-bool GLSLShader::AddUniform(const std::string& name, ParameterType type)
+bool GLSLShader::AddUniform(std::string_view name, ParameterType type)
 {
     GLSLUniform uni;
     uni.name = name;
     uni.type = type;
     
     Use();
-    uni.location = glGetUniformLocation(program_, name.c_str());
+    uni.location = glGetUniformLocation(program_, std::string(name).c_str());
     OpenGLState::UseProgram(0);
     
     if(uni.location < 0)
     {
 #ifdef DEBUG
-        //cError("Uniform '%s' doesn't exist!", name.c_str());
+        //cError("Uniform '%s' doesn't exist!", std::string(name).c_str());
 #endif
         return false;
     }
@@ -164,7 +164,7 @@ bool GLSLShader::AddUniform(const std::string& name, ParameterType type)
     return true;
 }
 
-bool GLSLShader::SetAttribute(const std::string& name, GLfloat x)
+bool GLSLShader::SetAttribute(std::string_view name, GLfloat x)
 {
     GLint index = 0;
     bool success = GetAttribute(name, FLOAT, index);
@@ -175,7 +175,7 @@ bool GLSLShader::SetAttribute(const std::string& name, GLfloat x)
     return success;
 }
 
-bool GLSLShader::SetUniform(const std::string& name, bool x)
+bool GLSLShader::SetUniform(std::string_view name, bool x)
 {
     GLint location = 0;
     bool success = GetUniform(name, BOOLEAN, location);
@@ -186,7 +186,7 @@ bool GLSLShader::SetUniform(const std::string& name, bool x)
     return success;
 }
 
-bool GLSLShader::SetUniform(const std::string& name, GLfloat x)
+bool GLSLShader::SetUniform(std::string_view name, GLfloat x)
 {
     GLint location = 0;
     bool success = GetUniform(name, FLOAT, location);
@@ -197,7 +197,7 @@ bool GLSLShader::SetUniform(const std::string& name, GLfloat x)
     return success;
 }
 
-bool GLSLShader::SetUniform(const std::string& name, glm::vec2 x)
+bool GLSLShader::SetUniform(std::string_view name, glm::vec2 x)
 {
     GLint location = 0;
     bool success = GetUniform(name, VEC2, location);
@@ -208,7 +208,7 @@ bool GLSLShader::SetUniform(const std::string& name, glm::vec2 x)
     return success;
 }
 
-bool GLSLShader::SetUniform(const std::string& name, glm::vec3 x)
+bool GLSLShader::SetUniform(std::string_view name, glm::vec3 x)
 {
     GLint location = 0;
     bool success = GetUniform(name, VEC3, location);
@@ -219,7 +219,7 @@ bool GLSLShader::SetUniform(const std::string& name, glm::vec3 x)
     return success;
 }
 
-bool GLSLShader::SetUniform(const std::string& name, glm::vec4 x)
+bool GLSLShader::SetUniform(std::string_view name, glm::vec4 x)
 {
     GLint location = 0;
     bool success = GetUniform(name, VEC4, location);
@@ -230,7 +230,7 @@ bool GLSLShader::SetUniform(const std::string& name, glm::vec4 x)
     return success;
 }
 
-bool GLSLShader::SetUniform(const std::string& name, GLuint x)
+bool GLSLShader::SetUniform(std::string_view name, GLuint x)
 {
     GLint location = 0;
     bool success = GetUniform(name, UINT, location);
@@ -241,7 +241,7 @@ bool GLSLShader::SetUniform(const std::string& name, GLuint x)
     return success;
 }
 
-bool GLSLShader::SetUniform(const std::string& name, GLint x)
+bool GLSLShader::SetUniform(std::string_view name, GLint x)
 {
     GLint location = 0;
     bool success = GetUniform(name, INT, location);
@@ -252,7 +252,7 @@ bool GLSLShader::SetUniform(const std::string& name, GLint x)
     return success;
 }
 
-bool GLSLShader::SetUniform(const std::string& name, glm::ivec2 x)
+bool GLSLShader::SetUniform(std::string_view name, glm::ivec2 x)
 {
     GLint location = 0;
     bool success = GetUniform(name, IVEC2, location);
@@ -263,7 +263,7 @@ bool GLSLShader::SetUniform(const std::string& name, glm::ivec2 x)
     return success;
 }
 
-bool GLSLShader::SetUniform(const std::string& name, glm::ivec3 x)
+bool GLSLShader::SetUniform(std::string_view name, glm::ivec3 x)
 {
     GLint location = 0;
     bool success = GetUniform(name, IVEC3, location);
@@ -274,7 +274,7 @@ bool GLSLShader::SetUniform(const std::string& name, glm::ivec3 x)
     return success;
 }
 
-bool GLSLShader::SetUniform(const std::string& name, glm::ivec4 x)
+bool GLSLShader::SetUniform(std::string_view name, glm::ivec4 x)
 {
     GLint location = 0;
     bool success = GetUniform(name, IVEC4, location);
@@ -285,7 +285,7 @@ bool GLSLShader::SetUniform(const std::string& name, glm::ivec4 x)
     return success;
 }
 
-bool GLSLShader::SetUniform(const std::string& name, glm::uvec2 x)
+bool GLSLShader::SetUniform(std::string_view name, glm::uvec2 x)
 {
     GLint location = 0;
     bool success = GetUniform(name, UVEC2, location);
@@ -296,7 +296,7 @@ bool GLSLShader::SetUniform(const std::string& name, glm::uvec2 x)
     return success;
 }
 
-bool GLSLShader::SetUniform(const std::string& name, glm::uvec3 x)
+bool GLSLShader::SetUniform(std::string_view name, glm::uvec3 x)
 {
     GLint location = 0;
     bool success = GetUniform(name, UVEC3, location);
@@ -307,7 +307,7 @@ bool GLSLShader::SetUniform(const std::string& name, glm::uvec3 x)
     return success;
 }
 
-bool GLSLShader::SetUniform(const std::string& name, glm::uvec4 x)
+bool GLSLShader::SetUniform(std::string_view name, glm::uvec4 x)
 {
     GLint location = 0;
     bool success = GetUniform(name, UVEC4, location);
@@ -318,7 +318,7 @@ bool GLSLShader::SetUniform(const std::string& name, glm::uvec4 x)
     return success;
 }
 
-bool GLSLShader::SetUniform(const std::string& name, glm::mat3 x)
+bool GLSLShader::SetUniform(std::string_view name, glm::mat3 x)
 {
     GLint location = 0;
     bool success = GetUniform(name, MAT3, location);
@@ -329,7 +329,7 @@ bool GLSLShader::SetUniform(const std::string& name, glm::mat3 x)
     return success;
 }
 
-bool GLSLShader::SetUniform(const std::string& name, glm::mat4 x)
+bool GLSLShader::SetUniform(std::string_view name, glm::mat4 x)
 {
     GLint location = 0;
     bool success = GetUniform(name, MAT4, location);
@@ -340,7 +340,7 @@ bool GLSLShader::SetUniform(const std::string& name, glm::mat4 x)
     return success;
 }
 
-bool GLSLShader::GetUniform(const std::string& name, ParameterType type, GLint& location)
+bool GLSLShader::GetUniform(std::string_view name, ParameterType type, GLint& location)
 {
     auto it = std::find_if(uniforms_.begin(), uniforms_.end(), [&name](const GLSLUniform& u) { return u.name == name; });
     if(it != uniforms_.end())
@@ -353,17 +353,17 @@ bool GLSLShader::GetUniform(const std::string& name, ParameterType type, GLint& 
         else
         {
 #ifdef DEBUG
-            cError("Uniform %s doesn't exist! Mismatched type!", name.c_str());
+            cError("Uniform %s doesn't exist! Mismatched type!", std::string(name).c_str());
 #endif
             return false;
         }
     }
     
-    //cError("Uniform %s doesn't exist!", name.c_str());
+    //cError("Uniform %s doesn't exist!", std::string(name).c_str());
     return false;
 }
 
-bool GLSLShader::GetAttribute(const std::string& name, ParameterType type, GLint& index)
+bool GLSLShader::GetAttribute(std::string_view name, ParameterType type, GLint& index)
 {
     auto it = std::find_if(attributes_.begin(), attributes_.end(), [&name](const GLSLAttribute& a) { return a.name == name; });
     if(it != attributes_.end())
@@ -380,9 +380,9 @@ bool GLSLShader::GetAttribute(const std::string& name, ParameterType type, GLint
     return false;
 }
 
-bool GLSLShader::BindUniformBlock(const std::string& name, GLuint bindingPoint)
+bool GLSLShader::BindUniformBlock(std::string_view name, GLuint bindingPoint)
 {
-    GLuint blockIndex = glGetUniformBlockIndex(program_, name.c_str());
+    GLuint blockIndex = glGetUniformBlockIndex(program_, std::string(name).c_str());
     if(blockIndex != GL_INVALID_INDEX)
     {
         glUniformBlockBinding(program_, blockIndex, bindingPoint);
@@ -391,15 +391,15 @@ bool GLSLShader::BindUniformBlock(const std::string& name, GLuint bindingPoint)
     else
     {
 #ifdef DEBUG
-        cError("Uniform block %s not found in program!", name.c_str());
+        cError("Uniform block %s not found in program!", std::string(name).c_str());
 #endif
         return false;
     }
 }
 
-bool GLSLShader::BindShaderStorageBlock(const std::string& name, GLuint bindingPoint)
+bool GLSLShader::BindShaderStorageBlock(std::string_view name, GLuint bindingPoint)
 {
-    GLuint blockIndex = glGetProgramResourceIndex(program_, GL_SHADER_STORAGE_BLOCK, name.c_str());
+    GLuint blockIndex = glGetProgramResourceIndex(program_, GL_SHADER_STORAGE_BLOCK, std::string(name).c_str());
     if(blockIndex != GL_INVALID_INDEX)
     {
         glShaderStorageBlockBinding(program_, blockIndex, bindingPoint);
@@ -408,7 +408,7 @@ bool GLSLShader::BindShaderStorageBlock(const std::string& name, GLuint bindingP
     else
     {
 #ifdef DEBUG
-        cError("Shader storage block %s not found in program!", name.c_str());
+        cError("Shader storage block %s not found in program!", std::string(name).c_str());
 #endif
         return false;
     }
@@ -439,10 +439,10 @@ void GLSLShader::Verbose()
     verbose = true;
 }
 
-GLuint GLSLShader::LoadShader(GLenum shaderType, const std::string& filename, const std::string& header, GLint *shaderCompiled)
+GLuint GLSLShader::LoadShader(GLenum shaderType, std::string_view filename, std::string_view header, GLint *shaderCompiled)
 {
     GLuint shader = 0;
-    std::string sourcePath = GetShaderPath() + filename;
+    std::string sourcePath = GetShaderPath() + std::string(filename);
 #ifdef EMBEDDED_RESOURCES
     ResourceHandle rh(sourcePath);
     if(!rh.isValid())
@@ -465,7 +465,7 @@ GLuint GLSLShader::LoadShader(GLenum shaderType, const std::string& filename, co
     if(verbose)
         cInfo("Loading shader from: %s", sourcePath.c_str());
 #endif
-    std::string source = header + "\n";
+    std::string source = std::string(header) + "\n";
     std::string line;
     while(!sourceBuf.eof())
     {

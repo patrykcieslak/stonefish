@@ -58,7 +58,7 @@ namespace sf
          \param uniqueName a name for the comm device
          \param deviceId an identification code of the device
          */
-        Comm(const std::string& uniqueName, uint64_t deviceId);
+        Comm(std::string_view uniqueName, uint64_t deviceId);
         
         //! A destructor.
         virtual ~Comm();
@@ -73,7 +73,7 @@ namespace sf
         /*!
          \param data the data to be sent
          */
-        virtual void SendMessage(const std::string& data);
+        virtual void SendMessage(std::string_view data);
         virtual void SendMessage(const std::vector<uint8_t>& data);
         
         //! A method to read received data frames. 

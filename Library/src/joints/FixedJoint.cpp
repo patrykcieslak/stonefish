@@ -35,7 +35,7 @@
 namespace sf
 {
 
-FixedJoint::FixedJoint(const std::string& uniqueName, SolidEntity* solid) 
+FixedJoint::FixedJoint(std::string_view uniqueName, SolidEntity* solid) 
     : Joint(uniqueName, false)
 {
     btRigidBody* body = solid->GetRigidBody();
@@ -53,7 +53,7 @@ FixedJoint::FixedJoint(const std::string& uniqueName, SolidEntity* solid)
     cInfo("Fixed joint created between the world and '%s'.", jSolidB_->GetName().c_str());
 }
 
-FixedJoint::FixedJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB) 
+FixedJoint::FixedJoint(std::string_view uniqueName, SolidEntity* solidA, SolidEntity* solidB) 
     : Joint(uniqueName, false)
 {
     btRigidBody* bodyA = solidA->GetRigidBody();
@@ -70,7 +70,7 @@ FixedJoint::FixedJoint(const std::string& uniqueName, SolidEntity* solidA, Solid
     cInfo("Fixed joint created between '%s' and '%s'.", jSolidA_->GetName().c_str(), jSolidB_->GetName().c_str());
 }
 
-FixedJoint::FixedJoint(const std::string& uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId) 
+FixedJoint::FixedJoint(std::string_view uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId) 
     : Joint(uniqueName, false)
 {
     Transform linkTransform = fe->GetLinkTransform(linkId+1);
@@ -94,7 +94,7 @@ FixedJoint::FixedJoint(const std::string& uniqueName, SolidEntity* solid, Feathe
     cInfo("Fixed joint created between '%s' and '%s'.", jSolidA_->GetName().c_str(), jSolidB_->GetName().c_str());
 }
 
-FixedJoint::FixedJoint(const std::string& uniqueName, FeatherstoneEntity* feA, FeatherstoneEntity* feB, int linkIdA, int linkIdB) : Joint(uniqueName, false)
+FixedJoint::FixedJoint(std::string_view uniqueName, FeatherstoneEntity* feA, FeatherstoneEntity* feB, int linkIdA, int linkIdB) : Joint(uniqueName, false)
 {
     Transform linkATransform = feA->GetLinkTransform(linkIdA+1);
     Transform linkBTransform = feB->GetLinkTransform(linkIdB+1);

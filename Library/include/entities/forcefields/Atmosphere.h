@@ -46,7 +46,7 @@ namespace sf
          \param uniqueName the name for the atmosphere
          \param f a pointer to the gas filling the atmosphere (normally air)
          */
-        Atmosphere(const std::string& uniqueName, Fluid g);
+        Atmosphere(std::string_view uniqueName, Fluid g);
         
         //! A method implementing graphics initialization.
         /*!

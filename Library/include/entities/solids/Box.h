@@ -44,8 +44,8 @@ namespace sf
          \param thickness defines the thickness of the box walls, if positive the box is treated as shell
          \param uvMode texture coordinates generation mode
         */
-        Box(const std::string& uniqueName, PhysicsSettings phy, const Vector3& dimensions, const Transform& origin, 
-                const std::string& material, const std::string& look, Scalar thickness = Scalar(-1), unsigned int uvMode = 0);
+        Box(std::string_view uniqueName, PhysicsSettings phy, const Vector3& dimensions, const Transform& origin, 
+                std::string_view material, std::string_view look, Scalar thickness = Scalar(-1), unsigned int uvMode = 0);
         
         //! A method that returns the type of body.
         SolidType GetSolidType() const;

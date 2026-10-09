@@ -44,7 +44,7 @@ void MaterialManager::ClearMaterialsAndFluids()
     fluidNameManager_.ClearNames();
 }
 
-std::string MaterialManager::CreateMaterial(const std::string& uniqueName, Scalar density, Scalar restitution, Scalar magnetic)
+std::string MaterialManager::CreateMaterial(std::string_view uniqueName, Scalar density, Scalar restitution, Scalar magnetic)
 {
     //Create and add new material
     Material mat;
@@ -77,7 +77,7 @@ std::string MaterialManager::CreateMaterial(const std::string& uniqueName, Scala
     return mat.name;
 }
 
-std::string MaterialManager::CreateFluid(const std::string& uniqueName, Scalar density, Scalar viscosity, Scalar IOR)
+std::string MaterialManager::CreateFluid(std::string_view uniqueName, Scalar density, Scalar viscosity, Scalar IOR)
 {
     Fluid flu;
     flu.name = fluidNameManager_.AddName(uniqueName);
@@ -89,7 +89,7 @@ std::string MaterialManager::CreateFluid(const std::string& uniqueName, Scalar d
     return flu.name;
 }
 
-bool MaterialManager::SetMaterialsInteraction(const std::string& firstMaterialName, const std::string& secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff)
+bool MaterialManager::SetMaterialsInteraction(std::string_view firstMaterialName, std::string_view secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff)
 {
     MaterialPair p;
     p.mat1Id = GetMaterialIndex(firstMaterialName);
@@ -106,7 +106,7 @@ bool MaterialManager::SetMaterialsInteraction(const std::string& firstMaterialNa
     }
     catch(const std::out_of_range& e)
     {
-        cError("Material pair (%s,%s) not found!", firstMaterialName.c_str(), secondMaterialName.c_str());
+        cError("Material pair (%s,%s) not found!", std::string(firstMaterialName).c_str(), std::string(secondMaterialName).c_str());
         return false;
     }
 }
@@ -134,12 +134,12 @@ Friction MaterialManager::GetMaterialsInteraction(int mat1Index, int mat2Index)
     }
 }
 
-Friction MaterialManager::GetMaterialsInteraction(const std::string& mat1Name, const std::string& mat2Name)
+Friction MaterialManager::GetMaterialsInteraction(std::string_view mat1Name, std::string_view mat2Name)
 {
     return GetMaterialsInteraction(GetMaterialIndex(mat1Name), GetMaterialIndex(mat2Name));
 }
 
-int MaterialManager::GetMaterialIndex(const std::string& name)
+int MaterialManager::GetMaterialIndex(std::string_view name)
 {
     auto it = std::find_if(materials_.begin(), materials_.end(), [&name](const Material& m) { return m.name == name; });
     if(it != materials_.end())
@@ -156,12 +156,12 @@ Material MaterialManager::GetMaterial(int index)
         return materials_[0];
 }
 
-Material MaterialManager::GetMaterial(const std::string& name)
+Material MaterialManager::GetMaterial(std::string_view name)
 {
     return GetMaterial(GetMaterialIndex(name));
 }
 
-Fluid MaterialManager::GetFluid(const std::string& name)
+Fluid MaterialManager::GetFluid(std::string_view name)
 {
     auto it = std::find_if(fluids_.begin(), fluids_.end(), [&name](const Fluid& f) { return f.name == name; });
     if(it != fluids_.end())

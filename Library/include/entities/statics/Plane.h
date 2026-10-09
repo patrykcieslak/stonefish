@@ -41,7 +41,7 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param uvScale scaling of the texture coordinates
          */
-        Plane(const std::string& uniqueName, Scalar size, const std::string& material, const std::string& look = "", float uvScale = 1.f);
+        Plane(std::string_view uniqueName, Scalar size, std::string_view material, std::string_view look = "", float uvScale = 1.f);
         
         //! A method returning the extents of the plane axis alligned bounding box.
         /*!

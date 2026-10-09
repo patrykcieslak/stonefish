@@ -32,7 +32,7 @@
 namespace sf
 {
 
-SpringJoint::SpringJoint(const std::string& uniqueName, SolidEntity* solid, const Transform& attachment,
+SpringJoint::SpringJoint(std::string_view uniqueName, SolidEntity* solid, const Transform& attachment,
                         const Vector3& linearStiffness, const Vector3& angularStiffness,
                         const Vector3& linearDamping, const Vector3& angularDamping) : Joint(uniqueName, false)
 {
@@ -61,7 +61,7 @@ SpringJoint::SpringJoint(const std::string& uniqueName, SolidEntity* solid, cons
     constraint_ = std::move(spring);
 }
 
-SpringJoint::SpringJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Transform& attachment,
+SpringJoint::SpringJoint(std::string_view uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Transform& attachment,
                         const Vector3& linearStiffness, const Vector3& angularStiffness,
                         const Vector3& linearDamping, const Vector3& angularDamping) : Joint(uniqueName, false)
 {

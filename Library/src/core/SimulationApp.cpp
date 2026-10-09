@@ -32,7 +32,7 @@
 namespace sf
 {
 
-SimulationApp::SimulationApp(const std::string& title, const std::string& dataDirPath, std::unique_ptr<SimulationManager> sim)
+SimulationApp::SimulationApp(std::string_view title, std::string_view dataDirPath, std::unique_ptr<SimulationManager> sim)
     : console_{std::make_unique<Console>()}, startTime_{0}, autostep_{true}, timeStep_{Scalar(0)}, state_{SimulationState::NOT_READY},
       simManager_{std::move(sim)}, title_{title}, dataPath_{dataDirPath}, physicsTime_{0.0}
 {
@@ -102,9 +102,9 @@ ThreadPool* SimulationApp::GetPhysicsThreadPool()
     return physicsThreadPool_.get();
 }
 
-void* SimulationApp::GetPluginHandle(const std::string& name)
+void* SimulationApp::GetPluginHandle(std::string_view name)
 {
-    auto it = pluginHandles_.find(name);
+    auto it = pluginHandles_.find(std::string(name));
     if (it != pluginHandles_.end())
         return it->second;
     else
@@ -195,9 +195,9 @@ void SimulationApp::CleanUp()
 {
 }
 
-void SimulationApp::AddPluginHandle(const std::string& name, void* handle)
+void SimulationApp::AddPluginHandle(std::string_view name, void* handle)
 {
-    pluginHandles_.insert({name, handle});
+    pluginHandles_.insert({std::string(name), handle});
 }
 
 //Static

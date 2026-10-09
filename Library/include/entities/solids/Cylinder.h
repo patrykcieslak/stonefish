@@ -44,7 +44,7 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the cylinder walls, if positive the cylinder is treated as shell
          */
-        Cylinder(const std::string& uniqueName, PhysicsSettings phy, Scalar radius, Scalar height, const Transform& origin, const std::string& material, const std::string& look, Scalar thickness = Scalar(-1));
+        Cylinder(std::string_view uniqueName, PhysicsSettings phy, Scalar radius, Scalar height, const Transform& origin, std::string_view material, std::string_view look, Scalar thickness = Scalar(-1));
         
         //! A method that returns the type of body.
         SolidType GetSolidType() const;

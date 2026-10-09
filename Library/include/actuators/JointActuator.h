@@ -43,7 +43,7 @@ namespace sf
         /*!
          \param uniqueName a name for the actuator.
          */
-        JointActuator(const std::string& uniqueName);
+        JointActuator(std::string_view uniqueName);
 
         //! A destructor.
         virtual ~JointActuator() = default;

@@ -39,7 +39,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        IMU(const std::string& uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
+        IMU(std::string_view uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
         
         //! A method performing internal sensor state update.
         /*!
@@ -76,7 +76,7 @@ namespace sf
         /*!
          \param info a construction info structure
         */
-        static std::unique_ptr<IMU> Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info);
+        static std::unique_ptr<IMU> Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info);
 
         private:
             Scalar yawDriftRate_;

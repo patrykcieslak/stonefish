@@ -33,7 +33,7 @@
 namespace sf
 {
 
-AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Trajectory> traj) : MovingEntity(uniqueName, "", ""), traj_(std::move(traj))
+AnimatedEntity::AnimatedEntity(std::string_view uniqueName, std::unique_ptr<Trajectory> traj) : MovingEntity(uniqueName, "", ""), traj_(std::move(traj))
 {
     if(traj_ == nullptr)
         throw std::invalid_argument("Trajectory pointer cannot be null");
@@ -49,7 +49,7 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
     phyObjectId_ = graObjectId_ = -1;
 }
 
-AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Trajectory> traj, Scalar sphereRadius, const Transform& origin, const std::string& material, const std::string& look, bool collides) 
+AnimatedEntity::AnimatedEntity(std::string_view uniqueName, std::unique_ptr<Trajectory> traj, Scalar sphereRadius, const Transform& origin, std::string_view material, std::string_view look, bool collides) 
     : MovingEntity(uniqueName, material, look), traj_(std::move(traj))
 {   
     if(traj_ == nullptr)
@@ -71,7 +71,7 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
     }
 }
 
-AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Trajectory> traj, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& origin, const std::string& material, const std::string& look, bool collides)
+AnimatedEntity::AnimatedEntity(std::string_view uniqueName, std::unique_ptr<Trajectory> traj, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& origin, std::string_view material, std::string_view look, bool collides)
     : MovingEntity(uniqueName, material, look), traj_(std::move(traj))
 {
     if(traj_ == nullptr)
@@ -94,7 +94,7 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
     }
 }
 
-AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Trajectory> traj, Vector3 boxDimensions, const Transform& origin, const std::string& material, const std::string& look, bool collides) 
+AnimatedEntity::AnimatedEntity(std::string_view uniqueName, std::unique_ptr<Trajectory> traj, Vector3 boxDimensions, const Transform& origin, std::string_view material, std::string_view look, bool collides) 
     : MovingEntity(uniqueName, material, look), traj_(std::move(traj))
 {
     if(traj_ == nullptr)
@@ -116,13 +116,13 @@ AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Tr
     }
 }
 
-AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Trajectory> traj, const std::string& modelFilename, Scalar scale, const Transform& origin, const std::string& material, const std::string& look, bool collides)
+AnimatedEntity::AnimatedEntity(std::string_view uniqueName, std::unique_ptr<Trajectory> traj, std::string_view modelFilename, Scalar scale, const Transform& origin, std::string_view material, std::string_view look, bool collides)
     : AnimatedEntity(uniqueName, std::move(traj), modelFilename, scale, origin, "", Scalar(1), I4(), material, look, collides)
 {
 }
 
-AnimatedEntity::AnimatedEntity(const std::string& uniqueName, std::unique_ptr<Trajectory> traj, const std::string& graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
-                       const std::string& physicsFilename, Scalar physicsScale, const Transform& physicsOrigin, const std::string& material, const std::string& look, bool collides)
+AnimatedEntity::AnimatedEntity(std::string_view uniqueName, std::unique_ptr<Trajectory> traj, std::string_view graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
+                       std::string_view physicsFilename, Scalar physicsScale, const Transform& physicsOrigin, std::string_view material, std::string_view look, bool collides)
     : MovingEntity(uniqueName, material, look), traj_(std::move(traj))
 {
     if(traj_ == nullptr)

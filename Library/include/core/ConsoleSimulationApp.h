@@ -42,7 +42,7 @@ namespace sf
          \param dataDirPath a path to the directory containing the simulation data
          \param sim a pointer to the simulation manager
          */
-        ConsoleSimulationApp(const std::string& title, const std::string& dataDirPath, std::unique_ptr<SimulationManager> sim);
+        ConsoleSimulationApp(std::string_view title, std::string_view dataDirPath, std::unique_ptr<SimulationManager> sim);
         
         //! A destructor.
         virtual ~ConsoleSimulationApp() = default;

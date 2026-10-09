@@ -56,7 +56,7 @@ namespace sf
          \param fontPath a path to the font file
          \param size the native size of the font
          */
-        OpenGLPrinter(const std::string& fontPath, GLuint size);
+        OpenGLPrinter(std::string_view fontPath, GLuint size);
         
         //! A destructor.
         ~OpenGLPrinter();
@@ -70,21 +70,21 @@ namespace sf
          \param size the height of the font
          \param raw flag indicating if raw OpenGL calls should be used
          */
-        void Print(const std::string& text, glm::vec4 color, GLuint x, GLuint y, GLfloat size, bool raw = false);
+        void Print(std::string_view text, glm::vec4 color, GLuint x, GLuint y, GLfloat size, bool raw = false);
         
         //! A method used to measure the length of a string in pixels.
         /*!
          \param text the string to be measured
          \return the length of the string in pixels
          */
-        GLuint TextLength(const std::string& text);
+        GLuint TextLength(std::string_view text);
         
         //! A method used to measure the sise of the string in pixels.
         /*!
          \param text the string to be measured
          \return a 2D vector containing width and height of the text in pixels
          */
-        glm::ivec2 TextDimensions(const std::string& text);
+        glm::ivec2 TextDimensions(std::string_view text);
         
         //! A static method used to set the widow size for the printers.
         /*!

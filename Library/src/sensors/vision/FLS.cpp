@@ -34,7 +34,7 @@
 namespace sf
 {
 
-FLS::FLS(const std::string& uniqueName, unsigned int numOfBeams, unsigned int numOfBins, Scalar horizontalFOVDeg, 
+FLS::FLS(std::string_view uniqueName, unsigned int numOfBeams, unsigned int numOfBins, Scalar horizontalFOVDeg, 
     Scalar verticalFOVDeg, Scalar minRange, Scalar maxRange, SonarOutputFormat outputFormat, Scalar frequency)
     : Camera(uniqueName, numOfBeams, numOfBins, horizontalFOVDeg, frequency)
 {
@@ -322,7 +322,7 @@ ConstructInfo FLS::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<FLS> FLS::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+std::unique_ptr<FLS> FLS::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
 {
     // Specs
     int beams = std::get<int>(info.nodes.at("specs").attributes.at("beams").value);

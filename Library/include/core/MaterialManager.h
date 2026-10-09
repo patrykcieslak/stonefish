@@ -107,7 +107,7 @@ namespace sf
          \param magnetic a factor defining magnetic properties
          \return a name of the created material
          */
-        std::string CreateMaterial(const std::string& uniqueName, Scalar density, Scalar restitution, Scalar magnetic = Scalar(0));
+        std::string CreateMaterial(std::string_view uniqueName, Scalar density, Scalar restitution, Scalar magnetic = Scalar(0));
         
         //! A method that sets interaction between a pair of materials.
         /*!
@@ -117,7 +117,7 @@ namespace sf
          \param dynamicFricCoeff a coefficient of dynamic friction between materials
          \return was the interaction was set properly?
          */
-        bool SetMaterialsInteraction(const std::string& firstMaterialName, const std::string& secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff);
+        bool SetMaterialsInteraction(std::string_view firstMaterialName, std::string_view secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff);
         
         //! A method that returns friction information for a specified pair of materials.
         /*!
@@ -133,7 +133,7 @@ namespace sf
          \param mat2Name a name of the second material
          \return a structure containing friction coefficients
          */
-        Friction GetMaterialsInteraction(const std::string& mat1Name, const std::string& mat2Name);
+        Friction GetMaterialsInteraction(std::string_view mat1Name, std::string_view mat2Name);
         
         //! A method returning a list of materials (names).
         std::vector<std::string> GetMaterialsList();
@@ -143,7 +143,7 @@ namespace sf
          \param name a name of the material
          \return a structure containing properties of the material
          */
-        Material GetMaterial(const std::string& name);
+        Material GetMaterial(std::string_view name);
         
         //! A method returning material information.
         /*!
@@ -160,14 +160,14 @@ namespace sf
          \param IOR index of refraction of the fluid
          \return a name of the created fluid
          */
-        std::string CreateFluid(const std::string& uniqueName, Scalar density, Scalar viscosity, Scalar IOR);
+        std::string CreateFluid(std::string_view uniqueName, Scalar density, Scalar viscosity, Scalar IOR);
         
         //! A method returning a fluid by name.
         /*!
          \param name a name of the fluid
          \return a the fluid structure
          */
-        Fluid GetFluid(const std::string& name);
+        Fluid GetFluid(std::string_view name);
         
         //! A method returning a fluid by id.
         /*!
@@ -180,7 +180,7 @@ namespace sf
         void ClearMaterialsAndFluids();
         
     private:
-        int GetMaterialIndex(const std::string& name);
+        int GetMaterialIndex(std::string_view name);
         
         std::vector<Material> materials_;
         std::unordered_map<MaterialPair, Friction, MaterialPairHash> interactions_;

@@ -44,7 +44,7 @@ namespace sf
          \param pivot a point where the axis of joint is located
          \param collideLinked a flag that sets if the bodies connected by the joint should coliide
          */
-        SphericalJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, bool collideLinked = true);
+        SphericalJoint(std::string_view uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, bool collideLinked = true);
         
         //! A constructor to create a spherical joint between a solid body and a link of a multibody.
         /*!
@@ -54,7 +54,7 @@ namespace sf
          \param linkId an index of the link of the multibody
          \param pivot a connection point
          */
-        SphericalJoint(const std::string& uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId, const Vector3& pivot, bool collideLinked = true);
+        SphericalJoint(std::string_view uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId, const Vector3& pivot, bool collideLinked = true);
 
         //! A method used to apply torque to the joint.
         /*!

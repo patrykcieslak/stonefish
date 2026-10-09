@@ -34,7 +34,7 @@
 namespace sf
 {
 
-ThermalCamera::ThermalCamera(const std::string& uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar minTemp, Scalar maxTemp,
+ThermalCamera::ThermalCamera(std::string_view uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar minTemp, Scalar maxTemp,
     Scalar frequency, Scalar near, Scalar far) : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
 {
     depthRange_ = glm::vec2((GLfloat)near, (GLfloat)far);
@@ -199,7 +199,7 @@ ConstructInfo ThermalCamera::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<ThermalCamera> ThermalCamera::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+std::unique_ptr<ThermalCamera> ThermalCamera::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
 {
     // Specs
     int resolutionX = std::get<int>(info.nodes.at("specs").attributes.at("resolution_x").value);

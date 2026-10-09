@@ -45,8 +45,8 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param uvScale scaling of texture coordinates
          */
-        Terrain(const std::string& uniqueName, const std::string& pathToHeightmap, Scalar scaleX, Scalar scaleY, Scalar height, 
-            const std::string& material, const std::string& look = "", float uvScale = 1.f);
+        Terrain(std::string_view uniqueName, std::string_view pathToHeightmap, Scalar scaleX, Scalar scaleY, Scalar height, 
+            std::string_view material, std::string_view look = "", float uvScale = 1.f);
         
         //! A method used to add the terrain to the simulation.
         /*!

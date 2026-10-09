@@ -44,7 +44,7 @@ namespace sf
          \param rightHand a flag to indicate if the propeller is right hand (clockwise rotation)
          \param inverted a flag to indicate if the setpoint is inverted (positive value results in backward force)
         */
-        Propeller(const std::string& uniqueName, std::unique_ptr<SolidEntity> propeller, Scalar diameter, 
+        Propeller(std::string_view uniqueName, std::unique_ptr<SolidEntity> propeller, Scalar diameter, 
             const std::pair<Scalar, Scalar>& thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand, bool inverted = false);
         
         //! A method used to update the internal state of the thruster.
@@ -87,7 +87,7 @@ namespace sf
         /*!
          \param info a construction info structure
         */
-        static std::unique_ptr<Propeller> Construct(const std::string& uniqueName, ConstructInfo& info);
+        static std::unique_ptr<Propeller> Construct(std::string_view uniqueName, ConstructInfo& info);
         
     private:
         void WatchdogTimeout() override;

@@ -34,7 +34,7 @@
 namespace sf
 {
 
-Servo::Servo(const std::string& uniqueName, Scalar positionGain, Scalar velocityGain, Scalar maxTorque) : JointActuator(uniqueName)
+Servo::Servo(std::string_view uniqueName, Scalar positionGain, Scalar velocityGain, Scalar maxTorque) : JointActuator(uniqueName)
 {
     Kp_ = btFabs(positionGain);
     Kv_ = btFabs(velocityGain);
@@ -312,7 +312,7 @@ ConstructInfo Servo::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<Servo> Servo::Construct(const std::string& uniqueName, ConstructInfo& info)
+std::unique_ptr<Servo> Servo::Construct(std::string_view uniqueName, ConstructInfo& info)
 {
     // Required
     Scalar kp = std::get<Scalar>(info.nodes.at("controller").attributes.at("position_gain").value);

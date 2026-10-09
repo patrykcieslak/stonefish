@@ -158,7 +158,7 @@ std::vector<uint8_t> OpticalModem::IntroduceErrors(
 }
 
 //Member 
-OpticalModem::OpticalModem(const std::string& uniqueName, uint64_t deviceId, Scalar fovDeg, Scalar operatingRange, Scalar ambientLightSensitivity)
+OpticalModem::OpticalModem(std::string_view uniqueName, uint64_t deviceId, Scalar fovDeg, Scalar operatingRange, Scalar ambientLightSensitivity)
                                 : Comm(uniqueName, deviceId)
 {
     maxRange_ = operatingRange <= Scalar(0) ? Scalar(100) : operatingRange;
@@ -429,7 +429,7 @@ ConstructInfo OpticalModem::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<OpticalModem> OpticalModem::Construct(const std::string& uniqueName, uint64_t deviceId, ConstructInfo& info)
+std::unique_ptr<OpticalModem> OpticalModem::Construct(std::string_view uniqueName, uint64_t deviceId, ConstructInfo& info)
 {
     // Required
     Scalar fov = std::get<Scalar>(info.nodes.at("specs").attributes.at("fov").value);

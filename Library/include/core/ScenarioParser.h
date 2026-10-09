@@ -237,7 +237,7 @@ namespace sf
          \param namePrefix a string added at the beginning of the actuator name
          \return pointer to actuator
          */
-        virtual std::unique_ptr<Actuator, ActuatorDeleter> ParseActuator(XMLElement* element, const std::string& namePrefix);
+        virtual std::unique_ptr<Actuator, ActuatorDeleter> ParseActuator(XMLElement* element, std::string_view namePrefix);
 
         //! A method used to parse a description of a sensor.
         /*!
@@ -245,7 +245,7 @@ namespace sf
          \param namePrefix a string added at the beginning of the sensor name
          \return pointer to sensor
          */
-        virtual std::unique_ptr<Sensor, SensorDeleter> ParseSensor(XMLElement* element, const std::string& namePrefix);
+        virtual std::unique_ptr<Sensor, SensorDeleter> ParseSensor(XMLElement* element, std::string_view namePrefix);
         
         //! A method used to parse a description of a light source.
         /*!
@@ -253,7 +253,7 @@ namespace sf
          \param namePrefix a string added at the beginning of the light name
          \return pointer to light
          */
-        virtual std::unique_ptr<Light> ParseLight(XMLElement* element, const std::string& namePrefix);
+        virtual std::unique_ptr<Light> ParseLight(XMLElement* element, std::string_view namePrefix);
 
         //! A method used to parse a communication device description.
         /*!
@@ -261,7 +261,7 @@ namespace sf
          \param namePrefix a string added at the beginning of the comm name
          \return pointer to the communication device
          */
-        virtual std::unique_ptr<Comm, CommDeleter> ParseComm(XMLElement* element, const std::string& namePrefix);
+        virtual std::unique_ptr<Comm, CommDeleter> ParseComm(XMLElement* element, std::string_view namePrefix);
         
         //! A method used to parse a single contact description.
         /*!

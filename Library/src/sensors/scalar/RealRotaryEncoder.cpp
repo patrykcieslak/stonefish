@@ -31,7 +31,7 @@
 namespace sf
 {
 
-RealRotaryEncoder::RealRotaryEncoder(const std::string& uniqueName, unsigned int cpr_resolution, bool absolute, Scalar frequency, int historyLength) : RotaryEncoder(uniqueName, frequency, historyLength)
+RealRotaryEncoder::RealRotaryEncoder(std::string_view uniqueName, unsigned int cpr_resolution, bool absolute, Scalar frequency, int historyLength) : RotaryEncoder(uniqueName, frequency, historyLength)
 {
     cprResolution_ = cpr_resolution;
     abs_ = absolute;

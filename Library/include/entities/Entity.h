@@ -82,7 +82,7 @@ namespace sf
         /*!
          \param uniqueName a name for the entity
          */
-        Entity(const std::string& uniqueName);
+        Entity(std::string_view uniqueName);
         
         //! A destructor.
         virtual ~Entity();

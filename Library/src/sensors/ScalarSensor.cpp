@@ -32,7 +32,7 @@
 namespace sf
 {
 
-ScalarSensor::ScalarSensor(const std::string& uniqueName, Scalar frequency, long int historyLength) 
+ScalarSensor::ScalarSensor(std::string_view uniqueName, Scalar frequency, long int historyLength) 
     : Sensor(uniqueName, frequency), sampleCount_(0), historyLen_(historyLength)
 {
 }
@@ -129,14 +129,14 @@ void ScalarSensor::ClearHistory()
     history_.clear();
 }
 
-void ScalarSensor::SaveMeasurementsToTextFile(const std::string& path, bool includeTime, size_t fixedPrecision)
+void ScalarSensor::SaveMeasurementsToTextFile(std::string_view path, bool includeTime, size_t fixedPrecision)
 {
     if(history_.size() == 0)
         return;
     
-    cInfo("Saving %s measurements to: %s", GetName().c_str(), path.c_str());
+    cInfo("Saving %s measurements to: %s", GetName().c_str(), std::string(path).c_str());
     
-    FILE* fp = fopen(path.c_str(), "wt");
+    FILE* fp = fopen(std::string(path).c_str(), "wt");
     if(fp == NULL)
     {
         cError("File could not be opened!");

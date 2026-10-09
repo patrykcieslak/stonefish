@@ -34,7 +34,7 @@
 namespace sf
 {
 
-IMU::IMU(const std::string& uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+IMU::IMU(std::string_view uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels_.push_back(SensorChannel("Roll", QuantityType::ANGLE));
     channels_.push_back(SensorChannel("Pitch", QuantityType::ANGLE));
@@ -151,7 +151,7 @@ ConstructInfo IMU::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<IMU> IMU::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+std::unique_ptr<IMU> IMU::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
 {
     // History (optional)
     int history = -1;

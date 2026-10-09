@@ -32,7 +32,7 @@
 namespace sf
 {
 
-Trigger::Trigger(const std::string& uniqueName, Scalar radius, const Transform& worldTransform, const std::string& look) : ForcefieldEntity(uniqueName)
+Trigger::Trigger(std::string_view uniqueName, Scalar radius, const Transform& worldTransform, std::string_view look) : ForcefieldEntity(uniqueName)
 {
     ghost_->setCollisionFlags(ghost_->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
     ghost_->setWorldTransform(worldTransform);
@@ -54,7 +54,7 @@ Trigger::Trigger(const std::string& uniqueName, Scalar radius, const Transform& 
     }
 }
 
-Trigger::Trigger(const std::string& uniqueName, Scalar radius, Scalar length, const Transform& worldTransform, const std::string& look) : ForcefieldEntity(uniqueName)
+Trigger::Trigger(std::string_view uniqueName, Scalar radius, Scalar length, const Transform& worldTransform, std::string_view look) : ForcefieldEntity(uniqueName)
 {
     ghost_->setCollisionFlags(ghost_->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
     ghost_->setWorldTransform(worldTransform);
@@ -75,7 +75,7 @@ Trigger::Trigger(const std::string& uniqueName, Scalar radius, Scalar length, co
     }
 }
 
-Trigger::Trigger(const std::string& uniqueName, const Vector3& dimensions, const Transform& worldTransform, const std::string& look) : ForcefieldEntity(uniqueName)
+Trigger::Trigger(std::string_view uniqueName, const Vector3& dimensions, const Transform& worldTransform, std::string_view look) : ForcefieldEntity(uniqueName)
 {
     ghost_->setCollisionFlags(ghost_->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
     ghost_->setWorldTransform(worldTransform);

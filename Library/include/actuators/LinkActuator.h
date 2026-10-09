@@ -42,7 +42,7 @@ namespace sf
         /*!
          \param uniqueName a name of the link actuator
          */
-        LinkActuator(const std::string& uniqueName);
+        LinkActuator(std::string_view uniqueName);
 
         //! A destructor.
         virtual ~LinkActuator() = default;

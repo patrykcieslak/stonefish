@@ -47,7 +47,7 @@
 namespace sf
 {
 
-GraphicalSimulationApp::GraphicalSimulationApp(const std::string& title, const std::string& dataDirPath, 
+GraphicalSimulationApp::GraphicalSimulationApp(std::string_view title, std::string_view dataDirPath, 
     RenderSettings r, HelperSettings h, std::unique_ptr<SimulationManager> sim)
 : SimulationApp(title, dataDirPath, std::move(sim))
 {

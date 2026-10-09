@@ -32,10 +32,10 @@
 namespace sf
 {
 
-Obstacle::Obstacle(const std::string& uniqueName,
-         const std::string& graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
-         const std::string& physicsFilename, Scalar physicsScale, const Transform& physicsOrigin, bool convexHull,
-         const std::string& material, const std::string& look) : StaticEntity(uniqueName, material, look)
+Obstacle::Obstacle(std::string_view uniqueName,
+         std::string_view graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
+         std::string_view physicsFilename, Scalar physicsScale, const Transform& physicsOrigin, bool convexHull,
+         std::string_view material, std::string_view look) : StaticEntity(uniqueName, material, look)
 {
     graMesh_ = OpenGLContent::LoadMesh(graphicsFilename, graphicsScale, false);
     OpenGLContent::TransformMesh(graMesh_.get(), graphicsOrigin);
@@ -93,12 +93,12 @@ Obstacle::Obstacle(const std::string& uniqueName,
     BuildRigidBody();
 }
     
-Obstacle::Obstacle(const std::string& uniqueName, const std::string& modelFilename, Scalar scale, const Transform& origin, bool convexHull, const std::string& material, const std::string& look)
+Obstacle::Obstacle(std::string_view uniqueName, std::string_view modelFilename, Scalar scale, const Transform& origin, bool convexHull, std::string_view material, std::string_view look)
     : Obstacle(uniqueName, modelFilename, scale, origin, "", scale, origin, convexHull, material, look)
 {
 }
 
-Obstacle::Obstacle(const std::string& uniqueName, Scalar sphereRadius, const Transform& origin, const std::string& material, const std::string& look) : StaticEntity(uniqueName, material, look)
+Obstacle::Obstacle(std::string_view uniqueName, Scalar sphereRadius, const Transform& origin, std::string_view material, std::string_view look) : StaticEntity(uniqueName, material, look)
 {
     phyMesh_ = OpenGLContent::BuildSphere(sphereRadius);
     graMesh_ = phyMesh_;
@@ -120,7 +120,7 @@ Obstacle::Obstacle(const std::string& uniqueName, Scalar sphereRadius, const Tra
     }
 }
 
-Obstacle::Obstacle(const std::string& uniqueName, Vector3 boxDimensions, const Transform& origin, const std::string& material, const std::string& look, unsigned int uvMode) : StaticEntity(uniqueName, material, look)
+Obstacle::Obstacle(std::string_view uniqueName, Vector3 boxDimensions, const Transform& origin, std::string_view material, std::string_view look, unsigned int uvMode) : StaticEntity(uniqueName, material, look)
 {
     Vector3 halfExtents = boxDimensions/Scalar(2);
     glm::vec3 glHalfExtents(halfExtents.x(), halfExtents.y(), halfExtents.z());
@@ -145,7 +145,7 @@ Obstacle::Obstacle(const std::string& uniqueName, Vector3 boxDimensions, const T
     }
 }
 
-Obstacle::Obstacle(const std::string& uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& origin, const std::string& material, const std::string& look) : StaticEntity(uniqueName, material, look)
+Obstacle::Obstacle(std::string_view uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& origin, std::string_view material, std::string_view look) : StaticEntity(uniqueName, material, look)
 {
     Scalar halfHeight = cylinderHeight/Scalar(2);
     phyMesh_ = OpenGLContent::BuildCylinder((GLfloat)cylinderRadius, (GLfloat)cylinderHeight, (unsigned int)btMax(ceil(2.0*M_PI*cylinderRadius/0.1), 32.0)); //Max 0.1 m cylinder wall slice width

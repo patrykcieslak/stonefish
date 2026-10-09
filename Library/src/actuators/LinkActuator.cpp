@@ -30,7 +30,7 @@
 namespace sf
 {
 
-LinkActuator::LinkActuator(const std::string& uniqueName) : Actuator(uniqueName)
+LinkActuator::LinkActuator(std::string_view uniqueName) : Actuator(uniqueName)
 {
     attach_ = nullptr;
     o2a_ = I4();

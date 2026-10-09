@@ -45,7 +45,7 @@ namespace sf
          \param linearDamping damping for the linear DOFs
          \param angularDamping damping for the angular DOFs
          */
-        SpringJoint(const std::string& uniqueName, SolidEntity* solid, const Transform& attachment, 
+        SpringJoint(std::string_view uniqueName, SolidEntity* solid, const Transform& attachment, 
             const Vector3& linearStiffness, const Vector3& angularStiffness,
             const Vector3& linearDamping, const Vector3& angularDamping);
 
@@ -61,7 +61,7 @@ namespace sf
          \param angularDamping damping for the angular DOFs
          \
          */
-        SpringJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Transform& attachment,
+        SpringJoint(std::string_view uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Transform& attachment,
             const Vector3& linearStiffness, const Vector3& angularStiffness,
             const Vector3& linearDamping, const Vector3& angularDamping);
         

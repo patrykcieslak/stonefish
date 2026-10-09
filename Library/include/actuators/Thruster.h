@@ -47,7 +47,7 @@ namespace sf
          \param invertedSetpoint a flag to indicate if the setpoint is inverted (positive value results in backward force)
          \param normalizedSetpoint a flag to indicate if the setpoint given by the user is normalized [-1,1]
         */
-        Thruster(const std::string &uniqueName, std::unique_ptr<SolidEntity> propeller,
+        Thruster(std::string_view uniqueName, std::unique_ptr<SolidEntity> propeller,
                  std::unique_ptr<RotorDynamics> rotorDynamics,
                  std::unique_ptr<ThrustModel> thrustModel,
                  Scalar diameter, bool rightHand, Scalar maxSetpoint,
@@ -109,7 +109,7 @@ namespace sf
         /*!
          \param info a construction info structure
         */
-        static std::unique_ptr<Thruster> Construct(const std::string& uniqueName, ConstructInfo& info);
+        static std::unique_ptr<Thruster> Construct(std::string_view uniqueName, ConstructInfo& info);
 
     private:
         void WatchdogTimeout() override;

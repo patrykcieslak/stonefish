@@ -66,7 +66,7 @@ namespace sf
          \param name_ a name for the channel
          \param type_ a type of quantity represented by channel data
          */
-        SensorChannel(const std::string& name_, QuantityType type_) : name(name_), type(type_), stdDev(0), rangeMin(-BT_LARGE_FLOAT), rangeMax(BT_LARGE_FLOAT) {}
+        SensorChannel(std::string_view name_, QuantityType type_) : name(name_), type(type_), stdDev(0), rangeMin(-BT_LARGE_FLOAT), rangeMax(BT_LARGE_FLOAT) {}
         
         //! A method used to set standard deviation of the measurement
         /*!
@@ -92,7 +92,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (0 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        ScalarSensor(const std::string& uniqueName, Scalar frequency, long int historyLength);
+        ScalarSensor(std::string_view uniqueName, Scalar frequency, long int historyLength);
         
         //! A destructor.
         virtual ~ScalarSensor() = default;
@@ -109,7 +109,7 @@ namespace sf
          \param includeTime a flag specifying if the timestamp should be written
          \param fixedPrecision number of decimal places to write
          */
-        void SaveMeasurementsToTextFile(const std::string& path, bool includeTime = true, size_t fixedPrecision = 6);
+        void SaveMeasurementsToTextFile(std::string_view path, bool includeTime = true, size_t fixedPrecision = 6);
         
         //! A method returning the number of channels of the sensor.
         size_t GetNumOfChannels() const;

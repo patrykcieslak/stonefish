@@ -30,7 +30,7 @@
 namespace sf
 {
 
-CylindricalJoint::CylindricalJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, const Vector3& axis, bool collideLinked) : Joint(uniqueName, collideLinked)
+CylindricalJoint::CylindricalJoint(std::string_view uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, const Vector3& axis, bool collideLinked) : Joint(uniqueName, collideLinked)
 {
     btRigidBody* bodyA = solidA->GetRigidBody();
     btRigidBody* bodyB = solidB->GetRigidBody();

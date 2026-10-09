@@ -33,7 +33,7 @@
 namespace sf
 {
 
-Torque::Torque(const std::string& uniqueName, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
+Torque::Torque(std::string_view uniqueName, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
 {
     channels_.push_back(SensorChannel("Torque", QuantityType::TORQUE));
 }
@@ -89,7 +89,7 @@ ConstructInfo Torque::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<Torque> Torque::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+std::unique_ptr<Torque> Torque::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
 {
     // History (optional)
     int history = -1;

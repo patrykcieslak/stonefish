@@ -41,7 +41,7 @@ namespace sf
          \param maxVerticalFOVDeg the maximum vertical angle of radiation pattern [deg]
          \param operatingRange the operating range [m]
          */
-        SimpleUSBL(const std::string& uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange);
+        SimpleUSBL(std::string_view uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange);
         
         //! A method used to set the resolution of the measurements.
         /*!
@@ -68,7 +68,7 @@ namespace sf
         /*!
          \param info a construction info structure
         */
-        static std::unique_ptr<SimpleUSBL> Construct(const std::string& uniqueName, uint64_t deviceId, ConstructInfo& info);
+        static std::unique_ptr<SimpleUSBL> Construct(std::string_view uniqueName, uint64_t deviceId, ConstructInfo& info);
     
     private:
         Scalar rangeRes_;

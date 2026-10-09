@@ -32,7 +32,7 @@
 namespace sf
 {
 
-SphericalJoint::SphericalJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, bool collideLinked) : Joint(uniqueName, collideLinked)
+SphericalJoint::SphericalJoint(std::string_view uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, bool collideLinked) : Joint(uniqueName, collideLinked)
 {
     btRigidBody* bodyA = solidA->GetRigidBody();
     btRigidBody* bodyB = solidB->GetRigidBody();
@@ -49,7 +49,7 @@ SphericalJoint::SphericalJoint(const std::string& uniqueName, SolidEntity* solid
     angleIC_ = Vector3(0.,0.,0.);
 }
 
-SphericalJoint::SphericalJoint(const std::string& uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId, const Vector3& pivot, bool collideLinked) : Joint(uniqueName, collideLinked)
+SphericalJoint::SphericalJoint(std::string_view uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId, const Vector3& pivot, bool collideLinked) : Joint(uniqueName, collideLinked)
 {
     Transform linkTransform = fe->GetLinkTransform(linkId+1);
     Transform solidTransform = solid->GetCgTransform();

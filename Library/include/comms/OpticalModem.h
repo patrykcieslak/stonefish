@@ -42,7 +42,7 @@ namespace sf
          \param operatingRange the maximum ideal operating range [m]
          \param ambientLightSensitivity an empirical unitless factor [0.0, 1.0] specifying how ambient light impacts the device operation
          */
-        OpticalModem(const std::string& uniqueName, uint64_t deviceId, Scalar fovDeg, Scalar operatingRange, Scalar ambientLightSensitivity);
+        OpticalModem(std::string_view uniqueName, uint64_t deviceId, Scalar fovDeg, Scalar operatingRange, Scalar ambientLightSensitivity);
         
         //! A destructor.
         virtual ~OpticalModem();
@@ -63,7 +63,7 @@ namespace sf
         /*!
          \param info a construction info structure
         */
-        static std::unique_ptr<OpticalModem> Construct(const std::string& uniqueName, uint64_t deviceId, ConstructInfo& info);
+        static std::unique_ptr<OpticalModem> Construct(std::string_view uniqueName, uint64_t deviceId, ConstructInfo& info);
         
     protected:
         //! A method performing internal comm state update.

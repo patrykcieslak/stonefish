@@ -427,7 +427,7 @@ Contact* SimulationManager::GetContact(unsigned int index)
         return nullptr;
 }
 
-Contact* SimulationManager::GetContact(const std::string& name)
+Contact* SimulationManager::GetContact(std::string_view name)
 {
     auto it = std::find_if(contacts_.begin(), contacts_.end(), [&name](const std::unique_ptr<Contact>& e) { return e->GetName() == name; });
     if(it != contacts_.end())
@@ -454,7 +454,7 @@ Robot* SimulationManager::GetRobot(unsigned int index)
         return nullptr;
 }
 
-Robot* SimulationManager::GetRobot(const std::string& name)
+Robot* SimulationManager::GetRobot(std::string_view name)
 {
     auto it = std::find_if(robots_.begin(), robots_.end(), [&name](const std::unique_ptr<Robot>& e) { return e->GetName() == name; });
     if(it != robots_.end())
@@ -471,7 +471,7 @@ Entity* SimulationManager::GetEntity(unsigned int index)
         return nullptr;
 }
 
-Entity* SimulationManager::GetEntity(const std::string& name)
+Entity* SimulationManager::GetEntity(std::string_view name)
 {
     auto it = std::find_if(entities_.begin(), entities_.end(), [&name](const std::unique_ptr<Entity>& e) { return e->GetName() == name; });
     if(it != entities_.end())
@@ -488,7 +488,7 @@ Joint* SimulationManager::GetJoint(unsigned int index)
         return nullptr;
 }
 
-Joint* SimulationManager::GetJoint(const std::string& name)
+Joint* SimulationManager::GetJoint(std::string_view name)
 {
     auto it = std::find_if(joints_.begin(), joints_.end(), [&name](const std::unique_ptr<Joint>& e) { return e->GetName() == name; });
     if(it != joints_.end())
@@ -505,7 +505,7 @@ Actuator* SimulationManager::GetActuator(unsigned int index)
         return nullptr;
 }
 
-Actuator* SimulationManager::GetActuator(const std::string& name)
+Actuator* SimulationManager::GetActuator(std::string_view name)
 {
     auto it = std::find_if(actuators_.begin(), actuators_.end(), 
         [&name](const std::unique_ptr<Actuator, ActuatorDeleter>& e) { return e->GetName() == name; }
@@ -524,7 +524,7 @@ Sensor* SimulationManager::GetSensor(unsigned int index)
         return nullptr;
 }
 
-Sensor* SimulationManager::GetSensor(const std::string& name)
+Sensor* SimulationManager::GetSensor(std::string_view name)
 {
     auto it = std::find_if(sensors_.begin(), sensors_.end(), 
         [&name](const std::unique_ptr<Sensor, SensorDeleter>& e) { return e->GetName() == name; }
@@ -543,7 +543,7 @@ Comm* SimulationManager::GetComm(unsigned int index)
         return nullptr;
 }
 
-Comm* SimulationManager::GetComm(const std::string& name)
+Comm* SimulationManager::GetComm(std::string_view name)
 {
     auto it = std::find_if(comms_.begin(), comms_.end(), 
         [&name](const std::unique_ptr<Comm, CommDeleter>& e) { return e->GetName() == name; }
@@ -1211,18 +1211,18 @@ void SimulationManager::RenderBulletDebug()
     debugDrawer_->Render();
 }
  
-std::string SimulationManager::CreateMaterial(const std::string& uniqueName, Scalar density, Scalar restitution)
+std::string SimulationManager::CreateMaterial(std::string_view uniqueName, Scalar density, Scalar restitution)
 {
     return GetMaterialManager()->CreateMaterial(uniqueName, density, restitution);
 }
 
-bool SimulationManager::SetMaterialsInteraction(const std::string& firstMaterialName, const std::string& secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff)
+bool SimulationManager::SetMaterialsInteraction(std::string_view firstMaterialName, std::string_view secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff)
 {
     return GetMaterialManager()->SetMaterialsInteraction(firstMaterialName, secondMaterialName, staticFricCoeff, dynamicFricCoeff);
 }
 
-std::string SimulationManager::CreateLook(const std::string& name, Color color, float roughness, float metalness, float reflectivity, 
-    const std::string& albedoTexturePath, const std::string& normalTexturePath, const std::string& temperatureTexturePath, const std::pair<float, float>& temperatureRange)
+std::string SimulationManager::CreateLook(std::string_view name, Color color, float roughness, float metalness, float reflectivity, 
+    std::string_view albedoTexturePath, std::string_view normalTexturePath, std::string_view temperatureTexturePath, const std::pair<float, float>& temperatureRange)
 {
     if(SimulationApp::GetApp()->HasGraphics())
         return static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->CreatePhysicalLook(name, color.rgb, roughness, metalness, reflectivity, 

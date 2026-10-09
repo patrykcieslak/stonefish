@@ -46,10 +46,10 @@ namespace sf
          \param material the name of the material the body is made of
          \param look the name of the graphical material used for rendering
          */
-        Obstacle(const std::string& uniqueName,
-                 const std::string& graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
-                 const std::string& physicsFilename, Scalar physicsScale, const Transform& physicsOrigin, bool convexHull,
-                 const std::string& material, const std::string& look = "");
+        Obstacle(std::string_view uniqueName,
+                 std::string_view graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
+                 std::string_view physicsFilename, Scalar physicsScale, const Transform& physicsOrigin, bool convexHull,
+                 std::string_view material, std::string_view look = "");
         
         //! A constructor building an obstacle based on a mesh file.
         /*!
@@ -61,7 +61,7 @@ namespace sf
          \param material the name of the material the body is made of
          \param look the name of the graphical material used for rendering
          */
-        Obstacle(const std::string& uniqueName, const std::string& modelFilename, Scalar scale, const Transform& origin, bool convexHull, const std::string& material, const std::string& look = "");
+        Obstacle(std::string_view uniqueName, std::string_view modelFilename, Scalar scale, const Transform& origin, bool convexHull, std::string_view material, std::string_view look = "");
         
         //! A constructor building a spherical obstacle.
         /*!
@@ -71,7 +71,7 @@ namespace sf
          \param material the name of the material the body is made of
          \param look the name of the graphical material used for rendering
          */
-        Obstacle(const std::string& uniqueName, Scalar sphereRadius, const Transform& origin, const std::string& material, const std::string& look = "");
+        Obstacle(std::string_view uniqueName, Scalar sphereRadius, const Transform& origin, std::string_view material, std::string_view look = "");
     
         //! A constructor building a box obstacle.
         /*!
@@ -82,7 +82,7 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param uvMode texture coordinates generation mode (0 - texture cross, 1 - same texture on all faces)
          */
-        Obstacle(const std::string& uniqueName, Vector3 boxDimensions, const Transform& origin, const std::string& material, const std::string& look = "", unsigned int uvMode = 0);
+        Obstacle(std::string_view uniqueName, Vector3 boxDimensions, const Transform& origin, std::string_view material, std::string_view look = "", unsigned int uvMode = 0);
         
         //! A constructor building a cylindrical obstacle.
         /*!
@@ -93,7 +93,7 @@ namespace sf
          \param material the name of the material the body is made of
          \param look the name of the graphical material used for rendering
          */
-        Obstacle(const std::string& uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& origin, const std::string& material, const std::string& look = "");
+        Obstacle(std::string_view uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& origin, std::string_view material, std::string_view look = "");
         
         //! A destructor.
         virtual ~Obstacle();

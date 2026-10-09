@@ -33,7 +33,7 @@
 namespace sf
 {
 
-StaticEntity::StaticEntity(const std::string& uniqueName, const std::string& material, const std::string& look) : Entity(uniqueName)
+StaticEntity::StaticEntity(std::string_view uniqueName, std::string_view material, std::string_view look) : Entity(uniqueName)
 {
     mat_ = SimulationApp::GetApp()->GetSimulationManager()->GetMaterialManager()->GetMaterial(material);
     if(SimulationApp::GetApp()->HasGraphics())

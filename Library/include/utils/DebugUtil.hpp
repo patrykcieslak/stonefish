@@ -80,7 +80,7 @@ bool testVector3(std::string_view title, const Vector3& value, const Vector3& ex
     return success;
 }
 #else
-void printTransform(const std::string& title, const Transform& t, unsigned int precision = 3)
+void printTransform(std::string_view title, const Transform& t, unsigned int precision = 3)
 {
     std::cout << "---- " << title << " ----\n";
     std::cout << std::setprecision(precision) << "Origin:\n [" << t.getOrigin().x() <<  ", " << t.getOrigin().y() << ", " << t.getOrigin().z() << "]\n";
@@ -91,12 +91,12 @@ void printTransform(const std::string& title, const Transform& t, unsigned int p
                                               << "[" << r[2].x() << ", " << r[2].y() << ", " << r[2].z() << "]\n";
 }
 
-void printVector3(const std::string& title, const Vector3& v, unsigned int precision = 3)
+void printVector3(std::string_view title, const Vector3& v, unsigned int precision = 3)
 {
     std::cout << std::setprecision(precision) << title << ": [" << v.x() << ", " << v.y() << ", " << v.z() << "]\n";
 }
 
-void printMatrix3(const std::string& title, const Matrix3& m, unsigned int precision = 3)
+void printMatrix3(std::string_view title, const Matrix3& m, unsigned int precision = 3)
 {
     std::cout << "---- " << title << " ----\n";
     std::cout << std::setprecision(precision) << "[" << m[0].x() << ", " << m[0].y() << ", " << m[0].z() << "]\n"
@@ -104,14 +104,14 @@ void printMatrix3(const std::string& title, const Matrix3& m, unsigned int preci
                                               << "[" << m[2].x() << ", " << m[2].y() << ", " << m[2].z() << "]\n";
 }
 
-bool testScalar(const std::string& title, const Scalar& value, const Scalar& expected, Scalar tolerance = 1e-6)
+bool testScalar(std::string_view title, const Scalar& value, const Scalar& expected, Scalar tolerance = 1e-6)
 {
     bool success = btFabs(value - expected) < tolerance;
     std::cout << std::setprecision(6) << (success ? "[PASS] " : "[FAIL] ") << title << ": " << value << " (expected " << expected << ")\n";
     return success;
 }
 
-bool testVector3(const std::string& title, const Vector3& value, const Vector3& expected, Scalar tolerance = 1e-6)
+bool testVector3(std::string_view title, const Vector3& value, const Vector3& expected, Scalar tolerance = 1e-6)
 {
     bool success = btFabs(value.getX() - expected.getX()) < tolerance 
                 && btFabs(value.getY() - expected.getY()) < tolerance 

@@ -35,7 +35,7 @@
 namespace sf
 {
 
-GPS::GPS(const std::string& uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+GPS::GPS(std::string_view uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels_.push_back(SensorChannel("Latitude", QuantityType::ANGLE));
     channels_.push_back(SensorChannel("Longitude", QuantityType::ANGLE));
@@ -114,7 +114,7 @@ ConstructInfo GPS::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<GPS> GPS::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+std::unique_ptr<GPS> GPS::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
 {
     // History (optional)
     int history = -1;

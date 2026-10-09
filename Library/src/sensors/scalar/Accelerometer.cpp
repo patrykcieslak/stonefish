@@ -34,7 +34,7 @@
 namespace sf
 {
 
-Accelerometer::Accelerometer(const std::string& uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Accelerometer::Accelerometer(std::string_view uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels_.push_back(SensorChannel("Linear Acceleration X", QuantityType::ACCELERATION));
     channels_.push_back(SensorChannel("Linear Acceleration Y", QuantityType::ACCELERATION));
@@ -103,7 +103,7 @@ ConstructInfo Accelerometer::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<Accelerometer> Accelerometer::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+std::unique_ptr<Accelerometer> Accelerometer::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
 {
     // History (optional)
     int history = -1;

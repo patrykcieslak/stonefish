@@ -31,7 +31,7 @@
 class SlidingTestApp : public sf::GraphicalSimulationApp
 {
 public:
-    SlidingTestApp(const std::string& dataDirPath, sf::RenderSettings s, sf::HelperSettings h, std::unique_ptr<SlidingTestManager> sim);
+    SlidingTestApp(std::string_view dataDirPath, sf::RenderSettings s, sf::HelperSettings h, std::unique_ptr<SlidingTestManager> sim);
     
     void DoHUD();
 };

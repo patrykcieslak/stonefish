@@ -59,7 +59,7 @@ namespace sf
          \param maxRange the maximum measured range [m]
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          */
-        Lidar(const std::string& uniqueName, unsigned int horizontalRes, unsigned int verticalRes, Scalar horizontalFOVDeg, Scalar verticalFOVDeg,
+        Lidar(std::string_view uniqueName, unsigned int horizontalRes, unsigned int verticalRes, Scalar horizontalFOVDeg, Scalar verticalFOVDeg,
                     Scalar minRange, Scalar maxRange, Scalar frequency = Scalar(-1));
         
         //! A method performing internal sensor state update.
@@ -132,7 +132,7 @@ namespace sf
         /*!
          \param info a construction info structure
         */
-        static std::unique_ptr<Lidar> Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info);
+        static std::unique_ptr<Lidar> Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info);
         
     private:
         void InitGraphics(bool& seesParticles);

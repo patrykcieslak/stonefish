@@ -31,7 +31,7 @@
 namespace sf
 {
 
-LinkSensor::LinkSensor(const std::string& uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
+LinkSensor::LinkSensor(std::string_view uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
 {
     attach_ = nullptr;
     o2s_ = Transform::getIdentity();

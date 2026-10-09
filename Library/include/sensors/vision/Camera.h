@@ -41,7 +41,7 @@ namespace sf
          \param horizFOVDeg the horizontal field of view [deg]
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          */
-        Camera(const std::string& uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, Scalar frequency);
+        Camera(std::string_view uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, Scalar frequency);
         
         //! A destructor.
         virtual ~Camera() = default;

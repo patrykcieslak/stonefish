@@ -32,7 +32,7 @@
 namespace sf
 {
 
-FeatherstoneEntity::FeatherstoneEntity(const std::string& uniqueName, size_t totalNumOfLinks, std::unique_ptr<SolidEntity> baseSolid, bool fixedBase) : Entity(uniqueName)
+FeatherstoneEntity::FeatherstoneEntity(std::string_view uniqueName, size_t totalNumOfLinks, std::unique_ptr<SolidEntity> baseSolid, bool fixedBase) : Entity(uniqueName)
 {
     Scalar M = baseSolid->GetAugmentedMass();
     Vector3 I = baseSolid->GetAugmentedInertia();
@@ -436,7 +436,7 @@ void FeatherstoneEntity::AddLink(std::unique_ptr<SolidEntity> solid, const Trans
     }
 }
 
-int FeatherstoneEntity::AddRevoluteJoint(const std::string& name, size_t parent, size_t child, const Vector3& pivot, const Vector3& axis, bool collisionBetweenJointLinks)
+int FeatherstoneEntity::AddRevoluteJoint(std::string_view name, size_t parent, size_t child, const Vector3& pivot, const Vector3& axis, bool collisionBetweenJointLinks)
 {
     //No self joint possible and base cannot be a child
     if(parent == child || child == 0)
@@ -472,7 +472,7 @@ int FeatherstoneEntity::AddRevoluteJoint(const std::string& name, size_t parent,
     return ((int)joints_.size() - 1);
 }
 
-int FeatherstoneEntity::AddPrismaticJoint(const std::string& name, size_t parent, size_t child, const Vector3& axis, bool collisionBetweenJointLinks)
+int FeatherstoneEntity::AddPrismaticJoint(std::string_view name, size_t parent, size_t child, const Vector3& axis, bool collisionBetweenJointLinks)
 {
     //No self joint possible and base cannot be a child
     if(parent == child || child == 0)
@@ -508,7 +508,7 @@ int FeatherstoneEntity::AddPrismaticJoint(const std::string& name, size_t parent
     return ((int)joints_.size() - 1);
 }
 
-int FeatherstoneEntity::AddFixedJoint(const std::string& name, size_t parent, size_t child, const Vector3& pivot)
+int FeatherstoneEntity::AddFixedJoint(std::string_view name, size_t parent, size_t child, const Vector3& pivot)
 {
     //No self joint possible and base cannot be a child
     if(parent == child || child == 0)

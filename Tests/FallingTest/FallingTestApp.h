@@ -31,7 +31,7 @@
 class FallingTestApp : public sf::GraphicalSimulationApp
 {
 public:
-    FallingTestApp(const std::string& dataDirPath, sf::RenderSettings s, sf::HelperSettings h, std::unique_ptr<FallingTestManager> sim);
+    FallingTestApp(std::string_view dataDirPath, sf::RenderSettings s, sf::HelperSettings h, std::unique_ptr<FallingTestManager> sim);
     
     void DoHUD();
 };

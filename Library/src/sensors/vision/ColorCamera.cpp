@@ -34,7 +34,7 @@
 namespace sf
 {
 
-ColorCamera::ColorCamera(const std::string& uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency, 
+ColorCamera::ColorCamera(std::string_view uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency, 
     Scalar near, Scalar far) : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
 {
     depthRange_ = glm::vec2((GLfloat)near, (GLfloat)far);
@@ -142,7 +142,7 @@ ConstructInfo ColorCamera::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<ColorCamera> ColorCamera::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+std::unique_ptr<ColorCamera> ColorCamera::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
 {
     // Specs
     int resolutionX = std::get<int>(info.nodes.at("specs").attributes.at("resolution_x").value);

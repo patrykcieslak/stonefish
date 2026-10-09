@@ -30,7 +30,7 @@
 namespace sf
 {
         
-SimpleUSBL::SimpleUSBL(const std::string& uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange) 
+SimpleUSBL::SimpleUSBL(std::string_view uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange) 
            : USBL(uniqueName, deviceId, minVerticalFOVDeg, maxVerticalFOVDeg, operatingRange)
 {
     rangeRes_ = Scalar(0);
@@ -169,7 +169,7 @@ ConstructInfo SimpleUSBL::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<SimpleUSBL> SimpleUSBL::Construct(const std::string& uniqueName, uint64_t deviceId, ConstructInfo& info)
+std::unique_ptr<SimpleUSBL> SimpleUSBL::Construct(std::string_view uniqueName, uint64_t deviceId, ConstructInfo& info)
 {
     // Required
     Scalar minVerticalFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("min_vertical_fov").value);

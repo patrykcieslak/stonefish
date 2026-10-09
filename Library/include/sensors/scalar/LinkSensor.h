@@ -42,7 +42,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (0 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        LinkSensor(const std::string& uniqueName, Scalar frequency, int historyLength);
+        LinkSensor(std::string_view uniqueName, Scalar frequency, int historyLength);
         
         //! A destructor.
         virtual ~LinkSensor() = default;

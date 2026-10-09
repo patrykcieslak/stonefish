@@ -52,7 +52,7 @@ namespace sf
          \param uniqueName a name for the robot
          \param fixedBase is the robot fixed to the world?
          */
-        Robot(const std::string& uniqueName, bool fixedBase = false);
+        Robot(std::string_view uniqueName, bool fixedBase = false);
         
         //! A destructor.
         virtual ~Robot();
@@ -76,7 +76,7 @@ namespace sf
          \param positionLimits a pair of min and max limit of joint position (if min > max then joint has no limits)
          \param damping joint motion damping (works when there is no actuator attached to the joint) 
          */
-        void DefineRevoluteJoint(const std::string& jointName, const std::string& parentName, const std::string& childName, const Transform& origin, 
+        void DefineRevoluteJoint(std::string_view jointName, std::string_view parentName, std::string_view childName, const Transform& origin, 
                                  const Vector3& axis, std::pair<Scalar, Scalar> positionLimits = std::make_pair(Scalar(1), Scalar(-1)), Scalar damping = Scalar(-1));
         
         //! A method used to define a prismatic joint between two mechanical parts of the robot.
@@ -89,7 +89,7 @@ namespace sf
          \param positionLimits a pair of min and max limit of joint position (if min > max then joint has no limits)
          \param damping joint motion damping (works when there is no actuator attached to the joint)
          */
-        void DefinePrismaticJoint(const std::string& jointName, const std::string& parentName, const std::string& childName, const Transform& origin, 
+        void DefinePrismaticJoint(std::string_view jointName, std::string_view parentName, std::string_view childName, const Transform& origin, 
                                   const Vector3& axis, std::pair<Scalar, Scalar> positionLimits = std::make_pair(Scalar(1), Scalar(-1)), Scalar damping = Scalar(-1));
         
         //! A method used to define a fixed joint between two mechanical parts of the robot.
@@ -99,7 +99,7 @@ namespace sf
          \param childName a name of the child link
          \param origin frame of the joint
          */
-        void DefineFixedJoint(const std::string& jointName, const std::string& parentName, const std::string& childName, const Transform& origin);
+        void DefineFixedJoint(std::string_view jointName, std::string_view parentName, std::string_view childName, const Transform& origin);
         
         //! A method which uses links and joints definitions to build the kinematic structure of the robot.
         virtual void BuildKinematicStructure() = 0;
@@ -111,16 +111,16 @@ namespace sf
          \param monitoredLinkName a name of the link to which the sensor is attached
          \param origin a transfromation from the link origin to the sensor frame
          */
-        virtual LinkSensor* AddLinkSensor(std::unique_ptr<Sensor> s, const std::string& monitoredLinkName, const Transform& origin);
-        virtual LinkSensor* AddLinkSensor(std::unique_ptr<Sensor, SensorDeleter> s, const std::string& monitoredLinkName, const Transform& origin);
+        virtual LinkSensor* AddLinkSensor(std::unique_ptr<Sensor> s, std::string_view monitoredLinkName, const Transform& origin);
+        virtual LinkSensor* AddLinkSensor(std::unique_ptr<Sensor, SensorDeleter> s, std::string_view monitoredLinkName, const Transform& origin);
         
         //! A method used to attach a sensor to a specified joint of the robot.
         /*!
          \param s a pointer to a joint sensor object
          \param monitoredJointName a name of the joint at which the sensor is attached
          */
-        virtual JointSensor* AddJointSensor(std::unique_ptr<Sensor> s, const std::string& monitoredJointName) = 0;
-        virtual JointSensor* AddJointSensor(std::unique_ptr<Sensor, SensorDeleter> s, const std::string& monitoredJointName) = 0;
+        virtual JointSensor* AddJointSensor(std::unique_ptr<Sensor> s, std::string_view monitoredJointName) = 0;
+        virtual JointSensor* AddJointSensor(std::unique_ptr<Sensor, SensorDeleter> s, std::string_view monitoredJointName) = 0;
         
         //! A method used to attach a vision sensor to a specified link of the robot.
         /*!
@@ -128,8 +128,8 @@ namespace sf
          \param attachmentLinkName a name of the link to which the sensor is attached
          \param origin a transformation from the link origin to the sensor frame
          */
-        virtual VisionSensor* AddVisionSensor(std::unique_ptr<Sensor> s, const std::string& attachmentLinkName, const Transform& origin);
-        virtual VisionSensor* AddVisionSensor(std::unique_ptr<Sensor, SensorDeleter> s, const std::string& attachmentLinkName, const Transform& origin);
+        virtual VisionSensor* AddVisionSensor(std::unique_ptr<Sensor> s, std::string_view attachmentLinkName, const Transform& origin);
+        virtual VisionSensor* AddVisionSensor(std::unique_ptr<Sensor, SensorDeleter> s, std::string_view attachmentLinkName, const Transform& origin);
 
         //ACTUATORS
         //! A method used to attach an actuator to a specified link of the robot.
@@ -138,16 +138,16 @@ namespace sf
          \param actuatedLinkName a name of the link which is to be actuated
          \param origin a transformation from the link origin to the actuator frame
          */
-        virtual LinkActuator* AddLinkActuator(std::unique_ptr<Actuator> a, const std::string& actuatedLinkName, const Transform& origin);
-        virtual LinkActuator* AddLinkActuator(std::unique_ptr<Actuator, ActuatorDeleter> a, const std::string& actuatedLinkName, const Transform& origin);
+        virtual LinkActuator* AddLinkActuator(std::unique_ptr<Actuator> a, std::string_view actuatedLinkName, const Transform& origin);
+        virtual LinkActuator* AddLinkActuator(std::unique_ptr<Actuator, ActuatorDeleter> a, std::string_view actuatedLinkName, const Transform& origin);
         
         //! A method used to attach an actuator to a specified joint of the robot.
         /*!
          \param a a pointer to a joint actuator object
          \param actuatedJointName a name of the joint which is to be driven
          */
-        virtual JointActuator* AddJointActuator(std::unique_ptr<Actuator> a, const std::string& actuatedJointName) = 0;
-        virtual JointActuator* AddJointActuator(std::unique_ptr<Actuator, ActuatorDeleter> a, const std::string& actuatedJointName) = 0;
+        virtual JointActuator* AddJointActuator(std::unique_ptr<Actuator> a, std::string_view actuatedJointName) = 0;
+        virtual JointActuator* AddJointActuator(std::unique_ptr<Actuator, ActuatorDeleter> a, std::string_view actuatedJointName) = 0;
         
         //COMMUNICATION DEVICES
         //! A method used to attach a communication device to a specified link of the robot.
@@ -156,8 +156,8 @@ namespace sf
          \param attachmentLinkName a name of the link to which the comm is attached
          \param origin a transfromation from the link origin to the comm frame
          */
-        virtual Comm* AddComm(std::unique_ptr<Comm> c, const std::string& attachmentLinkName, const Transform& origin);
-        virtual Comm* AddComm(std::unique_ptr<Comm, CommDeleter> c, const std::string& attachmentLinkName, const Transform& origin);
+        virtual Comm* AddComm(std::unique_ptr<Comm> c, std::string_view attachmentLinkName, const Transform& origin);
+        virtual Comm* AddComm(std::unique_ptr<Comm, CommDeleter> c, std::string_view attachmentLinkName, const Transform& origin);
         
         //GENERAL
         //! A method adding the robot to the simulation world (includes consistency checking).
@@ -179,7 +179,7 @@ namespace sf
          \param aname the name of the actuator
          \return a pointer to the actuator object
          */
-        Actuator* GetActuator(const std::string& aname);
+        Actuator* GetActuator(std::string_view aname);
         
         //! A method returning a pointer to the actuator by index.
         /*!
@@ -193,7 +193,7 @@ namespace sf
          \param sname the name of the sensor
          \return a pointer to the sensor object
          */
-        Sensor* GetSensor(const std::string& sname);
+        Sensor* GetSensor(std::string_view sname);
         
         //! A method returning a pointer to the sensor by index.
         /*!
@@ -207,7 +207,7 @@ namespace sf
          \param cname the name of the communication device
          \return a pointer to the comm object
          */
-        Comm* GetComm(const std::string& cname);
+        Comm* GetComm(std::string_view cname);
         
         //! A method returning a pointer to the communication device by index.
         /*!
@@ -224,7 +224,7 @@ namespace sf
          \param lname a name of the link
          \return a pointer to the link solid
          */
-        SolidEntity* GetLink(const std::string& lname);
+        SolidEntity* GetLink(std::string_view lname);
 
         //! A method returning a pointer to the link by index.
         /*!

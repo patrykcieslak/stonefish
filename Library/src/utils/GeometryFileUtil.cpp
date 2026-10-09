@@ -34,9 +34,9 @@
 namespace sf
 {
 
-std::unique_ptr<Mesh> LoadGeometryFromFile(const std::string& path, GLfloat scale)
+std::unique_ptr<Mesh> LoadGeometryFromFile(std::string_view path, GLfloat scale)
 {
-    std::string extension = path.substr(path.length()-3,3); // Get file extension
+    std::string extension{path.substr(path.length()-3,3)}; // Get file extension
     
     if(extension == "stl" || extension == "STL")
         return LoadSTL(path, scale);
@@ -49,11 +49,11 @@ std::unique_ptr<Mesh> LoadGeometryFromFile(const std::string& path, GLfloat scal
     }
 }
 
-std::unique_ptr<Mesh> LoadOBJ(const std::string& path, GLfloat scale)
+std::unique_ptr<Mesh> LoadOBJ(std::string_view path, GLfloat scale)
 {
     std::unique_ptr<Mesh> mesh {};
 
-    cInfo("Loading geometry from: %s", path.c_str());
+    cInfo("Loading geometry from: %s", std::string(path).c_str());
     
     int64_t start = GetTimeInMicroseconds();
     rapidobj::Result objData = rapidobj::ParseFile(path);
@@ -67,7 +67,7 @@ std::unique_ptr<Mesh> LoadOBJ(const std::string& path, GLfloat scale)
     bool success = rapidobj::Triangulate(objData);
     if (!success)
     {
-        cCritical("Failed to triangulate geometry!", path.c_str());
+        cCritical("Failed to triangulate geometry!", std::string(path).c_str());
         return nullptr;
     }
 
@@ -282,18 +282,18 @@ std::unique_ptr<Mesh> LoadOBJ(const std::string& path, GLfloat scale)
     return mesh;
 }
 
-std::unique_ptr<Mesh> LoadSTL(const std::string& path, GLfloat scale)
+std::unique_ptr<Mesh> LoadSTL(std::string_view path, GLfloat scale)
 {
     //Read STL data
-    FILE* file = fopen(path.c_str(), "rb");   
+    FILE* file = fopen(std::string(path).c_str(), "rb");   
     
     if(file == NULL)
     {
-        cCritical("Failed to open geometry file: %s", path.c_str());
+        cCritical("Failed to open geometry file: %s", std::string(path).c_str());
         return nullptr;
     }
     
-    cInfo("Loading geometry from: %s", path.c_str());
+    cInfo("Loading geometry from: %s", std::string(path).c_str());
     
     std::unique_ptr<PlainMesh> mesh = std::make_unique<PlainMesh>();
 

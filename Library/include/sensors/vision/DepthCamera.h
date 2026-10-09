@@ -47,7 +47,7 @@ namespace sf
          \param maxDepth the maximum measured depth [m]
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          */
-        DepthCamera(const std::string& uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg,
+        DepthCamera(std::string_view uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg,
                     Scalar minDepth, Scalar maxDepth, Scalar frequency = Scalar(-1));
         
         //! A method performing internal sensor state update.
@@ -105,7 +105,7 @@ namespace sf
         /*!
          \param info a construction info structure
         */
-        static std::unique_ptr<DepthCamera> Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info);
+        static std::unique_ptr<DepthCamera> Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info);
         
     private:
         void InitGraphics(bool& seesParticles);

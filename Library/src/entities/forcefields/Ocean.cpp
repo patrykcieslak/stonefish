@@ -39,7 +39,7 @@
 namespace sf
 {
 
-Ocean::Ocean(const std::string& uniqueName, Scalar waves, Fluid l) : ForcefieldEntity(uniqueName)
+Ocean::Ocean(std::string_view uniqueName, Scalar waves, Fluid l) : ForcefieldEntity(uniqueName)
 {
     ghost_->setCollisionFlags(ghost_->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
     oceanState_ = waves > Scalar(2.0) ? Scalar(2.0) : waves;

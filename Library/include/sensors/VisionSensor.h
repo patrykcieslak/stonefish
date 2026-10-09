@@ -47,7 +47,7 @@ namespace sf
          \param uniqueName a name for the sensor
          \param frequency the sampling frequency of the sensor [Hz] (0 if updated every simulation step)
          */
-        VisionSensor(const std::string& uniqueName, Scalar frequency);
+        VisionSensor(std::string_view uniqueName, Scalar frequency);
         
         //! A destructor.
         virtual ~VisionSensor() = default;

@@ -32,7 +32,7 @@
 namespace sf
 {
 
-DCMotor::DCMotor(const std::string& uniqueName, Scalar motorR, Scalar motorL, Scalar motorKe, Scalar motorKt, Scalar friction) : JointActuator(uniqueName)
+DCMotor::DCMotor(std::string_view uniqueName, Scalar motorR, Scalar motorL, Scalar motorKe, Scalar motorKt, Scalar friction) : JointActuator(uniqueName)
 {
     //Params
     R_ = motorR;
@@ -216,7 +216,7 @@ ConstructInfo DCMotor::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<DCMotor> DCMotor::Construct(const std::string& uniqueName, ConstructInfo& info)
+std::unique_ptr<DCMotor> DCMotor::Construct(std::string_view uniqueName, ConstructInfo& info)
 {
     // Required
     Scalar R = std::get<Scalar>(info.nodes.at("specs").attributes.at("R").value);

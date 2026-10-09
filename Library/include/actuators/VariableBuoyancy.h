@@ -40,7 +40,7 @@ namespace sf
          \param volumeMeshPath a list of paths to the meshes representing different states of the buoyancy volume
          \param initialVolume an initial state of the VBS
          */
-        VariableBuoyancy(const std::string& uniqueName, const std::vector<std::string>& volumeMeshPaths, Scalar initialVolume);
+        VariableBuoyancy(std::string_view uniqueName, const std::vector<std::string>& volumeMeshPaths, Scalar initialVolume);
         
         //! A method used to update the internal state of the actuator.
         /*!
@@ -76,7 +76,7 @@ namespace sf
         /*!
          \param info a construction info structure
         */
-        static std::unique_ptr<VariableBuoyancy> Construct(const std::string& uniqueName, ConstructInfo& info);
+        static std::unique_ptr<VariableBuoyancy> Construct(std::string_view uniqueName, ConstructInfo& info);
         
     private:
         void InterpolateVProps(Scalar volume, Scalar& m, Vector3& cg);

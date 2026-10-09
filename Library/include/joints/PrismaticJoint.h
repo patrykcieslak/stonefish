@@ -43,7 +43,7 @@ namespace sf
          \param axis a vector parallel to the joint axis
          \param collideLinked a flag that sets if the bodies connected by the joint should collide
          */
-        PrismaticJoint(const std::string& uniqueName, SolidEntity* solidA, SolidEntity* solidB,
+        PrismaticJoint(std::string_view uniqueName, SolidEntity* solidA, SolidEntity* solidB,
                        const Vector3& axis, bool collideLinked = true);
         
         //! A method used to apply force to the joint.

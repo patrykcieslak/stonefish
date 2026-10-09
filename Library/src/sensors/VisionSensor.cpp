@@ -33,7 +33,7 @@
 namespace sf
 {
 
-VisionSensor::VisionSensor(const std::string& uniqueName, Scalar frequency) : Sensor(uniqueName, frequency)
+VisionSensor::VisionSensor(std::string_view uniqueName, Scalar frequency) : Sensor(uniqueName, frequency)
 {
     if(!SimulationApp::GetApp()->HasGraphics())
         cCritical("Not possible to use vision sensors in console simulation! Use graphical simulation if possible.");

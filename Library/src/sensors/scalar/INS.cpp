@@ -34,7 +34,7 @@
 namespace sf
 {
 
-INS::INS(const std::string& uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+INS::INS(std::string_view uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels_.push_back(SensorChannel("North", QuantityType::LENGTH));
     channels_.push_back(SensorChannel("East", QuantityType::LENGTH));
@@ -181,17 +181,17 @@ void INS::InternalUpdate(Scalar dt)
     )); //Adds noise.....:(
 }
 
-void INS::ConnectGPS(const std::string& name)
+void INS::ConnectGPS(std::string_view name)
 {
     gpsName_ = name;
 }
 
-void INS::ConnectDVL(const std::string& name)
+void INS::ConnectDVL(std::string_view name)
 {
     dvlName_ = name;
 }
 
-void INS::ConnectPressure(const std::string& name)
+void INS::ConnectPressure(std::string_view name)
 {
     pressName_ = name;
 }

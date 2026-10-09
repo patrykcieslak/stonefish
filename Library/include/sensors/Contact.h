@@ -76,7 +76,7 @@ namespace sf
          \param entityB a pointer to the second entity
          \param historyLength defines: 0 -> unlimited history, >0 -> history with a specified length
          */
-        Contact(const std::string& uniqueName, Entity* entityA, Entity* entityB, unsigned int historyLength = 1);
+        Contact(std::string_view uniqueName, Entity* entityA, Entity* entityB, unsigned int historyLength = 1);
         
         //! A destructor.
         ~Contact();

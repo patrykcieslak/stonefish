@@ -34,7 +34,7 @@
 namespace sf
 {
 
-MovingEntity::MovingEntity(const std::string& uniqueName, const std::string& material, const std::string& look) : Entity(uniqueName)
+MovingEntity::MovingEntity(std::string_view uniqueName, std::string_view material, std::string_view look) : Entity(uniqueName)
 {
     mat_ = SimulationApp::GetApp()->GetSimulationManager()->GetMaterialManager()->GetMaterial(material);
     if(SimulationApp::GetApp()->HasGraphics())

@@ -47,7 +47,7 @@ namespace sf
          \param uniqueName a name for the sensor
          \param frequency the sampling frequency of the sensor [Hz] (0 if updated every simulation step)
          */
-        Sensor(const std::string& uniqueName, Scalar frequency);
+        Sensor(std::string_view uniqueName, Scalar frequency);
         
         //! A destructor.
         virtual ~Sensor();
@@ -95,7 +95,7 @@ namespace sf
         void SetRenderable(bool render);
 
         //! A method to set the visual representation of the sensor.
-        void SetVisual(const std::string& meshFilename, Scalar scale, const std::string& look);
+        void SetVisual(std::string_view meshFilename, Scalar scale, std::string_view look);
                 
         //! A method performing an internal update of the sensor state.
         /*!

@@ -33,7 +33,7 @@
 namespace sf
 {
 
-ConsoleSimulationApp::ConsoleSimulationApp(const std::string& title, const std::string& dataDirPath, std::unique_ptr<SimulationManager> sim)
+ConsoleSimulationApp::ConsoleSimulationApp(std::string_view title, std::string_view dataDirPath, std::unique_ptr<SimulationManager> sim)
 : SimulationApp(title, dataDirPath, std::move(sim))
 {
     simulationThread_ = nullptr;

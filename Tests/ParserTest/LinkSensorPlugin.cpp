@@ -28,7 +28,7 @@
 namespace sf
 {
 
-LinkSensorPlugin::LinkSensorPlugin(const std::string& uniqueName, Scalar frequency, int historyLength) 
+LinkSensorPlugin::LinkSensorPlugin(std::string_view uniqueName, Scalar frequency, int historyLength) 
     : LinkSensor(uniqueName, frequency, historyLength)
 {
     printf("Sensor plugin constructed!\n");

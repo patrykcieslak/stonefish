@@ -57,7 +57,7 @@ namespace sf
          \param dataDirPath a path to the directory containing simulation data
          \param sim a pointer to the simulation manager
          */
-        SimulationApp(const std::string& title, const std::string& dataDirPath, std::unique_ptr<SimulationManager> sim);
+        SimulationApp(std::string_view title, std::string_view dataDirPath, std::unique_ptr<SimulationManager> sim);
         
         //! A destructor.
         virtual ~SimulationApp();
@@ -83,7 +83,7 @@ namespace sf
         virtual void StepSimulation();
 
         //! A method that stores the plugin handles.
-        void AddPluginHandle(const std::string& name, void* handle);
+        void AddPluginHandle(std::string_view name, void* handle);
         
         //! A method setting the maximum allowed parallel threads for physcis computation.
         /*!
@@ -116,7 +116,7 @@ namespace sf
         ThreadPool* GetPhysicsThreadPool();
 
         //! A method returning the plugin handle.
-        void* GetPluginHandle(const std::string& name);
+        void* GetPluginHandle(std::string_view name);
 
         //! A method informing if the application is graphical.
         virtual bool HasGraphics() = 0;

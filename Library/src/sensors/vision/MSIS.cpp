@@ -34,7 +34,7 @@
 namespace sf
 {
 
-MSIS::MSIS(const std::string& uniqueName, Scalar stepAngleDeg, unsigned int numOfBins, Scalar horizontalBeamWidthDeg, Scalar verticalBeamWidthDeg,
+MSIS::MSIS(std::string_view uniqueName, Scalar stepAngleDeg, unsigned int numOfBins, Scalar horizontalBeamWidthDeg, Scalar verticalBeamWidthDeg,
            Scalar minRotationDeg, Scalar maxRotationDeg, Scalar minRange, Scalar maxRange, SonarOutputFormat outputFormat, Scalar frequency)
     : Camera(uniqueName, (unsigned int)ceil(Scalar(360)/stepAngleDeg), numOfBins, horizontalBeamWidthDeg, frequency)
 {
@@ -407,7 +407,7 @@ ConstructInfo MSIS::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<MSIS> MSIS::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+std::unique_ptr<MSIS> MSIS::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
 {
     // Specs
     int bins = std::get<int>(info.nodes.at("specs").attributes.at("bins").value);

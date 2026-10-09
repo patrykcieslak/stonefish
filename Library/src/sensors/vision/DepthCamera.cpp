@@ -34,7 +34,7 @@
 namespace sf
 {
 
-DepthCamera::DepthCamera(const std::string& uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar minDepth, Scalar maxDepth, Scalar frequency)
+DepthCamera::DepthCamera(std::string_view uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar minDepth, Scalar maxDepth, Scalar frequency)
     : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
 {
     depthRange_.x = minDepth < Scalar(0.01) ? 0.01f : (GLfloat)minDepth;
@@ -150,7 +150,7 @@ ConstructInfo DepthCamera::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<DepthCamera> DepthCamera::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+std::unique_ptr<DepthCamera> DepthCamera::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
 {
     // Specs
     int resolutionX = std::get<int>(info.nodes.at("specs").attributes.at("resolution_x").value);

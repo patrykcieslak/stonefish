@@ -49,7 +49,7 @@ namespace sf
          \param outputFormat the format of the sonar output data
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated based on maximum range)
          */
-        FLS(const std::string& uniqueName, unsigned int numOfBeams, unsigned int numOfBins, Scalar horizontalFOVDeg, Scalar verticalFOVDeg,
+        FLS(std::string_view uniqueName, unsigned int numOfBeams, unsigned int numOfBins, Scalar horizontalFOVDeg, Scalar verticalFOVDeg,
                     Scalar minRange, Scalar maxRange, SonarOutputFormat outputFormat = SonarOutputFormat::U8, Scalar frequency = Scalar(-1));
         
         //! A method performing internal sensor state update.
@@ -154,7 +154,7 @@ namespace sf
         /*!
          \param info a construction info structure
         */
-        static std::unique_ptr<FLS> Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info);
+        static std::unique_ptr<FLS> Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info);
 
     private:
         void InitGraphics(bool& seesParticles);

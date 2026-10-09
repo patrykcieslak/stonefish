@@ -31,9 +31,9 @@
 namespace sf
 {
 
-Wing::Wing(const std::string& uniqueName, PhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength,
+Wing::Wing(std::string_view uniqueName, PhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength,
            Scalar maxCamber, Scalar maxCamberPos, Scalar profileThickness, Scalar wingLength, const Transform& origin, 
-           const std::string& material, const std::string& look, Scalar thickness)
+           std::string_view material, std::string_view look, Scalar thickness)
            : SolidEntity(uniqueName, phy, material, look, thickness)
 {
     T_O2G_ = T_O2C_ = origin;
@@ -63,8 +63,8 @@ Wing::Wing(const std::string& uniqueName, PhysicsSettings phy, Scalar baseChordL
     P_CB_ = Vector3(0,0,0);
 }
     
-Wing::Wing(const std::string& uniqueName, PhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength, const std::string& NACA, Scalar wingLength, const Transform& origin, 
-           const std::string& material, const std::string& look, Scalar thickness)
+Wing::Wing(std::string_view uniqueName, PhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength, std::string_view NACA, Scalar wingLength, const Transform& origin, 
+           std::string_view material, std::string_view look, Scalar thickness)
            : SolidEntity(uniqueName, phy, material, look, thickness)
 {
     T_O2G_ = T_O2C_ = origin;

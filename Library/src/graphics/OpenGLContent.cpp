@@ -1302,8 +1302,8 @@ size_t OpenGLContent::BuildCable(size_t numNodes)
     return cables_.size()-1;
 }
 
-std::string OpenGLContent::CreateSimpleLook(const std::string& name, glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, 
-                                            GLfloat reflectivity, const std::string& albedoTexturePath)
+std::string OpenGLContent::CreateSimpleLook(std::string_view name, glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, 
+                                            GLfloat reflectivity, std::string_view albedoTexturePath)
 {
     Look look;
     look.name = lookNameManager_.AddName(name);
@@ -1317,9 +1317,9 @@ std::string OpenGLContent::CreateSimpleLook(const std::string& name, glm::vec3 r
     return look.name;
 }
 
-std::string OpenGLContent::CreatePhysicalLook(const std::string& name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness, 
-                                              GLfloat reflectivity, const std::string& albedoTexturePath, const std::string& normalMapPath, 
-                                              const std::string& temperatureMapPath, glm::vec2 temperatureRange)
+std::string OpenGLContent::CreatePhysicalLook(std::string_view name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness, 
+                                              GLfloat reflectivity, std::string_view albedoTexturePath, std::string_view normalMapPath, 
+                                              std::string_view temperatureMapPath, glm::vec2 temperatureRange)
 {
     Look look;
     look.name = lookNameManager_.AddName(name);
@@ -1373,7 +1373,7 @@ size_t OpenGLContent::GetLightsCount()
     return lights_.size();
 }
 
-int OpenGLContent::GetLookId(const std::string& name)
+int OpenGLContent::GetLookId(std::string_view name)
 {
     if (name.empty()) return -1; // No name specified --> default look
 
@@ -1401,7 +1401,7 @@ const Look& OpenGLContent::GetLook(size_t id)
 }
     
 //Static methods
-GLuint OpenGLContent::LoadTexture(const std::string& filename, bool srgb, bool alpha, GLfloat anisotropy, bool internal)
+GLuint OpenGLContent::LoadTexture(std::string_view filename, bool srgb, bool alpha, GLfloat anisotropy, bool internal)
 {
     int width, height, channels;
     int reqChannels = alpha ? 4 : 3;
@@ -1413,17 +1413,17 @@ GLuint OpenGLContent::LoadTexture(const std::string& filename, bool srgb, bool a
     unsigned char* dataBuffer;
     if(internal)
     {
-        ResourceHandle rh(filename);
+        ResourceHandle rh(std::string(filename));
         dataBuffer = stbi_load_from_memory(rh.data(), rh.size(), &width, &height, &channels, reqChannels);
     }
     else
-        dataBuffer = stbi_load(filename.c_str(), &width, &height, &channels, reqChannels);
+        dataBuffer = stbi_load(std::string(filename).c_str(), &width, &height, &channels, reqChannels);
 #else
-    unsigned char* dataBuffer = stbi_load(filename.c_str(), &width, &height, &channels, reqChannels);
+    unsigned char* dataBuffer = stbi_load(std::string(filename).c_str(), &width, &height, &channels, reqChannels);
 #endif
     if(dataBuffer == NULL)
     {
-        cError("Failed to load texture from: %s", filename.c_str());
+        cError("Failed to load texture from: %s", std::string(filename).c_str());
         return 0;
     }
     
@@ -1432,7 +1432,7 @@ GLuint OpenGLContent::LoadTexture(const std::string& filename, bool srgb, bool a
         cWarning("Texture has %d channels while expected %d channels!", channels, reqChannels);
     }
 
-    cInfo("Loaded texture from: %s", filename.c_str());
+    cInfo("Loaded texture from: %s", std::string(filename).c_str());
     
     glGenTextures(1, &texture);
     OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, texture);
@@ -1454,9 +1454,9 @@ GLuint OpenGLContent::LoadTexture(const std::string& filename, bool srgb, bool a
     return texture;
 }
 
-GLuint OpenGLContent::LoadInternalTexture(const std::string& filename, bool srgb, bool alpha, GLfloat anisotropy)
+GLuint OpenGLContent::LoadInternalTexture(std::string_view filename, bool srgb, bool alpha, GLfloat anisotropy)
 {
-    return LoadTexture(GetShaderPath() + filename, srgb, alpha, anisotropy, true);
+    return LoadTexture(GetShaderPath() + std::string(filename), srgb, alpha, anisotropy, true);
 }
 
 GLuint OpenGLContent::GenerateTexture(GLenum target, glm::uvec3 dimensions, GLenum internalFormat, GLenum format, GLenum type, const void* data, 
@@ -2526,11 +2526,11 @@ std::unique_ptr<Mesh> OpenGLContent::BuildTerrain(const std::vector<GLdouble>& h
     return mesh;
 }
 
-std::unique_ptr<Mesh> OpenGLContent::LoadMesh(const std::string& filename, GLfloat scale, bool smooth)
+std::unique_ptr<Mesh> OpenGLContent::LoadMesh(std::string_view filename, GLfloat scale, bool smooth)
 {
     std::unique_ptr<Mesh> mesh = LoadGeometryFromFile(filename, scale);
     if(mesh == nullptr)
-        cCritical("Cannot create mesh from file: %s", filename.c_str());
+        cCritical("Cannot create mesh from file: %s", std::string(filename).c_str());
     
     CheckAndRepairFaceVertexOrder(mesh.get());
     if(smooth)

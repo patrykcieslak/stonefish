@@ -47,7 +47,7 @@ namespace sf
          \param near the minimum drawing distance [m]
          \param far the maximum drawing distance [m]
          */
-        OpticalFlowCamera(const std::string& uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency = Scalar(-1), 
+        OpticalFlowCamera(std::string_view uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency = Scalar(-1), 
             Scalar near = Scalar(STD_NEAR_PLANE_DISTANCE), Scalar far = Scalar(STD_FAR_PLANE_DISTANCE)); //Rendering options
         
         //! A method performing internal sensor state update.
@@ -112,7 +112,7 @@ namespace sf
         /*!
          \param info a construction info structure
         */
-        static std::unique_ptr<OpticalFlowCamera> Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info);
+        static std::unique_ptr<OpticalFlowCamera> Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info);
         
     private:
         void InitGraphics(bool& seesParticles);

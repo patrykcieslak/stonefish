@@ -39,7 +39,7 @@
 namespace sf
 {
 
-GeneralRobot::GeneralRobot(const std::string& uniqueName, bool fixedBase) : Robot(uniqueName, fixedBase)
+GeneralRobot::GeneralRobot(std::string_view uniqueName, bool fixedBase) : Robot(uniqueName, fixedBase)
 {
 }
 
@@ -48,7 +48,7 @@ RobotType GeneralRobot::GetType() const
     return RobotType::GENERAL;
 }
 
-Joint* GeneralRobot::GetJoint(const std::string& name)
+Joint* GeneralRobot::GetJoint(std::string_view name)
 {
     auto it = std::find_if(joints_.begin(), joints_.end(), [&name](Joint* joint) { return joint->GetName() == name; });
     if(it != joints_.end())
@@ -79,7 +79,7 @@ void GeneralRobot::BuildKinematicStructure()
 {   
 }
         
-JointSensor* GeneralRobot::AddJointSensor(std::unique_ptr<Sensor, SensorDeleter> s, const std::string& monitoredJointName)
+JointSensor* GeneralRobot::AddJointSensor(std::unique_ptr<Sensor, SensorDeleter> s, std::string_view monitoredJointName)
 {
     if (s == nullptr || s->GetType() != SensorType::JOINT)
     {
@@ -90,7 +90,7 @@ JointSensor* GeneralRobot::AddJointSensor(std::unique_ptr<Sensor, SensorDeleter>
     for(size_t i = 0; i < jointsData_.size(); ++i)
         if(jointsData_[i].name == monitoredJointName)
         {
-            jsAttachments_.push_back(std::make_pair(static_cast<JointSensor*>(s.get()), monitoredJointName));
+            jsAttachments_.push_back(std::make_pair(static_cast<JointSensor*>(s.get()), std::string(monitoredJointName)));
             detachedSensors_.push_back(std::move(s));
             sensors_.push_back(detachedSensors_.back().get());
             return static_cast<JointSensor*>(sensors_.back());
@@ -98,12 +98,12 @@ JointSensor* GeneralRobot::AddJointSensor(std::unique_ptr<Sensor, SensorDeleter>
     return nullptr;
 }
 
-JointSensor* GeneralRobot::AddJointSensor(std::unique_ptr<Sensor> s, const std::string& monitoredJointName)
+JointSensor* GeneralRobot::AddJointSensor(std::unique_ptr<Sensor> s, std::string_view monitoredJointName)
 {
     return AddJointSensor(std::unique_ptr<Sensor, SensorDeleter>(s.release(), Sensor::DefaultDeleter), monitoredJointName);
 }
 
-JointActuator* GeneralRobot::AddJointActuator(std::unique_ptr<Actuator, ActuatorDeleter> a, const std::string& actuatedJointName)
+JointActuator* GeneralRobot::AddJointActuator(std::unique_ptr<Actuator, ActuatorDeleter> a, std::string_view actuatedJointName)
 {
     if (a == nullptr || a->GetType() != ActuatorType::JOINT)
     {
@@ -114,7 +114,7 @@ JointActuator* GeneralRobot::AddJointActuator(std::unique_ptr<Actuator, Actuator
     for(size_t i = 0; i < jointsData_.size(); ++i)
         if(jointsData_[i].name == actuatedJointName)
         {
-            jaAttachments_.push_back(std::make_pair(static_cast<JointActuator*>(a.get()), actuatedJointName));
+            jaAttachments_.push_back(std::make_pair(static_cast<JointActuator*>(a.get()), std::string(actuatedJointName)));
             detachedActuators_.push_back(std::move(a));
             actuators_.push_back(detachedActuators_.back().get());    
             return static_cast<JointActuator*>(actuators_.back());
@@ -122,7 +122,7 @@ JointActuator* GeneralRobot::AddJointActuator(std::unique_ptr<Actuator, Actuator
     return nullptr;
 }
 
-JointActuator* GeneralRobot::AddJointActuator(std::unique_ptr<Actuator> a, const std::string& actuatedJointName)
+JointActuator* GeneralRobot::AddJointActuator(std::unique_ptr<Actuator> a, std::string_view actuatedJointName)
 {
     return AddJointActuator(std::unique_ptr<Actuator, ActuatorDeleter>(a.release(), Actuator::DefaultDeleter), actuatedJointName);
 }

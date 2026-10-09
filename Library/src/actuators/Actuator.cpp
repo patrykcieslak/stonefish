@@ -37,7 +37,7 @@ void Actuator::DefaultDeleter(Actuator* a)
     delete a;
 }
 
-Actuator::Actuator(const std::string& uniqueName)
+Actuator::Actuator(std::string_view uniqueName)
 {
     name_ = SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->AddName(uniqueName);
     dm_ = DisplayMode::GRAPHICAL;

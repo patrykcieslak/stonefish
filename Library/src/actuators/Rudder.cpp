@@ -37,7 +37,7 @@
 namespace sf
 {
 
-Rudder::Rudder(const std::string& uniqueName, std::unique_ptr<SolidEntity> rudder, Scalar area, Scalar liftCoeff, Scalar dragCoeff, Scalar stallAngle, 
+Rudder::Rudder(std::string_view uniqueName, std::unique_ptr<SolidEntity> rudder, Scalar area, Scalar liftCoeff, Scalar dragCoeff, Scalar stallAngle, 
     Scalar maxAngle, bool inverted, Scalar maxAngularRate) : LinkActuator(uniqueName)
 {
     this->dragCoeff_ = dragCoeff;
@@ -243,7 +243,7 @@ ConstructInfo Rudder::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<Rudder> Rudder::Construct(const std::string& uniqueName, ConstructInfo& info)
+std::unique_ptr<Rudder> Rudder::Construct(std::string_view uniqueName, ConstructInfo& info)
 {
     // Required
     Scalar dragCoeff = std::get<Scalar>(info.nodes.at("specs").attributes.at("drag_coeff").value);
@@ -279,7 +279,7 @@ std::unique_ptr<Rudder> Rudder::Construct(const std::string& uniqueName, Constru
     phy.collisions = false;
     phy.buoyancy = false;
 
-    std::unique_ptr<Polyhedron> rudder = std::make_unique<Polyhedron>(uniqueName + "/Rudder", phy, GetFullPath(std::string(meshFilename)), 
+    std::unique_ptr<Polyhedron> rudder = std::make_unique<Polyhedron>(std::string(uniqueName) + std::string("/Rudder"), phy, GetFullPath(std::string(meshFilename)), 
         meshScale, meshOrigin, materialName, lookName);
         
     return std::make_unique<Rudder>(uniqueName, std::move(rudder), area, liftCoeff, dragCoeff, stallAngle, maxAngle, inverted, maxAngularRate);

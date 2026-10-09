@@ -33,7 +33,7 @@
 namespace sf
 {
     
-Contact::Contact(const std::string& uniqueName, Entity* entityA, Entity* entityB, unsigned int inclusiveHistoryLength)
+Contact::Contact(std::string_view uniqueName, Entity* entityA, Entity* entityB, unsigned int inclusiveHistoryLength)
 {
     name_ = SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->AddName(uniqueName);
     A_ = entityA;

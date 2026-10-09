@@ -38,7 +38,7 @@ namespace sf
          \param uniqueName a name for the push
          \param inverted a flag indicating if the direction of the generated force should be reversed
         */
-        Push(const std::string& uniqueName, bool inverted = false);
+        Push(std::string_view uniqueName, bool inverted = false);
         
         //! A method used to update the internal state of the push actuator.
         /*!
@@ -75,7 +75,7 @@ namespace sf
         /*!
          \param info a construction info structure
         */
-        static std::unique_ptr<Push> Construct(const std::string& uniqueName, ConstructInfo& info);
+        static std::unique_ptr<Push> Construct(std::string_view uniqueName, ConstructInfo& info);
         
     private:
         void WatchdogTimeout() override;

@@ -37,7 +37,7 @@
 namespace sf
 {
 
-Propeller::Propeller(const std::string& uniqueName, std::unique_ptr<SolidEntity> propeller, Scalar diameter, 
+Propeller::Propeller(std::string_view uniqueName, std::unique_ptr<SolidEntity> propeller, Scalar diameter, 
     const std::pair<Scalar, Scalar>& thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand, bool inverted) : LinkActuator(uniqueName),
     propeller_(std::move(propeller)), D_(diameter), kT0_(thrustCoeff), kQ0_(torqueCoeff), RH_(rightHand), inv_(inverted)
 {
@@ -220,7 +220,7 @@ ConstructInfo Propeller::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<Propeller> Propeller::Construct(const std::string& uniqueName, ConstructInfo& info)
+std::unique_ptr<Propeller> Propeller::Construct(std::string_view uniqueName, ConstructInfo& info)
 {
     // Required
     std::pair<Scalar, Scalar> thrustCoeff;
@@ -253,7 +253,7 @@ std::unique_ptr<Propeller> Propeller::Construct(const std::string& uniqueName, C
     phy.collisions = false;
     phy.buoyancy = false;
     phy.mode = PhysicsMode::AERODYNAMIC;
-    std::unique_ptr<Polyhedron> mesh = std::make_unique<Polyhedron>(uniqueName + "/Propeller", phy, GetFullPath(meshFilename), 
+    std::unique_ptr<Polyhedron> mesh = std::make_unique<Polyhedron>(std::string(uniqueName) + std::string("/Propeller"), phy, GetFullPath(meshFilename), 
         meshScale, I4(), materialName, lookName, Scalar(-1.), GeometryApproxType::CYLINDER);
         
     return std::make_unique<Propeller>(uniqueName, std::move(mesh), diameter, thrustCoeff, torqueCoeff, maxRpm, right, inverted);

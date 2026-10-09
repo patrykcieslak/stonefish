@@ -364,7 +364,7 @@ namespace sf
          \param name a name of the robot
          \return a pointer to a robot object
          */
-        Robot* GetRobot(const std::string& name);
+        Robot* GetRobot(std::string_view name);
         
         //! A method returning an entity by index.
         /*!
@@ -378,7 +378,7 @@ namespace sf
          \param name a name of the entity
          \return a pointer to an entity object
          */
-        Entity* GetEntity(const std::string& name);
+        Entity* GetEntity(std::string_view name);
         
         //! A method returning a joint by index.
         /*!
@@ -392,7 +392,7 @@ namespace sf
          \param name a name of the joint
          \return a pointer to a joint object
          */
-        Joint* GetJoint(const std::string& name);
+        Joint* GetJoint(std::string_view name);
         
         //! A method returning a contact by index.
         /*!
@@ -406,7 +406,7 @@ namespace sf
          \param name a name of the contact
          \return a pointer to a contact object
          */
-        Contact* GetContact(const std::string& name);
+        Contact* GetContact(std::string_view name);
         
         //! A method returning a contavt by entity pair.
         /*!
@@ -428,7 +428,7 @@ namespace sf
          \param name a name of the actuator
          \return a pointer to an actuator object
          */
-        Actuator* GetActuator(const std::string& name);
+        Actuator* GetActuator(std::string_view name);
         
         //! A method returning a sensor by index.
         /*!
@@ -442,7 +442,7 @@ namespace sf
          \param name a name of the sensor
          \return a pointer to a sensor object
          */
-        Sensor* GetSensor(const std::string& name);
+        Sensor* GetSensor(std::string_view name);
         
         //! A method returning a communication device by index.
         /*!
@@ -456,7 +456,7 @@ namespace sf
          \param name a name of the communication device
          \return a pointer to a comm object
          */
-        Comm* GetComm(const std::string& name);
+        Comm* GetComm(std::string_view name);
         
         //! A method returning a pointer to the NED object.
         NED* GetNed();
@@ -516,7 +516,7 @@ namespace sf
          \param restitution a restitution factor <0,1>
          \return a name of the created material
          */
-        std::string CreateMaterial(const std::string& uniqueName, Scalar density, Scalar restitution);
+        std::string CreateMaterial(std::string_view uniqueName, Scalar density, Scalar restitution);
         
         //! A method that sets interaction between a pair of materials.
         /*!
@@ -526,7 +526,7 @@ namespace sf
          \param dynamicFricCoeff a coefficient of dynamic friction between materials
          \return was the interaction was set properly?
          */
-        bool SetMaterialsInteraction(const std::string& firstMaterialName, const std::string& secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff);
+        bool SetMaterialsInteraction(std::string_view firstMaterialName, std::string_view secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff);
         
         //! A method used to create a rendering look.
         /*!
@@ -541,9 +541,9 @@ namespace sf
          \param temperatureRange a range of temperatures represented by the texture values
          \return the actual name of the created look
          */
-        std::string CreateLook(const std::string& name, Color color, float roughness, float metalness = 0.f, float reflectivity = 0.f, 
-                               const std::string& albedoTexturePath = "", const std::string& normalTexturePath = "", 
-                               const std::string& temperatureTexturePath = "", const std::pair<float, float>& temperatureRange = std::make_pair(20.f, 20.f));
+        std::string CreateLook(std::string_view name, Color color, float roughness, float metalness = 0.f, float reflectivity = 0.f, 
+                               std::string_view albedoTexturePath = "", std::string_view normalTexturePath = "", 
+                               std::string_view temperatureTexturePath = "", const std::pair<float, float>& temperatureRange = std::make_pair(20.f, 20.f));
         
     protected:
         static void SolveICTickCallback(btDynamicsWorld* world, Scalar timeStep);

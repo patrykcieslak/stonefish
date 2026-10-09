@@ -45,7 +45,7 @@ namespace sf
          \param color a color of the light
          \param lum the luminous power of the light [lm]
          */
-        Light(const std::string& uniqueName, Scalar radius, Color color, Scalar lum);
+        Light(std::string_view uniqueName, Scalar radius, Color color, Scalar lum);
         
         //! A constructor of a spot light.
         /*!
@@ -55,7 +55,7 @@ namespace sf
          \param color a color of the light
          \param lum the luminous power of the light [lm]
          */
-        Light(const std::string& uniqueName, Scalar radius, Scalar coneAngleDeg, Color color, Scalar lum);
+        Light(std::string_view uniqueName, Scalar radius, Scalar coneAngleDeg, Color color, Scalar lum);
         
 		//! A method used to attach the comm device to the world origin.
         /*!

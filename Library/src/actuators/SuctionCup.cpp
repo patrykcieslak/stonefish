@@ -34,7 +34,7 @@
 namespace sf
 {
 
-SuctionCup::SuctionCup(const std::string& uniqueName) : LinkActuator(uniqueName)
+SuctionCup::SuctionCup(std::string_view uniqueName) : LinkActuator(uniqueName)
 {
     pump_ = false;
     joint_ = nullptr;
@@ -147,7 +147,7 @@ ConstructInfo SuctionCup::GetConstructInfo()
     return ConstructInfo();
 }
 
-std::unique_ptr<SuctionCup> SuctionCup::Construct(const std::string& uniqueName, ConstructInfo& info)
+std::unique_ptr<SuctionCup> SuctionCup::Construct(std::string_view uniqueName, ConstructInfo& info)
 {
     return std::make_unique<SuctionCup>(uniqueName);
 }

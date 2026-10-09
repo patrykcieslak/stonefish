@@ -28,7 +28,7 @@
 #include <sensors/ScalarSensor.h>
 #include <sensors/Contact.h>
 
-SlidingTestApp::SlidingTestApp(const std::string& dataDirPath, sf::RenderSettings s, sf::HelperSettings h, std::unique_ptr<SlidingTestManager> sim) 
+SlidingTestApp::SlidingTestApp(std::string_view dataDirPath, sf::RenderSettings s, sf::HelperSettings h, std::unique_ptr<SlidingTestManager> sim) 
     : GraphicalSimulationApp("Sliding Test", dataDirPath, s, h, std::move(sim))
 {
 }

@@ -32,7 +32,7 @@
 namespace sf
 {
 
-Gyroscope::Gyroscope(const std::string& uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Gyroscope::Gyroscope(std::string_view uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels_.push_back(SensorChannel("Angular velocity X", QuantityType::ANGULAR_VELOCITY));
     channels_.push_back(SensorChannel("Angular velocity Y", QuantityType::ANGULAR_VELOCITY));
@@ -106,7 +106,7 @@ ConstructInfo Gyroscope::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<Gyroscope> Gyroscope::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+std::unique_ptr<Gyroscope> Gyroscope::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
 {
     // History (optional)
     int history = -1;

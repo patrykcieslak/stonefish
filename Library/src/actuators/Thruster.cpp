@@ -39,7 +39,7 @@
 namespace sf
 {
 
-Thruster::Thruster(const std::string& uniqueName, std::unique_ptr<SolidEntity> propeller,
+Thruster::Thruster(std::string_view uniqueName, std::unique_ptr<SolidEntity> propeller,
                                             std::unique_ptr<RotorDynamics> rotorDynamics,
                                             std::unique_ptr<ThrustModel> thrustModel,
                                             Scalar diameter, bool rightHand, Scalar maxSetpoint,
@@ -299,7 +299,7 @@ ConstructInfo Thruster::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<Thruster> Thruster::Construct(const std::string& uniqueName, ConstructInfo& info)
+std::unique_ptr<Thruster> Thruster::Construct(std::string_view uniqueName, ConstructInfo& info)
 {
     // Specs
     Scalar maxSetpoint = std::get<Scalar>(info.nodes.at("specs").attributes.at("max_setpoint").value);
@@ -327,7 +327,7 @@ std::unique_ptr<Thruster> Thruster::Construct(const std::string& uniqueName, Con
     phy.collisions = false;
     phy.buoyancy = false;
     phy.mode = PhysicsMode::SUBMERGED;
-    std::unique_ptr<Polyhedron> propeller = std::make_unique<Polyhedron>(uniqueName + "/Propeller", phy, GetFullPath(meshFilename), 
+    std::unique_ptr<Polyhedron> propeller = std::make_unique<Polyhedron>(std::string(uniqueName) + std::string("/Propeller"), phy, GetFullPath(meshFilename), 
         meshScale, I4(), materialName, lookName, Scalar(-1.), GeometryApproxType::CYLINDER);
 
     // Rotor dynamics

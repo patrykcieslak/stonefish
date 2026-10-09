@@ -43,7 +43,7 @@ namespace sf
          \param carrierFrequency the base frequency of the signal [Hz]
          \param baseline the distance between transducers forming one pair [m]
          */
-        RealUSBL(const std::string& uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange,
+        RealUSBL(std::string_view uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange,
                  Scalar carrierFrequency, Scalar baseline);
            
         //! A method used to set the noise characteristics of the device.
@@ -66,7 +66,7 @@ namespace sf
         /*!
          \param info a construction info structure
         */
-        static std::unique_ptr<RealUSBL> Construct(const std::string& uniqueName, uint64_t deviceId, ConstructInfo& info);
+        static std::unique_ptr<RealUSBL> Construct(std::string_view uniqueName, uint64_t deviceId, ConstructInfo& info);
 
     private:
         Scalar CalcModel(Scalar R, Scalar theta);

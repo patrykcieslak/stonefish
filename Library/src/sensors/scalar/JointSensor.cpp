@@ -31,7 +31,7 @@
 namespace sf
 {
 
-JointSensor::JointSensor(const std::string& uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
+JointSensor::JointSensor(std::string_view uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
 {
     fe_ = nullptr;
     jId_ = 0;

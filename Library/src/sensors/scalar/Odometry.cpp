@@ -32,7 +32,7 @@
 namespace sf
 {
 
-Odometry::Odometry(const std::string& uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Odometry::Odometry(std::string_view uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
     channels_.push_back(SensorChannel("Position X", QuantityType::LENGTH));
     channels_.push_back(SensorChannel("Position Y", QuantityType::LENGTH));
@@ -115,7 +115,7 @@ ConstructInfo Odometry::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<Odometry> Odometry::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+std::unique_ptr<Odometry> Odometry::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
 {
     // History (optional)
     int history = -1;

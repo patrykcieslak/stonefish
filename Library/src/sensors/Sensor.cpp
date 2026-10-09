@@ -42,7 +42,7 @@ void Sensor::DefaultDeleter(Sensor* s)
     delete s;
 }
 
-Sensor::Sensor(const std::string& uniqueName, Scalar frequency)
+Sensor::Sensor(std::string_view uniqueName, Scalar frequency)
 {
     name_ = SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->AddName(uniqueName);
     SetUpdateFrequency(frequency);
@@ -107,7 +107,7 @@ void Sensor::SetRenderable(bool render)
     renderable_ = render;
 }
 
-void Sensor::SetVisual(const std::string& meshFilename, Scalar scale, const std::string& look)
+void Sensor::SetVisual(std::string_view meshFilename, Scalar scale, std::string_view look)
 {
     if(!SimulationApp::GetApp()->HasGraphics())
         return;

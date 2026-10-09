@@ -31,7 +31,7 @@
 namespace sf
 {
 
-Current::Current(const std::string& uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
+Current::Current(std::string_view uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
 {
     motor_ = nullptr;
     channels_.push_back(SensorChannel("Current", QuantityType::CURRENT));

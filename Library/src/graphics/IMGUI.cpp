@@ -282,17 +282,17 @@ void IMGUI::End()
     OpenGLState::DisableBlend();
 }
 
-void IMGUI::DrawPlainText(GLfloat x, GLfloat y, glm::vec4 color, const std::string& text, GLfloat scale)
+void IMGUI::DrawPlainText(GLfloat x, GLfloat y, glm::vec4 color, std::string_view text, GLfloat scale)
 {
     plainPrinter_->Print(text, color, x, windowH_ - y - STANDARD_FONT_BASELINE * scale, STANDARD_FONT_SIZE * scale);
 }
 
-GLfloat IMGUI::PlainTextLength(const std::string& text)
+GLfloat IMGUI::PlainTextLength(std::string_view text)
 {
     return plainPrinter_->TextLength(text);
 }
 
-glm::vec2 IMGUI::PlainTextDimensions(const std::string& text)
+glm::vec2 IMGUI::PlainTextDimensions(std::string_view text)
 {
     return plainPrinter_->TextDimensions(text);
 }
@@ -489,7 +489,7 @@ void IMGUI::DoPanel(GLfloat x, GLfloat y, GLfloat w, GLfloat h)
     DrawRoundedRect(x, y, w, h, theme_[PANEL_COLOR]);
 }
 
-void IMGUI::DoLabel(GLfloat x, GLfloat y, const std::string& text, glm::vec4 color, GLfloat scale)
+void IMGUI::DoLabel(GLfloat x, GLfloat y, std::string_view text, glm::vec4 color, GLfloat scale)
 {
     if(color.r < 0.f)
         DrawPlainText(x, y, theme_[ACTIVE_TEXT_COLOR], text, scale);
@@ -497,7 +497,7 @@ void IMGUI::DoLabel(GLfloat x, GLfloat y, const std::string& text, glm::vec4 col
         DrawPlainText(x, y, color, text, scale);
 }
 
-bool IMGUI::DoButton(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const std::string& title)
+bool IMGUI::DoButton(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, std::string_view title)
 {
     bool result = false;
     
@@ -533,7 +533,7 @@ bool IMGUI::DoButton(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const s
     return result;
 }
 
-Scalar IMGUI::DoSlider(Uid id, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scalar max, Scalar value, const std::string& title, unsigned int decimalPlaces)
+Scalar IMGUI::DoSlider(Uid id, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scalar max, Scalar value, std::string_view title, unsigned int decimalPlaces)
 {
     //Check and correct dimensions
     w = w < 8*backgroundMargin_ ? 8.f*backgroundMargin_ : w;
@@ -598,7 +598,7 @@ Scalar IMGUI::DoSlider(Uid id, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scal
     return result;
 }
 
-void IMGUI::DoProgressBar(GLfloat x, GLfloat y, GLfloat w, Scalar progress, const std::string& title)
+void IMGUI::DoProgressBar(GLfloat x, GLfloat y, GLfloat w, Scalar progress, std::string_view title)
 {
     //Check and correct dimensions
     w = w < 8*backgroundMargin_ ? 8.f*backgroundMargin_ : w;
@@ -623,7 +623,7 @@ void IMGUI::DoProgressBar(GLfloat x, GLfloat y, GLfloat w, Scalar progress, cons
     DrawRect(x+backgroundMargin_*2.f + progress * barW, y + backgroundMargin_+STANDARD_FONT_SIZE+5.f-barH/2.f, barW - progress*barW, barH, theme_[EMPTY_COLOR]);
 }
 
-bool IMGUI::DoCheckBox(Uid id, GLfloat x, GLfloat y, GLfloat w, bool value, const std::string& title)
+bool IMGUI::DoCheckBox(Uid id, GLfloat x, GLfloat y, GLfloat w, bool value, std::string_view title)
 {
     bool result = value;
     GLfloat size = 14.f;
@@ -667,7 +667,7 @@ bool IMGUI::DoCheckBox(Uid id, GLfloat x, GLfloat y, GLfloat w, bool value, cons
     return result;
 }
 
-unsigned int IMGUI::DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const std::vector<std::string>& options, unsigned int value, const std::string& title)
+unsigned int IMGUI::DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const std::vector<std::string>& options, unsigned int value, std::string_view title)
 {
     value = value >= options.size() ? 0 : value;
     unsigned int result = value;
@@ -790,7 +790,7 @@ unsigned int IMGUI::DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const st
     return result;
 }
 
-bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sens, std::vector<unsigned short>& dims, const std::string& title, Scalar fixedRange[2])
+bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sens, std::vector<unsigned short>& dims, std::string_view title, Scalar fixedRange[2])
 {
     bool result = false;
     GLfloat pltW = w/windowW_ * 2.f;
@@ -946,7 +946,7 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, Scala
     return result;
 }
 
-bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, std::vector<std::vector<GLfloat> >& data, const std::string& title, Scalar fixedRange[2])
+bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, std::vector<std::vector<GLfloat> >& data, std::string_view title, Scalar fixedRange[2])
 {
     //Check if enough data
     if(data.size() < 1 || data[0].size() < 2)
@@ -1097,7 +1097,7 @@ bool IMGUI::DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, std::
     return result;
 }
 
-bool IMGUI::DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sensX, unsigned short dimX, ScalarSensor* sensY, unsigned short dimY, const std::string& title)
+bool IMGUI::DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sensX, unsigned short dimX, ScalarSensor* sensY, unsigned short dimY, std::string_view title)
 {
     bool result = false;
     GLfloat pltW = w/windowW_ * 2.f;

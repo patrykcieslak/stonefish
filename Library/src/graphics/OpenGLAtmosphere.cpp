@@ -44,7 +44,7 @@ namespace sf
 
 GLuint OpenGLAtmosphere::atmosphereAPI = 0;
 
-OpenGLAtmosphere::OpenGLAtmosphere(const std::string& modelFilename, RenderQuality shadow)
+OpenGLAtmosphere::OpenGLAtmosphere(std::string_view modelFilename, RenderQuality shadow)
 {
     //Prepare for rendering
     for(unsigned short i=0; i<AtmosphereTextures::TEXTURE_COUNT; ++i) textures_[i] = 0;
@@ -277,7 +277,7 @@ GLuint OpenGLAtmosphere::GetAtmosphereTexture(AtmosphereTextures id)
     return textures_[id];
 }
 
-void OpenGLAtmosphere::LoadAtmosphereData(const std::string& filename)
+void OpenGLAtmosphere::LoadAtmosphereData(std::string_view filename)
 {
     //Load parameters used to generate atmosphere data
     glm::uvec3 transmittanceSize;
@@ -286,11 +286,11 @@ void OpenGLAtmosphere::LoadAtmosphereData(const std::string& filename)
     GLfloat lengthUnitInMeters;
     GLfloat bottomRadius;
 #ifdef EMBEDDED_RESOURCES
-    ResourceHandle rh(filename);
+    ResourceHandle rh(std::string(filename));
     std::istringstream dataString(rh.string());
     std::istream& data(dataString);
 #else
-    std::ifstream dataFile(filename, std::ios::binary | std::ios::in);
+    std::ifstream dataFile(std::string(filename), std::ios::binary | std::ios::in);
     std::istream& data(dataFile);
 #endif    
     data.read((char*)&transmittanceSize, sizeof(transmittanceSize));

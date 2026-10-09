@@ -34,7 +34,7 @@
 namespace sf
 {
 
-SSS::SSS(const std::string& uniqueName, unsigned int numOfBins, unsigned int numOfLines, Scalar verticalBeamWidthDeg,
+SSS::SSS(std::string_view uniqueName, unsigned int numOfBins, unsigned int numOfLines, Scalar verticalBeamWidthDeg,
          Scalar horizontalBeamWidthDeg, Scalar verticalTiltDeg, Scalar minRange, Scalar maxRange, SonarOutputFormat outputFormat, Scalar frequency)
     : Camera(uniqueName, (numOfBins%2==0 ? numOfBins : numOfBins+1), numOfLines, verticalBeamWidthDeg, frequency)
 {
@@ -333,7 +333,7 @@ ConstructInfo SSS::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<SSS> SSS::Construct(const std::string& uniqueName, Scalar frequency, ConstructInfo& info)
+std::unique_ptr<SSS> SSS::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
 {
     // Specs
     int bins = std::get<int>(info.nodes.at("specs").attributes.at("bins").value);

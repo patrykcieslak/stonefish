@@ -48,9 +48,9 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the wing walls, if positive the wing is treated as shell [m]
          */
-        Wing(const std::string& uniqueName, PhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength,
+        Wing(std::string_view uniqueName, PhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength,
              Scalar maxCamber, Scalar maxCamberPos, Scalar profileThickness, Scalar wingLength, const Transform& origin, 
-             const std::string& material, const std::string& look, Scalar thickness = Scalar(-1));
+             std::string_view material, std::string_view look, Scalar thickness = Scalar(-1));
         
         //! A constructor.
         /*!
@@ -65,8 +65,8 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the wing walls, if positive the wing is treated as shell
          */
-        Wing(const std::string& uniqueName, PhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength, const std::string& NACA, Scalar wingLength, const Transform& origin, 
-             const std::string& material, const std::string& look, Scalar thickness = Scalar(-1));
+        Wing(std::string_view uniqueName, PhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength, std::string_view NACA, Scalar wingLength, const Transform& origin, 
+             std::string_view material, std::string_view look, Scalar thickness = Scalar(-1));
         
         //! A method that returns the type of body.
         SolidType GetSolidType() const;

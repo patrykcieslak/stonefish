@@ -44,7 +44,7 @@ namespace sf
         /*!
          \param uniqueName a name of the actuator
          */
-        Actuator(const std::string& uniqueName);
+        Actuator(std::string_view uniqueName);
         
         //! A destructor.
         virtual ~Actuator();

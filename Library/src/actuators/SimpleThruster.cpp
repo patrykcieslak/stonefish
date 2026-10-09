@@ -37,7 +37,7 @@
 namespace sf
 {
 
-SimpleThruster::SimpleThruster(const std::string& uniqueName, std::unique_ptr<SolidEntity> propeller, bool rightHand, bool inverted) 
+SimpleThruster::SimpleThruster(std::string_view uniqueName, std::unique_ptr<SolidEntity> propeller, bool rightHand, bool inverted) 
     : LinkActuator(uniqueName), propeller_(std::move(propeller)), RH_(rightHand), inv_(inverted)
 {
     propeller_->BuildGraphicalObject();
@@ -211,7 +211,7 @@ ConstructInfo SimpleThruster::GetConstructInfo()
     return info;
 }
 
-std::unique_ptr<SimpleThruster> SimpleThruster::Construct(const std::string& uniqueName, ConstructInfo& info)
+std::unique_ptr<SimpleThruster> SimpleThruster::Construct(std::string_view uniqueName, ConstructInfo& info)
 {
     // Optional
     bool inverted = false;
@@ -242,7 +242,7 @@ std::unique_ptr<SimpleThruster> SimpleThruster::Construct(const std::string& uni
     phy.collisions = false;
     phy.buoyancy = false;
     phy.mode = PhysicsMode::SUBMERGED;
-    std::unique_ptr<Polyhedron> mesh = std::make_unique<Polyhedron>(uniqueName + "/Propeller", phy, GetFullPath(meshFilename), 
+    std::unique_ptr<Polyhedron> mesh = std::make_unique<Polyhedron>(std::string(uniqueName) + std::string("/Propeller"), phy, GetFullPath(meshFilename), 
         meshScale, I4(), materialName, lookName);
         
     std::unique_ptr<SimpleThruster> actuator = std::make_unique<SimpleThruster>(uniqueName, std::move(mesh), right, inverted);

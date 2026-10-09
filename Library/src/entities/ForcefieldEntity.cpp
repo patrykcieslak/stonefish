@@ -31,7 +31,7 @@
 namespace sf
 {
 
-ForcefieldEntity::ForcefieldEntity(const std::string& uniqueName) : Entity(uniqueName)
+ForcefieldEntity::ForcefieldEntity(std::string_view uniqueName) : Entity(uniqueName)
 {
     ghost_ = std::make_unique<btPairCachingGhostObject>();
     ghost_->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);

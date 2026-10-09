@@ -32,7 +32,7 @@
 namespace sf
 {
     
-Atmosphere::Atmosphere(const std::string& uniqueName, Fluid g) : ForcefieldEntity(uniqueName), gas_(g)
+Atmosphere::Atmosphere(std::string_view uniqueName, Fluid g) : ForcefieldEntity(uniqueName), gas_(g)
 {
     ghost_->setCollisionFlags(ghost_->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
     
