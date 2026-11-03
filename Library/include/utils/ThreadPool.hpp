@@ -125,14 +125,17 @@ namespace sf
 
         ~ThreadPool()
         {
-            std::unique_lock<std::mutex> lock(queueMutex_);
-            stop_ = true;
-            
+            {
+                std::lock_guard<std::mutex> lock(queueMutex_); // std::lock_guard ensures mutex is unlocked when leaving scope
+                stop_ = true;
+            }
             condition_.notify_all();
+
+            // The lock must be released before joining, otherwise workers can't wake up and join() deadlocks
             for (std::thread &worker : workers_)
             {
                 if (worker.joinable())
-                    worker.detach();
+                    worker.join();
             }
         }
 
