@@ -55,7 +55,7 @@ namespace sf
         virtual void AttachToSolid(SolidEntity* body, const Transform& origin);
         
 		//! A method implementing the rendering of the actuator.
-        virtual std::vector<Renderable> Render();
+        virtual std::vector<Renderable> Render() override;
 		
         //! A method used to set the actuator origin frame.
         /*!

@@ -88,13 +88,13 @@ namespace sf
         /*!
          \param dt a time step of the simulation
          */
-        void Update(Scalar dt);
+        void Update(Scalar dt) override;
         
         //! A method that updates light position.
         void UpdateTransform();
         
         //! A method implementing the rendering of the light dummy.
-        std::vector<Renderable> Render();
+        std::vector<Renderable> Render() override;
 
         //! A method to switch on/off the light.
         /*!

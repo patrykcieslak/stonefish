@@ -46,10 +46,10 @@ namespace sf
         /*!
          \param dt the time step of the simulation [s]
          */
-        void Update(Scalar dt);
+        void Update(Scalar dt) override;
         
         //! A method implementing the rendering of the VBS.
-        std::vector<Renderable> Render();
+        std::vector<Renderable> Render() override;
         
         //! A method used to set the desired flow rate setpoint.
         /*!

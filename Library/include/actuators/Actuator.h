@@ -91,5 +91,9 @@ namespace sf
         Scalar watchdogTimeout_;
     };
 
+    // Plugin architecture types
     using ActuatorDeleter = void(*)(Actuator*);
+    typedef Actuator* (*CreateActuatorFunc)(const char*, ConstructInfo*);
+    typedef void (*DestroyActuatorFunc)(Actuator*);
+    typedef ConstructInfo (*GetActuatorConstructInfoFunc)();
 }

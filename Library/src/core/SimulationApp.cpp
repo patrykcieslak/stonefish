@@ -27,7 +27,6 @@
 
 #include "core/SimulationManager.h"
 #include "utils/SystemUtil.hpp"
-#include <dlfcn.h>
 
 namespace sf
 {
@@ -46,13 +45,13 @@ SimulationApp::SimulationApp(std::string_view title, std::string_view dataDirPat
 
     //Get available threads
     SetMaxPhysicsThreads(GetPhysicalCores());
+
+    //Plugin support
+    pluginManager_ = std::make_unique<PluginManager>();
 }
 
 SimulationApp::~SimulationApp()
 {
-    for (auto h : pluginHandles_)
-        dlclose(h.second);
-
     if(SimulationApp::handle == this)
         SimulationApp::handle = nullptr;
 }
@@ -102,13 +101,9 @@ ThreadPool* SimulationApp::GetPhysicsThreadPool()
     return physicsThreadPool_.get();
 }
 
-void* SimulationApp::GetPluginHandle(std::string_view name)
+PluginManager* SimulationApp::GetPluginManager()
 {
-    auto it = pluginHandles_.find(std::string(name));
-    if (it != pluginHandles_.end())
-        return it->second;
-    else
-        return nullptr;
+    return pluginManager_.get();
 }
 
 void SimulationApp::Init()
@@ -193,11 +188,6 @@ void SimulationApp::Quit()
 
 void SimulationApp::CleanUp()
 {
-}
-
-void SimulationApp::AddPluginHandle(std::string_view name, void* handle)
-{
-    pluginHandles_.insert({std::string(name), handle});
 }
 
 //Static

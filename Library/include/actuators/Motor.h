@@ -46,7 +46,7 @@ namespace sf
         /*!
          \param dt the time step of the simulation [s]
          */
-        void Update(Scalar dt);
+        void Update(Scalar dt) override;
 
         //! A method to set the motor torque.
         /*!

@@ -38,3 +38,6 @@ target_link_libraries(ParserTest Stonefish_test)
 
 add_library(LinkSensorPlugin SHARED ParserTest/LinkSensorPlugin.cpp)
 target_link_libraries(LinkSensorPlugin PRIVATE Stonefish_test)
+
+add_library(LinkActuatorPlugin SHARED ParserTest/LinkActuatorPlugin.cpp)
+target_link_libraries(LinkActuatorPlugin PRIVATE Stonefish_test)

@@ -61,15 +61,15 @@ namespace sf
         /*!
          \param dt a time step of the simulation [s]
          */
-        void Update(Scalar dt);
+        void Update(Scalar dt) override;
 
-        //!
+        //! A method used to engage the suction cup.
         void Engage(SimulationManager* sm);
         
-        //!  
+        //! A method used to set the state of the vacuum pump.
         void SetPump(bool enabled);
 
-        //!
+        //! A method returning the state of the vacuum pump.
         bool GetPump() const;
 
         //! A method returning type of link actuator.

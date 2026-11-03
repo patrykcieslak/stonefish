@@ -136,7 +136,9 @@ namespace sf
         int graObjectId_;
     };
 
+    // Plugin architecture types
     using SensorDeleter = void(*)(Sensor*);
-    typedef Sensor* (*CreateSensorFunc)(const char*, Scalar);
+    typedef Sensor* (*CreateSensorFunc)(const char*, Scalar, ConstructInfo*);
     typedef void (*DestroySensorFunc)(Sensor*);
+    typedef ConstructInfo (*GetSensorConstructInfoFunc)();
 }

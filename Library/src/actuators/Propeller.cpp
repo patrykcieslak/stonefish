@@ -109,7 +109,7 @@ void Propeller::Update(Scalar dt)
     iError_ += error * dt;
     iError_ = iError_ > iLim_ ? iLim_ : (iError_ < -iLim_ ? -iLim_ : iError_);
     
-    if(attach_ != NULL)
+    if(attach_ != nullptr)
     {
         //Get transforms
         Transform solidTrans = attach_->GetCgTransform();

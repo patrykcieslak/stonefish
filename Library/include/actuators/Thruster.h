@@ -58,10 +58,10 @@ namespace sf
         /*!
          \param dt a time step of the simulation [s]
          */
-        void Update(Scalar dt);
+        void Update(Scalar dt) override;
 
         //! A method implementing the rendering of the thruster.
-        std::vector<Renderable> Render();
+        std::vector<Renderable> Render() override;
 
         //! A method setting the new value of the thruster speed setpoint.
         /*!

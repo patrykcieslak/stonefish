@@ -2606,19 +2606,51 @@ std::unique_ptr<Actuator, ActuatorDeleter> ScenarioParser::ParseActuator(XMLElem
     std::string typeStr(type);
  
     //---- Specific ----
-    const ActuatorFactoryEntry* factory = ActuatorFactory::Instance().Find(typeStr);
-    if (factory == nullptr)
+    if (typeStr == "plugin")
     {
-        log.Print(MessageType::ERROR, "Actuator type '%s' not supported!", typeStr.c_str());
-        return {nullptr, nullptr};
+        const char* plugin = nullptr;
+        if (element->QueryStringAttribute("plugin", &plugin) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Plugin path for actuator '%s' missing!", actuatorName.c_str());
+            return {nullptr, nullptr};
+        }
+
+        std::string pluginPath = GetFullPath(std::string(plugin));
+        void* handle = SimulationApp::GetApp()->GetPluginManager()->LoadPlugin(pluginPath);        
+        if (!handle) // Load plugin
+        {
+            log.Print(MessageType::ERROR, "Cannot load plugin for actuator '%s'!", actuatorName.c_str());
+            return {nullptr, nullptr};
+        }
+
+        dlerror();
+        auto create = (CreateActuatorFunc)dlsym(handle, "create");
+        auto destroy = (DestroyActuatorFunc)dlsym(handle, "destroy");
+        auto getConstructInfo = (GetActuatorConstructInfoFunc)dlsym(handle, "getConstructInfo");
+
+        ConstructInfo info = getConstructInfo();
+
+        if (ParseConstructInfo(element, info))
+            return std::unique_ptr<Actuator, ActuatorDeleter>(create(actuatorName.c_str(), &info), destroy);
+        else
+            return {nullptr, nullptr};
     }
-
-    ConstructInfo info = factory->GetConstructInfo();
-
-    if (ParseConstructInfo(element, info))
-        return std::unique_ptr<Actuator, ActuatorDeleter>(factory->construct(actuatorName, info).release(), Actuator::DefaultDeleter);
     else
-        return {nullptr, nullptr};
+    {
+        const ActuatorFactoryEntry* factory = ActuatorFactory::Instance().Find(typeStr);
+        if (factory == nullptr)
+        {
+            log.Print(MessageType::ERROR, "Actuator type '%s' not supported!", typeStr.c_str());
+            return {nullptr, nullptr};
+        }
+
+        ConstructInfo info = factory->GetConstructInfo();
+
+        if (ParseConstructInfo(element, info))
+            return std::unique_ptr<Actuator, ActuatorDeleter>(factory->construct(actuatorName, info).release(), Actuator::DefaultDeleter);
+        else
+            return {nullptr, nullptr};
+    }
 }
 
 std::unique_ptr<Sensor, SensorDeleter> ScenarioParser::ParseSensor(XMLElement* element, std::string_view namePrefix)
@@ -2661,27 +2693,24 @@ std::unique_ptr<Sensor, SensorDeleter> ScenarioParser::ParseSensor(XMLElement* e
         }
 
         std::string pluginPath = GetFullPath(std::string(plugin));
-
-        void* handle = SimulationApp::GetApp()->GetPluginHandle(pluginPath); // Check if plugin already loaded
-        
+        void* handle = SimulationApp::GetApp()->GetPluginManager()->LoadPlugin(pluginPath);        
         if (!handle) // Load plugin
         {
-            handle = dlopen(pluginPath.c_str(), RTLD_LAZY);
-
-            if (!handle)
-            {
-                log.Print(MessageType::ERROR, "Cannot load plugin for sensor '%s'!", sensorName.c_str());
-                return {nullptr, nullptr};
-            }
-
-            SimulationApp::GetApp()->AddPluginHandle(pluginPath, handle);
+            log.Print(MessageType::ERROR, "Cannot load plugin for sensor '%s'!", sensorName.c_str());
+            return {nullptr, nullptr};
         }
- 
-        dlerror();
-        auto createSensor = (CreateSensorFunc)dlsym(handle, "create");
-        auto destroySensor = (DestroySensorFunc)dlsym(handle, "destroy");
 
-        sens = std::unique_ptr<Sensor, SensorDeleter>(createSensor(sensorName.c_str(), rate), destroySensor);
+        dlerror();
+        auto create = (CreateSensorFunc)dlsym(handle, "create");
+        auto destroy = (DestroySensorFunc)dlsym(handle, "destroy");
+        auto getConstructInfo = (GetSensorConstructInfoFunc)dlsym(handle, "getConstructInfo");
+
+        ConstructInfo info = getConstructInfo();
+
+        if (ParseConstructInfo(element, info))
+            sens = std::unique_ptr<Sensor, SensorDeleter>(create(sensorName.c_str(), rate, &info), destroy);
+        else
+            return {nullptr, nullptr};
     }
     else
     {
@@ -2809,19 +2838,51 @@ std::unique_ptr<Comm, CommDeleter> ScenarioParser::ParseComm(XMLElement* element
     }
 
     // ---- Specific ----
-    const CommFactoryEntry* factory = CommFactory::Instance().Find(typeStr);
-    if (factory == nullptr)
+    if (typeStr == "plugin")
     {
-        log.Print(MessageType::ERROR, "Communication device type '%s' not supported!", typeStr.c_str());
-        return {nullptr, nullptr};
+        const char* plugin = nullptr;
+        if (element->QueryStringAttribute("plugin", &plugin) != XML_SUCCESS)
+        {
+            log.Print(MessageType::ERROR, "Plugin path for communication device '%s' missing!", commName.c_str());
+            return {nullptr, nullptr};
+        }
+
+        std::string pluginPath = GetFullPath(std::string(plugin));
+        void* handle = SimulationApp::GetApp()->GetPluginManager()->LoadPlugin(pluginPath);        
+        if (!handle) // Load plugin
+        {
+            log.Print(MessageType::ERROR, "Cannot load plugin for communication device '%s'!", commName.c_str());
+            return {nullptr, nullptr};
+        }
+
+        dlerror();
+        auto create = (CreateCommFunc)dlsym(handle, "create");
+        auto destroy = (DestroyCommFunc)dlsym(handle, "destroy");
+        auto getConstructInfo = (GetCommConstructInfoFunc)dlsym(handle, "getConstructInfo");
+
+        ConstructInfo info = getConstructInfo();
+
+        if (ParseConstructInfo(element, info))
+            return std::unique_ptr<Comm, CommDeleter>(create(commName.c_str(), devId, &info), destroy);
+        else
+            return {nullptr, nullptr};
     }
-
-    ConstructInfo info = factory->GetConstructInfo();
-
-    if (ParseConstructInfo(element, info))
-        return std::unique_ptr<Comm, CommDeleter>(factory->construct(commName, devId, info).release(), Comm::DefaultDeleter);
     else
-        return {nullptr, nullptr};
+    {
+        const CommFactoryEntry* factory = CommFactory::Instance().Find(typeStr);
+        if (factory == nullptr)
+        {
+            log.Print(MessageType::ERROR, "Communication device type '%s' not supported!", typeStr.c_str());
+            return {nullptr, nullptr};
+        }
+
+        ConstructInfo info = factory->GetConstructInfo();
+
+        if (ParseConstructInfo(element, info))
+            return std::unique_ptr<Comm, CommDeleter>(factory->construct(commName, devId, info).release(), Comm::DefaultDeleter);
+        else
+            return {nullptr, nullptr};
+    }
 }
 
 bool ScenarioParser::ParseContact(XMLElement* element)

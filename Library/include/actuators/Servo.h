@@ -62,7 +62,7 @@ namespace sf
         /*!
          \param dt the time step of the simulation [s]
          */
-        virtual void Update(Scalar dt);
+        virtual void Update(Scalar dt) override;
         
         //! A method to set the desired control mode.
         /*!

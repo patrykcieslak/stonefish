@@ -43,7 +43,7 @@ void Pressure::InternalUpdate(Scalar dt)
     Scalar data(0.); //Gauge pressure //data(101325.); //Pa (1 atm)
     
     Ocean* liq = SimulationApp::GetApp()->GetSimulationManager()->GetOcean();
-    if(liq != NULL)
+    if(liq != nullptr)
         data += liq->GetPressure(GetSensorFrame().getOrigin());
     
     //Record sample

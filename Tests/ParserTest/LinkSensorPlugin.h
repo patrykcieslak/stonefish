@@ -23,34 +23,46 @@
 //  Copyright (c) 2026 Patryk Cieslak. All rights reserved.
 //
 
+#pragma once
+
 #include <sensors/scalar/LinkSensor.h>
 
 namespace sf
 {
-
-class LinkSensorPlugin : public LinkSensor
-{
-public:
-    LinkSensorPlugin(std::string_view uniqueName, Scalar frequency, int historyLength);
-
-    ~LinkSensorPlugin() override;
-
-    void InternalUpdate(Scalar dt) override;
-
-    ScalarSensorType GetScalarSensorType() const override;
-};
-
-extern "C" 
-{
-    Sensor* create(const char* uniqueName, Scalar frequency)
+    //! A class representing an example of a sensor plugin that measures the surrounding fluid velocity.
+    class LinkSensorPlugin : public LinkSensor
     {
-        return new LinkSensorPlugin(uniqueName, frequency, -1);
-    }
+    public:
+        //! A constructor.
+        /*!
+        \param uniqueName a name for the sensor
+        \param globalFrame a flag indicating whether the measurements are in the global frame
+        \param frequency the sampling frequency of the sensor [Hz] (0 if updated every simulation step)
+        \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
+        */
+        LinkSensorPlugin(std::string_view uniqueName, bool globalFrame, Scalar frequency = Scalar(-1), int historyLength = -1);
 
-    void destroy(Sensor* sensor) 
-    {
-        delete sensor;
-    }
-}
+        void InternalUpdate(Scalar dt) override;
 
+        //! A method used to set the noise characteristics of the sensor.
+        /*!
+        \param fluidVelocityStdDev standard deviation of the linear acceleration measurement noise for each axis
+        */
+        void SetNoise(Vector3 fluidVelocityStdDev);
+
+        //! A method returning the type of scalar sensor.
+        ScalarSensorType GetScalarSensorType() const override;
+
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo GetConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+        \param info a construction info structure
+        */
+        static LinkSensorPlugin* Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo* info);
+
+    private:
+        bool globalFrame_;
+    };
 }

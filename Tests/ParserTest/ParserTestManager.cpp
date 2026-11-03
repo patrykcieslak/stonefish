@@ -27,6 +27,8 @@
 
 #include <core/ScenarioParser.h>
 #include <utils/SystemUtil.hpp>
+#include <core/Robot.h>
+#include "LinkSensorPlugin.h"
 
 ParserTestManager::ParserTestManager(sf::Scalar stepsPerSecond) 
     : SimulationManager(stepsPerSecond, sf::Solver::SI, sf::CollisionFilter::EXCLUSIVE)
@@ -40,4 +42,16 @@ void ParserTestManager::BuildScenario()
     parser.SaveLog("parser_test.log");
     if(!success)
         cCritical("Scenario parser: Parsing failed!");    
+
+    GetOcean()->EnableVelocityFields();
+}
+
+void ParserTestManager::SimulationStepCompleted(sf::Scalar timeStep)
+{
+    sf::LinkSensorPlugin* sensor = static_cast<sf::LinkSensorPlugin*>(GetRobot("Robot1")->GetSensor("Robot1/Plugin"));
+    if (sensor)
+    {
+        auto lastSample = sensor->GetLastSample().GetData();
+        printf("%s -> Fluid velocity: %.6f, %.6f, %.6f\n", sensor->GetName().c_str(), lastSample.at(0), lastSample.at(1), lastSample.at(2));
+    }
 }

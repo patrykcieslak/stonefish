@@ -175,5 +175,9 @@ namespace sf
         bool renderable_;
     };
 
+    // Plugin architecture types
     using CommDeleter = void(*)(Comm*);
+    typedef Comm* (*CreateCommFunc)(const char*, uint64_t, ConstructInfo*);
+    typedef void (*DestroyCommFunc)(Comm*);
+    typedef ConstructInfo (*GetCommConstructInfoFunc)();
 }

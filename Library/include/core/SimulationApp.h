@@ -28,6 +28,7 @@
 #include "StonefishCommon.h"
 #include "core/Console.h"
 #include "utils/ThreadPool.hpp"
+#include "core/PluginManager.h"
 
 //Console output aliases
 #define cInfo(format, ...)     sf::SimulationApp::GetApp()->GetConsole()->Print(sf::MessageType::INFO, format, ##__VA_ARGS__)
@@ -82,9 +83,6 @@ namespace sf
         //! A method that performs a single simulation step and necessary updates.
         virtual void StepSimulation();
 
-        //! A method that stores the plugin handles.
-        void AddPluginHandle(std::string_view name, void* handle);
-        
         //! A method setting the maximum allowed parallel threads for physcis computation.
         /*!
          \param n number of threads
@@ -115,11 +113,11 @@ namespace sf
         //! A method returning the physics thread pool.
         ThreadPool* GetPhysicsThreadPool();
 
-        //! A method returning the plugin handle.
-        void* GetPluginHandle(std::string_view name);
-
         //! A method informing if the application is graphical.
         virtual bool HasGraphics() = 0;
+
+        //! A method to get access to the plugin manager.
+        PluginManager* GetPluginManager();
 
         //! A static method returning the pointer to the currently running application.
         static SimulationApp* GetApp();
@@ -143,11 +141,11 @@ namespace sf
         std::unique_ptr<ThreadPool> physicsThreadPool_;
 
     private:
+        std::unique_ptr<PluginManager> pluginManager_; // Declared first so that it is destroyed last, after all plugin objects owned by the simulation manager
         std::unique_ptr<SimulationManager> simManager_;
         std::string title_;
         std::string dataPath_;
         double physicsTime_;
-        std::unordered_map<std::string, void*> pluginHandles_;
         
         static SimulationApp* handle;
     };

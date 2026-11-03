@@ -33,4 +33,5 @@ public:
     ParserTestManager(sf::Scalar stepsPerSecond);
     
     void BuildScenario();
+    void SimulationStepCompleted(sf::Scalar timeStep);
 };
