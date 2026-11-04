@@ -27,13 +27,26 @@ Optionally, the user can enable a watchdog timer that will reset the actuator if
 .. code-block:: cpp
 
     std::unique_ptr<sf::Thruster> th = std::make_unique<sf::Thruster>(...);  
-    th->setWatchdog(Scalar(1));
+    th->SetWatchdog(Scalar(1));
 
 Not all of the actuators are going to use the watchdog as it is limited to the ones that have a clear zero state.
 
 .. note::
 
     In the following sections, description of each specific actuator implementation is accompanied with an example of actuator instantiation through the XML syntax and the C++ code. It is assumed that the XML snippets are located inside the definition of a robot. In case of C++ code, it is assumed that an object ``sf::Robot* robot = new sf::Robot(...);`` was created before the actuator definition. 
+
+Plugins
+=======
+
+Available actuators can be extended by creating a plugin (see :ref:`Plugin interface <plugin_interface>`). When loading these plugins using the XML syntax, the type of the actuator has to be defined as ``plugin`` and a path to the plugin library has to be provided, through a ``plugin`` attribute.
+
+.. code-block:: xml
+
+    <actuator name="ActuatorPlugin" type="plugin" plugin="path/to/plugin/library">
+        <!-- specific definitions here -->
+    </actuator>
+
+When developing plugins you are required to specify the ``sf::ConstructInfo`` structure which will be used to automatically load the required and optional parameters from the XML file. Moreover, as the plugin has to be defined as a subclass of one of the actuator types, it will automatically behave like a joint or a link actuator, and will requires the same parameters, as described in the following sections. The plugin can be loaded using the C++ code as well.
 
 .. _joint-actuators:
 
@@ -71,7 +84,7 @@ A motor is a simple actuator that applies desired torque to the joint.
     #include <Stonefish/actuators/Motor.h>
 
     std::unique_ptr<sf::Motor> motor = std::make_unique<sf::Motor>("Motor");
-    motor->setCommand(1.0);
+    motor->SetTorque(1.0);
     robot->AddJointActuator(std::move(motor), "Joint1");
 
 Servomotor
@@ -93,9 +106,9 @@ It is possible to define an initial position of the joint that will be achieved 
     #include <Stonefish/actuators/Servo.h>
 
     std::unique_ptr<sf::Servo> srv = std::make_unique<sf::Servo>("Servo", 1.0, 0.5, 10.0);
-    srv->setControlMode(sf::ServoControlMode::POSITION_CTRL);
-    srv->setMaxVelocity(0.1);
-    srv->setDesiredPosition(0.5);
+    srv->SetControlMode(sf::ServoControlMode::POSITION_CTRL);
+    srv->SetMaxVelocity(0.1);
+    srv->SetDesiredPosition(0.5);
     robot->AddJointActuator(std::move(srv), "Joint1");
 
 Link actuators
@@ -137,7 +150,7 @@ A push actuator is a virtual actuator that applies a given force to the attached
     #include <Stonefish/actuators/Push.h>
 
     std::unique_ptr<sf::Push> push = std::make_unique<sf::Push>("Push", false, false);
-    push->setForceLimits(-10.0, 10.0);
+    push->SetForceLimits(-10.0, 10.0);
     robot->AddLinkActuator(std::move(push), "Link1", sf::I4()); 
 
 Propeller

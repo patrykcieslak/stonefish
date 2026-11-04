@@ -22,7 +22,7 @@ The same can be achieved in code by the following line:
 
 .. code-block:: cpp
 
-    getNED()->Init(40.0, 20.0, 0.0);
+    GetNed()->Init(40.0, 20.0, 0.0);
 
 Ocean
 =====
@@ -82,12 +82,12 @@ The following lines of code can be used to achieve the same:
     #include <Stonefish/entities/forcefields/Uniform.h>
     #include <Stonefish/entities/forcefields/Jet.h>
 
-    getMaterialManager()->CreateFluid("OceanWater", 1031.0, 0.002, 1.33);
-    EnableOcean(0.0, getMaterialManager()->getFluid("OceanWater"));
-    getOcean()->setWaterType(0.2);
-    getOcean()->SetConditions(15.0);
-    getOcean()->AddVelocityField(std::make_unique<sf::Uniform>(sf::Vector3(1.0, 0.0, 0.0)));
-    getOcean()->AddVelocityField(std::make_unique<sf::Jet>(sf::Vector3(0.0, 0.0, 3.0), sf::Vector3(0.0, 1.0, 0.0), 0.2, 2.0));
+    GetMaterialManager()->CreateFluid("OceanWater", 1031.0, 0.002, 1.33);
+    EnableOcean(0.0, GetMaterialManager()->GetFluid("OceanWater"));
+    GetOcean()->SetWaterType(0.2);
+    GetOcean()->SetConditions(15.0);
+    GetOcean()->AddVelocityField(std::make_unique<sf::Uniform>(sf::Vector3(1.0, 0.0, 0.0)));
+    GetOcean()->AddVelocityField(std::make_unique<sf::Jet>(sf::Vector3(0.0, 0.0, 3.0), sf::Vector3(0.0, 1.0, 0.0), 0.2, 2.0));
 
 Atmosphere
 ==========
@@ -135,10 +135,10 @@ The following lines of code can be used to achieve the same:
     #include <Stonefish/entities/forcefields/Uniform.h>
     #include <Stonefish/entities/forcefields/Jet.h>
 
-    getAtmosphere()->SetupSunPosition(20.0, 50.0);
-    getAtmosphere()->SetConditions(20.0, 101300.0, 0.5);
-    getAtmosphere()->AddVelocityField(std::make_unique<sf::Uniform>(sf::Vector3(1.0, 0.0, 0.0)));
-    getAtmosphere()->AddVelocityField(std::make_unique<sf::Jet>(sf::Vector3(0.0, 0.0, 3.0), sf::Vector3(0.0, 1.0, 0.0), 0.2, 2.0));
+    GetAtmosphere()->SetupSunPosition(20.0, 50.0);
+    GetAtmosphere()->SetConditions(20.0, 101300.0, 0.5);
+    GetAtmosphere()->AddVelocityField(std::make_unique<sf::Uniform>(sf::Vector3(1.0, 0.0, 0.0)));
+    GetAtmosphere()->AddVelocityField(std::make_unique<sf::Jet>(sf::Vector3(0.0, 0.0, 3.0), sf::Vector3(0.0, 1.0, 0.0), 0.2, 2.0));
 
 Static bodies
 =============

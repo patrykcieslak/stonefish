@@ -26,7 +26,7 @@ An example of using a contact recording feature is presented below:
     sf::SolidEntity* body1 = ...;
     sf::StaticEntity* body2 = ...;
     std::unique_ptr<sf::Contact> cnt = std::make_unique<sf::Contact>("Contact1", body1, body2, 1000);
-    cnt->setDisplayMask(CONTACT_DISPLAY_PATH_A);
+    cnt->SetDisplayMask(CONTACT_DISPLAY_PATH_A);
     AddContact(std::move(cnt)); 
 
 Soft collision

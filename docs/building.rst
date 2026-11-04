@@ -162,7 +162,20 @@ Example of creating a button widget (*note:* ``MySimulationApp`` is a subclass o
         button.owner = 0;  //e.g. id of a panel 
         button.item = 10;  //e.g. id of an option on a list (item 1 to 8 used by standard GUI) 
 
-        if(getGUI()->DoButton(button, 200, 10, 200, 50, "Press me"))
+        if(GetGUI()->DoButton(button, 200, 10, 200, 50, "Press me"))
             //code_to_execute (e.g. Console info log) 
             cInfo("Button Pressed");          
     }
+
+.. _plugin_interface:
+
+Plugin interface
+================
+
+Stonefish comes with a plugin interface that allows to extend the functionality of the library without modifying its source code. 
+The plugin interface is based on the C++ standard library and requires the use of dynamic libraries. The plugin interface is designed to be simple and easy to use, allowing developers to create plugins that can be loaded at runtime. 
+
+The plugin interface can be used to add new sensors, actuators, and communication devices. The plugins are supported by the scenario description file parser and using them this way does not require any coding. If the plugins have to be loaded from the C++ code, the class ``sf::PluginManager`` has to be used.
+
+Two plugin examples are provided in the ``Tests/ParserTest`` directory: a sensor plugin and an actuator plugin. It is recommended to use these examples as templates for your own plugins, as the parser class requires exports of some specific functions (defined at the end of the example source files). The declaration of the exported functions can also be found in the header files of the base ``sf::Sensor``, ``sf::Actuator``, and ``sf::Comm`` classes.
+

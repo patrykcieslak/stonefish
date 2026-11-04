@@ -11,6 +11,7 @@ The changelog of the library code is presented below. **Breaking changes** were 
     
     In this version the code was **deeply refactored** to improve code style and introduce modern C++ techniques: manual memory management was limitted to the minimum to avoid memory leaks, standard library algorithms were used across the code, all class members were renamed with a final underscore, etc. These changes severly affected the API, e.g., the way to instantiate simulation objects.
   
+- Implemented plugin interface for actuators, sensors, and communication devices
 - Implemented soft body cables
 - Significantly improved the speed of loading OBJ files
 - Replaced OpenMP parallelization with a proper implementation of a thread pool
