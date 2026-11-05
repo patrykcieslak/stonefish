@@ -71,7 +71,7 @@ Scalar Lidar::GetVerticalFov() const
 
 VisionSensorType Lidar::GetVisionSensorType() const
 {
-    return VisionSensorType::MULTIBEAM2;
+    return VisionSensorType::LIDAR;
 }
 
 OpenGLView* Lidar::GetOpenGlView() const
@@ -222,7 +222,7 @@ void Lidar::NewDataReady(void* data, unsigned int index)
     {
         dataCounter_ = 0;
         
-        //Copy (rearange) data from temp to final sonar image
+        //Copy (rearange) data from temp to final lidar image
         for(size_t i=0; i<cameras_.size(); ++i)
         {
             size_t xoffset = cameras_[i].dataOffset/resY_;

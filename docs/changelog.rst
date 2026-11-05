@@ -13,6 +13,7 @@ The changelog of the library code is presented below. **Breaking changes** were 
   
 - Implemented plugin interface for actuators, sensors, and communication devices
 - Implemented soft body cables
+- Implemented a LiDAR sensor
 - Significantly improved the speed of loading OBJ files
 - Replaced OpenMP parallelization with a proper implementation of a thread pool
 - Added support for glueing dynamic bodies to robot links

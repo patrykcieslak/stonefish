@@ -608,6 +608,26 @@ The segmentation camera is a virtual imaging device that captures the ID of the 
     std::unique_ptr<sf::SegmentationCamera> cam = std::make_unique<sf::SegmentationCamera>("SCam", 800, 600, sf::Scalar(60.0), 5.0);
     robot->AddVisionSensor(std::move(cam), "Link1", sf::I4());
 
+LiDAR
+-----
+
+The LiDAR measures distances to objects by measuring the time-of-flight of the laser pulses emitted from the device and reflected back by the surface of the objects. The output image is a greyscale floating-point bitmap, where pixel values represent measured ranges.
+
+.. code-block:: xml
+
+    <sensor name="Lidar" rate="5.0" type="lidar">
+        <specs resolution_x="800" resolution_y="600" horizontal_fov="120.0" vertical_fov="20.0" range_min="0.2" range_max="10.0"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <link name="Link1"/>
+    </sensor>
+
+.. code-block:: cpp
+
+    #include <Stonefish/sensors/vision/Lidar.h>
+
+    std::unique_ptr<sf::Lidar> lidar = std::make_unique<sf::Lidar>("Lidar", 800, 600, 120.0, 60.0, 0.2, 10.0, 5.0);
+    robot->AddVisionSensor(std::move(lidar), "Link1", sf::I4());
+
 Forward-looking sonar (FLS)
 ---------------------------
 
