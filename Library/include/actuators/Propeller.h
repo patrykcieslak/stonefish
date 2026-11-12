@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/05/2019.
-//  Copyright (c) 2019-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Propeller__
-#define __Stonefish_Propeller__
+#pragma once
 
 #include "actuators/LinkActuator.h"
 
@@ -39,70 +38,78 @@ namespace sf
          \param uniqueName a name for the thruster
          \param propeller a pointer to a rigid body representing the propeller
          \param diameter the diameter of the propeller [m]
-         \param thrustCoeff the thrust coefficient
+         \param thrustCoeff the thrust coefficient (forward and backward)
          \param torqueCoeff the torque coefficient
          \param maxRPM the maximum rotational speed of the motor [rpm]
          \param rightHand a flag to indicate if the propeller is right hand (clockwise rotation)
          \param inverted a flag to indicate if the setpoint is inverted (positive value results in backward force)
         */
-        Propeller(std::string uniqueName, std::shared_ptr<SolidEntity> propeller, Scalar diameter, Scalar thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand, bool inverted = false);
+        Propeller(std::string_view uniqueName, std::unique_ptr<SolidEntity> propeller, Scalar diameter, 
+            const std::pair<Scalar, Scalar>& thrustCoeff, Scalar torqueCoeff, Scalar maxRPM, bool rightHand, bool inverted = false);
         
         //! A method used to update the internal state of the thruster.
         /*!
          \param dt a time step of the simulation [s]
          */
-        void Update(Scalar dt);
+        void Update(Scalar dt) override;
         
         //! A method implementing the rendering of the thruster.
-        std::vector<Renderable> Render();
+        std::vector<Renderable> Render() override;
         
         //! A method setting the new value of the thruster speed setpoint.
         /*!
          \param s the desired speed of the thruster as fraction <0,1>
          */
-        void setSetpoint(Scalar s);
+        void SetSetpoint(Scalar s);
         
         //! A method returning the current setpoint.
-        Scalar getSetpoint() const;
+        Scalar GetSetpoint() const;
         
         //! A method returning the generated thrust.
-        Scalar getThrust() const;
+        Scalar GetThrust() const;
         
         //! A method returning the induced torque.
-        Scalar getTorque() const;
+        Scalar GetTorque() const;
 
         //! A method returning the angular position of the propeller [rad]
-        Scalar getAngle() const;
+        Scalar GetAngle() const;
         
         //! A method returning the angular velocity of the propeller [rad/s]
-        Scalar getOmega() const;
+        Scalar GetOmega() const;
         
-        //! A method returning the type of the actuator.
-        ActuatorType getType() const;
+        //! A method returning type of link actuator.
+        LinkActuatorType GetLinkActuatorType() const override;
+
+        //! A method returning the construction info for the actuator.
+        static ConstructInfo GetConstructInfo();
+
+        //! A method constructing the actuator based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<Propeller> Construct(std::string_view uniqueName, ConstructInfo& info);
         
     private:
         void WatchdogTimeout() override;
 
         //Params
-        Scalar D;
-        Scalar kT0;
-        Scalar kQ0;
-        Scalar kp;
-        Scalar ki;
-        Scalar iLim;
-        Scalar omegaLim;
-        std::shared_ptr<SolidEntity> propeller_;
-        bool RH;
-        bool inv;
+        std::unique_ptr<SolidEntity> propeller_;
+        Scalar D_;
+        std::pair<Scalar, Scalar> kT0_;
+        Scalar kQ0_;
+        Scalar kp_;
+        Scalar ki_;
+        Scalar iLim_;
+        Scalar omegaLim_;
+        bool RH_;
+        bool inv_;
         
         //States
-        Scalar theta;
-        Scalar omega;
-        Scalar thrust;
-        Scalar torque;
-        Scalar setpoint;
-        Scalar iError;
+        Scalar theta_;
+        Scalar omega_;
+        Scalar thrust_;
+        Scalar torque_;
+        Scalar setpoint_;
+        Scalar iError_;
     };
 }
-
-#endif

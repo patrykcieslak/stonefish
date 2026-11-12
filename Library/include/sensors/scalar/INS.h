@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/10/2021.
-//  Copyright (c) 2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2021-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_INS__
-#define __Stonefish_INS__
+#pragma once
 
 #include "sensors/scalar/LinkSensor.h"
 #include "sensors/scalar/GPS.h"
@@ -43,7 +42,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        INS(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
+        INS(std::string_view uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
     
         //! A method performing internal sensor state update.
         /*!
@@ -58,62 +57,61 @@ namespace sf
         /*!
          \param name a unique name identifying the sensor
          */
-        void ConnectGPS(const std::string& name);
+        void ConnectGPS(std::string_view name);
 
         //! A method used to connect a pressure sensor to the INS.
         /*!
          \param name a unique name identifying the sensor
          */
-        void ConnectPressure(const std::string& name);
+        void ConnectPressure(std::string_view name);
 
         //! A method used to connect a DVL to the INS.
         /*!
          \param name a unique name identifying the sensor
          */
-        void ConnectDVL(const std::string& name);
+        void ConnectDVL(std::string_view name);
 
         //! A method used to set the output frame (in device frame).
         /*!
          \param T a transformation from the device origin to the output frame
          */
-        void setOutputFrame(const Transform& T);
+        void SetOutputFrame(const Transform& T);
 
         //! A method used to set the range of the sensor.
         /*!
          \param angularVelocityMax the maximum measured angular velocity for each axis [rad s^-1]
          \param linearAccelerationMax the maximum measured linear acceleration for each axis [m s^-2]
          */
-        void setRange(Vector3 angularVelocityMax, Vector3 linearAccelerationMax);
+        void SetRange(Vector3 angularVelocityMax, Vector3 linearAccelerationMax);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
          \param angularVelocityStdDev standard deviation of the angular velocity measurement noise for each axis
          \param linearAccelerationStdDev the standard deviation of the acceleration measurement for each axis
          */
-        void setNoise(Vector3 angularVelocityStdDev, Vector3 linearAccelerationStdDev);
+        void SetNoise(Vector3 angularVelocityStdDev, Vector3 linearAccelerationStdDev);
         
         //! A method rendering the sensor representation.
         std::vector<Renderable> Render();
 
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const override;
+        ScalarSensorType GetScalarSensorType() const override;
 
         private:
-            Scalar latitude, longitude, altitude;
-            Vector3 ned;
-            Vector3 velocity;
-            Transform out;
-            std::string gpsName;
-            std::string dvlName;
-            std::string pressName;
-            std::normal_distribution<Scalar> accNoiseX;
-            std::normal_distribution<Scalar> accNoiseY;
-            std::normal_distribution<Scalar> accNoiseZ;
-            std::normal_distribution<Scalar> avNoiseX;
-            std::normal_distribution<Scalar> avNoiseY;
-            std::normal_distribution<Scalar> avNoiseZ;
-            bool imuNoise;
+            Scalar latitude_, longitude_, altitude_;
+            Vector3 ned_;
+            Vector3 velocity_;
+            Transform out_;
+            std::string gpsName_;
+            std::string dvlName_;
+            std::string pressName_;
+            std::normal_distribution<Scalar> accNoiseX_;
+            std::normal_distribution<Scalar> accNoiseY_;
+            std::normal_distribution<Scalar> accNoiseZ_;
+            std::normal_distribution<Scalar> avNoiseX_;
+            std::normal_distribution<Scalar> avNoiseY_;
+            std::normal_distribution<Scalar> avNoiseZ_;
+            bool imuNoise_;
     };
 }
 
-#endif

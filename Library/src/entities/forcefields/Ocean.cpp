@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/10/17.
-//  Copyright(c) 2017-2025 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/forcefields/Ocean.h"
@@ -39,106 +39,91 @@
 namespace sf
 {
 
-Ocean::Ocean(std::string uniqueName, Scalar waves, Fluid l) : ForcefieldEntity(uniqueName)
+Ocean::Ocean(std::string_view uniqueName, Scalar waves, Fluid l) : ForcefieldEntity(uniqueName)
 {
-    ghost->setCollisionFlags(ghost->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
-    oceanState = waves > Scalar(2.0) ? Scalar(2.0) : waves;
+    ghost_->setCollisionFlags(ghost_->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
+    oceanState_ = waves > Scalar(2.0) ? Scalar(2.0) : waves;
      
     Scalar size(100000);
-    depth = size;
+    depth_ = size;
     Vector3 halfExtents = Vector3(size/Scalar(2), size/Scalar(2), size/Scalar(2));
-    ghost->setWorldTransform(Transform(Quaternion::getIdentity(), Vector3(0, 0, size/Scalar(2) - oceanState*Scalar(3)))); //Move ocean influence zone a bit up to account for waves
-    ghost->setCollisionShape(new btBoxShape(halfExtents));
+    ghost_->setWorldTransform(Transform(Quaternion::getIdentity(), Vector3(0, 0, size/Scalar(2) - oceanState_*Scalar(3)))); //Move ocean influence zone a bit up to account for waves
+    collisionShape_ = std::make_unique<btBoxShape>(halfExtents);
+    ghost_->setCollisionShape(collisionShape_.get());
     
-    currents = std::vector<VelocityField*>(0);
-    currentsEnabled = false;
-    
-    liquid = l;
-    wavesDebug.type = RenderableType::HYDRO_POINTS;
-    wavesDebug.model = glm::mat4(1.f);
-    wavesDebug.data = std::make_shared<std::vector<glm::vec3>>();
-    waterType = Scalar(0.0);
-    glOcean = nullptr;
+    velocityFieldsEnabled_ = false;
+    liquid_ = l;
+    wavesDebug_.type = RenderableType::HYDRO_POINTS;
+    wavesDebug_.model = glm::mat4(1.f);
+    wavesDebug_.data = std::make_shared<std::vector<glm::vec3>>();
+    waterType_ = Scalar(0.0);
 }
 
-Ocean::~Ocean()
+bool Ocean::HasWaves() const
 {
-    if(currents.size() > 0)
-    {
-        for(unsigned int i=0; i<currents.size(); ++i)
-            delete currents[i];
-        currents.clear();
-    }
-    
-    if(glOcean != nullptr)
-        delete glOcean;
+    return oceanState_ > Scalar(0);
 }
 
-bool Ocean::hasWaves() const
+bool Ocean::HasParticles() const
 {
-    return oceanState > Scalar(0);
-}
-
-bool Ocean::hasParticles() const
-{
-    if(glOcean != nullptr)
-        return glOcean->getParticlesEnabled();
+    if(glOcean_ != nullptr)
+        return glOcean_->GetParticlesEnabled();
     else
         return false;
 }
 
-Scalar Ocean::getWaterType() const
+Scalar Ocean::GetWaterType() const
 {
-    return waterType;
+    return waterType_;
 }
         
-OpenGLOcean* Ocean::getOpenGLOcean()
+OpenGLOcean* Ocean::GetOpenGlOcean()
 {
-    return glOcean;
+    return glOcean_.get();
 }
 
-ForcefieldType Ocean::getForcefieldType()
+ForcefieldType Ocean::GetForcefieldType()
 {
     return ForcefieldType::OCEAN;
 }
 
-Fluid Ocean::getLiquid() const
+Fluid Ocean::GetLiquid() const
 {
-    return liquid;
+    return liquid_;
 }
 
-VelocityField* Ocean::getVelocityField(size_t index)
+VelocityField* Ocean::GetVelocityField(size_t index)
 {
-    if(index < currents.size())
-        return currents[index];
+    if(index < velocityFields_.size())
+        return velocityFields_[index].get();
     else
         return nullptr;
 }
 
-void Ocean::setWaterType(Scalar jerlov)
+void Ocean::SetWaterType(Scalar jerlov)
 { 
-    if(glOcean != nullptr)
+    if(glOcean_ != nullptr)
     {
-        waterType = jerlov > Scalar(1) ? Scalar(1) : (jerlov < Scalar(0) ? Scalar(0) : jerlov);
-        glOcean->setWaterType((float)waterType);
+        waterType_ = jerlov > Scalar(1) ? Scalar(1) : (jerlov < Scalar(0) ? Scalar(0) : jerlov);
+        glOcean_->SetWaterType((float)waterType_);
     }
 }
 
-void Ocean::setParticles(bool enabled)
+void Ocean::SetParticles(bool enabled)
 {
-    if(glOcean != nullptr)
-        glOcean->setParticles(enabled);
+    if(glOcean_ != nullptr)
+        glOcean_->SetParticles(enabled);
 }
 
 void Ocean::SetConditions(Scalar waterTemp)
 {
-    if(glOcean != nullptr)
-        glOcean->setWaterTemperature((float)waterTemp);
+    if(glOcean_ != nullptr)
+        glOcean_->SetWaterTemperature((float)waterTemp);
 }
 
-void Ocean::AddVelocityField(VelocityField* field)
+void Ocean::AddVelocityField(std::unique_ptr<VelocityField> field)
 {
-    currents.push_back(field);
+    velocityFields_.push_back(std::move(field));
 }
 
 bool Ocean::IsInsideFluid(const Vector3& point)
@@ -148,9 +133,9 @@ bool Ocean::IsInsideFluid(const Vector3& point)
 
 float Ocean::GetDepth(const glm::vec3& point)
 {
-    if(hasWaves()) //Geometric waves
+    if(HasWaves()) //Geometric waves
     {
-        GLfloat waveHeight = glOcean->ComputeWaveHeight(point.x, point.y);
+        GLfloat waveHeight = glOcean_->ComputeWaveHeight(point.x, point.y);
         glm::vec3 wavePoint(point.x, point.y, waveHeight);
 #ifdef DEBUG_WAVES
         wavesDebug.getDataAsPoints()->push_back(wavePoint);
@@ -174,21 +159,21 @@ Scalar Ocean::GetDepth(const Vector3& point)
 
 Scalar Ocean::GetPressure(const Vector3& point)
 {
-    Scalar g = SimulationApp::getApp()->getSimulationManager()->getGravity().getZ();
+    Scalar g = SimulationApp::GetApp()->GetSimulationManager()->GetGravity().getZ();
     Scalar d = GetDepth(point);
-    Scalar pressure = d > Scalar(0) ? d*liquid.density*g : Scalar(0);
+    Scalar pressure = d > Scalar(0) ? d*liquid_.density*g : Scalar(0);
     return pressure;
 }
 
 Vector3 Ocean::GetFluidVelocity(const Vector3& point) const
 {
-    if(currentsEnabled)
+    if(velocityFieldsEnabled_)
     {
         Vector3 fv = V0();
-        for(size_t i=0; i<currents.size(); ++i)
+        for(size_t i=0; i<velocityFields_.size(); ++i)
         {
-            if(currents[i]->isEnabled())
-                fv += currents[i]->GetVelocityAtPoint(point);
+            if(velocityFields_[i]->IsEnabled())
+                fv += velocityFields_[i]->GetVelocityAtPoint(point);
         }
         return fv;
     }
@@ -200,20 +185,25 @@ glm::vec3 Ocean::GetFluidVelocity(const glm::vec3& point) const
     return glVectorFromVector(GetFluidVelocity(Vector3(point.x, point.y, point.z)));
 }
 
-void Ocean::EnableCurrents()
+void Ocean::EnableVelocityFields()
 {
-    currentsEnabled = true;
+    velocityFieldsEnabled_ = true;
 }
 
-void Ocean::DisableCurrents()
+void Ocean::DisableVelocityFields()
 {
-    currentsEnabled = false;
+    velocityFieldsEnabled_ = false;
 }
 
-void Ocean::UpdateCurrentsData()
+void Ocean::UpdateVelocityFieldsData()
 {
-    if(glOcean != NULL)
-        glOcean->UpdateOceanCurrentsData(glOceanCurrentsUBOData);
+    if(glOcean_ != NULL)
+        glOcean_->UpdateOceanCurrentsData(glOceanCurrentsUBOData_);
+}
+
+void Ocean::ClearVelocityFields()
+{
+    velocityFields_.clear();
 }
 
 void Ocean::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co, bool recompute)
@@ -243,7 +233,7 @@ void Ocean::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co, bool
       
     HydrodynamicsSettings settings;
     
-    if (ent->getType() == EntityType::SOLID)
+    if (ent->GetType() == EntityType::SOLID)
     {
         if(recompute)
         {
@@ -254,7 +244,7 @@ void Ocean::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co, bool
         
         ((SolidEntity*)ent)->ApplyHydrodynamicForces();
     }
-    else if (ent->getType() == EntityType::CABLE)
+    else if (ent->GetType() == EntityType::CABLE)
     {
         if(recompute)
         {
@@ -269,63 +259,64 @@ void Ocean::ApplyFluidForces(btDynamicsWorld* world, btCollisionObject* co, bool
 
 void Ocean::InitGraphics(SDL_mutex* hydrodynamics)
 {
-    if(oceanState > 0.0)
-        glOcean = new OpenGLRealOcean(depth, oceanState, hydrodynamics);
+    if(oceanState_ > 0.0)
+        glOcean_ = std::make_unique<OpenGLRealOcean>(depth_, oceanState_, hydrodynamics);
     else
-        glOcean = new OpenGLFlatOcean(depth);
-    setWaterType(0.2);
+        glOcean_ = std::make_unique<OpenGLFlatOcean>(depth_);
+    SetWaterType(0.2);
 }
 
 std::vector<Renderable> Ocean::Render()
 {
-    std::vector<Actuator*> act;
+    std::vector<std::unique_ptr<Actuator, ActuatorDeleter>> act;
     return Render(act);
 }
 
-std::vector<Renderable> Ocean::Render(const std::vector<Actuator*>& act)
+std::vector<Renderable> Ocean::Render(const std::vector<std::unique_ptr<Actuator, ActuatorDeleter>>& act)
 {
     std::vector<Renderable> items(0);
     
     //Update currents data
-    glOceanCurrentsUBOData.gravity = glm::vec3(0.f,0.f,9.81f);
-    glOceanCurrentsUBOData.numCurrents = 0;
+    glOceanCurrentsUBOData_.gravity = glm::vec3(0.f,0.f,9.81f);
+    glOceanCurrentsUBOData_.numCurrents = 0;
 
-    if(currentsEnabled)
+    if(velocityFieldsEnabled_)
     {
-        for(size_t i=0; i<currents.size(); ++i)
-            if(currents[i]->isEnabled())
+        for(size_t i=0; i<velocityFields_.size(); ++i)
+            if(velocityFields_[i]->IsEnabled())
             {
-                std::vector<Renderable> citems = currents[i]->Render(glOceanCurrentsUBOData.currents[glOceanCurrentsUBOData.numCurrents]);
+                std::vector<Renderable> citems = velocityFields_[i]->Render(glOceanCurrentsUBOData_.currents[glOceanCurrentsUBOData_.numCurrents]);
                 items.insert(items.end(), citems.begin(), citems.end());
-                ++glOceanCurrentsUBOData.numCurrents;
+                ++glOceanCurrentsUBOData_.numCurrents;
             }
     }
     
     for(size_t i=0; i<act.size(); ++i)
-        if(act[i]->getType() == ActuatorType::THRUSTER)
+        if (act[i]->GetType() == ActuatorType::LINK 
+            && static_cast<LinkActuator*>(act[i].get())->GetLinkActuatorType() == LinkActuatorType::THRUSTER)
         {
-            Thruster* th = (Thruster*)act[i];
-            Transform thFrame = th->getActuatorFrame();
+            Thruster* th = static_cast<Thruster*>(act[i].get());
+            Transform thFrame = th->GetActuatorFrame();
             Vector3 thPos = thFrame.getOrigin();
             Vector3 thDir = -thFrame.getBasis().getColumn(0);
-            Scalar R = th->getPropellerDiameter()/Scalar(2);
-            Scalar vel = (th->isPropellerRight() ? Scalar(0.1) : Scalar(-0.1)) * th->getThrust();
-            glOceanCurrentsUBOData.currents[glOceanCurrentsUBOData.numCurrents].posR = glm::vec4((GLfloat)thPos.getX(), 
+            Scalar R = th->GetPropellerDiameter()/Scalar(2);
+            Scalar vel = (th->IsPropellerRight() ? Scalar(0.1) : Scalar(-0.1)) * th->GetThrust();
+            glOceanCurrentsUBOData_.currents[glOceanCurrentsUBOData_.numCurrents].posR = glm::vec4((GLfloat)thPos.getX(), 
                                                                              (GLfloat)thPos.getY(), 
                                                                              (GLfloat)thPos.getZ(), (GLfloat)R);
-            glOceanCurrentsUBOData.currents[glOceanCurrentsUBOData.numCurrents].dirV = glm::vec4((GLfloat)thDir.getX(),
+            glOceanCurrentsUBOData_.currents[glOceanCurrentsUBOData_.numCurrents].dirV = glm::vec4((GLfloat)thDir.getX(),
                                                                              (GLfloat)thDir.getY(),
                                                                              (GLfloat)thDir.getZ(),
                                                                              (GLfloat)vel);
-            glOceanCurrentsUBOData.currents[glOceanCurrentsUBOData.numCurrents].params = glm::vec3(0.f);
-            glOceanCurrentsUBOData.currents[glOceanCurrentsUBOData.numCurrents].type = 10;
-            ++glOceanCurrentsUBOData.numCurrents;
+            glOceanCurrentsUBOData_.currents[glOceanCurrentsUBOData_.numCurrents].params = glm::vec3(0.f);
+            glOceanCurrentsUBOData_.currents[glOceanCurrentsUBOData_.numCurrents].type = 10;
+            ++glOceanCurrentsUBOData_.numCurrents;
         }
 
-    if(wavesDebug.getDataAsPoints()->size() > 0)
+    if(wavesDebug_.GetDataAsPoints()->size() > 0)
     {
-        items.push_back(wavesDebug);
-        wavesDebug.getDataAsPoints()->clear();
+        items.push_back(wavesDebug_);
+        wavesDebug_.GetDataAsPoints()->clear();
     }
 
     return items;

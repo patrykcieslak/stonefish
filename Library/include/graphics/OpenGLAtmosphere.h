@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 22/07/2017.
-//  Copyright (c) 2017-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLAtmosphere__
-#define __Stonefish_OpenGLAtmosphere__
+#pragma once
 
 #include <functional>
 #include "graphics/OpenGLDataStructs.h"
@@ -69,7 +68,7 @@ namespace sf
          \param modelFilename a path to the atmosphere model file
          \param shadow a rendering quality od the shadow
          */
-        OpenGLAtmosphere(const std::string& modelFilename, RenderQuality shadow);
+        OpenGLAtmosphere(std::string_view modelFilename, RenderQuality shadow);
         
         //! A destructor.
         ~OpenGLAtmosphere();
@@ -78,7 +77,7 @@ namespace sf
         /*!
          \param filename a path to the model data file
          */
-        void LoadAtmosphereData(const std::string& filename);
+        void LoadAtmosphereData(std::string_view filename);
         
         //! A method that draws the sky and sun.
         /*!
@@ -120,32 +119,32 @@ namespace sf
         /*!
          \param temperature the air temperature at sea level [degC]
          */
-        void setAirTemperature(GLfloat temperature);
+        void SetAirTemperature(GLfloat temperature);
 
         //! A method to get the air temperature at sea level.
         /*!
          \return the air temperature at sea level [degC]
          */
-        GLfloat getAirTemperature();
+        GLfloat GetAirTemperature();
 
         //! A method to set the air humidity at sea level.
         /*!
          \param humidity the air relative humidity at sea level [0-1]
          */
-        void setAirHumidity(GLfloat humidity);
+        void SetAirHumidity(GLfloat humidity);
 
         //! A method to get the air humidity at sea level.
         /*!
          \return the air relative humidity at sea level [0-1]
          */
-        GLfloat getAirHumidity();
+        GLfloat GetAirHumidity();
 
         //! A method returning the OpenGL id of a texture.
         /*!
          \param id the atmosphere texture to get id for
          \return OpenGL id of the requested texture
          */
-        GLuint getAtmosphereTexture(AtmosphereTextures id);
+        GLuint GetAtmosphereTexture(AtmosphereTextures id);
         
         //! A method returning the sun direction.
         glm::vec3 GetSunDirection();
@@ -162,42 +161,40 @@ namespace sf
         static void Init();
         
         //! A static method returning the OpenGL id of the compiled API shader.
-        static GLuint getAtmosphereAPI();
+        static GLuint GetAtmosphereApi();
         
     private:
         //Data
         void UpdateSkyEmissivity();
-        unsigned int nPrecomputedWavelengths;
-        unsigned int nScatteringOrders;
-        GLuint sunSkyUBO;
-        SunSkyUBO sunSkyUBOData;
+        unsigned int nPrecomputedWavelengths_;
+        unsigned int nScatteringOrders_;
+        GLuint sunSkyUBO_;
+        SunSkyUBO sunSkyUBOData_;
         
         //Shadows
         glm::mat4 BuildCropProjMatrix(ViewFrustum &f);
         void UpdateFrustumCorners(ViewFrustum &f, glm::vec3 center, glm::vec3 dir, glm::vec3 up);
         void UpdateSplitDist(GLfloat nd, GLfloat fd);
-        GLuint sunShadowmapArray;
-        GLuint sunDepthSampler;
-        GLuint sunShadowSampler;
-        GLuint sunShadowmapSplits;
-        GLuint sunShadowmapSize;
-        glm::vec3 sunDirection;
-        glm::mat4x4* sunShadowCPM;
-        glm::mat4x4 sunModelView;
-        ViewFrustum* sunShadowFrustum;
-        GLuint sunShadowFBO;
-		GLSLShader* sunShadowmapShader; //debug draw shadowmap
+        GLuint sunShadowmapArray_;
+        GLuint sunDepthSampler_;
+        GLuint sunShadowSampler_;
+        GLuint sunShadowmapSplits_;
+        GLuint sunShadowmapSize_;
+        glm::vec3 sunDirection_;
+        std::vector<glm::mat4x4> sunShadowCPM_;
+        std::vector<ViewFrustum> sunShadowFrustum_;
+        glm::mat4x4 sunModelView_;
+        GLuint sunShadowFBO_;
+		std::unique_ptr<GLSLShader> sunShadowmapShader_; //debug draw shadowmap
         
         //Rendering
-        GLfloat sunAzimuth;
-        GLfloat sunElevation;
-        GLfloat airTemperature;
-        GLfloat airHumidity;
+        GLfloat sunAzimuth_;
+        GLfloat sunElevation_;
+        GLfloat airTemperature_;
+        GLfloat airHumidity_;
 
-        GLSLShader* skySunShaders[2];
-        GLuint textures[AtmosphereTextures::TEXTURE_COUNT];
+        std::array<std::unique_ptr<GLSLShader>, 2> skySunShaders_;
+        GLuint textures_[AtmosphereTextures::TEXTURE_COUNT];
         static GLuint atmosphereAPI;
     };
 }
-
-#endif

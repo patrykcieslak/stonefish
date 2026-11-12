@@ -23,8 +23,7 @@
 //  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_GeometryFileUtil__
-#define __Stonefish_GeometryFileUtil__
+#pragma once
 
 #include "StonefishCommon.h"
 #include "graphics/OpenGLDataStructs.h"
@@ -131,7 +130,7 @@ namespace sf
      \param scale a scale to apply to the data
      \return a pointer to an allocated mesh structure
      */
-    Mesh* LoadGeometryFromFile(const std::string& path, GLfloat scale);
+    std::unique_ptr<Mesh> LoadGeometryFromFile(std::string_view path, GLfloat scale);
     
     //! A function to load geometry from a STL file.
     /*!
@@ -139,7 +138,7 @@ namespace sf
      \param scale a scale to apply to the data
      \return a pointer to an allocated mesh structure
      */
-    Mesh* LoadSTL(const std::string& path, GLfloat scale);
+    std::unique_ptr<Mesh> LoadSTL(std::string_view path, GLfloat scale);
     
     //! A function to load geometry from an OBJ file.
     /*!
@@ -147,7 +146,7 @@ namespace sf
      \param scale a scale to apply to the data
      \return a pointer to an allocated mesh structure
      */
-    Mesh* LoadOBJ(const std::string& path, GLfloat scale);
+    std::unique_ptr<Mesh> LoadOBJ(std::string_view path, GLfloat scale);
 
     //! A function to compute all physical properties of a mesh.
     /*!
@@ -187,5 +186,3 @@ namespace sf
     */
     bool IsDiagonal(const Matrix3& A);
 }
-
-#endif

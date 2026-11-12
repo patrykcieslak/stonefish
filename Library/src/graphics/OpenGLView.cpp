@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/05/18.
-//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLView.h"
@@ -32,58 +32,54 @@ namespace sf
 
 OpenGLView::OpenGLView(GLint x, GLint y, GLint width, GLint height)
 {
-    originX = x;
-    originY = y;
-    viewportWidth = width + width % 2;
-    viewportHeight = height + height % 2;
-    enabled = true;
-	continuous = false;
-    viewUBOData.VP = glm::mat4(1.f);
-    viewUBOData.eye = glm::vec3(0.f);
-    ExtractFrustumFromVP(viewUBOData.frustum, viewUBOData.VP);
+    originX_ = x;
+    originY_ = y;
+    viewportWidth_ = width + width % 2;
+    viewportHeight_ = height + height % 2;
+    enabled_ = true;
+	continuous_ = false;
+    viewUBOData_.VP = glm::mat4(1.f);
+    viewUBOData_.eye = glm::vec3(0.f);
+    ExtractFrustumFromVP(viewUBOData_.frustum, viewUBOData_.VP);
 }
 
-OpenGLView::~OpenGLView()
+GLuint OpenGLView::GetRenderFbo() const
 {
+    return renderFBO_;
 }
 
-GLuint OpenGLView::getRenderFBO() const
+const ViewUBO* OpenGLView::GetViewUboData() const
 {
-    return renderFBO;
+	return &viewUBOData_;
 }
 
-const ViewUBO* OpenGLView::getViewUBOData() const
+void OpenGLView::SetEnabled(bool en)
 {
-	return &viewUBOData;
+    enabled_ = en;
 }
 
-void OpenGLView::setEnabled(bool en)
+bool OpenGLView::IsEnabled()
 {
-    enabled = en;
+    return enabled_;
 }
 
-bool OpenGLView::isEnabled()
+bool OpenGLView::IsContinuous()
 {
-    return enabled;
-}
-
-bool OpenGLView::isContinuous()
-{
-	return continuous;
+	return continuous_;
 }
 
 void OpenGLView::SetViewport()
 {
-    OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+    OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
 }
 
-GLint* OpenGLView::GetViewport() const
+std::vector<GLint> OpenGLView::GetViewport() const
 {
-    GLint* view = new GLint[4];
-    view[0] = originX;
-    view[1] = originY;
-    view[2] = viewportWidth;
-    view[3] = viewportHeight;
+    std::vector<GLint> view(4);
+    view[0] = originX_;
+    view[1] = originY_;
+    view[2] = viewportWidth_;
+    view[3] = viewportHeight_;
     return view;
 }
 

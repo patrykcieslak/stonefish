@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/07/18.
-//  Copyright (c) 2018-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -41,7 +41,7 @@ namespace sf
         VelocityField();
         
         //! A destructor.
-        virtual ~VelocityField();
+        virtual ~VelocityField() = default;
         
         //! A method returning velocity at a specified point.
         /*!
@@ -54,16 +54,16 @@ namespace sf
         virtual std::vector<Renderable> Render(VelocityFieldUBO& ubo) = 0;
 
         //! A method to enable/disable the velocity field.
-        void setEnabled(bool en);
+        void SetEnabled(bool en);
 
         //! A method informing if the velocity field is enabled.
-        bool isEnabled() const;
+        bool IsEnabled() const;
 
         //! A method returning the type of the velocity field.
-        virtual VelocityFieldType getType() const = 0;
+        virtual VelocityFieldType GetType() const = 0;
 
     private:
-        bool enabled;
+        bool enabled_;
     };
 }
 

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/07/18.
-//  Copyright(c) 2018-2025 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -61,18 +61,18 @@ namespace sf
         /*!
          \param x new outlet velocity [m/s]
          */
-        void setOutletVelocity(Scalar x);
+        void SetOutletVelocity(Scalar x);
 
         //! A method to get the flow velocity.
-        Scalar getOutletVelocity() const;
+        Scalar GetOutletVelocity() const;
 
          //! A method returning the type of the velocity field.
-        VelocityFieldType getType() const;
+        VelocityFieldType GetType() const;
         
     private:
-        Vector3 c, n;
-        Scalar r;
-        Scalar vout;
+        Vector3 c_, n_;
+        Scalar r_;
+        Scalar vout_;
     };
 }
 

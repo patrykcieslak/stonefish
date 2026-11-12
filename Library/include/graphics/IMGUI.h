@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/27/12.
-//  Copyright (c) 2012-2022 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_IMGUI__
-#define __Stonefish_IMGUI__
+#pragma once
 
 #include <SDL2/SDL_keyboard.h>
 #include "StonefishCommon.h"
@@ -47,7 +46,7 @@
 namespace sf
 {
     //! A class holiding widget id.
-    class Uid
+    struct Uid
     {
     public:
         int owner;
@@ -94,16 +93,16 @@ namespace sf
         void End();
         
         //! A method that informs if any widget is currently active.
-        bool isAnyActive();
+        bool IsAnyActive();
         
         //! A method returning the width of the GUI.
-        int getWindowHeight();
+        int GetWindowHeight();
         
         //! A method returning the height of the GUI.
-        int getWindowWidth();
+        int GetWindowWidth();
         
         //! A method returning the id of a background texture.
-        GLuint getTranslucentTexture();
+        GLuint GetTranslucentTexture();
         
         //! A method servicing the mouse down event.
         /*!
@@ -157,7 +156,7 @@ namespace sf
          \param color the color of the text
          \param scale the font scaling factor
          */
-        void DoLabel(GLfloat x, GLfloat y, const std::string& text, glm::vec4 color = glm::vec4(-1.f), GLfloat scale = 1.f);
+        void DoLabel(GLfloat x, GLfloat y, std::string_view text, glm::vec4 color = glm::vec4(-1.f), GLfloat scale = 1.f);
         
         //! A method used to create a progress bar widget.
         /*!
@@ -167,7 +166,7 @@ namespace sf
          \param progress the value of the progress
          \param title the title string
          */
-        void DoProgressBar(GLfloat x, GLfloat y, GLfloat w, Scalar progress, const std::string& title);
+        void DoProgressBar(GLfloat x, GLfloat y, GLfloat w, Scalar progress, std::string_view title);
         
         //! A method used to create the button widget.
         /*!
@@ -179,7 +178,7 @@ namespace sf
          \param title the title string
          \return button status
          */
-        bool DoButton(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, const std::string& title);
+        bool DoButton(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, std::string_view title);
         
         //! A method used to create a slider widget.
         /*!
@@ -194,7 +193,7 @@ namespace sf
          \param decimalPlaces a display precision of the current slider value 
          \return new value
          */
-        Scalar DoSlider(Uid id, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scalar max, Scalar value, const std::string& title, unsigned int decimalPlaces = 2);
+        Scalar DoSlider(Uid id, GLfloat x, GLfloat y, GLfloat w, Scalar min, Scalar max, Scalar value, std::string_view title, unsigned int decimalPlaces = 2);
         
         //! A method used to create a checkbox widget.
         /*!
@@ -206,7 +205,7 @@ namespace sf
          \param title the title string
          \return new checkbox status
          */
-        bool DoCheckBox(Uid id, GLfloat x, GLfloat y, GLfloat w, bool value, const std::string& title);
+        bool DoCheckBox(Uid id, GLfloat x, GLfloat y, GLfloat w, bool value, std::string_view title);
         
         //! A method used to create a combo box.
         /*!
@@ -219,7 +218,7 @@ namespace sf
          \param title the title string
          \return new combobox value
          */
-        unsigned int DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const std::vector<std::string>& options, unsigned int value, const std::string& title);
+        unsigned int DoComboBox(Uid id, GLfloat x, GLfloat y, GLfloat w, const std::vector<std::string>& options, unsigned int value, std::string_view title);
         
         //! A method used to create a time plot widget for a sensor.
         /*!
@@ -233,7 +232,7 @@ namespace sf
          \param title the title string
          \param fixedRange a range of the Y axis (if NULL the plot adjusts automatically)
          */
-        bool DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sens, std::vector<unsigned short>& dims, const std::string& title, Scalar fixedRange[2] = NULL);
+        bool DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sens, std::vector<unsigned short>& dims, std::string_view title, Scalar fixedRange[2] = NULL);
         
         //! A method used to create a time plot widget for and arbitrary array od data.
         /*!
@@ -246,7 +245,7 @@ namespace sf
          \param title the title string
          \param fixedRange a range of the Y axis (if NULL the plot adjusts automatically)
          */        
-        bool DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, std::vector<std::vector<GLfloat> >& data, const std::string& title, Scalar fixedRange[2] = NULL);
+        bool DoTimePlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, std::vector<std::vector<GLfloat> >& data, std::string_view title, Scalar fixedRange[2] = NULL);
 
         //! A method used to create a XY plot widget.
         /*!
@@ -261,50 +260,48 @@ namespace sf
          \param dimY the id of the sensor dimension used as data source
          \param title a pointer to the XY plot title
          */
-        bool DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sensX, unsigned short dimX, ScalarSensor* sensY, unsigned short dimY, const std::string& title);
+        bool DoXYPlot(Uid id, GLfloat x, GLfloat y, GLfloat w, GLfloat h, ScalarSensor* sensX, unsigned short dimX, ScalarSensor* sensY, unsigned short dimY, std::string_view title);
         
     private:
-        Uid getHot();
-        Uid getActive();
-        void setHot(Uid newHot);
-        void setActive(Uid newActive);
-        bool isHot(Uid id);
-        bool isActive(Uid id);
-        void clearActive();
-        void clearHot();
+        Uid GetHot();
+        Uid GetActive();
+        void SetHot(Uid newHot);
+        void SetActive(Uid newActive);
+        bool IsHot(Uid id);
+        bool IsActive(Uid id);
+        void ClearActive();
+        void ClearHot();
         bool MouseInRect(int x, int y, int w, int h);
         bool MouseIsDown(bool leftButton);
-        int getMouseX();
-        int getMouseY();
+        int GetMouseX();
+        int GetMouseY();
         
-        void DrawPlainText(GLfloat x, GLfloat y, glm::vec4 color, const std::string& text, GLfloat scale = 1.f);
-        GLfloat PlainTextLength(const std::string& text);
-        glm::vec2 PlainTextDimensions(const std::string& text);
+        void DrawPlainText(GLfloat x, GLfloat y, glm::vec4 color, std::string_view text, GLfloat scale = 1.f);
+        GLfloat PlainTextLength(std::string_view text);
+        glm::vec2 PlainTextDimensions(std::string_view text);
         void DrawRoundedRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec4 color = glm::vec4(1));
         void DrawRect(GLfloat x, GLfloat y, GLfloat w, GLfloat h, glm::vec4 color = glm::vec4(1));
         void DrawArrow(GLfloat x, GLfloat y, GLfloat h, bool up, glm::vec4 color = glm::vec4(1));
         
-        GLint windowW,windowH;
-        bool shaders;
-        int mouseX, mouseY;
-        bool mouseLeftDown, mouseRightDown;
-        Uid hot;
-        Uid active;
+        GLint windowW_, windowH_;
+        bool shaders_;
+        int mouseX_, mouseY_;
+        bool mouseLeftDown_, mouseRightDown_;
+        Uid hot_;
+        Uid active_;
         
-        OpenGLPrinter* plainPrinter;
-        GLuint logoTexture;
-        GLuint guiTexture;
-        glm::vec4 theme[11];
-        GLfloat backgroundMargin;
+        std::unique_ptr<OpenGLPrinter> plainPrinter_;
+        GLuint logoTexture_;
+        GLuint guiTexture_;
+        glm::vec4 theme_[11];
+        GLfloat backgroundMargin_;
         
         //Translucent background
-        GLuint guiVAO;
-        GLuint translucentFBO;
-        GLuint translucentTexture[2];
-        GLSLShader* downsampleShader;
-        GLSLShader* gaussianShader;
-        GLSLShader* guiShader[2];
+        GLuint guiVAO_;
+        GLuint translucentFBO_;
+        GLuint translucentTexture_[2];
+        std::unique_ptr<GLSLShader> downsampleShader_;
+        std::unique_ptr<GLSLShader> gaussianShader_;
+        std::array<std::unique_ptr<GLSLShader>, 2> guiShader_;
     };
 }
-
-#endif

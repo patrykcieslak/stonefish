@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/12/12.
-//  Copyright (c) 2012-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLLight__
-#define __Stonefish_OpenGLLight__
+#pragma once
 
 #include "graphics/OpenGLDataStructs.h"
 
@@ -57,7 +56,7 @@ namespace sf
         OpenGLLight(glm::vec3 position, GLfloat radius, glm::vec3 color, GLfloat lum);
         
         //! A destructor.
-        virtual ~OpenGLLight();
+        virtual ~OpenGLLight() = default;
         
         //! A method creating shadowmap textures.
         /*!
@@ -84,7 +83,7 @@ namespace sf
         virtual void SetupShader(LightUBO* ubo) = 0;
         
         //! A method returning the type of the light.
-        virtual LightType getType() const = 0;
+        virtual LightType GetType() const = 0;
         
         //! A method used to update position of light.
         /*!
@@ -102,25 +101,25 @@ namespace sf
         void SwitchOff();
         
         //! A method returning the color and intensity of the light.
-        glm::vec4 getColorLi();
+        glm::vec4 GetColorLi();
         
         //! A method returning the position of the light.
-        glm::vec3 getPosition();
+        glm::vec3 GetPosition();
 		
 		//! A method returning the radius of the light source.
-		GLfloat getSourceRadius();
+		GLfloat GetSourceRadius();
         
         //! A method returning the orientation of the light.
-        glm::quat getOrientation();
+        glm::quat GetOrientation();
 
         //! A method returning the model matrix of the light.
-        virtual glm::mat4 getTransform();
+        virtual glm::mat4 GetTransform();
 
         //! A method returning the light source object id.
-        int getSourceObject();
+        int GetSourceObject();
         
         //! A method informing if the light is active.
-        bool isActive();
+        bool IsActive();
         
         //! An operator used to sort lights by type.
         bool operator<(const OpenGLLight& l);
@@ -129,7 +128,7 @@ namespace sf
         /*!
          \param lights a list of OpenGL lights in the scene
          */
-        static void Init(std::vector<OpenGLLight*>& lights);
+        static void Init(const std::vector<std::unique_ptr<OpenGLLight>>& lights);
         
         //! A static method to destroy the common data.
         static void Destroy();
@@ -141,9 +140,9 @@ namespace sf
         static void SetCamera(OpenGLCamera* view);
 
     protected:
-		glm::vec4 colorLi;
-		bool active;
-        int sourceObject;
+		glm::vec4 colorLi_;
+		bool active_;
+        int sourceObject_;
         
         static GLuint spotShadowArrayTex; //2D array texture for storing shadowmaps of all spot lights (using only one texture unit for all spotlights!)
         static GLuint spotShadowSampler;
@@ -151,10 +150,8 @@ namespace sf
         static OpenGLCamera* activeView;
         
     private:
-        glm::vec3 pos;
-        glm::vec3 tempPos;
-		GLfloat R;
+        glm::vec3 pos_;
+        glm::vec3 tempPos_;
+		GLfloat R_;
     };
 }
-
-#endif

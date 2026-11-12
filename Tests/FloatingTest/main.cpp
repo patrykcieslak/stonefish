@@ -20,7 +20,7 @@
 //  FloatingTest
 //
 //  Created by Patryk Cieslak on 02/05/2019.
-//  Copyright (c) 2019-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include <core/GraphicalSimulationApp.h>
@@ -46,8 +46,7 @@ int main(int argc, const char * argv[])
     h.showActuators = false;
     h.showForces = false;
     
-    FloatingTestManager* simulationManager = new FloatingTestManager(500.0);
-    sf::GraphicalSimulationApp app("FloatingTest", std::string(DATA_DIR_PATH), s, h, simulationManager);
+    sf::GraphicalSimulationApp app("FloatingTest", std::string(DATA_DIR_PATH), s, h, std::make_unique<FloatingTestManager>(500.0));
     app.Run();
     
     return 0;

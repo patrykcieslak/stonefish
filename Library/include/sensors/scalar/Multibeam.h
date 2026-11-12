@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/08/2018.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Multibeam__
-#define __Stonefish_Multibeam__
+#pragma once
 
 #include "sensors/scalar/LinkSensor.h"
 
@@ -42,7 +41,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        Multibeam(std::string uniqueName, Scalar angleRangeDeg, unsigned int angleSteps, Scalar frequency = Scalar(-1), int historyLength = -1);
+        Multibeam(std::string_view uniqueName, Scalar angleRangeDeg, unsigned int angleSteps, Scalar frequency = Scalar(-1), int historyLength = -1);
         
         //! A method performing internal sensor state update.
         /*!
@@ -55,29 +54,37 @@ namespace sf
          \param rangeMin the minimum measured range [m]
          \param rangeMax the maximum measured range [m]
          */
-        void setRange(Scalar rangeMin, Scalar rangeMax);
+        void SetRange(Scalar rangeMin, Scalar rangeMax);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
          \param rangeStdDev standard deviation of the range measurement noise
          */
-        void setNoise(Scalar rangeStdDev);
+        void SetNoise(Scalar rangeStdDev);
         
         //! A method resetting the state of the sensor.
         std::vector<Renderable> Render();
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const override;
+        ScalarSensorType GetScalarSensorType() const override;
 
         //! A method returning the angleRangeDeg parameter
-        Scalar getAngleRange() const;
+        Scalar GetAngleRange() const;
         
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo GetConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<Multibeam> Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info);
+
     private:
-        Scalar angRange;
-        unsigned int angSteps;
-        std::vector<Scalar> angles;
-        std::vector<Scalar> distances;
+        Scalar angRange_;
+        unsigned int angSteps_;
+        std::vector<Scalar> angles_;
+        std::vector<Scalar> distances_;
     };
 }
 
-#endif

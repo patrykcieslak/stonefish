@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 24/05/2014.
-//  Copyright (c) 2014-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Console__
-#define __Stonefish_Console__
+#pragma once
 
 #include <SDL2/SDL_thread.h>
 #include "StonefishCommon.h"
@@ -79,16 +78,15 @@ namespace sf
         bool SaveToFile(std::string filename);
     
         //! A method that returns a pointer to the console data mutex.
-        SDL_mutex* getLinesMutex();
+        SDL_mutex* GetLinesMutex();
         
         //! A method that returns a copy of the console lines.
-        std::vector<ConsoleMessage> getLines();
+        std::vector<ConsoleMessage> GetLines();
         
     protected:
-        bool stdoutEnabled;
-        std::vector<ConsoleMessage> lines;
-        SDL_mutex* linesMutex;
+        bool stdoutEnabled_;
+        std::vector<ConsoleMessage> lines_;
+        SDL_mutex* linesMutex_;
     };
 }
 
-#endif

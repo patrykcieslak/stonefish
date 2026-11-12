@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/11/2018. Based on cola2_lib by udg_cirs.
-//  Copyright(c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_NED__
-#define __Stonefish_NED__
+#pragma once
 
 #include "StonefishCommon.h"
 
@@ -118,17 +117,17 @@ namespace sf
                           Scalar& lat, Scalar& lon, Scalar& height) const;
         
     private:
-        Scalar _init_lat;
-        Scalar _init_lon;
-        Scalar _init_h;
-        Scalar _init_ecef_x;
-        Scalar _init_ecef_y;
-        Scalar _init_ecef_z;
-        Matrix3 _ecef_to_ned_matrix;
-        Matrix3 _ned_to_ecef_matrix;
-        
-        Scalar __cbrt__(const Scalar x) const;
-        Matrix3 __nRe__(const Scalar lat_rad, const Scalar lon_rad) const;
+        Scalar Cbrt(const Scalar x) const;
+        Matrix3 NRe(const Scalar lat_rad, const Scalar lon_rad) const;
+    
+        Scalar initLat_;
+        Scalar initLon_;
+        Scalar initH_;
+        Scalar initEcefX_;
+        Scalar initEcefY_;
+        Scalar initEcefZ_;
+        Matrix3 ecef2NedMatrix_;
+        Matrix3 ned2EcefMatrix_;
         
         //World Geodetic System 1984 (WGS84)
         static const Scalar a;
@@ -139,4 +138,3 @@ namespace sf
     };
 }
 
-#endif

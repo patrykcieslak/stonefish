@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/10/2020.
-//  Copyright (c) 2020-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/animation/Trajectory.h"
@@ -29,82 +29,78 @@ namespace sf
 {
 
 Trajectory::Trajectory(PlaybackMode playback) 
-    : playMode(playback), playTime(0), endTime(0), iteration(0), forward(true)
+    : playMode_(playback), playTime_(0), endTime_(0), iteration_(0), forward_(true)
 {
 }
 
-Trajectory::~Trajectory()
+Scalar Trajectory::GetPlaybackTime() const
 {
+    return playTime_;
 }
 
-Scalar Trajectory::getPlaybackTime() const
+unsigned int Trajectory::GetPlaybackIteration() const
 {
-    return playTime;
+    return iteration_;
 }
 
-unsigned int Trajectory::getPlaybackIteration() const
+Transform Trajectory::GetInterpolatedTransform() const
 {
-    return iteration;
+    return interpTrans_;
 }
 
-Transform Trajectory::getInterpolatedTransform() const
+Vector3 Trajectory::GetInterpolatedLinearVelocity() const
 {
-    return interpTrans;
+    return interpVel_;
 }
 
-Vector3 Trajectory::getInterpolatedLinearVelocity() const
+Vector3 Trajectory::GetInterpolatedAngularVelocity() const
 {
-    return interpVel;
+    return interpAngVel_;
 }
 
-Vector3 Trajectory::getInterpolatedAngularVelocity() const
+Vector3 Trajectory::GetInterpolatedLinearAcceleration() const
 {
-    return interpAngVel;
-}
-
-Vector3 Trajectory::getInterpolatedLinearAcceleration() const
-{
-    return interpAcc;
+    return interpAcc_;
 }
 
 void Trajectory::Play(Scalar dt)
 {
     //Update time
-    switch(playMode)
+    switch(playMode_)
     {
         case PlaybackMode::ONETIME:
         {
-            playTime += dt;
-            if(playTime > endTime)
-                playTime = endTime;
+            playTime_ += dt;
+            if(playTime_ > endTime_)
+                playTime_ = endTime_;
         }
             break;
 
         case PlaybackMode::REPEAT:
         {
-            playTime += dt;
-            if(playTime > endTime)
+            playTime_ += dt;
+            if(playTime_ > endTime_)
             {
-                playTime -= endTime;
-                ++iteration;
+                playTime_ -= endTime_;
+                ++iteration_;
             }
         }
             break;
 
         case PlaybackMode::BOOMERANG:
         {
-            playTime += forward ? dt : -dt;
-            if(playTime > endTime)
+            playTime_ += forward_ ? dt : -dt;
+            if(playTime_ > endTime_)
             {
-                playTime = endTime - (playTime - endTime);
-                forward = false;
-                ++iteration;
+                playTime_ = endTime_ - (playTime_ - endTime_);
+                forward_ = false;
+                ++iteration_;
             }
-            else if(playTime < Scalar(0))
+            else if(playTime_ < Scalar(0))
             {
-                playTime = -playTime;
-                forward = true;
-                ++iteration;
+                playTime_ = -playTime_;
+                forward_ = true;
+                ++iteration_;
             }
         }
             break;
@@ -114,15 +110,15 @@ void Trajectory::Play(Scalar dt)
     Interpolate();
 
     //Clear velocities when stopped
-    if(playTime == endTime && playMode == PlaybackMode::ONETIME)
+    if(playTime_ == endTime_ && playMode_ == PlaybackMode::ONETIME)
     {
-        interpVel.setZero();
-        interpAngVel.setZero();
-        interpAcc.setZero();
+        interpVel_.setZero();
+        interpAngVel_.setZero();
+        interpAcc_.setZero();
     }
 }
 
-void Trajectory::calculateVelocityShortestPath(const Transform &transform0, const Transform &transform1, Scalar timeStep, Vector3 &linVel, Vector3 &angVel)
+void Trajectory::CalculateVelocityShortestPath(const Transform &transform0, const Transform &transform1, Scalar timeStep, Vector3 &linVel, Vector3 &angVel)
 {
     linVel = (transform1.getOrigin() - transform0.getOrigin()) / timeStep;
 

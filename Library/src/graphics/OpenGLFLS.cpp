@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 13/02/20.
-//  Copyright (c) 2020-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLFLS.h"
@@ -55,7 +55,7 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
     fov_.x = glm::radians(horizontalFOVDeg);
     fov_.y = glm::radians(verticalFOVDeg);
     GLfloat hFactor = sinf(fov_.x/2.f);
-    viewportWidth = (GLint)ceilf(2.f*hFactor*numOfBins);
+    viewportWidth_ = (GLint)ceilf(2.f*hFactor*numOfBins);
     UpdateTransform();
 
     //Calculate necessary number of camera views
@@ -84,8 +84,8 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32F, nViewBeams_, (GLuint)nBeamSamples_);  
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-    glGenFramebuffers(1, &renderFBO);
-    OpenGLState::BindFramebuffer(renderFBO);
+    glGenFramebuffers(1, &renderFBO_);
+    OpenGLState::BindFramebuffer(renderFBO_);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, inputDepthRBO_);
     glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, inputRangeIntensityTex_, 0, 0);
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -137,7 +137,7 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
     glGenTextures(1, &displayTex_);
     OpenGLState::BindTexture(TEX_BASE, GL_TEXTURE_2D, displayTex_);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, viewportWidth, viewportHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL); //RGB image
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, viewportWidth_, viewportHeight_, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL); //RGB image
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -183,7 +183,7 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
                          + "\n#define N_BEAM_SAMPLES " + std::to_string(nBeamSamples_) + "\n"; 
     std::vector<GLSLSource> sources;
     sources.push_back(GLSLSource(GL_COMPUTE_SHADER, "flsOutput.comp", header));
-    sonarOutputShader_ = new GLSLShader(sources);
+    sonarOutputShader_ = std::make_unique<GLSLShader>(sources);
     sonarOutputShader_->AddUniform("sonarInput", ParameterType::INT);
     sonarOutputShader_->AddUniform("sonarOutput", ParameterType::INT);
     sonarOutputShader_->AddUniform("beams", ParameterType::UVEC2);
@@ -217,7 +217,7 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
             shaderFilename = "flsPostprocessF32.comp";
             break;
     }
-    sonarPostprocessShader_ = new GLSLShader({GLSLSource(GL_COMPUTE_SHADER, shaderFilename)});
+    sonarPostprocessShader_ = std::make_unique<GLSLShader>(std::vector<GLSLSource>({GLSLSource(GL_COMPUTE_SHADER, shaderFilename)}));
     sonarPostprocessShader_->AddUniform("sonarOutput", ParameterType::INT);
     sonarPostprocessShader_->AddUniform("sonarPost", ParameterType::INT);
     sonarPostprocessShader_->Use();
@@ -228,8 +228,6 @@ OpenGLFLS::OpenGLFLS(glm::vec3 eyePosition, glm::vec3 direction, glm::vec3 sonar
 
 OpenGLFLS::~OpenGLFLS()
 {
-    delete sonarOutputShader_;
-    delete sonarPostprocessShader_;
     glDeleteTextures(2, outputTex_);
 }
 
@@ -242,7 +240,7 @@ void OpenGLFLS::UpdateTransform()
 
     //Update settings if necessary
     bool updateProjection = false;
-    glm::vec3 rangeGain((GLfloat)sonar_->getRangeMin(), (GLfloat)sonar_->getRangeMax(), (GLfloat)sonar_->getGain());
+    glm::vec3 rangeGain((GLfloat)sonar_->GetRangeMin(), (GLfloat)sonar_->GetRangeMax(), (GLfloat)sonar_->GetGain());
     if(rangeGain.x != range_.x)
     {
         range_.x = rangeGain.x;
@@ -317,12 +315,12 @@ void OpenGLFLS::UpdateTransform()
     }
 }
 
-void OpenGLFLS::setNoise(glm::vec2 signalStdDev)
+void OpenGLFLS::SetNoise(glm::vec2 signalStdDev)
 {
     noise_ = signalStdDev;
 }
 
-void OpenGLFLS::setSonar(FLS* s)
+void OpenGLFLS::SetSonar(FLS* s)
 {
     sonar_ = s;
 
@@ -350,17 +348,17 @@ void OpenGLFLS::setSonar(FLS* s)
 
     glGenBuffers(1, &displayPBO_);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, displayPBO_);
-    glBufferData(GL_PIXEL_PACK_BUFFER, viewportWidth * viewportHeight * 3, 0, GL_STREAM_READ);
+    glBufferData(GL_PIXEL_PACK_BUFFER, viewportWidth_ * viewportHeight_ * 3, 0, GL_STREAM_READ);
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 }
 
 void OpenGLFLS::ComputeOutput(std::vector<Renderable>& objects)
 {
-    OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
+    OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent();
     content->SetDrawingMode(DrawingMode::RAW);
     
     //Generate sonar input
-    OpenGLState::BindFramebuffer(renderFBO);
+    OpenGLState::BindFramebuffer(renderFBO_);
     OpenGLState::Viewport(0, 0, nViewBeams_, nBeamSamples_);
     glDisable(GL_DEPTH_CLAMP);
     sonarInputShader_[1]->Use();
@@ -380,12 +378,12 @@ void OpenGLFLS::ComputeOutput(std::vector<Renderable>& objects)
         {
             if(objects[h].type != RenderableType::SOLID)
                 continue;
-            const Object& obj = content->getObject(objects[h].objectId);
-            const Look& look = content->getLook(objects[h].lookId);
+            const Object& obj = content->GetObject(objects[h].objectId);
+            const Look& look = content->GetLook(objects[h].lookId);
             glm::mat4 M = objects[h].model;
-            Material mat = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(objects[h].materialName);
+            Material mat = SimulationApp::GetApp()->GetSimulationManager()->GetMaterialManager()->GetMaterial(objects[h].materialName);
             bool normalMapping = obj.texturable && (look.normalMap > 0);
-            shader = normalMapping ? sonarInputShader_[1] : sonarInputShader_[0];
+            shader = normalMapping ? sonarInputShader_[1].get() : sonarInputShader_[0].get();
             shader->Use();
             shader->SetUniform("MVP", VP * M);
             shader->SetUniform("M", M);
@@ -437,7 +435,7 @@ void OpenGLFLS::ComputeOutput(std::vector<Renderable>& objects)
     glDispatchCompute((GLuint)ceilf(nBeams_/16.f), (GLuint)ceilf(nBins_/16.f), 1);
     
     OpenGLState::BindFramebuffer(displayFBO_);
-    OpenGLState::Viewport(0, 0, viewportWidth, viewportHeight);
+    OpenGLState::Viewport(0, 0, viewportWidth_, viewportHeight_);
     glClear(GL_COLOR_BUFFER_BIT);
     OpenGLState::BindTexture(TEX_POSTPROCESS1, GL_TEXTURE_2D, outputTex_[1]);
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -460,19 +458,19 @@ void OpenGLFLS::DrawLDR(GLuint destinationFBO, bool updated)
     unsigned int dispX, dispY;
     GLfloat dispScale;
     if(sonar_ != nullptr)
-        display = sonar_->getDisplayOnScreen(dispX, dispY, dispScale);
+        display = sonar_->GetDisplayOnScreen(dispX, dispY, dispScale);
     
     //Draw on screen
     if(display)
     {
-        OpenGLContent* content = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent();
-        int windowHeight = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowHeight();
-        int windowWidth = ((GraphicalSimulationApp*)SimulationApp::getApp())->getWindowWidth();
+        OpenGLContent* content = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent();
+        int windowHeight = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetWindowHeight();
+        int windowWidth = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetWindowWidth();
         OpenGLState::BindFramebuffer(destinationFBO);    
         content->SetViewportSize(windowWidth, windowHeight);
         OpenGLState::Viewport(0, 0, windowWidth, windowHeight);
         OpenGLState::DisableCullFace();
-        content->DrawTexturedQuad(dispX, dispY+viewportHeight*dispScale, viewportWidth*dispScale, -viewportHeight*dispScale, displayTex_);
+        content->DrawTexturedQuad(dispX, dispY+viewportHeight_*dispScale, viewportWidth_*dispScale, -viewportHeight_*dispScale, displayTex_);
         OpenGLState::EnableCullFace();
         OpenGLState::BindFramebuffer(0);
     }

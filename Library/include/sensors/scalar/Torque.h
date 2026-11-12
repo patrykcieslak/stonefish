@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 20/03/2018.
-//  Copyright (c) 2019-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Torque__
-#define __Stonefish_Torque__
+#pragma once
 
 #include "sensors/scalar/JointSensor.h"
 
@@ -40,7 +39,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        Torque(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
+        Torque(std::string_view uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
         
         //! A method performing internal sensor state update.
         /*!
@@ -52,17 +51,25 @@ namespace sf
         /*!
          \param torqueMax the maximum measured torque [Nm]
          */
-        void setRange(Scalar torqueMax);
+        void SetRange(Scalar torqueMax);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
          \param torqueStdDev standard deviation of torque measurement noise
          */
-        void setNoise(Scalar torqueStdDev);
+        void SetNoise(Scalar torqueStdDev);
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const override;
+        ScalarSensorType GetScalarSensorType() const override;
+
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo GetConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<Torque> Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info);
     };
 }
 
-#endif

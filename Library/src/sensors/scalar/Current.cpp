@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 09/06/2014.
-//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Current.h"
@@ -31,18 +31,18 @@
 namespace sf
 {
 
-Current::Current(std::string uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
+Current::Current(std::string_view uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
 {
-    motor = nullptr;
-    channels.push_back(SensorChannel("Current", QuantityType::CURRENT));
+    motor_ = nullptr;
+    channels_.push_back(SensorChannel("Current", QuantityType::CURRENT));
 }
 
-Transform Current::getSensorFrame() const
+Transform Current::GetSensorFrame() const
 {
     return I4();
 }
 
-void Current::getSensorVelocity(Vector3& linear, Vector3& angular) const
+void Current::GetSensorVelocity(Vector3& linear, Vector3& angular) const
 {
     linear = V0();
     angular = V0();
@@ -51,27 +51,26 @@ void Current::getSensorVelocity(Vector3& linear, Vector3& angular) const
 void Current::AttachToMotor(DCMotor* m)
 {
     if(m != nullptr)
-        motor = m;
+        motor_ = m;
 }
 
 void Current::InternalUpdate(Scalar dt)
 {
-    //read current
+    // Read current
     Scalar current = Scalar(0);
-    if(motor != nullptr)
-        current = motor->getCurrent();
+    if(motor_ != nullptr)
+        current = motor_->GetCurrent();
     
-    //record sample
-    Sample s{std::vector<Scalar>({current})};
-    AddSampleToHistory(s);
+    // Record sample
+    AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({current})));
 }
 
-SensorType Current::getType() const
+SensorType Current::GetType() const
 {
     return SensorType::OTHER;
 }
 
-ScalarSensorType Current::getScalarSensorType() const
+ScalarSensorType Current::GetScalarSensorType() const
 {
     return ScalarSensorType::CURRENT;
 }

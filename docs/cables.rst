@@ -62,9 +62,15 @@ Cables can be instantiated as follows:
 
     #include <Stonefish/entities/solids/Sphere.h>
     #include <Stonefish/entities/CableEntity.h>
-    sf::Sphere* sph = new sf::Sphere("Sphere", phy, 0.5, sf::I4(), "Steel", "Yellow");
-    AddSolidEntity(sph, sf::I4());
-    sf::CableEntity* cable = new sf::CableEntity("Cable", phy, sf::Vector3(0.0, 0.0, -5.0), sf::Vector3(0.0, 0.0, -1.0), 100, 0.01, "Steel", "Yellow", 0.0, 10.f);
+    
+    sf::PhysicsSettings phy;
+    phy.mode = sf::PhysicsMode::SUBMERGED;
+    phy.collisions = true;
+    phy.buoyancy = true;
+
+    sf::SolidEntity* sphere = AddSolidEntity(std::make_unique<sf::Sphere>("Sphere", phy, 0.5, sf::I4(), "Steel", "Yellow"), sf::I4());
+    std::unique_ptr<sf::CableEntity> cable = std::make_unique<sf::CableEntity>("Cable", phy, sf::Vector3(0.0, 0.0, -5.0), 
+        sf::Vector3(0.0, 0.0, -1.0), 100, 0.01, "Steel", "Yellow", 0.0, 10.f);
     cable->AttachToWorld(sf::CableEnds::FIRST);
-    cable->AttachToSolid(sf::CableEnds::SECOND, sph);
-    AddCableEntity(cable);
+    cable->AttachToSolid(sf::CableEnds::SECOND, sphere);
+    AddCableEntity(std::move(cable));

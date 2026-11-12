@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 20/11/2018.
-//  Copyright (c) 2018-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_VisionSensor__
-#define __Stonefish_VisionSensor__
+#pragma once
 
 #include "sensors/Sensor.h"
 
@@ -32,7 +31,7 @@ namespace sf
 {
     //! An enum defining types of vision sensors.
     enum class VisionSensorType {COLOR_CAMERA, DEPTH_CAMERA, THERMAL_CAMERA, EVENT_BASED_CAMERA, 
-                                    OPTICAL_FLOW_CAMERA, SEGMENTATION_CAMERA, MULTIBEAM2, FLS, SSS, MSIS};
+        OPTICAL_FLOW_CAMERA, SEGMENTATION_CAMERA, LIDAR, FLS, SSS, MSIS, PLUGIN};
     
     class Entity;
     class StaticEntity;
@@ -48,10 +47,10 @@ namespace sf
          \param uniqueName a name for the sensor
          \param frequency the sampling frequency of the sensor [Hz] (0 if updated every simulation step)
          */
-        VisionSensor(std::string uniqueName, Scalar frequency);
+        VisionSensor(std::string_view uniqueName, Scalar frequency);
         
         //! A destructor.
-        virtual ~VisionSensor();
+        virtual ~VisionSensor() = default;
         
         //! A method performing internal sensor state update.
         /*!
@@ -86,34 +85,32 @@ namespace sf
         /*!
          \param origin a tranformation from the body frame to the sensor frame
          */
-        void setRelativeSensorFrame(const Transform& origin);
+        void SetRelativeSensorFrame(const Transform& origin);
 
         //! A method returning the type of the sensor.
-        SensorType getType() const override;
+        SensorType GetType() const override;
 
         //! A method returning the sensor measurement frame.
-        Transform getSensorFrame() const override;
+        Transform GetSensorFrame() const override;
 
         //! A method returning the velocity of the sensor measurement frame.
         /*!
          \param linear output of the linear velocity of the sensor measurement frame [m/s]
          \param angular output of the angular velocity of the sensor measurement frame [rad/s]
          */
-        void getSensorVelocity(Vector3& linear, Vector3& angular) const override;
+        void GetSensorVelocity(Vector3& linear, Vector3& angular) const override;
         
         //! A method returning the type of the vision sensor.
-        virtual VisionSensorType getVisionSensorType() const = 0;
+        virtual VisionSensorType GetVisionSensorType() const = 0;
 
         //! A method returning a pointer to the underlaying OpenGLView object.
-        virtual OpenGLView* getOpenGLView() const = 0;
+        virtual OpenGLView* GetOpenGlView() const = 0;
         
     protected:
         virtual void InitGraphics(bool& seesParticles) = 0;
         
     private:
-        Entity* attach;
-        Transform o2s;
+        Entity* attach_;
+        Transform o2s_;
     };
 }
-
-#endif

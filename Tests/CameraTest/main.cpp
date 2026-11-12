@@ -46,8 +46,7 @@ int main(int argc, const char * argv[])
     h.showActuators = false;
     h.showForces = false;
     
-    CameraTestManager* simulationManager = new CameraTestManager(100.0);
-    sf::GraphicalSimulationApp app("CameraTest", std::string(DATA_DIR_PATH), s, h, simulationManager);
+    sf::GraphicalSimulationApp app("CameraTest", std::string(DATA_DIR_PATH), s, h, std::make_unique<CameraTestManager>(100.0));
     app.Run();
     
     return 0;

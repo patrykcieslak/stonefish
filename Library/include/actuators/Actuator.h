@@ -20,22 +20,22 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/8/13.
-//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Actuator__
-#define __Stonefish_Actuator__
+#pragma once
 
 #include "StonefishCommon.h"
 #include "entities/Entity.h"
+#include "core/ConstructInfo.h"
 
 namespace sf
 {
     struct Renderable;
     
-    //! An enum designating a type of the actuator.
-    enum class ActuatorType {MOTOR, SERVO, PROPELLER, THRUSTER, VBS, LIGHT, RUDDER, SUCTION_CUP, PUSH, SIMPLE_THRUSTER};
-    
+    //! An enum defining types of sensors.
+    enum class ActuatorType {JOINT, LINK};
+
     //! An abstract class representing any actuator.
     class Actuator
     {
@@ -44,7 +44,7 @@ namespace sf
         /*!
          \param uniqueName a name of the actuator
          */
-        Actuator(std::string uniqueName);
+        Actuator(std::string_view uniqueName);
         
         //! A destructor.
         virtual ~Actuator();
@@ -62,31 +62,38 @@ namespace sf
         /*!
          \param m flag defining the display mode
          */
-        void setDisplayMode(DisplayMode m);
+        void SetDisplayMode(DisplayMode m);
 
         //! A method used to set the watchdog timeout.
         /*!
          \param timeout timeout of the watchdog [s]
         */
-        void setWatchdog(Scalar timeout);
-
-        //! A method returning the type of the actuator.
-        virtual ActuatorType getType() const = 0;
+        void SetWatchdog(Scalar timeout);
 
         //! A method returning the name of the actuator.
-        std::string getName() const;
+        const std::string& GetName() const;
+
+        //! A method returning the type of the actuator.
+        virtual ActuatorType GetType() const = 0;
+
+        //! A deleter method required for the plugin architecture.
+        static void DefaultDeleter(Actuator* a);
     
     protected:
         virtual void WatchdogTimeout();
         void ResetWatchdog();
 
-        DisplayMode dm;
+        DisplayMode dm_;
 
     private:
-        std::string name;
-        Scalar watchdog;
-        Scalar watchdogTimeout;
+        std::string name_;
+        Scalar watchdog_;
+        Scalar watchdogTimeout_;
     };
-}
 
-#endif 
+    // Plugin architecture types
+    using ActuatorDeleter = void(*)(Actuator*);
+    typedef Actuator* (*CreateActuatorFunc)(const char*, ConstructInfo*);
+    typedef void (*DestroyActuatorFunc)(Actuator*);
+    typedef ConstructInfo (*GetActuatorConstructInfoFunc)();
+}

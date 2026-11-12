@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 2/3/13.
-//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_SphericalJoint__
-#define __Stonefish_SphericalJoint__
+#pragma once
 
 #include "joints/Joint.h"
 
@@ -45,7 +44,7 @@ namespace sf
          \param pivot a point where the axis of joint is located
          \param collideLinked a flag that sets if the bodies connected by the joint should coliide
          */
-        SphericalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, bool collideLinked = true);
+        SphericalJoint(std::string_view uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, bool collideLinked = true);
         
         //! A constructor to create a spherical joint between a solid body and a link of a multibody.
         /*!
@@ -55,7 +54,7 @@ namespace sf
          \param linkId an index of the link of the multibody
          \param pivot a connection point
          */
-        SphericalJoint(std::string uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId, const Vector3& pivot, bool collideLinked = true);
+        SphericalJoint(std::string_view uniqueName, SolidEntity* solid, FeatherstoneEntity* fe, int linkId, const Vector3& pivot, bool collideLinked = true);
 
         //! A method used to apply torque to the joint.
         /*!
@@ -74,22 +73,20 @@ namespace sf
          \param constantFactor a constant damping torque vector [Nm]
          \param viscousFactor a coefficient of viscous damping [Nm*s*rad^-1]
          */
-        void setDamping(Vector3 constantFactor, Vector3 viscousFactor);
+        void SetDamping(Vector3 constantFactor, Vector3 viscousFactor);
         
         //! A method to set the desired initial condition of the joint.
         /*!
          \param angles the initial angles of rotation the joint [rad]
          */
-        void setIC(Vector3 angles);
+        void SetIc(Vector3 angles);
         
         //! A method returning the type of the joint.
-        JointType getType() const;
+        JointType GetType() const;
         
     private:
-        Vector3 sigDamping;
-        Vector3 velDamping;
-        Vector3 angleIC;
+        Vector3 sigDamping_;
+        Vector3 velDamping_;
+        Vector3 angleIC_;
     };
 }
-    
-#endif

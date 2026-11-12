@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 28/06/2014.
-//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLDebugDrawer.h"
@@ -78,11 +78,11 @@ void OpenGLDebugDrawer::reportErrorWarning(const char* warningString)
 void OpenGLDebugDrawer::Render()
 {
     glm::vec4 colorL(1.f, 1.f, 0.f, 1.f);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawPrimitives(PrimitiveType::LINES, &lineVertices_, colorL);
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->DrawPrimitives(PrimitiveType::LINES, &lineVertices_, colorL);
     lineVertices_.clear();
 
     glm::vec4 colorP(0.f, 1.f, 0.f, 1.f);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->DrawPrimitives(PrimitiveType::POINTS, &pointVertices_, colorP);
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->DrawPrimitives(PrimitiveType::POINTS, &pointVertices_, colorP);
     pointVertices_.clear();
 }
 

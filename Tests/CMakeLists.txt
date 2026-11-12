@@ -1,6 +1,6 @@
 add_definitions(-DDATA_DIR_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/Data/\")
 
-add_executable(ConsoleTest ConsoleTest/main.cpp ConsoleTest/ConsoleTestApp.cpp ConsoleTest/ConsoleTestManager.cpp)
+add_executable(ConsoleTest ConsoleTest/main.cpp ConsoleTest/ConsoleTestManager.cpp)
 target_link_libraries(ConsoleTest Stonefish_test)
 
 add_executable(CameraTest CameraTest/main.cpp CameraTest/CameraTestManager.cpp)
@@ -32,3 +32,12 @@ target_link_libraries(LearningTest Stonefish_test)
 
 add_executable(CableTest CableTest/main.cpp CableTest/CableTestApp.cpp CableTest/CableTestManager.cpp)
 target_link_libraries(CableTest Stonefish_test)
+
+add_executable(ParserTest ParserTest/main.cpp ParserTest/ParserTestManager.cpp)
+target_link_libraries(ParserTest Stonefish_test)
+
+add_library(LinkSensorPlugin SHARED ParserTest/LinkSensorPlugin.cpp)
+target_link_libraries(LinkSensorPlugin PRIVATE Stonefish_test)
+
+add_library(LinkActuatorPlugin SHARED ParserTest/LinkActuatorPlugin.cpp)
+target_link_libraries(LinkActuatorPlugin PRIVATE Stonefish_test)

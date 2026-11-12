@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 02/09/2022.
-//  Copyright (c) 2022 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2022-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_PerformanceMonitor__
-#define __Stonefish_PerformanceMonitor__
+#pragma once
 
 #include <SDL2/SDL_mutex.h>
 #include <chrono>
@@ -47,43 +46,41 @@ namespace sf
         void HydrodynamicsFinished();
 
         // In seconds.
-        double getSimulationTime();
+        double GetSimulationTime();
         
         // In microseconds.
-        double getPhysicsTime();
-        double getPhysicsTimeAverage();
-        template<typename T> std::vector<T> getPhysicsTimeHistory(size_t len) { return getHistory<T>(phyTime, len); };
+        double GetPhysicsTime();
+        double GetPhysicsTimeAverage();
+        template<typename T> std::vector<T> GetPhysicsTimeHistory(size_t len) { return GetHistory<T>(phyTime_, len); };
 
-        double getHydrodynamicsTime();
-        double getHydrodynamicsTimeAverage();
-        template<typename T> std::vector<T> getHydrodynamicsTimeHistory(size_t len) { return getHistory<T>(hydroTime, len); };
+        double GetHydrodynamicsTime();
+        double GetHydrodynamicsTimeAverage();
+        template<typename T> std::vector<T> GetHydrodynamicsTimeHistory(size_t len) { return GetHistory<T>(hydroTime_, len); };
 
     private:
         void Update(const std::chrono::high_resolution_clock::time_point& start, std::deque<double>& times, double& average);
-        template<typename T> std::vector<T> getHistory(std::deque<double>& data, size_t len)
+        template<typename T> std::vector<T> GetHistory(std::deque<double>& data, size_t len)
         { 
             std::vector<T> dataOut; 
             dataOut.resize(data.size() < len ? data.size() : len);
-            SDL_LockMutex(updateMtx);
+            SDL_LockMutex(updateMtx_);
             size_t offset = data.size() - dataOut.size();
             for(size_t i=data.size()-dataOut.size(); i<data.size(); ++i) 
                 dataOut[i-offset] = (T)(data[i]);
-            SDL_UnlockMutex(updateMtx);   
+            SDL_UnlockMutex(updateMtx_);   
             return dataOut;
         };
 
-        size_t maxCount;
-        std::chrono::high_resolution_clock::time_point simStart;
-        std::chrono::high_resolution_clock::time_point phyStart;
-        std::chrono::high_resolution_clock::time_point hydroStart;
-        double simTime;
-        bool simFinished;
-        std::deque<double> phyTime;
-        std::deque<double> hydroTime;
-        double phyTimeAvg;
-        double hydroTimeAvg;
-        SDL_mutex* updateMtx;
+        size_t maxCount_;
+        std::chrono::high_resolution_clock::time_point simStart_;
+        std::chrono::high_resolution_clock::time_point phyStart_;
+        std::chrono::high_resolution_clock::time_point hydroStart_;
+        double simTime_;
+        bool simFinished_;
+        std::deque<double> phyTime_;
+        std::deque<double> hydroTime_;
+        double phyTimeAvg_;
+        double hydroTimeAvg_;
+        SDL_mutex* updateMtx_;
     };
 }
-
-#endif

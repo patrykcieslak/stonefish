@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 18/11/2017.
-//  Copyright (c) 2017-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Accelerometer__
-#define __Stonefish_Accelerometer__
+#pragma once
 
 #include "sensors/scalar/LinkSensor.h"
 
@@ -40,7 +39,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        Accelerometer(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
+        Accelerometer(std::string_view uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
         
         //! A method performing internal sensor state update.
         /*!
@@ -52,17 +51,24 @@ namespace sf
         /*!
          \param linearAccelerationMax the maximum measured linear acceleration for each axis [m s^-2]
          */
-        void setRange(Vector3 linearAccelerationMax);
+        void SetRange(Vector3 linearAccelerationMax);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
          \param linearAccelerationStdDev standard deviation of the linear acceleration measurement noise for each axis
          */
-        void setNoise(Vector3 linearAccelerationStdDev);
+        void SetNoise(Vector3 linearAccelerationStdDev);
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const override;
+        ScalarSensorType GetScalarSensorType() const override;
+
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo GetConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<Accelerometer> Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info);
     };
 }
-
-#endif

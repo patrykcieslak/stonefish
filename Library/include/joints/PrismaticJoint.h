@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 27/03/2014.
-//  Copyright (c) 2014-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_PrismaticJoint__
-#define __Stonefish_PrismaticJoint__
+#pragma once
 
 #include "joints/Joint.h"
 
@@ -44,7 +43,7 @@ namespace sf
          \param axis a vector parallel to the joint axis
          \param collideLinked a flag that sets if the bodies connected by the joint should collide
          */
-        PrismaticJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB,
+        PrismaticJoint(std::string_view uniqueName, SolidEntity* solidA, SolidEntity* solidB,
                        const Vector3& axis, bool collideLinked = true);
         
         //! A method used to apply force to the joint.
@@ -64,30 +63,29 @@ namespace sf
          \param constantFactor a constant damping force [N]
          \param viscousFactor a coefficient of viscous damping [N*s*rad^-1]
          */
-        void setDamping(Scalar constantFactor, Scalar viscousFactor);
+        void SetDamping(Scalar constantFactor, Scalar viscousFactor);
         
         //! A method to set the limits of the joint.
         /*!
          \param min the minimum displacement of the joint [m]
          \param max the maximum displacement of the joint [m]
          */
-        void setLimits(Scalar min, Scalar max);
+        void SetLimits(Scalar min, Scalar max);
         
         //! A method to set the desired initial condition of the joint.
         /*!
          \param displacement the initial displacement of the joint [m]
          */
-        void setIC(Scalar displacement);
+        void SetIc(Scalar displacement);
         
         //! A method returning the type of the joint.
-        JointType getType() const;
+        JointType GetType() const;
         
     private:
-        Vector3 axisInA;
-        Scalar sigDamping;
-        Scalar velDamping;
-        Scalar displacementIC;
+        Vector3 axisInA_;
+        Scalar sigDamping_;
+        Scalar velDamping_;
+        Scalar displacementIC_;
     };
 }
 
-#endif

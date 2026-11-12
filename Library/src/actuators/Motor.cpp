@@ -20,60 +20,59 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 15/09/2015.
-//  Copyright (c) 2015-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2015-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Motor.h"
 
+#include "core/DeviceFactory.h"
 #include "joints/RevoluteJoint.h"
 #include "entities/FeatherstoneEntity.h"
 
 namespace sf
 {
 
-Motor::Motor(std::string uniqueName) : JointActuator(uniqueName)
+Motor::Motor(std::string_view uniqueName) : JointActuator(uniqueName)
 {
-    torque = Scalar(0);
-    setTorqueLimits(1, -1); // No limits
+    torque_ = Scalar(0);
+    SetTorqueLimit(-1); // No limit
 }
 
-ActuatorType Motor::getType() const
+JointActuatorType Motor::GetJointActuatorType() const
 {
-    return ActuatorType::MOTOR;
+    return JointActuatorType::MOTOR;
 }
 
-void Motor::setTorqueLimits(Scalar lower, Scalar upper)
+void Motor::SetTorqueLimit(Scalar tau)
 {
-    limits.first = lower;
-    limits.second = upper;
+    limit_ = tau;
 }
 
-void Motor::setCommand(Scalar tau)
+void Motor::SetTorque(Scalar tau)
 {
-    torque = tau;
-    if(limits.second > limits.first) // Limitted
-        torque = tau < limits.first ? limits.first : (tau > limits.second ? limits.second : tau);
+    if(limit_ > Scalar(0)) // Limitted
+        torque_ = tau < -limit_ ? -limit_ : (tau > limit_ ? limit_ : tau);
     else
-        torque = tau;
+        torque_ = tau;
     ResetWatchdog();
 }
 
-Scalar Motor::getTorque() const
+Scalar Motor::GetTorque() const
 {
-    return torque;
+    return torque_;
 }
 
-Scalar Motor::getAngle() const
+Scalar Motor::GetAngle() const
 {
-    if(j != nullptr && j->getType() == JointType::REVOLUTE)
+    if(j_ != nullptr && j_->GetType() == JointType::REVOLUTE)
     {
-        return ((RevoluteJoint*)j)->getAngle();
+        return static_cast<RevoluteJoint*>(j_)->GetAngle();
     }
-    else if(fe != nullptr)
+    else if(fe_ != nullptr)
     {
         Scalar angle;
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
-        fe->getJointPosition(jId, angle, jt);
+        fe_->GetJointPosition(jId_, angle, jt);
         
         if(jt == btMultibodyLink::eRevolute)
             return angle;
@@ -84,17 +83,17 @@ Scalar Motor::getAngle() const
         return Scalar(0);
 }
 
-Scalar Motor::getAngularVelocity() const
+Scalar Motor::GetAngularVelocity() const
 {
-    if(j != nullptr && j->getType() == JointType::REVOLUTE)
+    if(j_ != nullptr && j_->GetType() == JointType::REVOLUTE)
     {
-        return ((RevoluteJoint*)j)->getAngularVelocity();
+        return static_cast<RevoluteJoint*>(j_)->GetAngularVelocity();
     }
-    else if(fe != nullptr)
+    else if(fe_ != nullptr)
     {
         Scalar angularV;
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
-        fe->getJointVelocity(jId, angularV, jt);
+        fe_->GetJointVelocity(jId_, angularV, jt);
         
         if(jt == btMultibodyLink::eRevolute)
             return angularV;
@@ -109,15 +108,47 @@ void Motor::Update(Scalar dt)
 {
     Actuator::Update(dt);
 
-    if(j != nullptr && j->getType() == JointType::REVOLUTE)
-        ((RevoluteJoint*)j)->ApplyTorque(torque);
-    else if(fe != nullptr)
-        fe->DriveJoint(jId, torque);
+    if(j_ != nullptr && j_->GetType() == JointType::REVOLUTE)
+        static_cast<RevoluteJoint*>(j_)->ApplyTorque(torque_);
+    else if(fe_ != nullptr)
+        fe_->DriveJoint(jId_, torque_);
 }
 
 void Motor::WatchdogTimeout()
 {
-    setCommand(Scalar(0));
+    SetTorque(Scalar(0));
 }
+
+// Statics
+
+ConstructInfo Motor::GetConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+    
+    // Limits
+    node.optional = true;
+    node.attributes.insert({"max_torque", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"limits", node});
+
+    return info;
+}
+
+std::unique_ptr<Motor> Motor::Construct(std::string_view uniqueName, ConstructInfo& info)
+{
+    // Optional
+    Scalar maxTorque(-1.);
+    ConstructInfoValue& value = info.nodes.at("limits").attributes.at("max_torque");
+    if (value.valid)
+        maxTorque = std::get<Scalar>(value.value);
+
+    // Construct
+    std::unique_ptr<Motor> actuator = std::make_unique<Motor>(uniqueName);
+    actuator->SetTorqueLimit(maxTorque);
+
+    return actuator;
+}
+
+REGISTER_ACTUATOR("motor", Motor)
 
 }

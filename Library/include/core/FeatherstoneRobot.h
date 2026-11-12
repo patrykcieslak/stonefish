@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/11/2018.
-//  Copyright(c) 2018-2022 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_FeatherstoneRobot__
-#define __Stonefish_FeatherstoneRobot__
+#pragma once
 
 #include "core/Robot.h"
 
@@ -41,18 +40,15 @@ namespace sf
          \param uniqueName a name for the robot
          \param fixedBase is the robot fixed to the world?
          */
-        FeatherstoneRobot(std::string uniqueName, bool fixedBase = false);
+        FeatherstoneRobot(std::string_view uniqueName, bool fixedBase = false);
         
-        //! A destructor.
-        virtual ~FeatherstoneRobot();
-
         //! A method used to define a list of rigid bodies constituting the mechanical part of the robot (dynamic tree).
         /*!
          \param baseLink a solid contituting the base of the robot
          \param otherLinks a vector of subsequent links
          \param selfCollision a flag determining if self collision between multibody links should be enabled (subsequent links never collide)
          */
-        void DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLinks = std::vector<SolidEntity*>(0), bool selfCollision = false);
+        void DefineLinks(std::unique_ptr<SolidEntity> baseLink, std::vector<std::unique_ptr<SolidEntity>> otherLinks = std::vector<std::unique_ptr<SolidEntity>>(0), bool selfCollision = false);
         
         //! A method which uses links and joints definitions to build the kinematic structure of the robot.
         void BuildKinematicStructure();
@@ -62,14 +58,16 @@ namespace sf
          \param s a pointer to a joint sensor object
          \param monitoredJointName a name of the joint at which the sensor is attached
          */
-        void AddJointSensor(JointSensor* s, const std::string& monitoredJointName);
+        JointSensor* AddJointSensor(std::unique_ptr<Sensor> s, std::string_view monitoredJointName) override;
+        JointSensor* AddJointSensor(std::unique_ptr<Sensor, SensorDeleter> s, std::string_view monitoredJointName) override;
 
         //! A method used to attach an actuator to a specified joint of the robot.
         /*!
          \param a a pointer to a joint actuator object
          \param actuatedJointName a name of the joint which is to be driven
          */
-        void AddJointActuator(JointActuator* a, const std::string& actuatedJointName);
+        JointActuator* AddJointActuator(std::unique_ptr<Actuator> a, std::string_view actuatedJointName) override;
+        JointActuator* AddJointActuator(std::unique_ptr<Actuator, ActuatorDeleter> a, std::string_view actuatedJointName) override;
 
         //! A method used to attach an actuator to a specified link of the robot.
         /*!
@@ -77,7 +75,8 @@ namespace sf
          \param actuatedLinkName a name of the link which is to be actuated
          \param origin a transformation from the link origin to the actuator frame
          */
-        void AddLinkActuator(LinkActuator* a, const std::string& actuatedLinkName, const Transform& origin);
+        LinkActuator* AddLinkActuator(std::unique_ptr<Actuator> a, std::string_view actuatedLinkName, const Transform& origin) override;
+        LinkActuator* AddLinkActuator(std::unique_ptr<Actuator, ActuatorDeleter> a, std::string_view actuatedLinkName, const Transform& origin) override;
 
         //! A method adding the robot to the simulation world (includes consistency checking).
         /*!
@@ -94,26 +93,24 @@ namespace sf
         void Respawn(SimulationManager* sm, const Transform& origin) override;
 
         //! A method returning the pose of the robot in the world frame.
-        Transform getTransform() const;
+        Transform GetTransform() const;
 
         //! A method returning the index of the link.
         /*!
          \param lname the name of the link
          \return index of the link
         */
-        int getLinkIndex(const std::string& lname) const;
+        int GetLinkIndex(std::string_view lname) const;
 
         //! A method returning type of algorithm used for the robot.
-        RobotType getType() const;
+        RobotType GetType() const;
 
         //! A method returning a point to the underlaying Featherstone entity.
-        FeatherstoneEntity* getDynamics();
+        FeatherstoneEntity* GetDynamics();
 
     private:
-        int getJoint(const std::string& jname);
+        int GetJoint(std::string_view jname);
 
-        FeatherstoneEntity* dynamics;
+        FeatherstoneEntity* dynamics_;
     };
 }
-
-#endif

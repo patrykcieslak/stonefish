@@ -16,22 +16,21 @@
 */
 
 //
-//  USBLReal.h
+//  RealUSBL.h
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 21/12/2020.
-//  Copyright (c) 2020-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_USBLReal__
-#define __Stonefish_USBLReal__
+#pragma once
 
 #include "comms/USBL.h"
 
 namespace sf
 {
     //! A class representing a realistic USBL model.
-    class USBLReal : public USBL
+    class RealUSBL : public USBL
     {
     public:
         //! A constructor.
@@ -44,7 +43,7 @@ namespace sf
          \param carrierFrequency the base frequency of the signal [Hz]
          \param baseline the distance between transducers forming one pair [m]
          */
-        USBLReal(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange,
+        RealUSBL(std::string_view uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange,
                  Scalar carrierFrequency, Scalar baseline);
            
         //! A method used to set the noise characteristics of the device.
@@ -55,22 +54,30 @@ namespace sf
          \param baselineError the error in the distance between transducers forming a pair [m]
          \param depthDev standard deviation of the depth measurement [m]
          */
-        void setNoise(Scalar timeDev, Scalar soundVelocityDev, Scalar phaseDev, Scalar baselineError, Scalar depthDev);
+        void SetNoise(Scalar timeDev, Scalar soundVelocityDev, Scalar phaseDev, Scalar baselineError, Scalar depthDev);
         
         //! A method that processes all messages in the rx buffer.
         void ProcessMessages() override;
 
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo GetConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<RealUSBL> Construct(std::string_view uniqueName, uint64_t deviceId, ConstructInfo& info);
+
     private:
         Scalar CalcModel(Scalar R, Scalar theta);
 
-        Scalar freq;
-        Scalar bl;
-        Scalar blError;
-        std::normal_distribution<Scalar> noiseTime;
-        std::normal_distribution<Scalar> noiseSV;
-        std::normal_distribution<Scalar> noisePhase;
-        std::normal_distribution<Scalar> noiseDepth;
+        Scalar freq_;
+        Scalar bl_;
+        Scalar blError_;
+        std::normal_distribution<Scalar> noiseTime_;
+        std::normal_distribution<Scalar> noiseSV_;
+        std::normal_distribution<Scalar> noisePhase_;
+        std::normal_distribution<Scalar> noiseDepth_;
     };
 }
-    
-#endif
+

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 25/05/2014.
-//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Pose.h"
@@ -31,29 +31,30 @@
 namespace sf
 {
 
-Pose::Pose(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Pose::Pose(std::string_view uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    channels.push_back(SensorChannel("Coordinate X", QuantityType::LENGTH));
-    channels.push_back(SensorChannel("Coordinate Y", QuantityType::LENGTH));
-    channels.push_back(SensorChannel("Coordinate Z", QuantityType::LENGTH));
-    channels.push_back(SensorChannel("Roll", QuantityType::ANGLE));
-    channels.push_back(SensorChannel("Pitch", QuantityType::ANGLE));
-    channels.push_back(SensorChannel("Yaw", QuantityType::ANGLE));
+    channels_.push_back(SensorChannel("Coordinate X", QuantityType::LENGTH));
+    channels_.push_back(SensorChannel("Coordinate Y", QuantityType::LENGTH));
+    channels_.push_back(SensorChannel("Coordinate Z", QuantityType::LENGTH));
+    channels_.push_back(SensorChannel("Roll", QuantityType::ANGLE));
+    channels_.push_back(SensorChannel("Pitch", QuantityType::ANGLE));
+    channels_.push_back(SensorChannel("Yaw", QuantityType::ANGLE));
 }
 
 void Pose::InternalUpdate(Scalar dt)
 {
     //get angles
-    Transform trajFrame = getSensorFrame();
+    Transform trajFrame = GetSensorFrame();
     Scalar yaw, pitch, roll;
     trajFrame.getBasis().getEulerYPR(yaw, pitch, roll);
     
     //record sample
-    Sample s{std::vector<Scalar>({trajFrame.getOrigin().x(), trajFrame.getOrigin().y(), trajFrame.getOrigin().z(), roll, pitch, yaw})};
-    AddSampleToHistory(s);
+    AddSampleToHistory(std::make_unique<Sample>(
+        std::vector<Scalar>({trajFrame.getOrigin().x(), trajFrame.getOrigin().y(), trajFrame.getOrigin().z(), roll, pitch, yaw})
+    ));
 }
 
-ScalarSensorType Pose::getScalarSensorType() const
+ScalarSensorType Pose::GetScalarSensorType() const
 {
     return ScalarSensorType::POSE;
 }

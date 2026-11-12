@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 28/03/2014.
-//  Copyright (c) 2014-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_CylindricalJoint__
-#define __Stonefish_CylindricalJoint__
+#pragma once
 
 #include "joints/Joint.h"
 
@@ -45,7 +44,7 @@ namespace sf
          \param axis a vector parallel to the joint axis
          \param collideLinked a flag that sets if the bodies connected by the joint should coliide
          */
-        CylindricalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB,
+        CylindricalJoint(std::string_view uniqueName, SolidEntity* solidA, SolidEntity* solidB,
                          const Vector3& pivot, const Vector3& axis, bool collideLinked = true);
         
         //! A method used to apply force to the joint.
@@ -73,7 +72,7 @@ namespace sf
          \param angularConstantFactor a constant damping torque [Nm]
          \param angularViscousFactor a coefficient of viscous damping [Nm*s*rad^-1]
          */
-        void setDamping(Scalar linearConstantFactor, Scalar linearViscousFactor, Scalar angularConstantFactor, Scalar angularViscousFactor);
+        void SetDamping(Scalar linearConstantFactor, Scalar linearViscousFactor, Scalar angularConstantFactor, Scalar angularViscousFactor);
         
         //! A method to set the limits of the joint.
         /*!
@@ -82,28 +81,27 @@ namespace sf
          \param angularMin the minimum rotation angle of the joint [rad]
          \param angularMax the maximum rotation angle of the joint [rad]
          */
-        void setLimits(Scalar linearMin, Scalar linearMax, Scalar angularMin, Scalar angularMax);
+        void SetLimits(Scalar linearMin, Scalar linearMax, Scalar angularMin, Scalar angularMax);
         
         //! A method to set the desired initial conditions of the joint.
         /*!
          \param displacement the initial displacement of the joint [m]
          \param angle the initial angle of the joint [rad]
          */
-        void setIC(Scalar displacement, Scalar angle);
+        void SetIc(Scalar displacement, Scalar angle);
         
         //! A method returning the type of the joint.
-        JointType getType() const;
+        JointType GetType() const;
         
     private:
-        Vector3 axisInA;
-        Vector3 pivotInA;
-        Scalar linSigDamping;
-        Scalar linVelDamping;
-        Scalar angSigDamping;
-        Scalar angVelDamping;
-        Scalar displacementIC;
-        Scalar angleIC;
+        Vector3 axisInA_;
+        Vector3 pivotInA_;
+        Scalar linSigDamping_;
+        Scalar linVelDamping_;
+        Scalar angSigDamping_;
+        Scalar angVelDamping_;
+        Scalar displacementIC_;
+        Scalar angleIC_;
     };
 }
 
-#endif

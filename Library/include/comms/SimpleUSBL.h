@@ -16,22 +16,21 @@
 */
 
 //
-//  USBLSimple.h
+//  SimpleUSBL.h
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 25/02/2020.
-//  Copyright (c) 2020-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_USBLSimple__
-#define __Stonefish_USBLSimple__
+#pragma once
 
 #include "comms/USBL.h"
 
 namespace sf
 {
     //! A class representing a simplified USBL model.
-    class USBLSimple : public USBL
+    class SimpleUSBL : public USBL
     {
     public:
         //! A constructor.
@@ -42,14 +41,14 @@ namespace sf
          \param maxVerticalFOVDeg the maximum vertical angle of radiation pattern [deg]
          \param operatingRange the operating range [m]
          */
-        USBLSimple(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange);
+        SimpleUSBL(std::string_view uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange);
         
         //! A method used to set the resolution of the measurements.
         /*!
          \param range the range measurement resolution [m]
          \param angleDeg the angle measurement resolution [deg]
          */
-        void setResolution(Scalar range, Scalar angleDeg);
+        void SetResolution(Scalar range, Scalar angleDeg);
 
         //! A method used to set the noise characteristics of the device.
         /*!
@@ -57,18 +56,25 @@ namespace sf
          \param horizontalAngleDevDeg standard deviation of the angle measurement noise [deg]
          \param verticalAngleDevDeg standard deviation of the angle measurement noise [deg]
          */
-        void setNoise(Scalar rangeDev, Scalar horizontalAngleDevDeg, Scalar verticalAngleDevDeg);
+        void SetNoise(Scalar rangeDev, Scalar horizontalAngleDevDeg, Scalar verticalAngleDevDeg);
 
         //! A method that processes all messages in the rx buffer.
         void ProcessMessages() override;
+
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo GetConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<SimpleUSBL> Construct(std::string_view uniqueName, uint64_t deviceId, ConstructInfo& info);
     
     private:
-        Scalar rangeRes;
-        Scalar angleRes;
-        std::normal_distribution<Scalar> noiseRange;
-        std::normal_distribution<Scalar> noiseHAngle;
-        std::normal_distribution<Scalar> noiseVAngle;
+        Scalar rangeRes_;
+        Scalar angleRes_;
+        std::normal_distribution<Scalar> noiseRange_;
+        std::normal_distribution<Scalar> noiseHAngle_;
+        std::normal_distribution<Scalar> noiseVAngle_;
     };
 }
-    
-#endif

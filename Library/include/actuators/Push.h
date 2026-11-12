@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/07/2023.
-//  Copyright (c) 2023-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2023-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Push__
-#define __Stonefish_Push__
+#pragma once
 
 #include "actuators/LinkActuator.h"
 
@@ -39,39 +38,50 @@ namespace sf
          \param uniqueName a name for the push
          \param inverted a flag indicating if the direction of the generated force should be reversed
         */
-        Push(std::string uniqueName, bool inverted = false);
+        Push(std::string_view uniqueName, bool inverted = false);
         
         //! A method used to update the internal state of the push actuator.
         /*!
          \param dt a time step of the simulation [s]
          */
-        void Update(Scalar dt);
+        void Update(Scalar dt) override;
         
         //! A method implementing the rendering of the push actuator.
-        std::vector<Renderable> Render();
+        std::vector<Renderable> Render() override;
         
         //! A method used to set the force limits.
-        void setForceLimits(Scalar lower, Scalar upper);
+        /*!
+         \param positive positive force limit [N]
+         \param negative negative force limit (absolute) [N]
+        */
+        void SetForceLimits(Scalar positive, Scalar negative);
 
         //! A method setting the new value of the desired force.
         /*!
          \param f the desired force to be generated
          */
-        void setForce(Scalar f);
+        void SetForce(Scalar f);
         
         //! A method returning the current setpoint.
-        Scalar getForce() const;
+        Scalar GetForce() const;
 
-        //! A method returning the type of the actuator.
-        ActuatorType getType() const;
+        //! A method returning type of link actuator.
+        LinkActuatorType GetLinkActuatorType() const override;
+
+        //! A method returning the construction info for the actuator.
+        static ConstructInfo GetConstructInfo();
+
+        //! A method constructing the actuator based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<Push> Construct(std::string_view uniqueName, ConstructInfo& info);
         
     private:
         void WatchdogTimeout() override;
 
-        Scalar setpoint;
-        bool inv;
-        std::pair<Scalar, Scalar> limits;
+        Scalar setpoint_;
+        bool inv_;
+        std::pair<Scalar, Scalar> limits_;
     };
 }
-
-#endif

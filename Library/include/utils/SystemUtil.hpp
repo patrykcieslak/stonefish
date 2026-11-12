@@ -136,12 +136,20 @@ inline void GetCWD(char* buffer, int length)
 
 inline std::string GetShaderPath()
 {
-    return ((GraphicalSimulationApp*)SimulationApp::getApp())->getShaderPath();
+    return static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetShaderPath();
 }
 
 inline std::string GetDataPath()
 {
-    return SimulationApp::getApp()->getDataPath();
+    return SimulationApp::GetApp()->GetDataPath();
+}
+
+inline std::string GetFullPath(std::string_view path)
+{
+    if(path.at(0) == '/' || path.at(0) == '~') //Absolute path?
+        return std::string(path);
+    else
+        return GetDataPath() + std::string(path);
 }
 
 inline const char* GetDataPathPrefix(const char* directory)

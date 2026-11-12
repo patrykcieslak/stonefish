@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 09/02/2024.
-//  Copyright (c) 2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish__CameraTestManager__
-#define __Stonefish__CameraTestManager__
+#pragma once
 
 #include <core/SimulationManager.h>
 
@@ -37,5 +36,3 @@ public:
     
     void BuildScenario();
 };
-
-#endif

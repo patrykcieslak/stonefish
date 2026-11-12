@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 22/07/20.
-//  Copyright (c) 2020-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLSonar__
-#define __Stonefish_OpenGLSonar__
+#pragma once
 
 #include "graphics/OpenGLView.h"
 #include <random>
@@ -108,19 +107,19 @@ namespace sf
         void Update();
         
         //! A method that informs if the sonar needs update.
-        bool needsUpdate() override;
+        bool NeedsUpdate() override;
         
         //! A method to set the color map used during sonar data visulization.
         /*!
          \param cm the color map to be used
          */
-        void setColorMap(ColorMap cm);
+        void SetColorMap(ColorMap cm);
         
         //! A method return output format of the sonar.
-        SonarOutputFormat getOutputFormat() const;
+        SonarOutputFormat GetOutputFormat() const;
 
         //! A method returning the type of the view.
-        ViewType getType() const override;
+        ViewType GetType() const override;
         
         //! A static method to load shaders.
         static void Init();
@@ -159,9 +158,8 @@ namespace sf
         GLuint displayVAO_;
         GLuint displayVBO_;
         
-        static GLSLShader* sonarInputShader_[2];
-        static GLSLShader* sonarVisualizeShader_[2];
+        static std::array<std::unique_ptr<GLSLShader>, 2> sonarInputShader_;
+        static std::array<std::unique_ptr<GLSLShader>, 2> sonarVisualizeShader_;
     };
 }
 
-#endif

@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/30/13.
-//  Copyright (c) 2013-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Box__
-#define __Stonefish_Box__
+#pragma once
 
 #include "entities/SolidEntity.h"
 
@@ -45,18 +44,16 @@ namespace sf
          \param thickness defines the thickness of the box walls, if positive the box is treated as shell
          \param uvMode texture coordinates generation mode
         */
-        Box(std::string uniqueName, PhysicsSettings phy, const Vector3& dimensions, const Transform& origin, 
-                std::string material, std::string look, Scalar thickness = Scalar(-1), unsigned int uvMode = 0);
+        Box(std::string_view uniqueName, PhysicsSettings phy, const Vector3& dimensions, const Transform& origin, 
+                std::string_view material, std::string_view look, Scalar thickness = Scalar(-1), unsigned int uvMode = 0);
         
         //! A method that returns the type of body.
-        SolidType getSolidType();
+        SolidType GetSolidType() const;
         
         //! A method that returns the collision shape for the box.
-        btCollisionShape* BuildCollisionShape();
+        std::unique_ptr<btCollisionShape> BuildCollisionShape();
         
     private:
-        Vector3 halfExtents;
+        Vector3 halfExtents_;
     };
 }
-
-#endif

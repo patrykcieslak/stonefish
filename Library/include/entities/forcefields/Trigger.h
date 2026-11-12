@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/04/18.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -41,7 +41,7 @@ namespace sf
          \param origin the position of the trigger in the world frame
          \param look a name of the material used when rendering the trigger
          */
-        Trigger(std::string uniqueName, Scalar radius, const Transform& origin, std::string look = "");
+        Trigger(std::string_view uniqueName, Scalar radius, const Transform& origin, std::string_view look = "");
         
         //! A constructor of a cylindrical trigger object.
         /*!
@@ -51,7 +51,7 @@ namespace sf
          \param origin the position of the trigger in the world frame
          \param look a name of the material used when rendering the trigger
          */
-        Trigger(std::string uniqueName, Scalar radius, Scalar length, const Transform& origin, std::string look = "");
+        Trigger(std::string_view uniqueName, Scalar radius, Scalar length, const Transform& origin, std::string_view look = "");
         
         //! A constructor of a box-shaped trigger object.
         /*!
@@ -60,7 +60,7 @@ namespace sf
          \param origin the position of the trigger in the world frame
          \param look a name of the material used when rendering the trigger
          */
-        Trigger(std::string uniqueName, const Vector3& dimensions, const Transform& origin, std::string look = "");
+        Trigger(std::string_view uniqueName, const Vector3& dimensions, const Transform& origin, std::string_view look = "");
         
         //! A method used to add solids that will call actions if they come in contact with the trigger.
         /*!
@@ -81,15 +81,15 @@ namespace sf
         std::vector<Renderable> Render();
         
         //! A method returning the activity status.
-        bool isActive();
+        bool IsActive();
         
         //! A method returning the force field type.
-        ForcefieldType getForcefieldType();
+        ForcefieldType GetForcefieldType();
         
     private:
-        bool active;
-        std::vector<SolidEntity*> solids;
-        int objectId;
-        int lookId;
+        bool active_;
+        std::vector<SolidEntity*> solids_;
+        int objectId_;
+        int lookId_;
     };
 }

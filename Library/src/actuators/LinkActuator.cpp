@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 23/11/2018.
-//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/LinkActuator.h"
@@ -30,31 +30,36 @@
 namespace sf
 {
 
-LinkActuator::LinkActuator(std::string uniqueName) : Actuator(uniqueName)
+LinkActuator::LinkActuator(std::string_view uniqueName) : Actuator(uniqueName)
 {
-    attach = nullptr;
-    o2a = I4();
+    attach_ = nullptr;
+    o2a_ = I4();
 }
 
-void LinkActuator::setRelativeActuatorFrame(const Transform& origin)
+void LinkActuator::SetRelativeActuatorFrame(const Transform& origin)
 {
-    o2a = origin;
+    o2a_ = origin;
 }
 
-Transform LinkActuator::getActuatorFrame() const
+Transform LinkActuator::GetActuatorFrame() const
 {
-    if(attach != nullptr)
-        return attach->getOTransform() * o2a;
+    if(attach_ != nullptr)
+        return attach_->GetOTransform() * o2a_;
     else
-        return o2a;
+        return o2a_;
+}
+
+ActuatorType LinkActuator::GetType() const
+{
+    return ActuatorType::LINK;
 }
 
 void LinkActuator::AttachToSolid(SolidEntity* body, const Transform& origin)
 {
     if(body != nullptr)
     {
-        o2a = origin;
-        attach = body;
+        o2a_ = origin;
+        attach_ = body;
     }
 }
 
@@ -64,7 +69,7 @@ std::vector<Renderable> LinkActuator::Render()
 
     Renderable item;
     item.type = RenderableType::SENSOR_CS;
-    item.model = glMatrixFromTransform(getActuatorFrame());
+    item.model = glMatrixFromTransform(GetActuatorFrame());
     items.push_back(item);
 
     return items;

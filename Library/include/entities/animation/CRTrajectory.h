@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 22/10/20.
-//  Copyright(c) 2020-2023 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_CRTrajectory__
-#define __Stonefish_CRTrajectory__
+#pragma once
 
 #include "entities/animation/PWLTrajectory.h"
 
@@ -41,17 +40,15 @@ namespace sf
         CRTrajectory(PlaybackMode playback);
 
         //! A method updating the interpolated transform and velocities.
-        void Interpolate();
+        void Interpolate() override;
 
         //! A method that builds a graphical representation of the trajectory.
-        void BuildGraphicalPath();
+        void BuildGraphicalPath() override;
 
     private:
-        Vector3 catmullRom(Vector3 P0, Vector3 P1, Vector3 P2, Vector3 P3, 
+        Vector3 CatmullRom(Vector3 P0, Vector3 P1, Vector3 P2, Vector3 P3, 
                            Scalar t0, Scalar t1, Scalar t2, Scalar t3, Scalar t);
-        Vector3 catmullRomDerivative(Vector3 P0, Vector3 P1, Vector3 P2, Vector3 P3, 
+        Vector3 CatmullRomDerivative(Vector3 P0, Vector3 P1, Vector3 P2, Vector3 P3, 
                                      Scalar t0, Scalar t1, Scalar t2, Scalar t3, Scalar t);
     };
 }
-
-#endif

@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/05/2020.
-//  Copyright (c) 2020-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLFlatOcean__
-#define __Stonefish_OpenGLFlatOcean__
+#pragma once
 
 #include "graphics/OpenGLOcean.h"
 
@@ -74,9 +73,7 @@ namespace sf
         void DrawUnderwaterMask(OpenGLView* view) override;
         
     private:
-        GLuint vao;
-        GLuint vbo;
+        GLuint vao_;
+        GLuint vbo_;
     };
 }
-
-#endif

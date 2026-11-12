@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/13/13.
-//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/Joint.h"
@@ -32,150 +32,133 @@
 namespace sf
 {
 
-Joint::Joint(std::string uniqueName, bool collideLinkedEntities)
+Joint::Joint(std::string_view uniqueName, bool collideLinkedEntities)
 {
-    name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
-    collisionEnabled = collideLinkedEntities;
-    mbConstraint = nullptr;
-    constraint = nullptr;
-    jSolidA = nullptr;
-    jSolidB = nullptr;
+    name_ = SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->AddName(uniqueName);
+    collisionEnabled_ = collideLinkedEntities;
+    jSolidA_ = nullptr;
+    jSolidB_ = nullptr;
 }
 
-Joint::~Joint(void)
+Joint::~Joint()
 {
-    if(SimulationApp::getApp() != nullptr)
-        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
+    if(SimulationApp::GetApp() != nullptr)
+        SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->RemoveName(name_);
 }
 
-bool Joint::isMultibodyJoint()
+bool Joint::IsMultibodyJoint()
 {
-    return (constraint == nullptr) && (mbConstraint != nullptr);
+    return (constraint_ == nullptr) && (mbConstraint_ != nullptr);
 }
 
-btTypedConstraint* Joint::getConstraint()
+const std::string& Joint::GetName() const
 {
-    return constraint;
+    return name_;
 }
 
-std::string Joint::getName() const
-{
-    return name;
-}
-
-void Joint::setConstraint(btTypedConstraint *c)
-{
-    constraint = c;
-}
-
-void Joint::setConstraint(btMultiBodyConstraint *c)
-{
-    mbConstraint = c;
-}
-
-Scalar Joint::getFeedback(unsigned int dof)
+Scalar Joint::GetFeedback(unsigned int dof)
 {
     if(dof > 5)
         return Scalar(0);
     
-    if(constraint != nullptr)
+    if(constraint_ != nullptr)
     {
-        btJointFeedback* fb = constraint->getJointFeedback();
+        btJointFeedback* fb = constraint_->getJointFeedback();
         if(dof < 3)
             return fb->m_appliedForceBodyA[dof];
         else
             return fb->m_appliedTorqueBodyA[dof-3];
     }
-    else if(mbConstraint != nullptr)
+    else if(mbConstraint_ != nullptr)
     {
-        return mbConstraint->getAppliedImpulse(dof);
+        return mbConstraint_->getAppliedImpulse(dof);
     }
     else
         return Scalar(0);
 }
 
-SolidEntity* Joint::getSolidA()
+SolidEntity* Joint::GetSolidA()
 {
-    return jSolidA;
+    return jSolidA_;
 }
 
-SolidEntity* Joint::getSolidB()
+SolidEntity* Joint::GetSolidB()
 {
-    return jSolidB;
+    return jSolidB_;
 }
 
 void Joint::AddToSimulation(SimulationManager* sm)
 {
-    if(constraint != nullptr)
+    if(constraint_ != nullptr)
     {
         //Force feedback
         btJointFeedback* fb = new btJointFeedback();
-        constraint->enableFeedback(true);
-        constraint->setJointFeedback(fb);
+        constraint_->enableFeedback(true);
+        constraint_->setJointFeedback(fb);
 
         //Breaking
-        constraint->setBreakingImpulseThreshold(BT_LARGE_FLOAT);
+        constraint_->setBreakingImpulseThreshold(BT_LARGE_FLOAT);
 
         //Solver setup
         Scalar erp, stopErp;
-        sm->getJointErp(erp, stopErp);
+        sm->GetJointErp(erp, stopErp);
 
-        if(constraint->getConstraintType() == D6_SPRING_2_CONSTRAINT_TYPE)
+        if(constraint_->getConstraintType() == D6_SPRING_2_CONSTRAINT_TYPE)
         {
             for(int i=0; i<6; ++i) // Go through all axes
             {
-                constraint->setParam(BT_CONSTRAINT_ERP, erp, i);
-                constraint->setParam(BT_CONSTRAINT_STOP_ERP, stopErp, i);
-                constraint->setParam(BT_CONSTRAINT_CFM, 0.0, i);
-                constraint->setParam(BT_CONSTRAINT_STOP_CFM, 0.0, i);
+                constraint_->setParam(BT_CONSTRAINT_ERP, erp, i);
+                constraint_->setParam(BT_CONSTRAINT_STOP_ERP, stopErp, i);
+                constraint_->setParam(BT_CONSTRAINT_CFM, 0.0, i);
+                constraint_->setParam(BT_CONSTRAINT_STOP_CFM, 0.0, i);
             }
         }
-        else if (constraint->getConstraintType() == D6_CONSTRAINT_TYPE) // Generic 6DOF constraint does not support ERP
+        else if (constraint_->getConstraintType() == D6_CONSTRAINT_TYPE) // Generic 6DOF constraint does not support ERP
         {
             for(int i=0; i<6; ++i) // Go through all axes
             {
-                constraint->setParam(BT_CONSTRAINT_STOP_ERP, stopErp, i);
-                constraint->setParam(BT_CONSTRAINT_CFM, 0.0, i);
-                constraint->setParam(BT_CONSTRAINT_STOP_CFM, 0.0, i);
+                constraint_->setParam(BT_CONSTRAINT_STOP_ERP, stopErp, i);
+                constraint_->setParam(BT_CONSTRAINT_CFM, 0.0, i);
+                constraint_->setParam(BT_CONSTRAINT_STOP_CFM, 0.0, i);
             }
         }
         else // Use default axis
         {
-            constraint->setParam(BT_CONSTRAINT_ERP, erp);
-            constraint->setParam(BT_CONSTRAINT_STOP_ERP, stopErp); //Avoid explosion by softening the joint limits
-            constraint->setParam(BT_CONSTRAINT_CFM, 0.0);
-            constraint->setParam(BT_CONSTRAINT_STOP_CFM, 0.0);
+            constraint_->setParam(BT_CONSTRAINT_ERP, erp);
+            constraint_->setParam(BT_CONSTRAINT_STOP_ERP, stopErp); //Avoid explosion by softening the joint limits
+            constraint_->setParam(BT_CONSTRAINT_CFM, 0.0);
+            constraint_->setParam(BT_CONSTRAINT_STOP_CFM, 0.0);
         }
     
         //Add joint to dynamics world
-        sm->getDynamicsWorld()->addConstraint(constraint, !collisionEnabled);
+        sm->GetDynamicsWorld()->addConstraint(constraint_.get(), !collisionEnabled_);
     }
-    else if(mbConstraint != nullptr)
+    else if(mbConstraint_ != nullptr)
     {
         Scalar erp, stopErp;
-        sm->getJointErp(erp, stopErp);
-        mbConstraint->setErp(erp);
-        sm->getDynamicsWorld()->addMultiBodyConstraint(mbConstraint);
-        if(!collisionEnabled)
-            SimulationApp::getApp()->getSimulationManager()->DisableCollision(jSolidA, jSolidB);
+        sm->GetJointErp(erp, stopErp);
+        mbConstraint_->setErp(erp);
+        sm->GetDynamicsWorld()->addMultiBodyConstraint(mbConstraint_.get());
+        if(!collisionEnabled_)
+            SimulationApp::GetApp()->GetSimulationManager()->DisableCollision(jSolidA_, jSolidB_);
     }
 }
 
 void Joint::RemoveFromSimulation(SimulationManager* sm)
 {
-    if(constraint != nullptr)
+    if(constraint_ != nullptr)
     {
-        delete constraint->getJointFeedback();
-        sm->getDynamicsWorld()->removeConstraint(constraint);
+        delete constraint_->getJointFeedback();
+        sm->GetDynamicsWorld()->removeConstraint(constraint_.get());
     }
-    else if(mbConstraint != nullptr)
+    else if(mbConstraint_ != nullptr)
     {
-        sm->getDynamicsWorld()->removeMultiBodyConstraint(mbConstraint);
-        if(!collisionEnabled)
-            SimulationApp::getApp()->getSimulationManager()->EnableCollision(jSolidA, jSolidB);
+        sm->GetDynamicsWorld()->removeMultiBodyConstraint(mbConstraint_.get());
+        if(!collisionEnabled_)
+            SimulationApp::GetApp()->GetSimulationManager()->EnableCollision(jSolidA_, jSolidB_);
     }
 }
-    
+
 void Joint::ApplyDamping()
 {
     //Not applicable.

@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 17/01/2019.
-//  Copyright (c) 2019-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Wing__
-#define __Stonefish_Wing__
+#pragma once
 
 #include "entities/SolidEntity.h"
 
@@ -49,9 +48,9 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the wing walls, if positive the wing is treated as shell [m]
          */
-        Wing(std::string uniqueName, PhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength,
+        Wing(std::string_view uniqueName, PhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength,
              Scalar maxCamber, Scalar maxCamberPos, Scalar profileThickness, Scalar wingLength, const Transform& origin, 
-             std::string material, std::string look, Scalar thickness = Scalar(-1));
+             std::string_view material, std::string_view look, Scalar thickness = Scalar(-1));
         
         //! A constructor.
         /*!
@@ -66,18 +65,13 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the wing walls, if positive the wing is treated as shell
          */
-        Wing(std::string uniqueName, PhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength, std::string NACA, Scalar wingLength, const Transform& origin, 
-             std::string material, std::string look, Scalar thickness = Scalar(-1));
+        Wing(std::string_view uniqueName, PhysicsSettings phy, Scalar baseChordLength, Scalar tipChordLength, std::string_view NACA, Scalar wingLength, const Transform& origin, 
+             std::string_view material, std::string_view look, Scalar thickness = Scalar(-1));
         
         //! A method that returns the type of body.
-        SolidType getSolidType();
+        SolidType GetSolidType() const;
         
         //! A method that returns the collision shape for the wing (tapered box).
-        btCollisionShape* BuildCollisionShape();
-        
-    private:
-        
+        std::unique_ptr<btCollisionShape> BuildCollisionShape();
     };
 }
-
-#endif

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 03/03/2014.
-//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "FallingTestApp.h"
@@ -28,8 +28,8 @@
 #include <sensors/ScalarSensor.h>
 #include <graphics/IMGUI.h>
 
-FallingTestApp::FallingTestApp(std::string dataDirPath, sf::RenderSettings s, sf::HelperSettings h, FallingTestManager* sim)
-    : sf::GraphicalSimulationApp("Falling Test", dataDirPath, s, h, sim)
+FallingTestApp::FallingTestApp(std::string_view dataDirPath, sf::RenderSettings s, sf::HelperSettings h, std::unique_ptr<FallingTestManager> sim)
+    : sf::GraphicalSimulationApp("Falling Test", dataDirPath, s, h, std::move(sim))
 {
 }
 
@@ -40,5 +40,5 @@ void FallingTestApp::DoHUD()
     sf::Uid slider;
     slider.owner = 10;
     slider.item = 0;
-    getSimulationManager()->setStepsPerSecond(getGUI()->DoSlider(slider, 180.f, 10.f, 120.f, 100.0, 2000.0, getSimulationManager()->getStepsPerSecond(), "Steps/s"));
+    GetSimulationManager()->SetStepsPerSecond(GetGui()->DoSlider(slider, 180.f, 10.f, 120.f, 100.0, 2000.0, GetSimulationManager()->GetStepsPerSecond(), "Steps/s"));
 }

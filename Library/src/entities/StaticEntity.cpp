@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 24/05/2014.
-//  Copyright (c) 2014-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/StaticEntity.h"
@@ -33,86 +33,78 @@
 namespace sf
 {
 
-StaticEntity::StaticEntity(std::string uniqueName, std::string material, std::string look) : Entity(uniqueName)
+StaticEntity::StaticEntity(std::string_view uniqueName, std::string_view material, std::string_view look) : Entity(uniqueName)
 {
-    mat = SimulationApp::getApp()->getSimulationManager()->getMaterialManager()->getMaterial(material);
-    if(SimulationApp::getApp()->hasGraphics())
-        lookId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+    mat_ = SimulationApp::GetApp()->GetSimulationManager()->GetMaterialManager()->GetMaterial(material);
+    if(SimulationApp::GetApp()->HasGraphics())
+        lookId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->GetLookId(look);
     else
-        lookId = -1;
-    phyObjectId = -1;
-    dm = DisplayMode::GRAPHICAL;
-    rigidBody = nullptr;
-    phyMesh = nullptr;
+        lookId_ = -1;
+    phyObjectId_ = -1;
+    dm_ = DisplayMode::GRAPHICAL;
 }
 
-StaticEntity::~StaticEntity()
-{
-    if(phyMesh != nullptr) 
-        delete phyMesh;
-}
-
-EntityType StaticEntity::getType() const
+EntityType StaticEntity::GetType() const
 {
     return EntityType::STATIC;
 }
 
-Material StaticEntity::getMaterial() const
+Material StaticEntity::GetMaterial() const
 {
-    return mat;
+    return mat_;
 }
 
-void StaticEntity::setTransform(const Transform& trans)
+void StaticEntity::SetTransform(const Transform& trans)
 {
-    if(rigidBody != nullptr)
+    if(rigidBody_ != nullptr)
     {
-        rigidBody->getMotionState()->setWorldTransform(trans);
-        rigidBody->setCenterOfMassTransform(trans);
+        rigidBody_->getMotionState()->setWorldTransform(trans);
+        rigidBody_->setCenterOfMassTransform(trans);
     }
 }
 
-Transform StaticEntity::getTransform()
+Transform StaticEntity::GetTransform()
 {
-    if(rigidBody != nullptr)
+    if(rigidBody_ != nullptr)
     {
         Transform T;
-        rigidBody->getMotionState()->getWorldTransform(T);
+        rigidBody_->getMotionState()->getWorldTransform(T);
         return T;
     }
     else
         return Transform::getIdentity();
 }
 
-btRigidBody* StaticEntity::getRigidBody()
+btRigidBody* StaticEntity::GetRigidBody()
 {
-    return rigidBody;
+    return rigidBody_.get();
 }
 
-void StaticEntity::getAABB(Vector3& min, Vector3& max)
+void StaticEntity::GetAabb(Vector3& min, Vector3& max)
 {
-    if(rigidBody != nullptr)
-        rigidBody->getAabb(min, max);
+    if(rigidBody_ != nullptr)
+        rigidBody_->getAabb(min, max);
 }
 
-void StaticEntity::setDisplayMode(DisplayMode m)
+void StaticEntity::SetDisplayMode(DisplayMode m)
 {
-    dm = m;
+    dm_ = m;
 }
 
 std::vector<Renderable> StaticEntity::Render()
 {
     std::vector<Renderable> items(0);
     
-    if(rigidBody != nullptr && phyObjectId >= 0 && isRenderable())
+    if(rigidBody_ != nullptr && phyObjectId_ >= 0 && IsRenderable())
     {
         Transform trans;
-        rigidBody->getMotionState()->getWorldTransform(trans);
+        rigidBody_->getMotionState()->getWorldTransform(trans);
         
         Renderable item;
         item.type = RenderableType::SOLID;
-        item.materialName = mat.name;
-        item.objectId = phyObjectId;
-        item.lookId = dm == DisplayMode::GRAPHICAL ? lookId : -1;
+        item.materialName = mat_.name;
+        item.objectId = phyObjectId_;
+        item.lookId = dm_ == DisplayMode::GRAPHICAL ? lookId_ : -1;
         item.model = glMatrixFromTransform(trans);
         items.push_back(item);
     }
@@ -122,25 +114,25 @@ std::vector<Renderable> StaticEntity::Render()
 
 void StaticEntity::BuildGraphicalObject()
 {
-    if(phyMesh == nullptr || !SimulationApp::getApp()->hasGraphics())
+    if(phyMesh_ == nullptr || !SimulationApp::GetApp()->HasGraphics())
         return;
     
-    phyObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(phyMesh);
+    phyObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BuildObject(phyMesh_.get());
 }
 
-void StaticEntity::BuildRigidBody(btCollisionShape* shape)
+void StaticEntity::BuildRigidBody()
 {
-    btDefaultMotionState* motionState = new btDefaultMotionState();
+    motionState_ = std::make_unique<btDefaultMotionState>();
     
-    btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(Scalar(0), motionState, shape, Vector3(0,0,0));
+    btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(Scalar(0), motionState_.get(), collisionShape_.get(), Vector3(0,0,0));
     rigidBodyCI.m_friction = rigidBodyCI.m_rollingFriction = rigidBodyCI.m_restitution = Scalar(0); //not used
     rigidBodyCI.m_linearDamping = rigidBodyCI.m_angularDamping = Scalar(0); //not used
     rigidBodyCI.m_linearSleepingThreshold = rigidBodyCI.m_angularSleepingThreshold = Scalar(0); //not used
     rigidBodyCI.m_additionalDamping = false;
     
-    rigidBody = new btRigidBody(rigidBodyCI);
-    rigidBody->setUserPointer(this);
-    rigidBody->setCollisionFlags(rigidBody->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+    rigidBody_ = std::make_unique<btRigidBody>(rigidBodyCI);
+    rigidBody_->setUserPointer(this);
+    rigidBody_->setCollisionFlags(rigidBody_->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
     
     BuildGraphicalObject();
 }
@@ -152,11 +144,11 @@ void StaticEntity::AddToSimulation(SimulationManager* sm)
 
 void StaticEntity::AddToSimulation(SimulationManager* sm, const Transform& origin)
 {
-    if(rigidBody != nullptr)
+    if(rigidBody_ != nullptr)
     {
-        btDefaultMotionState* motionState = new btDefaultMotionState(origin);
-        rigidBody->setMotionState(motionState);
-        sm->getDynamicsWorld()->addRigidBody(rigidBody, MASK_STATIC, MASK_DYNAMIC);
+        motionState_ = std::make_unique<btDefaultMotionState>(origin);
+        rigidBody_->setMotionState(motionState_.get());
+        sm->GetDynamicsWorld()->addRigidBody(rigidBody_.get(), MASK_STATIC, MASK_DYNAMIC);
     }
 }
 
@@ -165,11 +157,11 @@ void StaticEntity::GroupTransform(std::vector<StaticEntity*>& objects, const Tra
 {
     for(unsigned int i=0; i<objects.size(); ++i)
     {
-        Transform Tw = objects[i]->getTransform();
+        Transform Tw = objects[i]->GetTransform();
         Transform Tc = centre.inverse() * Tw;
         Tc = transform * Tc;
         Tw = centre * Tc;
-        objects[i]->setTransform(Tw);
+        objects[i]->SetTransform(Tw);
     }
 }
 

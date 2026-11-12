@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 25/02/2020.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "comms/USBL.h"
@@ -31,19 +31,19 @@ namespace sf
 std::random_device USBL::randomDevice;
 std::mt19937 USBL::randomGenerator(randomDevice());
     
-USBL::USBL(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange)
+USBL::USBL(std::string_view uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange)
            : AcousticModem(uniqueName, deviceId, minVerticalFOVDeg, maxVerticalFOVDeg, operatingRange)
 {
-    ping = false;
-    noise = false;
+    ping_ = false;
+    noise_ = false;
 }
     
-std::map<uint64_t, BeaconInfo>& USBL::getBeaconInfo()
+std::map<uint64_t, BeaconInfo>& USBL::GetBeaconInfo()
 {
-    return beacons;
+    return beacons_;
 }
 
-CommType USBL::getType() const
+CommType USBL::GetType() const
 {
     return CommType::USBL;
 }
@@ -52,15 +52,15 @@ void USBL::EnableAutoPing(Scalar rate)
 {
     if(rate > Scalar(0))
     {
-        pingTime = Scalar(0);
-        pingRate = rate;
-        ping = true;
+        pingTime_ = Scalar(0);
+        pingRate_ = rate;
+        ping_ = true;
     }
 }
  
 void USBL::DisableAutoPing()
 {
-    ping = false;
+    ping_ = false;
 }
 
 void USBL::InternalUpdate(Scalar dt)
@@ -68,15 +68,15 @@ void USBL::InternalUpdate(Scalar dt)
     AcousticModem::InternalUpdate(dt);
     
     //Auto pinging with fixed rate
-    if(ping && pingRate > Scalar(0))
+    if(ping_ && pingRate_ > Scalar(0))
     {
-        pingTime += dt;
-        Scalar invRate = Scalar(1)/pingRate;
+        pingTime_ += dt;
+        Scalar invRate = Scalar(1)/pingRate_;
         
-        if(pingTime >= invRate)
+        if(pingTime_ >= invRate)
         {
             Comm::SendMessage("PING");
-            pingTime -= invRate;
+            pingTime_ -= invRate;
         }
     }
 }

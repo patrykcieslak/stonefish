@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 08/11/23.
-//  Copyright(c) 2023 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2023-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_BSTrajectory__
-#define __Stonefish_BSTrajectory__
+#pragma once
 
 #include "entities/animation/PWLTrajectory.h"
 #include "tinysplinecxx.h"
@@ -49,16 +48,14 @@ namespace sf
         void AddKeyPoint(Scalar keyTime, Transform keyTransform);
 
         //! A method updating the interpolated transform and velocities.
-        void Interpolate();
+        void Interpolate() override;
 
         //! A method that builds a graphical representation of the trajectory.
-        void BuildGraphicalPath();
+        void BuildGraphicalPath() override;
 
     private:
-        tinyspline::BSpline spline;
-        tinyspline::BSpline deriv;
-        double lastPlayTime;
+        tinyspline::BSpline spline_;
+        tinyspline::BSpline deriv_;
+        double lastPlayTime_;
     };
 }
-
-#endif

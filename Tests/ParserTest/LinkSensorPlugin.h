@@ -1,0 +1,74 @@
+/*    
+    This file is a part of Stonefish.
+
+    Stonefish is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Stonefish is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+//
+//  LinkSensorPlugin.h
+//  Stonefish
+//
+//  Created by Patryk Cieslak on 24/07/2026.
+//  Copyright (c) 2026 Patryk Cieslak. All rights reserved.
+//
+
+#pragma once
+
+#include <sensors/scalar/LinkSensor.h>
+
+namespace sf
+{
+    //! A class representing an example of a sensor plugin that measures the surrounding fluid velocity.
+    class LinkSensorPlugin : public LinkSensor
+    {
+    public:
+        //! A constructor.
+        /*!
+         \param uniqueName a name for the sensor
+         \param globalFrame a flag indicating whether the measurements are in the global frame
+         \param frequency the sampling frequency of the sensor [Hz] (0 if updated every simulation step)
+         \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
+         */
+        LinkSensorPlugin(std::string_view uniqueName, bool globalFrame, Scalar frequency = Scalar(-1), int historyLength = -1);
+
+        //! A method performing an internal update of the sensor state.
+        /*!
+         \param dt the sampling time of the simulation [s]
+         */
+        void InternalUpdate(Scalar dt) override;
+
+        //! A method used to set the noise characteristics of the sensor.
+        /*!
+         \param fluidVelocityStdDev standard deviation of the linear acceleration measurement noise for each axis
+         */
+        void SetNoise(Vector3 fluidVelocityStdDev);
+
+        //! A method returning the type of scalar sensor.
+        ScalarSensorType GetScalarSensorType() const override;
+
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo GetConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param uniqueName a name for the sensor
+         \param frequency the sampling frequency of the sensor [Hz] (0 if updated every simulation step)
+         \param info a construction info structure
+         */
+        static LinkSensorPlugin* Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo* info);
+
+    private:
+        bool globalFrame_;
+    };
+}

@@ -21,7 +21,7 @@ import sphinx_rtd_theme
 # -- Project information -----------------------------------------------------
 
 project = u'Stonefish'
-copyright = u'2025, Patryk Cieślak'
+copyright = u'2026, Patryk Cieślak'
 author = u'Patryk Cieślak'
 
 # The short X.Y version
@@ -72,7 +72,7 @@ language = None
 exclude_patterns = [u'_build', 'Thumbs.db', '.DS_Store']
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = None
+pygments_style = 'friendly'
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -191,6 +191,3 @@ epub_title = project
 
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
-
-
-# -- Extension configuration -------------------------------------------------

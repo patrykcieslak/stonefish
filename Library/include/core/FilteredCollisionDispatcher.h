@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/05/2014.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_FilteredCollisionDispatcher__
-#define __Stonefish_FilteredCollisionDispatcher__
+#pragma once
 
 #include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
 
@@ -55,11 +54,9 @@ namespace sf
          \param dispatcher a reference to the collision dispatcher
          \param dispatchInfo a reference to the collision dispatcher info structure
          */
-        static void myNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
+        static void MyNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
         
     private:
-        bool inclusive;
+        bool inclusive_;
     };
 }
-
-#endif

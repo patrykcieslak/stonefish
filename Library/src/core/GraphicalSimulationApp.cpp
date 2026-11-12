@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/GraphicalSimulationApp.h"
@@ -33,6 +33,7 @@
 #include "graphics/GLSLShader.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLConsole.h"
+#include "graphics/OpenGLPrinter.h"
 #include "graphics/IMGUI.h"
 #include "graphics/OpenGLTrackball.h"
 #include "utils/SystemUtil.hpp"
@@ -46,136 +47,126 @@
 namespace sf
 {
 
-GraphicalSimulationApp::GraphicalSimulationApp(std::string title, std::string dataDirPath, RenderSettings r, HelperSettings h, SimulationManager* sim)
-: SimulationApp(title, dataDirPath, sim)
+GraphicalSimulationApp::GraphicalSimulationApp(std::string_view title, std::string_view dataDirPath, 
+    RenderSettings r, HelperSettings h, std::unique_ptr<SimulationManager> sim)
+: SimulationApp(title, dataDirPath, std::move(sim))
 {
 #ifdef SHADER_DIR_PATH
-    shaderPath = SHADER_DIR_PATH;
+    shaderPath_ = SHADER_DIR_PATH;
 #else
     shaderPath = "/usr/local/share/Stonefish/shaders/";
 #endif
-    glLoadingContext = nullptr;
-    glMainContext = nullptr;
-    trackballCenter = nullptr;
-    selectedEntity = std::make_pair(nullptr, -1);
-    displayHUD = true;
-    displayKeymap = false;
-    displayConsole = false;
-    displayPerformance = false;
-    joystick = nullptr;
-    joystickAxes = nullptr;
-    joystickButtons = nullptr;
-    joystickHats = nullptr;
-    mouseWasDown.type = SDL_LASTEVENT;
-    simulationThread = nullptr;
-    loadingThread = nullptr;
-    glPipeline = nullptr;
-    gui = nullptr;
-    timeQuery[0] = 0;
-    timeQuery[1] = 0;
-    timeQueryPingpong = 0;
-    drawingTime = 0.0;
+    glLoadingContext_ = nullptr;
+    glMainContext_ = nullptr;
+    trackball_ = nullptr;
+    trackballCenter_ = nullptr;
+    selectedEntity_ = std::make_pair(nullptr, -1);
+    displayHUD_ = true;
+    displayKeymap_ = false;
+    displayConsole_ = false;
+    displayPerformance_ = false;
+    joystick_ = nullptr;
+    mouseWasDown_.type = SDL_LASTEVENT;
+    simulationThread_ = nullptr;
+    loadingThread_ = nullptr;
+    glPipeline_ = nullptr;
+    gui_ = nullptr;
+    timeQuery_[0] = 0;
+    timeQuery_[1] = 0;
+    timeQueryPingpong_ = 0;
+    drawingTime_ = 0.0;
     fps_ = 0.0;
-    maxDrawingTime = 0.0;
-    maxCounter = 0;
-    rSettings = r;
-    hSettings = h;
-    rSettings.windowW += rSettings.windowW % 2;
-    rSettings.windowH += rSettings.windowH % 2;
-    windowW = rSettings.windowW;
-    windowH = rSettings.windowH;
-}
-
-GraphicalSimulationApp::~GraphicalSimulationApp()
-{
-    if(console_ != nullptr) delete console_;
-    if(glPipeline != nullptr) delete glPipeline;
-    if(gui != nullptr) delete gui;
-    
-    if(joystick != nullptr)
-    {
-        delete [] joystickButtons;
-        delete [] joystickAxes;
-        delete [] joystickHats;
-    }
+    maxDrawingTime_ = 0.0;
+    maxCounter_ = 0;
+    rSettings_ = r;
+    hSettings_ = h;
+    rSettings_.windowW += rSettings_.windowW % 2;
+    rSettings_.windowH += rSettings_.windowH % 2;
+    windowW_ = rSettings_.windowW;
+    windowH_ = rSettings_.windowH;
 }
 
 void GraphicalSimulationApp::ShowHUD()
 {
-    displayHUD = true;
+    displayHUD_ = true;
 }
 
 void GraphicalSimulationApp::HideHUD()
 {
-    displayHUD = false;
+    displayHUD_ = false;
 }
 
 void GraphicalSimulationApp::ShowConsole()
 {
-    displayConsole = true;
+    displayConsole_ = true;
 }
 
 void GraphicalSimulationApp::HideConsole()
 {
-    displayConsole = false;
+    displayConsole_ = false;
 }
 
-OpenGLPipeline* GraphicalSimulationApp::getGLPipeline()
+OpenGLPipeline* GraphicalSimulationApp::GetGlPipeline()
 {
-    return glPipeline;
+    return glPipeline_.get();
 }
 
-IMGUI* GraphicalSimulationApp::getGUI()
+IMGUI* GraphicalSimulationApp::GetGui()
 {
-    return gui;
+    return gui_.get();
 }
 
-std::pair<Entity*, int> GraphicalSimulationApp::getSelectedEntity()
+OpenGLTrackball* GraphicalSimulationApp::GetTrackball()
 {
-    return selectedEntity;
+    return trackball_;
 }
 
-bool GraphicalSimulationApp::hasGraphics()
+std::pair<Entity*, int> GraphicalSimulationApp::GetSelectedEntity()
+{
+    return selectedEntity_;
+}
+
+bool GraphicalSimulationApp::HasGraphics()
 {
     return true;
 }
 
-SDL_Joystick* GraphicalSimulationApp::getJoystick()
+SDL_Joystick* GraphicalSimulationApp::GetJoystick()
 {
-    return joystick;
+    return joystick_;
 }
 
-double GraphicalSimulationApp::getDrawingTime(bool max)
+double GraphicalSimulationApp::GetDrawingTime(bool max)
 {
     if(max)
-        return maxDrawingTime;
+        return maxDrawingTime_;
     else
-        return drawingTime;
+        return drawingTime_;
 }
 
-int GraphicalSimulationApp::getWindowWidth()
+int GraphicalSimulationApp::GetWindowWidth()
 {
-    return windowW;
+    return windowW_;
 }
 
-int GraphicalSimulationApp::getWindowHeight()
+int GraphicalSimulationApp::GetWindowHeight()
 {
-    return windowH;
+    return windowH_;
 }
 
-std::string GraphicalSimulationApp::getShaderPath()
+std::string GraphicalSimulationApp::GetShaderPath()
 {
-    return shaderPath;
+    return shaderPath_;
 }
 
-RenderSettings GraphicalSimulationApp::getRenderSettings() const
+RenderSettings GraphicalSimulationApp::GetRenderSettings() const
 {
-    return glPipeline->getRenderSettings();
+    return glPipeline_->GetRenderSettings();
 }
 
-HelperSettings& GraphicalSimulationApp::getHelperSettings()
+HelperSettings& GraphicalSimulationApp::GetHelperSettings()
 {
-    return glPipeline->getHelperSettings();
+    return glPipeline_->GetHelperSettings();
 }
 
 void GraphicalSimulationApp::Init()
@@ -183,15 +174,15 @@ void GraphicalSimulationApp::Init()
     //General initialization
     SimulationApp::Init();
     //Window initialization + loading thread
-    loading = true;
+    loading_ = true;
     InitializeSDL();
 
     //Continue initialization with console visible
     cInfo("Initializing rendering pipeline:");
     cInfo("Loading GUI...");
-    gui = new IMGUI(windowW, windowH);
+    gui_ = std::make_unique<IMGUI>(windowW_, windowH_);
     InitializeGUI(); //Initialize non-standard graphical elements
-    glPipeline = new OpenGLPipeline(rSettings, hSettings);
+    glPipeline_ = std::make_unique<OpenGLPipeline>(rSettings_, hSettings_);
     ShowHUD();
     
     cInfo("Initializing simulation:");
@@ -201,13 +192,13 @@ void GraphicalSimulationApp::Init()
     SDL_Delay(1000);
     
     //Close loading console - exit loading thread
-    loading = false;
+    loading_ = false;
     int status = 0;
-    SDL_WaitThread(loadingThread, &status);
-    SDL_GL_MakeCurrent(window, glMainContext);
+    SDL_WaitThread(loadingThread_, &status);
+    SDL_GL_MakeCurrent(window_, glMainContext_);
 
     //Create performance counters
-    glGenQueries(2, timeQuery);
+    glGenQueries(2, timeQuery_.data());
 
     state_ = SimulationState::STOPPED;
 }
@@ -229,11 +220,11 @@ void GraphicalSimulationApp::InitializeSDL()
     SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
     
     //Create window
-    window = SDL_CreateWindow(getName().c_str(),
+    window_ = SDL_CreateWindow(GetName().c_str(),
                               SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED,
-                              windowW,
-                              windowH,
+                              windowW_,
+                              windowH_,
                               SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN// | SDL_WINDOW_ALLOW_HIGHDPI
                               );
                               
@@ -255,20 +246,20 @@ void GraphicalSimulationApp::InitializeSDL()
     SDL_Surface* icon = SDL_CreateRGBSurfaceFrom((void*)icon_image.pixel_data, icon_image.width, icon_image.height, 
         icon_image.bytes_per_pixel*8, icon_image.bytes_per_pixel*icon_image.width, rmask, gmask, bmask, amask);
     
-    SDL_SetWindowIcon(window, icon);
+    SDL_SetWindowIcon(window_, icon);
     SDL_FreeSurface(icon);
     
     //Create OpenGL contexts
-    glLoadingContext = SDL_GL_CreateContext(window);
-    if(glLoadingContext == nullptr)
+    glLoadingContext_ = SDL_GL_CreateContext(window_);
+    if(glLoadingContext_ == nullptr)
         cCritical("SDL2: %s", SDL_GetError());
     
-    glMainContext = SDL_GL_CreateContext(window);
-    if(glMainContext == nullptr)
+    glMainContext_ = SDL_GL_CreateContext(window_);
+    if(glMainContext_ == nullptr)
         cCritical("SDL2: %s", SDL_GetError());
     
     //Disable vertical synchronization
-    if(!rSettings.verticalSync)
+    if(!rSettings_.verticalSync)
     {
         if(SDL_GL_SetSwapInterval(0) == -1)
             cError("SDL2: %s", SDL_GetError());
@@ -285,40 +276,50 @@ void GraphicalSimulationApp::InitializeSDL()
     cInfo("Window created. OpenGL %d.%d contexts created.", vmajor, vminor);
     OpenGLState::Init();
     GLSLShader::Init();
+    OpenGLPrinter::Init();
     
     //Initialize console output
-    std::vector<ConsoleMessage> textLines = console_->getLines();
-    delete console_;
-    console_ = new OpenGLConsole();
+    std::vector<ConsoleMessage> textLines = console_->GetLines();
+    console_.reset();
+    console_ = std::make_unique<OpenGLConsole>();
     for(size_t i=0; i<textLines.size(); ++i)
         console_->AppendMessage(textLines[i]);
-    ((OpenGLConsole*)console_)->Init(windowW, windowH);
+    static_cast<OpenGLConsole*>(console_.get())->Init(windowW_, windowH_);
     
     //Create loading thread
     GraphicalSimulationThreadData* data = new GraphicalSimulationThreadData{*this};
-    loadingThread = SDL_CreateThread(GraphicalSimulationApp::RenderLoadingScreen, "loadingThread", data);
+    loadingThread_ = SDL_CreateThread(GraphicalSimulationApp::RenderLoadingScreen, "loadingThread", data);
     
     //Look for joysticks
     int jcount = SDL_NumJoysticks();
     
     if(jcount > 0)
     {
-        joystick = SDL_JoystickOpen(0);
-        joystickButtons = new bool[SDL_JoystickNumButtons(joystick)];
-        memset(joystickButtons, 0, SDL_JoystickNumButtons(joystick));
-        joystickAxes = new int16_t[SDL_JoystickNumAxes(joystick)];
-        memset(joystickAxes, 0, SDL_JoystickNumAxes(joystick) * sizeof(int16_t));
-        joystickHats = new uint8_t[SDL_JoystickNumHats(joystick)];
-        memset(joystickHats, 0, SDL_JoystickNumHats(joystick));
-        cInfo("Joystick %s connected (%d axes, %d hats, %d buttons)", SDL_JoystickName(joystick),
-                                                                      SDL_JoystickNumAxes(joystick),
-                                                                      SDL_JoystickNumHats(joystick),
-                                                                      SDL_JoystickNumButtons(joystick));
+        joystick_ = SDL_JoystickOpen(0);
+        joystickButtons_.resize(SDL_JoystickNumButtons(joystick_), false);
+        joystickAxes_.resize(SDL_JoystickNumAxes(joystick_), 0);
+        joystickHats_.resize(SDL_JoystickNumHats(joystick_), 0);
+        cInfo("Joystick %s connected (%d axes, %d hats, %d buttons)", SDL_JoystickName(joystick_),
+                                                                      SDL_JoystickNumAxes(joystick_),
+                                                                      SDL_JoystickNumHats(joystick_),
+                                                                      SDL_JoystickNumButtons(joystick_));
     }
 }
 
 void GraphicalSimulationApp::InitializeGUI()
 {
+}
+
+void GraphicalSimulationApp::CreateTrackball()
+{
+    if(GetGlPipeline()->GetContent()->GetViewsCount() == 0)
+    {
+        std::unique_ptr<OpenGLTrackball> trackball = std::make_unique<OpenGLTrackball>(glm::vec3(0.f,0.f,-1.f), 5.0, glm::vec3(0.f,0.f,-1.f), 0, 0, 
+            GetWindowWidth(), GetWindowHeight(), 90.f, glm::vec2(STD_NEAR_PLANE_DISTANCE, STD_FAR_PLANE_DISTANCE));
+        trackball_ = trackball.get();
+        trackball_->Rotate(glm::quat(glm::eulerAngleYXZ(0.0, 0.0, 0.25)));
+        GetGlPipeline()->GetContent()->AddView(std::move(trackball));
+    }
 }
 
 void GraphicalSimulationApp::WindowEvent(SDL_Event* event)
@@ -328,8 +329,8 @@ void GraphicalSimulationApp::WindowEvent(SDL_Event* event)
     switch(event->window.event)
     {
         case SDL_WINDOWEVENT_RESIZED:
-            SDL_GetWindowSize(window, &w, &h);
-            gui->Resize(w, h);
+            SDL_GetWindowSize(window_, &w, &h);
+            gui_->Resize(w, h);
             break;
     }
 }
@@ -347,73 +348,67 @@ void GraphicalSimulationApp::KeyDown(SDL_Event *event)
             break;
                       
         case SDLK_h:
-            displayHUD = !displayHUD;
+            displayHUD_ = !displayHUD_;
             break;
 
         case SDLK_k:
-            displayKeymap = !displayKeymap;
+            displayKeymap_ = !displayKeymap_;
             break;
 
         case SDLK_p:
-            displayPerformance = !displayPerformance;
+            displayPerformance_ = !displayPerformance_;
             break;
 
         case SDLK_c:
-            displayConsole = !displayConsole;
-            ((OpenGLConsole*)console_)->ResetScroll();
+            displayConsole_ = !displayConsole_;
+            static_cast<OpenGLConsole*>(console_.get())->ResetScroll();
             break;
             
         case SDLK_w: //Forward
         {
-            OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
-            if(trackball->isEnabled())
-                trackball->MoveCenter(trackball->GetLookingDirection() * moveStep);
+            if(trackball_->IsEnabled())
+                trackball_->MoveCenter(trackball_->GetLookingDirection() * moveStep);
         }
             break;
             
         case SDLK_s: //Backward
         {
-            OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
-            if(trackball->isEnabled())
-                trackball->MoveCenter(-trackball->GetLookingDirection() * moveStep);
+            if(trackball_->IsEnabled())
+                trackball_->MoveCenter(-trackball_->GetLookingDirection() * moveStep);
         }
             break;
             
         case SDLK_a: //Left
         {
-            OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
-            if(trackball->isEnabled())
+            if(trackball_->IsEnabled())
             {
-                glm::vec3 axis = glm::cross(trackball->GetLookingDirection(), trackball->GetUpDirection());
-                trackball->MoveCenter(-axis * moveStep);
+                glm::vec3 axis = glm::cross(trackball_->GetLookingDirection(), trackball_->GetUpDirection());
+                trackball_->MoveCenter(-axis * moveStep);
             }
         }
             break;
             
         case SDLK_d: //Right
         {
-            OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
-            if(trackball->isEnabled())
+            if(trackball_->IsEnabled())
             {
-                glm::vec3 axis = glm::cross(trackball->GetLookingDirection(), trackball->GetUpDirection());
-                trackball->MoveCenter(axis * moveStep);
+                glm::vec3 axis = glm::cross(trackball_->GetLookingDirection(), trackball_->GetUpDirection());
+                trackball_->MoveCenter(axis * moveStep);
             }
         }
             break;
             
         case SDLK_q: //Up
         {
-            OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
-            if(trackball->isEnabled())
-                trackball->MoveCenter(glm::vec3(0.f, 0.f, -moveStep));
+            if(trackball_->IsEnabled())
+                trackball_->MoveCenter(glm::vec3(0.f, 0.f, -moveStep));
         }
             break;
             
         case SDLK_z: //Down
         {
-            OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
-            if(trackball->isEnabled())
-                trackball->MoveCenter(glm::vec3(0.f, 0.f, moveStep));
+            if(trackball_->IsEnabled())
+                trackball_->MoveCenter(glm::vec3(0.f, 0.f, moveStep));
         }
             break;
 
@@ -472,36 +467,35 @@ void GraphicalSimulationApp::LoopInternal()
                 
             case SDL_KEYDOWN:
             {
-                gui->KeyDown(event.key.keysym.sym);
+                gui_->KeyDown(event.key.keysym.sym);
                 KeyDown(&event);
                 break;
             }
                 
             case SDL_KEYUP:
             {
-                gui->KeyUp(event.key.keysym.sym);
+                gui_->KeyUp(event.key.keysym.sym);
                 KeyUp(&event);
                 break;
             }
                 
             case SDL_MOUSEBUTTONDOWN:
             {
-                gui->MouseDown(event.button.x, event.button.y, event.button.button == SDL_BUTTON_LEFT);
-                mouseWasDown = event;
+                gui_->MouseDown(event.button.x, event.button.y, event.button.button == SDL_BUTTON_LEFT);
+                mouseWasDown_ = event;
             }
                 break;
                 
             case SDL_MOUSEBUTTONUP:
             {
                 //GUI
-                gui->MouseUp(event.button.x, event.button.y, event.button.button == SDL_BUTTON_LEFT);
+                gui_->MouseUp(event.button.x, event.button.y, event.button.button == SDL_BUTTON_LEFT);
                 
                 //Trackball
                 if(event.button.button == SDL_BUTTON_RIGHT || event.button.button == SDL_BUTTON_MIDDLE)
                 {
-                    OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
-                    if(trackball->isEnabled())
-                        trackball->MouseUp();
+                    if(trackball_->IsEnabled())
+                        trackball_->MouseUp();
                 }
                 
                 //Pass
@@ -512,14 +506,13 @@ void GraphicalSimulationApp::LoopInternal()
             case SDL_MOUSEMOTION:
             {
                 //GUI
-                gui->MouseMove(event.motion.x, event.motion.y);
+                gui_->MouseMove(event.motion.x, event.motion.y);
                 
-                OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
-                if(trackball->isEnabled())
+                if(trackball_->IsEnabled())
                 {
-                    GLfloat xPos = (GLfloat)(event.motion.x-getWindowWidth()/2.f)/(GLfloat)(getWindowHeight()/2.f);
-                    GLfloat yPos = -(GLfloat)(event.motion.y-getWindowHeight()/2.f)/(GLfloat)(getWindowHeight()/2.f);
-                    trackball->MouseMove(xPos, yPos);
+                    GLfloat xPos = (GLfloat)(event.motion.x-GetWindowWidth()/2.f)/(GLfloat)(GetWindowHeight()/2.f);
+                    GLfloat yPos = -(GLfloat)(event.motion.y-GetWindowHeight()/2.f)/(GLfloat)(GetWindowHeight()/2.f);
+                    trackball_->MouseMove(xPos, yPos);
                 }
                     
                 //Pass
@@ -529,14 +522,13 @@ void GraphicalSimulationApp::LoopInternal()
                 
             case SDL_MOUSEWHEEL:
             {
-                if(displayConsole) //GUI
-                    ((OpenGLConsole*)console_)->Scroll((GLfloat)-event.wheel.y);
+                if(displayConsole_) //GUI
+                    static_cast<OpenGLConsole*>(console_.get())->Scroll((GLfloat)-event.wheel.y);
                 else
                 {
                     //Trackball
-                    OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
-                    if(trackball->isEnabled())
-                        trackball->MouseScroll(event.wheel.y * -1.f);
+                    if(trackball_->IsEnabled())
+                        trackball_->MouseScroll(event.wheel.y * -1.f);
                     
                     //Pass
                     MouseScroll(&event);
@@ -545,12 +537,12 @@ void GraphicalSimulationApp::LoopInternal()
                 break;
                 
             case SDL_JOYBUTTONDOWN:
-                joystickButtons[event.jbutton.button] = true;
+                joystickButtons_[event.jbutton.button] = true;
                 JoystickDown(&event);
                 break;
                 
             case SDL_JOYBUTTONUP:
-                joystickButtons[event.jbutton.button] = false;
+                joystickButtons_[event.jbutton.button] = false;
                 JoystickUp(&event);
                 break;
                 
@@ -565,43 +557,44 @@ void GraphicalSimulationApp::LoopInternal()
         }
     }
 
-    if(joystick != nullptr)
+    if (state_ == SimulationState::FINISHED) // Break the internal loop to avoid accessing destroyed resources
+        return;
+
+    if(joystick_ != nullptr)
     {
-        for(int i=0; i<SDL_JoystickNumAxes(joystick); i++)
-            joystickAxes[i] = SDL_JoystickGetAxis(joystick, i);
+        for(int i=0; i<SDL_JoystickNumAxes(joystick_); i++)
+            joystickAxes_[i] = SDL_JoystickGetAxis(joystick_, i);
     
-        for(int i=0; i<SDL_JoystickNumHats(joystick); i++)
-            joystickHats[i] = SDL_JoystickGetHat(joystick, i);
+        for(int i=0; i<SDL_JoystickNumHats(joystick_); i++)
+            joystickHats_[i] = SDL_JoystickGetHat(joystick_, i);
     }
     
     ProcessInputs();
     RenderLoop();
     
     //workaround for checking if IMGUI is being manipulated
-    if(mouseWasDown.type == SDL_MOUSEBUTTONDOWN && !gui->isAnyActive())
+    if(mouseWasDown_.type == SDL_MOUSEBUTTONDOWN && !gui_->IsAnyActive())
     {
-        OpenGLTrackball* trackball = getSimulationManager()->getTrackball();
-        
-        if(trackball->isEnabled())
+        if(trackball_->IsEnabled())
         {
-            if(mouseWasDown.button.button == SDL_BUTTON_LEFT)
+            if(mouseWasDown_.button.button == SDL_BUTTON_LEFT)
             {
-                glm::vec3 eye = trackball->GetEyePosition();
-                glm::vec3 ray = trackball->Ray(mouseWasDown.button.x, mouseWasDown.button.y);
-                selectedEntity = getSimulationManager()->PickEntity(Vector3(eye.x, eye.y, eye.z), Vector3(ray.x, ray.y, ray.z));
+                glm::vec3 eye = trackball_->GetEyePosition();
+                glm::vec3 ray = trackball_->Ray(mouseWasDown_.button.x, mouseWasDown_.button.y);
+                selectedEntity_ = GetSimulationManager()->PickEntity(Vector3(eye.x, eye.y, eye.z), Vector3(ray.x, ray.y, ray.z));
             }
             else //RIGHT OR MIDDLE
             {
-                GLfloat xPos = (GLfloat)(mouseWasDown.motion.x-getWindowWidth()/2.f)/(GLfloat)(getWindowHeight()/2.f);
-                GLfloat yPos = -(GLfloat)(mouseWasDown.motion.y-getWindowHeight()/2.f)/(GLfloat)(getWindowHeight()/2.f);
-                trackball->MouseDown(xPos, yPos, mouseWasDown.button.button == SDL_BUTTON_MIDDLE);
+                GLfloat xPos = (GLfloat)(mouseWasDown_.motion.x-GetWindowWidth()/2.f)/(GLfloat)(GetWindowHeight()/2.f);
+                GLfloat yPos = -(GLfloat)(mouseWasDown_.motion.y-GetWindowHeight()/2.f)/(GLfloat)(GetWindowHeight()/2.f);
+                trackball_->MouseDown(xPos, yPos, mouseWasDown_.button.button == SDL_BUTTON_MIDDLE);
             }
         }
         
         //Pass
         MouseDown(&event);
     }
-    mouseWasDown.type = SDL_LASTEVENT;
+    mouseWasDown_.type = SDL_LASTEVENT;
 
     // Update FPS
     uint64_t elapsedTime = GetTimeInMicroseconds() - startTime_;
@@ -616,59 +609,59 @@ void GraphicalSimulationApp::RenderLoop()
     //Do some updates
     if(state_ != SimulationState::RUNNING)
     {
-        getSimulationManager()->UpdateDrawingQueue();
+        GetSimulationManager()->UpdateDrawingQueue();
     }
     
     //Rendering
-    glBeginQuery(GL_TIME_ELAPSED, timeQuery[timeQueryPingpong]);
-    glPipeline->Render(getSimulationManager());
-    glPipeline->DrawDisplay();
+    glBeginQuery(GL_TIME_ELAPSED, timeQuery_[timeQueryPingpong_]);
+    glPipeline_->Render(GetSimulationManager());
+    glPipeline_->DrawDisplay();
     
     //GUI & Console
-    if(displayConsole)
+    if(displayConsole_)
     {
-        gui->GenerateBackground();
-        ((OpenGLConsole*)console_)->Render(true);
+        gui_->GenerateBackground();
+        static_cast<OpenGLConsole*>(console_.get())->Render(true);
     }
     else
     {
-        if(displayHUD) //Draw immediate mode GUI
+        if(displayHUD_) //Draw immediate mode GUI
         {
-            gui->GenerateBackground();
-            gui->Begin();
+            gui_->GenerateBackground();
+            gui_->Begin();
             DoHUD();
-            gui->End();
+            gui_->End();
         }
         else //Just draw logo in the corner
         {
-            gui->Begin();
-            gui->End();
+            gui_->Begin();
+            gui_->End();
         }
     }
     glEndQuery(GL_TIME_ELAPSED);
     
     //Update drawing time
     uint64_t drawTime;
-    glGetQueryObjectui64v(timeQuery[1-timeQueryPingpong], GL_QUERY_RESULT, &drawTime);
-    timeQueryPingpong = 1-timeQueryPingpong;
+    glGetQueryObjectui64v(timeQuery_[1-timeQueryPingpong_], GL_QUERY_RESULT, &drawTime);
+    timeQueryPingpong_ = 1-timeQueryPingpong_;
 	double dt = std::min(drawTime/1000000.0, 1000.0); //in ms
 	double f = 1.0/60.0;
-	drawingTime = f*dt + (1.0-f)*drawingTime;
+	drawingTime_ = f*dt + (1.0-f)*drawingTime_;
 
     //Update maximum drawing time
-    if(maxCounter >= 60)
+    if(maxCounter_ >= 60)
     {
-        maxDrawingTime = drawingTime;
-        maxCounter = 0;
+        maxDrawingTime_ = drawingTime_;
+        maxCounter_ = 0;
     }
     else
     {
-        maxDrawingTime = std::max(maxDrawingTime, dt);
-        ++maxCounter;
+        maxDrawingTime_ = std::max(maxDrawingTime_, dt);
+        ++maxCounter_;
     }
 
     //glFinish(); //Ensure that the frame was fully rendered
-    SDL_GL_SwapWindow(window);
+    SDL_GL_SwapWindow(window_);
 }
 
 void GraphicalSimulationApp::DoHUD()
@@ -676,56 +669,56 @@ void GraphicalSimulationApp::DoHUD()
     char buf[256];
     
     //Helper settings
-    HelperSettings& hs = getHelperSettings();
-    Ocean* ocn = getSimulationManager()->getOcean();
+    HelperSettings& hs = GetHelperSettings();
+    Ocean* ocn = GetSimulationManager()->GetOcean();
     
     GLfloat offset = 10.f;
-    gui->DoPanel(10.f, offset, 160.f, ocn != nullptr ? 226.f : 159.f);
+    gui_->DoPanel(10.f, offset, 160.f, ocn != nullptr ? 226.f : 159.f);
     offset += 5.f;
-    gui->DoLabel(15.f, offset, "DEBUG");
+    gui_->DoLabel(15.f, offset, "DEBUG");
     offset += 15.f;
     
     Uid id;
     id.owner = 0;
     
     id.item = 0;
-    bool displayPhysical = getSimulationManager()->getSolidDisplayMode() == DisplayMode::PHYSICAL; 
-    displayPhysical = gui->DoCheckBox(id, 15.f, offset, 110.f, displayPhysical, "Physical objects");
-    getSimulationManager()->setSolidDisplayMode(displayPhysical ? DisplayMode::PHYSICAL : DisplayMode::GRAPHICAL);
+    bool displayPhysical = GetSimulationManager()->GetSolidDisplayMode() == DisplayMode::PHYSICAL; 
+    displayPhysical = gui_->DoCheckBox(id, 15.f, offset, 110.f, displayPhysical, "Physical objects");
+    GetSimulationManager()->SetSolidDisplayMode(displayPhysical ? DisplayMode::PHYSICAL : DisplayMode::GRAPHICAL);
     offset += 22.f;
     
     id.item = 1;
-    hs.showCoordSys = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showCoordSys, "Frames");
+    hs.showCoordSys = gui_->DoCheckBox(id, 15.f, offset, 110.f, hs.showCoordSys, "Frames");
     offset += 22.f;
     
     id.item = 2;
-    hs.showSensors = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showSensors, "Sensors");
+    hs.showSensors = gui_->DoCheckBox(id, 15.f, offset, 110.f, hs.showSensors, "Sensors");
     offset += 22.f;
     
     id.item = 3;
-    hs.showActuators = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showActuators, "Actuators");
+    hs.showActuators = gui_->DoCheckBox(id, 15.f, offset, 110.f, hs.showActuators, "Actuators");
     offset += 22.f;
     
     id.item = 4;
-    hs.showJoints = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showJoints, "Joints");
+    hs.showJoints = gui_->DoCheckBox(id, 15.f, offset, 110.f, hs.showJoints, "Joints");
     offset += 22.f;
     
     id.item = 5;
-    hs.showBulletDebugInfo = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showBulletDebugInfo, "Collision");
+    hs.showBulletDebugInfo = gui_->DoCheckBox(id, 15.f, offset, 110.f, hs.showBulletDebugInfo, "Collision");
     offset += 22.f;
     
     if(ocn != nullptr)
     {
         id.item = 6;
-        hs.showForces = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showForces, "Fluid Forces");
+        hs.showForces = gui_->DoCheckBox(id, 15.f, offset, 110.f, hs.showForces, "Fluid Forces");
         offset += 22.f;
     
         id.item = 7;
-        hs.showFluidDynamics = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showFluidDynamics, "Hydrodynamics");
+        hs.showFluidDynamics = gui_->DoCheckBox(id, 15.f, offset, 110.f, hs.showFluidDynamics, "Hydrodynamics");
         offset += 22.f;
 
         id.item = 8;
-        hs.showOceanVelocityField = gui->DoCheckBox(id, 15.f, offset, 110.f, hs.showOceanVelocityField, "Water velocity");
+        hs.showOceanVelocityField = gui_->DoCheckBox(id, 15.f, offset, 110.f, hs.showOceanVelocityField, "Water velocity");
         offset += 22.f;
     }
     
@@ -733,48 +726,48 @@ void GraphicalSimulationApp::DoHUD()
     
     //Time settings
     Scalar az, elev;
-    getSimulationManager()->getAtmosphere()->GetSunPosition(az, elev);
+    GetSimulationManager()->GetAtmosphere()->GetSunPosition(az, elev);
     
-    gui->DoPanel(10.f, offset, 160.f, 125.f);
+    gui_->DoPanel(10.f, offset, 160.f, 125.f);
     offset += 5.f;
-    gui->DoLabel(15.f, offset, "SUN POSITION");
+    gui_->DoLabel(15.f, offset, "SUN POSITION");
     offset += 15.f;
     
     id.owner = 1;
     id.item = 0;
-    az = gui->DoSlider(id, 15.f, offset, 150.f, Scalar(-180), Scalar(180), az, "Azimuth[deg]");
+    az = gui_->DoSlider(id, 15.f, offset, 150.f, Scalar(-180), Scalar(180), az, "Azimuth[deg]");
     offset += 50.f;
     
     id.item = 1;
-    elev = gui->DoSlider(id, 15.f, offset, 150.f, Scalar(-10), Scalar(90), elev, "Elevation[deg]");
+    elev = gui_->DoSlider(id, 15.f, offset, 150.f, Scalar(-10), Scalar(90), elev, "Elevation[deg]");
     offset += 61.f;
     
-    getSimulationManager()->getAtmosphere()->SetSunPosition(az, elev);
+    GetSimulationManager()->GetAtmosphere()->SetSunPosition(az, elev);
     
     //Ocean settings
     if(ocn != nullptr)
     {
-        Scalar waterType = ocn->getWaterType();
+        Scalar waterType = ocn->GetWaterType();
         
-        bool oceanOn = ocn->isRenderable();
+        bool oceanOn = ocn->IsRenderable();
         
-        gui->DoPanel(10.f, offset, 160.f, oceanOn ? 112.f : 33.f);
+        gui_->DoPanel(10.f, offset, 160.f, oceanOn ? 112.f : 33.f);
         offset += 5.f;
        
         id.owner = 2;
         id.item = 0;
-        ocn->setRenderable(gui->DoCheckBox(id, 15.f, offset, 110.f, oceanOn, "OCEAN"));
+        ocn->SetRenderable(gui_->DoCheckBox(id, 15.f, offset, 110.f, oceanOn, "OCEAN"));
         offset += 26.f;
         
         if(oceanOn)
         {
             id.item = 1;
-            waterType = gui->DoSlider(id, 15.f, offset, 150.f, Scalar(0), Scalar(1), waterType, "Jerlov water type");
-            ocn->setWaterType(waterType);
+            waterType = gui_->DoSlider(id, 15.f, offset, 150.f, Scalar(0), Scalar(1), waterType, "Jerlov water type");
+            ocn->SetWaterType(waterType);
             offset += 50.f;
             
             id.item = 2;
-            ocn->setParticles(gui->DoCheckBox(id, 19.f, offset, 110.f, ocn->hasParticles(), "Suspended particles"));
+            ocn->SetParticles(gui_->DoCheckBox(id, 19.f, offset, 110.f, ocn->HasParticles(), "Suspended particles"));
             offset += 29.f;
         }
 
@@ -782,9 +775,9 @@ void GraphicalSimulationApp::DoHUD()
     }
     
     //Main view exposure
-    gui->DoPanel(10.f, offset, 160.f, 126.f);
+    gui_->DoPanel(10.f, offset, 160.f, 126.f);
     offset += 5.f;
-    gui->DoLabel(15.f, offset, "VIEW");
+    gui_->DoLabel(15.f, offset, "VIEW");
     offset += 15.f;
     
     id.owner = 3;
@@ -798,10 +791,10 @@ void GraphicalSimulationApp::DoHUD()
     //Add robots to the list
     size_t rid = 0;
     Robot* rob;
-    while((rob = getSimulationManager()->getRobot(rid)) != nullptr)
+    while((rob = GetSimulationManager()->GetRobot(rid)) != nullptr)
     {
-        options.push_back(rob->getName());
-        if(rob->getBaseLink() == trackballCenter)
+        options.push_back(rob->GetName());
+        if(rob->GetBaseLink() == trackballCenter_)
             selected = (unsigned int)(rid + 1);
         ++rid;
     }
@@ -809,126 +802,126 @@ void GraphicalSimulationApp::DoHUD()
     size_t eid = 0;
     size_t aid = 0;
     Entity* ent;
-    while((ent = getSimulationManager()->getEntity(eid)) != nullptr)
+    while((ent = GetSimulationManager()->GetEntity(eid)) != nullptr)
     {
-        if(ent->getType() == sf::EntityType::ANIMATED)
+        if(ent->GetType() == sf::EntityType::ANIMATED)
         {
-            options.push_back(ent->getName());
-            if(ent == trackballCenter)
+            options.push_back(ent->GetName());
+            if(ent == trackballCenter_)
                 selected = (unsigned int)(rid + 1 + aid);
             ++aid;
         }
         ++eid;
     }
 
-    newSelected = gui->DoComboBox(id, 15.f, offset, 150.f, options, selected, "Trackball center");
+    newSelected = gui_->DoComboBox(id, 15.f, offset, 150.f, options, selected, "Trackball center");
     
     if(newSelected != selected)
     {
         if(newSelected == 0)
-            trackballCenter = nullptr;
+            trackballCenter_ = nullptr;
         else
         {
             if(newSelected <= rid)
-                trackballCenter = getSimulationManager()->getRobot(options[newSelected])->getBaseLink();
+                trackballCenter_ = GetSimulationManager()->GetRobot(options[newSelected])->GetBaseLink();
             else if(newSelected > rid)
-                trackballCenter = (MovingEntity*)getSimulationManager()->getEntity(options[newSelected]);
+                trackballCenter_ = (MovingEntity*)GetSimulationManager()->GetEntity(options[newSelected]);
         }     
-        getSimulationManager()->getTrackball()->GlueToMoving(trackballCenter);
+        trackball_->GlueToMoving(trackballCenter_);
     }
     offset += 51.f;
     
     id.owner = 3;
     id.item = 1;
-    getSimulationManager()->getTrackball()->setExposureCompensation(gui->DoSlider(id, 15.f, offset, 150.f, Scalar(-3), Scalar(3), getSimulationManager()->getTrackball()->getExposureCompensation(), "Exposure[EV]"));
+    trackball_->SetExposureCompensation(gui_->DoSlider(id, 15.f, offset, 150.f, Scalar(-3), Scalar(3), trackball_->GetExposureCompensation(), "Exposure[EV]"));
     offset += 61.f;
     
     //Picked entity information
-    if(selectedEntity.first != nullptr)
+    if(selectedEntity_.first != nullptr)
     {
-        switch(selectedEntity.first->getType())
+        switch(selectedEntity_.first->GetType())
         {
             case EntityType:: STATIC:
             {
-                StaticEntity* ent = (StaticEntity*)selectedEntity.first;
+                StaticEntity* ent = (StaticEntity*)selectedEntity_.first;
                 
-                gui->DoPanel(10.f, offset, 160.f, 66.f);
+                gui_->DoPanel(10.f, offset, 160.f, 66.f);
                 offset += 5.f;
-                gui->DoLabel(15.f, offset, "SELECTION INFO");
+                gui_->DoLabel(15.f, offset, "SELECTION INFO");
                 offset += 16.f;
-                gui->DoLabel(18.f, offset, std::string("Name: ") + ent->getName());
+                gui_->DoLabel(18.f, offset, std::string("Name: ") + ent->GetName());
                 offset += 14.f;
-                gui->DoLabel(18.f, offset, std::string("Type: Static"));
+                gui_->DoLabel(18.f, offset, std::string("Type: Static"));
                 offset += 14.f;
-                gui->DoLabel(18.f, offset, std::string("Material: ") + ent->getMaterial().name);
+                gui_->DoLabel(18.f, offset, std::string("Material: ") + ent->GetMaterial().name);
             }
                 break;
                 
             case EntityType:: SOLID:
             {
-                SolidEntity* ent = (SolidEntity*)selectedEntity.first;
+                SolidEntity* ent = (SolidEntity*)selectedEntity_.first;
                 
                 GLfloat infoOffset = offset;
-                gui->DoPanel(10.f, offset, 160.f, ent->getSolidType() == SolidType::COMPOUND ? 130.f : 122.f);
+                gui_->DoPanel(10.f, offset, 160.f, ent->GetSolidType() == SolidType::COMPOUND ? 130.f : 122.f);
                 offset += 5.f;
-                gui->DoLabel(15.f, offset, "SELECTION INFO");
+                gui_->DoLabel(15.f, offset, "SELECTION INFO");
                 offset += 16.f;
-                gui->DoLabel(18.f, offset, std::string("Name: ") + ent->getName());
+                gui_->DoLabel(18.f, offset, std::string("Name: ") + ent->GetName());
                 offset += 14.f;
-                gui->DoLabel(18.f, offset, std::string("Type: Dynamic"));
+                gui_->DoLabel(18.f, offset, std::string("Type: Dynamic"));
                 offset += 14.f;
-                if(ent->getSolidType() != SolidType::COMPOUND)
+                if(ent->GetSolidType() != SolidType::COMPOUND)
                 {
-                    gui->DoLabel(18.f, offset, std::string("Material: ") + ent->getMaterial().name);
+                    gui_->DoLabel(18.f, offset, std::string("Material: ") + ent->GetMaterial().name);
                     offset += 14.f;
                 }
-                std::sprintf(buf, "%1.3lf", ent->getMass());
-                gui->DoLabel(18.f, offset, std::string("Mass[kg]: ") + std::string(buf));
+                std::sprintf(buf, "%1.3lf", ent->GetMass());
+                gui_->DoLabel(18.f, offset, std::string("Mass[kg]: ") + std::string(buf));
                 offset += 14.f;
-                gui->DoLabel(18.f, offset, std::string("Inertia[kgm2]: "));
+                gui_->DoLabel(18.f, offset, std::string("Inertia[kgm2]: "));
                 offset += 14.f;
-                Vector3 I = ent->getInertia();
+                Vector3 I = ent->GetInertia();
                 std::sprintf(buf, "%1.3lf, %1.3lf, %1.3lf", I.x(), I.y(), I.z());
-                gui->DoLabel(23.f, offset, std::string(buf));
+                gui_->DoLabel(23.f, offset, std::string(buf));
                 offset += 14.f;
-                std::sprintf(buf, "%1.3lf", ent->getVolume()*1e3);
-                gui->DoLabel(18.f, offset, std::string("Volume[dm3]: ") + std::string(buf));
+                std::sprintf(buf, "%1.3lf", ent->GetVolume()*1e3);
+                gui_->DoLabel(18.f, offset, std::string("Volume[dm3]: ") + std::string(buf));
                 offset += 11.f;
                 
-                if(ent->getSolidType() == SolidType::COMPOUND)
+                if(ent->GetSolidType() == SolidType::COMPOUND)
                 {
                     Compound* cmp = (Compound*)ent;
                     id.owner = 4;
                     id.item = 0;
-                    cmp->setDisplayInternalParts(gui->DoCheckBox(id, 15.f, offset, 110.f, cmp->isDisplayingInternalParts(), "Show internals"));
+                    cmp->SetDisplayInternalParts(gui_->DoCheckBox(id, 15.f, offset, 110.f, cmp->IsDisplayingInternalParts(), "Show internals"));
                     offset += 22.f;
 
-                    CompoundPart part = cmp->getPart(cmp->getPartId(selectedEntity.second));
+                    const CompoundPart& part = cmp->GetPart(cmp->GetPartId(selectedEntity_.second));
                     if(part.solid != nullptr)
                     {
                         offset = infoOffset + 10.f;
                         GLfloat hOffset = 165.f;
-                        gui->DoPanel(hOffset + 10.f, offset, 130.f, 110.f);
+                        gui_->DoPanel(hOffset + 10.f, offset, 130.f, 110.f);
                         offset += 5.f;
-                        gui->DoLabel(hOffset + 15.f, offset, "PART INFO");
+                        gui_->DoLabel(hOffset + 15.f, offset, "PART INFO");
                         offset += 16.f;
-                        std::string partName = part.solid->getName();
+                        std::string partName = part.solid->GetName();
                         int beginIdx = partName.rfind('/');
-                        gui->DoLabel(hOffset + 18.f, offset, std::string("Name: ") + partName.substr(beginIdx + 1));
+                        gui_->DoLabel(hOffset + 18.f, offset, std::string("Name: ") + partName.substr(beginIdx + 1));
                         offset += 14.f;
-                        gui->DoLabel(hOffset + 18.f, offset, std::string("Material: ") + part.solid->getMaterial().name);
+                        gui_->DoLabel(hOffset + 18.f, offset, std::string("Material: ") + part.solid->GetMaterial().name);
                         offset += 14.f;
-                        std::sprintf(buf, "%1.3lf", part.solid->getMass());
-                        gui->DoLabel(hOffset + 18.f, offset, std::string("Mass[kg]: ") + std::string(buf));
+                        std::sprintf(buf, "%1.3lf", part.solid->GetMass());
+                        gui_->DoLabel(hOffset + 18.f, offset, std::string("Mass[kg]: ") + std::string(buf));
                         offset += 14.f;
-                        gui->DoLabel(hOffset + 18.f, offset, std::string("Inertia[kgm2]: "));
+                        gui_->DoLabel(hOffset + 18.f, offset, std::string("Inertia[kgm2]: "));
                         offset += 14.f;
-                        Vector3 I = part.solid->getInertia();
+                        Vector3 I = part.solid->GetInertia();
                         std::sprintf(buf, "%1.3lf, %1.3lf, %1.3lf", I.x(), I.y(), I.z());
-                        gui->DoLabel(hOffset + 23.f, offset, std::string(buf));
+                        gui_->DoLabel(hOffset + 23.f, offset, std::string(buf));
                         offset += 14.f;
-                        std::sprintf(buf, "%1.3lf", part.solid->getVolume()*1e3);
-                        gui->DoLabel(hOffset + 18.f, offset, std::string("Volume[dm3]: ") + std::string(buf));
+                        std::sprintf(buf, "%1.3lf", part.solid->GetVolume()*1e3);
+                        gui_->DoLabel(hOffset + 18.f, offset, std::string("Volume[dm3]: ") + std::string(buf));
                     }
                 }
             }
@@ -940,49 +933,49 @@ void GraphicalSimulationApp::DoHUD()
     }
     
     //Bottom panel
-    gui->DoPanel(-10, getWindowHeight()-30.f, getWindowWidth()+20, 30.f);
+    gui_->DoPanel(-10, GetWindowHeight()-30.f, GetWindowWidth()+20, 30.f);
     
-    std::sprintf(buf, "Drawing time: %1.2lf ms (FPS %1.0lf)", getDrawingTime(), fps_);
-    gui->DoLabel(10, getWindowHeight() - 20.f, buf);
+    std::sprintf(buf, "Drawing time: %1.2lf ms (FPS %1.0lf)", GetDrawingTime(), fps_);
+    gui_->DoLabel(10, GetWindowHeight() - 20.f, buf);
     
-    std::sprintf(buf, "CPU usage: %1.0lf%%", getSimulationManager()->getCpuUsage());
-    gui->DoLabel(220, getWindowHeight() - 20.f, buf);
+    std::sprintf(buf, "CPU usage: %1.0lf%%", GetSimulationManager()->GetCpuUsage());
+    gui_->DoLabel(220, GetWindowHeight() - 20.f, buf);
     
-    std::sprintf(buf, "Simulation time: %1.2lf s", getSimulationManager()->getSimulationTime());
-    gui->DoLabel(350, getWindowHeight() - 20.f, buf);
+    std::sprintf(buf, "Simulation time: %1.2lf s", GetSimulationManager()->GetSimulationTime());
+    gui_->DoLabel(350, GetWindowHeight() - 20.f, buf);
 
-    gui->DoLabel(getWindowWidth() - 100.f, getWindowHeight() - 20.f, "Hit [K] for keymap");
+    gui_->DoLabel(GetWindowWidth() - 100.f, GetWindowHeight() - 20.f, "Hit [K] for keymap");
 
     //Keymap
-    if(displayKeymap)
+    if(displayKeymap_)
     {
-        offset = getWindowHeight()-246.f;
-        GLfloat left = getWindowWidth()-130.f; 
-        gui->DoPanel(left - 10.f, offset, 130.f, 206.f); offset += 10.f;
-        gui->DoLabel(left, offset, "[H] show/hide GUI"); offset += 16.f;
-        gui->DoLabel(left, offset, "[C] show/hide console"); offset += 16.f;
-        gui->DoLabel(left, offset, "[W] move forward"); offset += 16.f;
-        gui->DoLabel(left, offset, "[S] move backward"); offset += 16.f;
-        gui->DoLabel(left, offset, "[A] move left"); offset += 16.f;
-        gui->DoLabel(left, offset, "[D] move right"); offset += 16.f;
-        gui->DoLabel(left, offset, "[Q] move up"); offset += 16.f;
-        gui->DoLabel(left, offset, "[Z] move down"); offset += 16.f;
-        gui->DoLabel(left, offset, "[Shift] move fast"); offset += 16.f;
-        gui->DoLabel(left, offset, "[Mouse right] rotate"); offset += 16.f;
-        gui->DoLabel(left, offset, "[Mouse middle] move"); offset += 16.f;
-        gui->DoLabel(left, offset, "[Mouse scroll] zoom"); offset += 16.f;
+        offset = GetWindowHeight()-246.f;
+        GLfloat left = GetWindowWidth()-130.f; 
+        gui_->DoPanel(left - 10.f, offset, 130.f, 206.f); offset += 10.f;
+        gui_->DoLabel(left, offset, "[H] show/hide GUI"); offset += 16.f;
+        gui_->DoLabel(left, offset, "[C] show/hide console"); offset += 16.f;
+        gui_->DoLabel(left, offset, "[W] move forward"); offset += 16.f;
+        gui_->DoLabel(left, offset, "[S] move backward"); offset += 16.f;
+        gui_->DoLabel(left, offset, "[A] move left"); offset += 16.f;
+        gui_->DoLabel(left, offset, "[D] move right"); offset += 16.f;
+        gui_->DoLabel(left, offset, "[Q] move up"); offset += 16.f;
+        gui_->DoLabel(left, offset, "[Z] move down"); offset += 16.f;
+        gui_->DoLabel(left, offset, "[Shift] move fast"); offset += 16.f;
+        gui_->DoLabel(left, offset, "[Mouse right] rotate"); offset += 16.f;
+        gui_->DoLabel(left, offset, "[Mouse middle] move"); offset += 16.f;
+        gui_->DoLabel(left, offset, "[Mouse scroll] zoom"); offset += 16.f;
     }
 
     //Performance
-    if(displayPerformance)
+    if(displayPerformance_)
     {
         std::vector<std::vector<GLfloat> > perfData;    
-        perfData.push_back(getSimulationManager()->getPerformanceMonitor().getPhysicsTimeHistory<GLfloat>(100));
-        perfData.push_back(getSimulationManager()->getPerformanceMonitor().getHydrodynamicsTimeHistory<GLfloat>(100));
+        perfData.push_back(GetSimulationManager()->GetPerformanceMonitor().GetPhysicsTimeHistory<GLfloat>(100));
+        perfData.push_back(GetSimulationManager()->GetPerformanceMonitor().GetHydrodynamicsTimeHistory<GLfloat>(100));
 
         id.owner = 4;
         id.item = 0;
-        gui->DoTimePlot(id, getWindowWidth()-300, getWindowHeight()-200, 290, 160, perfData, "Performance Monitor", new Scalar[2]{-1, 10000});
+        gui_->DoTimePlot(id, GetWindowWidth()-300, GetWindowHeight()-200, 290, 160, perfData, "Performance Monitor", new Scalar[2]{-1, 10000});
     }
 }
 
@@ -993,7 +986,7 @@ void GraphicalSimulationApp::StartSimulation()
     if (autostep_)
     {   
         GraphicalSimulationThreadData* data = new GraphicalSimulationThreadData{*this};
-        simulationThread = SDL_CreateThread(GraphicalSimulationApp::RunSimulation, "simulationThread", data);
+        simulationThread_ = SDL_CreateThread(GraphicalSimulationApp::RunSimulation, "simulationThread", data);
     }
 }
 
@@ -1004,22 +997,21 @@ void GraphicalSimulationApp::ResumeSimulation()
     if (autostep_)
     {
         GraphicalSimulationThreadData* data = new GraphicalSimulationThreadData{*this};
-        simulationThread = SDL_CreateThread(GraphicalSimulationApp::RunSimulation, "simulationThread", data);
+        simulationThread_ = SDL_CreateThread(GraphicalSimulationApp::RunSimulation, "simulationThread", data);
     }
 }
 
 void GraphicalSimulationApp::StopSimulation()
 {
-	SimulationApp::StopSimulation();
-
-    selectedEntity = std::make_pair(nullptr, -1);
-	trackballCenter = nullptr;
+    SimulationApp::StopSimulation();
+	selectedEntity_ = std::make_pair(nullptr, -1);
+	trackballCenter_ = nullptr;
     
-    if (autostep_ && simulationThread != nullptr)
+    if (autostep_ && simulationThread_ != nullptr)
     {
         int status;
-        SDL_WaitThread(simulationThread, &status);
-        simulationThread = nullptr;
+        SDL_WaitThread(simulationThread_, &status);
+        simulationThread_ = nullptr;
     }
 
     physicsThreadPool_.reset();
@@ -1029,27 +1021,27 @@ void GraphicalSimulationApp::StepSimulation()
 {
     SimulationApp::StepSimulation();
 
-    if(getGLPipeline()->isDrawingQueueEmpty())
+    if(GetGlPipeline()->IsDrawingQueueEmpty())
     {
-        SDL_LockMutex(getGLPipeline()->getDrawingQueueMutex());
-        getSimulationManager()->UpdateDrawingQueue();
-        SDL_UnlockMutex(getGLPipeline()->getDrawingQueueMutex());
+        SDL_LockMutex(GetGlPipeline()->GetDrawingQueueMutex());
+        GetSimulationManager()->UpdateDrawingQueue();
+        SDL_UnlockMutex(GetGlPipeline()->GetDrawingQueueMutex());
     }
 }
 
 void GraphicalSimulationApp::CleanUp()
 {
     SimulationApp::CleanUp();
-    glDeleteQueries(2, timeQuery);
+    glDeleteQueries(2, timeQuery_.data());
 
-    if(joystick != nullptr)
+    if(joystick_ != nullptr)
         SDL_JoystickClose(0);
     
-    if(glLoadingContext != nullptr)
-        SDL_GL_DeleteContext(glLoadingContext);
+    if(glLoadingContext_ != nullptr)
+        SDL_GL_DeleteContext(glLoadingContext_);
     
-    SDL_GL_DeleteContext(glMainContext);
-    SDL_DestroyWindow(window);
+    SDL_GL_DeleteContext(glMainContext_);
+    SDL_DestroyWindow(window_);
     SDL_Quit();
 }
 
@@ -1059,12 +1051,12 @@ int GraphicalSimulationApp::RenderLoadingScreen(void* data)
     GraphicalSimulationApp& app = static_cast<GraphicalSimulationThreadData*>(data)->app;
     
     //Make drawing in this thread possible
-    SDL_GL_MakeCurrent(app.window, app.glLoadingContext);  
+    SDL_GL_MakeCurrent(app.window_, app.glLoadingContext_);  
     
     //Render loading screen
     glClearColor(0.2f, 0.2f, 0.2f, 0.0f);
-    glScissor(0, 0, app.windowW, app.windowH);
-    glViewport(0, 0, app.windowW, app.windowH);
+    glScissor(0, 0, app.windowW_, app.windowH_);
+    glViewport(0, 0, app.windowW_, app.windowH_);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
@@ -1075,38 +1067,45 @@ int GraphicalSimulationApp::RenderLoadingScreen(void* data)
     glBindVertexArray(vao);
     glEnableVertexAttribArray(0);
     
-    while(app.loading)
+    while(app.loading_)
     {
         glClear(GL_COLOR_BUFFER_BIT);
         
         //Lock to prevent adding lines to the console while rendering
-        SDL_LockMutex(app.console_->getLinesMutex());
-        static_cast<OpenGLConsole*>(app.console_)->Render(false);
-        SDL_UnlockMutex(app.console_->getLinesMutex());
+        SDL_LockMutex(app.console_->GetLinesMutex());
+        static_cast<OpenGLConsole*>(app.console_.get())->Render(false);
+        SDL_UnlockMutex(app.console_->GetLinesMutex());
         
-        SDL_GL_SwapWindow(app.window);
+        SDL_GL_SwapWindow(app.window_);
     }
     
     glBindVertexArray(0);
     glDeleteVertexArrays(1, &vao);
     
     //Detach thread from GL context
-    SDL_GL_MakeCurrent(app.window, nullptr);
+    SDL_GL_MakeCurrent(app.window_, nullptr);
+
+    // Destroy thread data to avoid memory leak
+    delete static_cast<GraphicalSimulationThreadData*>(data);
+
     return 0;
 }
 
 int GraphicalSimulationApp::RunSimulation(void* data)
 {
     GraphicalSimulationApp& simApp = static_cast<GraphicalSimulationThreadData*>(data)->app;
-    SimulationManager* simManager = simApp.getSimulationManager();
+    SimulationManager* simManager = simApp.GetSimulationManager();
 
-    simManager->setCallSimulationStepCompleted(simApp.timeStep_ == Scalar(0));
+    simManager->SetCallSimulationStepCompleted(simApp.timeStep_ == Scalar(0));
 
-    while(simApp.getState() == SimulationState::RUNNING)
+    while(simApp.GetState() == SimulationState::RUNNING)
     {
         simApp.StepSimulation();
     }
-    
+
+    // Destroy thread data to avoid memory leak
+    delete static_cast<GraphicalSimulationThreadData*>(data);
+
     return 0;
 }
 

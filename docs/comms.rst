@@ -27,7 +27,20 @@ They can be attached to all kinds of bodies, as well as directly to the world fr
 
 .. note::
 
-    In the following sections, description of each specific implementation of a communication device is accompanied with an example of its instantiation through the XML syntax and the C++ code. It is assumed that the XML snippets are located inside the definition of a robot. In case of C++ code, it is assumed that an object ``sf::Robot* robot = new sf::Robot(...);`` was created before the device definition. 
+    In the following sections, description of each specific implementation of a communication device is accompanied with an example of its instantiation through the XML syntax and the C++ code. It is assumed that the XML snippets are located inside the definition of a robot. In case of the C++ code, it is assumed that a ``std::unique_ptr<Robot> robot`` was defined before the definition of the device, and the robot object was properly instantiated. 
+
+Plugins
+=======
+
+Available communication devices can be extended by creating a plugin (see :ref:`Plugin interface <plugin_interface>`). When loading these plugins using the XML syntax, the type of the communication device has to be defined as ``plugin`` and a path to the plugin library has to be provided, through a ``plugin`` attribute.
+
+.. code-block:: xml
+
+    <comm name="CommPlugin" device_id="1" type="plugin" plugin="path/to/plugin/library">
+        <!-- specific definitions here -->
+    </comm>
+
+When developing plugins you are required to specify the ``sf::ConstructInfo`` structure which will be used to automatically load the required and optional parameters from the XML file. The plugin can be loaded using the C++ code as well.
 
 Acoustic modem
 ==============
@@ -48,10 +61,11 @@ Moreover, an occlusion test is performed as default, to take into account the ob
 .. code-block:: cpp
 
     #include <Stonefish/comms/AcousticModem.h>
-    sf::AcousticModem* modem = new sf::AcousticModem("Modem", 5, 0.0, 220.0, 1000.0);
+
+    std::unique_ptr<sf::AcousticModem> modem = std::make_unique<sf::AcousticModem>("Modem", 5, 0.0, 220.0, 1000.0);
     modem->Connect(9);
-    modem->setOcclusionTest(true);
-    robot->AddComm(modem, "Link1", sf::I4());
+    modem->SetOcclusionTest(true);
+    robot->AddComm(std::move(modem), "Link1", sf::I4());
 
 USBL
 ====
@@ -75,13 +89,14 @@ Another feature of the USBL implementation is an automatic ping function used to
 .. code-block:: cpp
 
     #include <Stonefish/comms/USBL.h>
-    sf::USBL* usbl = new sf::USBL("USBL", 5, 0.0, 220.0, 1000.0);
+
+    std::unique_ptr<sf::USBL> usbl = std::make_unique<sf::USBL>("USBL", 5, 0.0, 220.0, 1000.0);
     usbl->Connect(9);
     usbl->EnableAutoPing(1.0);
-    usbl->setOcclusionTest(false);
-    usbl->setNoise(0.05, 0.2, 0.5);
-    usbl->setResolution(0.1, 0.1);
-    robot->AddComm(usbl, "Link1", sf::I4());
+    usbl->SetOcclusionTest(false);
+    usbl->SetNoise(0.05, 0.2, 0.5);
+    usbl->SetResolution(0.1, 0.1);
+    robot->AddComm(std::move(usbl), "Link1", sf::I4());
 
 Optical modem
 =============
@@ -103,6 +118,7 @@ based on water turbidity, depth, and ambient light intensity. User can define a 
 .. code-block:: cpp
 
     #include <Stonefish/comms/OpticalModem.h>
-    sf::OpticalModem* modem = new sf::OpticalModem("Modem", 5, 120.0, 50.0, 0.5);
+    
+    std::unique_ptr<sf::OpticalModem> modem = std::make_unique<sf::OpticalModem>("Modem", 5, 120.0, 50.0, 0.5);
     modem->Connect(9);
-    robot->AddComm(modem, "Link1", sf::I4());
+    robot->AddComm(std::move(modem), "Link1", sf::I4());

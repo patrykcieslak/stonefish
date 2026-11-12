@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 14/05/2025.
-//  Copyright (c) 2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2025-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpticalModem__
-#define __Stonefish_OpticalModem__
+#pragma once
 
 #include <map>
 #include "comms/Comm.h"
@@ -43,7 +42,7 @@ namespace sf
          \param operatingRange the maximum ideal operating range [m]
          \param ambientLightSensitivity an empirical unitless factor [0.0, 1.0] specifying how ambient light impacts the device operation
          */
-        OpticalModem(std::string uniqueName, uint64_t deviceId, Scalar fovDeg, Scalar operatingRange, Scalar ambientLightSensitivity);
+        OpticalModem(std::string_view uniqueName, uint64_t deviceId, Scalar fovDeg, Scalar operatingRange, Scalar ambientLightSensitivity);
         
         //! A destructor.
         virtual ~OpticalModem();
@@ -52,10 +51,19 @@ namespace sf
         std::vector<Renderable> Render();
         
         //! A method returnign the reception quality.
-        Scalar getReceptionQuality() const;
+        Scalar GetReceptionQuality() const;
 
         //! A method returning the type of the comm.
-        virtual CommType getType() const;
+        virtual CommType GetType() const;
+
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo GetConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<OpticalModem> Construct(std::string_view uniqueName, uint64_t deviceId, ConstructInfo& info);
         
     protected:
         //! A method performing internal comm state update.
@@ -65,24 +73,22 @@ namespace sf
         virtual void InternalUpdate(Scalar dt) override;
 
         virtual void MessageReceived(std::shared_ptr<CommDataFrame> message);
-        bool isReceptionPossible(Vector3 worldDir, Scalar distance);
+        bool IsReceptionPossible(Vector3 worldDir, Scalar distance);
         
-        static OpticalModem* getNode(uint64_t deviceId);
-        static std::vector<uint8_t> introduceErrors(const std::vector<uint8_t>& data, Scalar linkQuality);
+        static OpticalModem* GetNode(uint64_t deviceId);
+        static std::vector<uint8_t> IntroduceErrors(const std::vector<uint8_t>& data, Scalar linkQuality);
         
     private:
-        Scalar maxRange;
-        Scalar fov;
-        Scalar ambientLightSens;
-        Scalar receptionQuality;
-        Scalar trueRange;
+        Scalar maxRange_;
+        Scalar fov_;
+        Scalar ambientLightSens_;
+        Scalar receptionQuality_;
+        Scalar trueRange_;
         
-        static void addNode(OpticalModem* node);
-        static void removeNode(uint64_t deviceId);
-        static std::vector<uint64_t> getNodeIds();
+        static void AddNode(OpticalModem* node);
+        static void RemoveNode(uint64_t deviceId);
+        static std::vector<uint64_t> GetNodeIds();
 
         static std::map<uint64_t, OpticalModem*> nodes;
     };
 }
-    
-#endif

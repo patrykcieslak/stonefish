@@ -20,18 +20,17 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/06/2017.
-//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLContent__
-#define __Stonefish_OpenGLContent__
+#pragma once
 
 #include "graphics/OpenGLDataStructs.h"
 #include "graphics/GLSLShader.h"
 #include "core/NameManager.h"
 #include "graphics/OpenGLPointLight.h"
 #include "graphics/OpenGLSpotLight.h"
-#include <map>
+#include <unordered_map>
 
 namespace sf
 {
@@ -76,14 +75,14 @@ namespace sf
     struct MaterialShader
     {
         std::string shadingAlgorithm;
-        std::map<std::string, GLSLShader*> shaders;
+        std::unordered_map<std::string, std::shared_ptr<GLSLShader>> shaders;
 
         MaterialShader()
         {
             shadingAlgorithm = "";
         }
 
-        MaterialShader(const MaterialShader &obj)
+        MaterialShader(const MaterialShader& obj)
         {
             shadingAlgorithm = obj.shadingAlgorithm;
             for(auto i : obj.shaders)
@@ -241,13 +240,13 @@ namespace sf
         /*!
          \param view a pointer to a view object
          */
-        void AddView(OpenGLView* view);
+        void AddView(std::unique_ptr<OpenGLView> view);
         
         //! A method to add light to the list of lights.
         /*!
          \param light a pointer to a light object
          */
-        void AddLight(OpenGLLight* light);
+        void AddLight(std::unique_ptr<OpenGLLight> light);
         
         //! A method to build a graphical object from a mesh structure.
         /*!
@@ -273,8 +272,8 @@ namespace sf
          \param albedoTexturePath a path to the texture file specifying albedo color
          \return the actual name of the created look
          */
-        std::string CreateSimpleLook(const std::string& name, glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, 
-                                     GLfloat reflectivity = 0.f, const std::string& albedoTexturePath = "");
+        std::string CreateSimpleLook(std::string_view name, glm::vec3 rgbColor, GLfloat specular, GLfloat shininess, 
+            GLfloat reflectivity = 0.f, std::string_view albedoTexturePath = "");
         
         //! A method to create a new physical look.
         /*!
@@ -289,9 +288,9 @@ namespace sf
          \param temperatureRange a pair of values specifying the temperature range represented by the thermal map
          \return the actual name of the created look
          */
-        std::string CreatePhysicalLook(const std::string& name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness = 0.f, 
-                                       GLfloat reflectivity = 0.f, const std::string& albedoTexturePath = "", const std::string& normalMapPath = "", 
-                                       const std::string& temperatureMapPath = "", glm::vec2 temperatureRange = glm::vec2(20.f));
+        std::string CreatePhysicalLook(std::string_view name, glm::vec3 rgbColor, GLfloat roughness, GLfloat metalness = 0.f, 
+            GLfloat reflectivity = 0.f, std::string_view albedoTexturePath = "", std::string_view normalMapPath = "", 
+            std::string_view temperatureMapPath = "", glm::vec2 temperatureRange = glm::vec2(20.f));
         
         //! A method to use a look.
         /*!
@@ -313,20 +312,20 @@ namespace sf
          \param id the index of the view
          \return a pointer to the view object
          */
-        OpenGLView* getView(size_t id);
+        OpenGLView* GetView(size_t id);
         
         //! A method returning the number of views.
-        size_t getViewsCount();
+        size_t GetViewsCount();
         
         //! A method returning a pointer to a light.
         /*!
          \param id the index of the light
          \return a pointer to the light object
          */
-        OpenGLLight* getLight(size_t id);
+        OpenGLLight* GetLight(size_t id);
         
         //! A method returning the number of lights.
-        size_t getLightsCount();
+        size_t GetLightsCount();
         
         //! A method that updates lights UBO.
         void SetupLights();
@@ -336,19 +335,19 @@ namespace sf
          \param name the name of the look
          \return the id of the corresponding look structure
          */
-        int getLookId(const std::string& name);
+        int GetLookId(std::string_view name);
 
         //! A method returning a reference to the object structure.
         /*!
          \param id the id of the object
          */
-        const Object& getObject(size_t id);
+        const Object& GetObject(size_t id);
 
         //! A method returning a reference to the look structure.
         /*!
          \param id the id of the look
          */
-        const Look& getLook(size_t id);
+        const Look& GetLook(size_t id);
         
         //! A static method to load a texture.
         /*!
@@ -359,7 +358,8 @@ namespace sf
          \param internal a flag to indicate if the texture is an internal resource
          \return the id of the loaded texture
          */
-        static GLuint LoadTexture(const std::string& filename, bool srgb = true, bool alpha = false, GLfloat anisotropy = 0.f, bool internal = false);
+        static GLuint LoadTexture(std::string_view filename, bool srgb = true, bool alpha = false, 
+            GLfloat anisotropy = 0.f, bool internal = false);
         
         //! A static method to load an internal texture.
         /*!
@@ -369,7 +369,8 @@ namespace sf
          \param anisotropy defines maximum anisotropic filtering
          \return the id of the loaded texture
          */
-        static GLuint LoadInternalTexture(const std::string& filename, bool srgb = true, bool alpha = false, GLfloat anisotropy = 0.f);
+        static GLuint LoadInternalTexture(std::string_view filename, bool srgb = true, bool alpha = false, 
+            GLfloat anisotropy = 0.f);
         
         //! A static method to generate a new texture.
         /*!
@@ -385,7 +386,7 @@ namespace sf
          \return a texture handle
         */
         static GLuint GenerateTexture(GLenum target, glm::uvec3 dimensions, GLenum internalFormat, GLenum format, 
-                                      GLenum type, const void* data, FilteringMode fm, bool repeat, bool anisotropy = false);
+            GLenum type, const void* data, FilteringMode fm, bool repeat, bool anisotropy = false);
 
         //! A static method to create a framebuffer object.
         /*!
@@ -401,7 +402,7 @@ namespace sf
          \param smooth a flag to decide if model normals should be smoothed after loading
          \return a pointer to the allocated mesh structure
          */
-        static Mesh* LoadMesh(const std::string& filename, GLfloat scale, bool smooth);
+        static std::unique_ptr<Mesh> LoadMesh(std::string_view filename, GLfloat scale, bool smooth);
         
         //! A static method to build a graphical plane object.
         /*!
@@ -409,7 +410,7 @@ namespace sf
          \param uvScale scaling of the texture coordinates
          \return a pointer to the allocated mesh structure
          */
-        static Mesh* BuildPlane(GLfloat halfExtents, GLfloat uvScale = 1.f);
+        static std::unique_ptr<Mesh> BuildPlane(GLfloat halfExtents, GLfloat uvScale = 1.f);
         
         //! A static method to build a graphical box object.
         /*!
@@ -418,7 +419,7 @@ namespace sf
          \param uvMode texture coordinates generation mode (0 - texture cross, 1 - same texture on all faces, 2 - coordinates synced with dimensions (for grid))
          \return a pointer to the allocated mesh structure
          */
-        static Mesh* BuildBox(glm::vec3 halfExtents, unsigned int subdivisions = 3, unsigned int uvMode = 0);
+        static std::unique_ptr<Mesh> BuildBox(glm::vec3 halfExtents, unsigned int subdivisions = 3, unsigned int uvMode = 0);
         
         //! A static method to build a graphical sphere object. The volume of the discretized sphere is equal to the volume of an analytical sphere.
         /*!
@@ -426,7 +427,7 @@ namespace sf
          \param subdivisions number of subdivisions used when generating the mesh (needed for hydrodynamics)
          \return a pointer to the allocated mesh structure
          */
-        static Mesh* BuildSphere(GLfloat radius, unsigned int subdivisions = 3);
+        static std::unique_ptr<Mesh> BuildSphere(GLfloat radius, unsigned int subdivisions = 3);
         
         //! A static method to build a graphical cylinder object. The volume of the discretized cylinder is equal to the volume of an analytical cylinder.
         /*!
@@ -435,7 +436,7 @@ namespace sf
          \param slices number of slices used when computing the cylinder
          \return a pointer to the allocated mesh structure
          */
-        static Mesh* BuildCylinder(GLfloat radius, GLfloat height, unsigned int slices = 24);
+        static std::unique_ptr<Mesh> BuildCylinder(GLfloat radius, GLfloat height, unsigned int slices = 24);
         
         //! A static method to build a graphical torus object. The volume of the discretized torus is equal to the volume of an analytical torus.
         /*!
@@ -445,7 +446,8 @@ namespace sf
          \param minorSlices number of slices used when computing the torus
          \return a pointer to the allocated mesh structure
          */
-        static Mesh* BuildTorus(GLfloat majorRadius, GLfloat minorRadius, unsigned int majorSlices = 48, unsigned int minorSlices = 24);
+        static std::unique_ptr<Mesh> BuildTorus(GLfloat majorRadius, GLfloat minorRadius, 
+            unsigned int majorSlices = 48, unsigned int minorSlices = 24);
         
         //! A static method to build a graphical wing object.
         /*!
@@ -457,7 +459,8 @@ namespace sf
          \param wingLength the length of the wing [m]
          \return a pointer to the allocated mesh structure
          */
-        static Mesh* BuildWing(GLfloat baseChordLength, GLfloat tipChordLength, GLfloat maxCamber, GLfloat maxCamberPos, GLfloat profileThickness, GLfloat wingLength);
+        static std::unique_ptr<Mesh> BuildWing(GLfloat baseChordLength, GLfloat tipChordLength, 
+            GLfloat maxCamber, GLfloat maxCamberPos, GLfloat profileThickness, GLfloat wingLength);
         
         //! A static method to build a graphical terrain object.
         /*!
@@ -470,7 +473,8 @@ namespace sf
          \param uvScale scaling of the texture coordinates
          \return a pointer to the allocated mesh structure
          */
-        static Mesh* BuildTerrain(GLfloat* heightfield, int sizeX, int sizeY, GLfloat scaleX, GLfloat scaleY, GLfloat maxHeight, GLfloat uvScale = 1.f);
+        static std::unique_ptr<Mesh> BuildTerrain(const std::vector<GLdouble>& heightfield, int sizeX, int sizeY, 
+            GLfloat scaleX, GLfloat scaleY, GLfloat maxHeight, GLfloat uvScale = 1.f);
         
         //! A static method to transform mesh vertices.
         /*!
@@ -535,42 +539,39 @@ namespace sf
         
     private:
         //Modes
-        DrawingMode mode;
-        GLfloat maxAnisotropy;
+        DrawingMode mode_;
+        GLfloat maxAnisotropy_;
         
         //Data
-        std::vector<OpenGLView*> views;
-        std::vector<OpenGLLight*> lights;
-        std::vector<Object> objects; // Rigid meshes (static)
-        std::vector<Cable> cables;   // Cables (dynamic)
-        std::vector<Look> looks;     // OpenGL materials
-        NameManager lookNameManager;
-        std::string currentLookName;
-        std::string currentShaderMode;
+        std::vector<std::unique_ptr<OpenGLView>> views_;   // Views (trackball and sensors)
+        std::vector<std::unique_ptr<OpenGLLight>> lights_; // Lights (actuators)
+        std::vector<Object> objects_; // Rigid meshes (static)
+        std::vector<Cable> cables_;   // Cables (dynamic)
+        std::vector<Look> looks_;     // OpenGL materials
+        NameManager lookNameManager_;
+        std::string currentLookName_;
+        std::string currentShaderMode_;
         
-        glm::vec3 eyePos;
-        glm::vec3 viewDir;
-        glm::mat4 view; //Current view matrix;
-        glm::mat4 projection; //Current projection matrix
-        glm::mat4 viewProjection; //Current view-projection matrix
-        glm::vec2 viewportSize; //Current view-port size
-        GLfloat FC; //Current logarithmic depth buffer constant
+        glm::vec3 eyePos_;
+        glm::vec3 viewDir_;
+        glm::mat4 view_; //Current view matrix;
+        glm::mat4 projection_; //Current projection matrix
+        glm::mat4 viewProjection_; //Current view-projection matrix
+        glm::vec2 viewportSize_; //Current view-port size
+        GLfloat FC_; //Current logarithmic depth buffer constant
         
         //Standard objects
-        GLuint baseVertexArray; //base VAO
-        GLuint cubeBuf; //cubemap cross VBO
-        GLuint csBuf[2]; //vertex data for drawing coord systems
-        Object ellipsoid; //used for approximating fluid dynamics coeffs
-        Object cylinder; //used for approximating fluid dynamics coeffs
-        GLuint lightsUBO;
-        LightsUBO lightsUBOData;
-        GLuint viewUBO;
+        GLuint baseVertexArray_; //base VAO
+        GLuint cubeBuf_; //cubemap cross VBO
+        GLuint csBuf_[2]; //vertex data for drawing coord systems
+        Object ellipsoid_; //used for approximating fluid dynamics coeffs
+        Object cylinder_; //used for approximating fluid dynamics coeffs
+        GLuint lightsUBO_;
+        LightsUBO lightsUBOData_;
+        GLuint viewUBO_;
         
         //Shaders
-        std::map<std::string, GLSLShader*> basicShaders;
-        std::vector<MaterialShader> materialShaders;
-        GLSLShader* lightSourceShader[2];
+        std::unordered_map<std::string, std::unique_ptr<GLSLShader>> basicShaders_;
+        std::vector<MaterialShader> materialShaders_;
     };
 }
-
-#endif

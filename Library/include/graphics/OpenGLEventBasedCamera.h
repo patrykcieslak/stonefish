@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/03/24.
-//  Copyright (c) 2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLEventBasedCamera__
-#define __Stonefish_OpenGLEventBasedCamera__
+#pragma once
 
 #include "graphics/OpenGLCamera.h"
 #include <random>
@@ -102,22 +101,22 @@ namespace sf
         glm::vec3 GetUpDirection() const;
         
         //! A method returning the type of the view.
-        ViewType getType() const override;
+        ViewType GetType() const override;
         
         //! A method to set a pointer to a camera sensor.
         /*!
          \param cam a pointer to a camera sensor
          */
-        void setCamera(EventBasedCamera* cam);
+        void SetCamera(EventBasedCamera* cam);
 
         //! A method to set the noise properties of the event based camera.
         /*!
          \param sigmaC the standard deviation of the contrast threshold
          */
-        void setNoise(glm::vec2 sigmaC);
+        void SetNoise(glm::vec2 sigmaC);
          
         //! A method that informs if the camera needs update.
-        bool needsUpdate();
+        bool NeedsUpdate();
 
         //! A static method to load shaders.
         static void Init();
@@ -126,35 +125,34 @@ namespace sf
         static void Destroy();
         
     private:
-        EventBasedCamera* camera;
-        GLuint outputPBO;
-        GLuint renderLogLumTex;   // Last logarithm luminance image
-        GLuint renderEventTex[3]; // Events, last event timestamps, crossings
-        GLuint renderEventCounter; // Atomic event counter
-        GLuint displayFBO;
-        GLuint displayTex;
-        std::default_random_engine randGen;
-        std::uniform_real_distribution<float> randDist;
+        EventBasedCamera* camera_;
+        GLuint outputPBO_;
+        GLuint renderLogLumTex_;   // Last logarithm luminance image
+        GLuint renderEventTex_[3]; // Events, last event timestamps, crossings
+        GLuint renderEventCounter_; // Atomic event counter
+        GLuint displayFBO_;
+        GLuint displayTex_;
+        std::default_random_engine randGen_;
+        std::uniform_real_distribution<float> randDist_;
         glm::vec2 C_;
         glm::vec2 sigmaC_;
         int32_t Tr_;
-        uint32_t maxNumEvents;
+        uint32_t maxNumEvents_;
         
-        glm::mat4 cameraTransform;
-        glm::vec3 eye;
-        glm::vec3 dir;
-        glm::vec3 up;
-        glm::vec3 tempEye;
-        glm::vec3 tempDir;
-        glm::vec3 tempUp;
-        bool _needsUpdate;
-        bool newData;
-        bool initialized;
-        double lastSimTime;
+        glm::mat4 cameraTransform_;
+        glm::vec3 eye_;
+        glm::vec3 dir_;
+        glm::vec3 up_;
+        glm::vec3 tempEye_;
+        glm::vec3 tempDir_;
+        glm::vec3 tempUp_;
+        bool needsUpdate_;
+        bool newData_;
+        bool initialized_;
+        double lastSimTime_;
 
-        static GLSLShader** eventOutputShaders;
-        static GLSLShader* eventVisualizeShader;
+        static std::array<std::unique_ptr<GLSLShader>, 2> eventOutputShaders;
+        static std::unique_ptr<GLSLShader> eventVisualizeShader;
     };
 }
 
-#endif

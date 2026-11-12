@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/3/13.
-//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -41,10 +41,10 @@ namespace sf
         /*!
          \param uniqueName a name for the force field
          */
-        ForcefieldEntity(std::string uniqueName);
+        ForcefieldEntity(std::string_view uniqueName);
         
         //! A destructor.
-        virtual ~ForcefieldEntity();
+        virtual ~ForcefieldEntity() = default;
         
         //! A method used to add the force field to the simulation.
         /*!
@@ -60,18 +60,19 @@ namespace sf
          \param min a point located at the minimum coordinate corner
          \param max a point located at the maximum coordinate corner
          */
-        virtual void getAABB(Vector3& min, Vector3& max);
+        virtual void GetAabb(Vector3& min, Vector3& max);
         
         //! A method returning the pair caching object for the force field.
-        btPairCachingGhostObject* getGhost();
+        btPairCachingGhostObject* GetGhost();
         
         //! A method returning the type of the force field.
-        virtual ForcefieldType getForcefieldType() = 0;
+        virtual ForcefieldType GetForcefieldType() = 0;
         
         //! A method returning the type of the entity.
-        EntityType getType() const;
+        EntityType GetType() const;
         
     protected:
-        btPairCachingGhostObject* ghost;
+        std::unique_ptr<btPairCachingGhostObject> ghost_;
+        std::unique_ptr<btCollisionShape> collisionShape_;
     };
 }

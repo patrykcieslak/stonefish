@@ -20,7 +20,7 @@
 //  JointsTest
 //
 //  Created by Patryk Cieslak on 02/03/2014.
-//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include <core/GraphicalSimulationApp.h>
@@ -48,8 +48,7 @@ int main(int argc, const char * argv[])
     h.showForces = false;
     h.showJoints = true;
     
-    JointsTestManager simulationManager(1000.0);
-    JointsTestApp app(std::string(DATA_DIR_PATH), s, h, &simulationManager);
+    JointsTestApp app(std::string(DATA_DIR_PATH), s, h, std::make_unique<JointsTestManager>(1000.0));
     app.Run();
     
     return 0;

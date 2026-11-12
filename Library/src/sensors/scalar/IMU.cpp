@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/05/2014.
-//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/IMU.h"
@@ -29,95 +29,173 @@
 #include "sensors/Sample.h"
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
+#include "core/DeviceFactory.h"
 
 namespace sf
 {
 
-IMU::IMU(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+IMU::IMU(std::string_view uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    channels.push_back(SensorChannel("Roll", QuantityType::ANGLE));
-    channels.push_back(SensorChannel("Pitch", QuantityType::ANGLE));
-    channels.push_back(SensorChannel("Yaw", QuantityType::ANGLE));
-    channels.push_back(SensorChannel("Angular velocity X", QuantityType::ANGULAR_VELOCITY));
-    channels.push_back(SensorChannel("Angular velocity Y", QuantityType::ANGULAR_VELOCITY));
-    channels.push_back(SensorChannel("Angular velocity Z", QuantityType::ANGULAR_VELOCITY));
-    channels.push_back(SensorChannel("Linear acceleration X", QuantityType::ACCELERATION));
-    channels.push_back(SensorChannel("Linear acceleration Y", QuantityType::ACCELERATION));
-    channels.push_back(SensorChannel("Linear acceleration Z", QuantityType::ACCELERATION));
+    channels_.push_back(SensorChannel("Roll", QuantityType::ANGLE));
+    channels_.push_back(SensorChannel("Pitch", QuantityType::ANGLE));
+    channels_.push_back(SensorChannel("Yaw", QuantityType::ANGLE));
+    channels_.push_back(SensorChannel("Angular velocity X", QuantityType::ANGULAR_VELOCITY));
+    channels_.push_back(SensorChannel("Angular velocity Y", QuantityType::ANGULAR_VELOCITY));
+    channels_.push_back(SensorChannel("Angular velocity Z", QuantityType::ANGULAR_VELOCITY));
+    channels_.push_back(SensorChannel("Linear acceleration X", QuantityType::ACCELERATION));
+    channels_.push_back(SensorChannel("Linear acceleration Y", QuantityType::ACCELERATION));
+    channels_.push_back(SensorChannel("Linear acceleration Z", QuantityType::ACCELERATION));
     
-    yawDriftRate = Scalar(0);
-    accumulatedYawDrift = Scalar(0);
+    yawDriftRate_ = Scalar(0);
+    accumulatedYawDrift_ = Scalar(0);
 }
 
 void IMU::InternalUpdate(Scalar dt)
 {
     //get sensor frame in world
-    Transform imuTrans = getSensorFrame();
+    Transform imuTrans = GetSensorFrame();
     
     //get angular velocity
-    Vector3 av = imuTrans.getBasis().inverse() * attach->getAngularVelocity();
+    Vector3 av = imuTrans.getBasis().inverse() * attach_->GetAngularVelocity();
     
     //get angles
     Scalar yaw, pitch, roll;
     imuTrans.getBasis().getEulerYPR(yaw, pitch, roll);
     
     //accumulate and add drift
-    accumulatedYawDrift += yawDriftRate * dt;
-    yaw += accumulatedYawDrift;
+    accumulatedYawDrift_ += yawDriftRate_ * dt;
+    yaw += accumulatedYawDrift_;
 
     //get acceleration
-    Vector3 R = imuTrans.getOrigin() - attach->getCGTransform().getOrigin();
+    Vector3 R = imuTrans.getOrigin() - attach_->GetCgTransform().getOrigin();
     Vector3 la = imuTrans.getBasis().inverse() * (
-                   attach->getLinearAcceleration() 
-                   + attach->getAngularAcceleration().cross(R)
-                   + attach->getAngularVelocity().cross(attach->getAngularVelocity().cross(R))
-                   - SimulationApp::getApp()->getSimulationManager()->getGravity() // Negative to get readings like in actual sensor
+                   attach_->GetLinearAcceleration() 
+                   + attach_->GetAngularAcceleration().cross(R)
+                   + attach_->GetAngularVelocity().cross(attach_->GetAngularVelocity().cross(R))
+                   - SimulationApp::GetApp()->GetSimulationManager()->GetGravity() // Negative to get readings like in actual sensor
                 );
     
     //record sample
-    Sample s{std::vector<Scalar>({roll, pitch, yaw, av.x(), av.y(), av.z(), la.x(), la.y(), la.z()})};
-    AddSampleToHistory(s);
+    AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({roll, pitch, yaw, av.x(), av.y(), av.z(), la.x(), la.y(), la.z()})));
 }
 
 void IMU::Reset()
 {
     ScalarSensor::Reset();
-    accumulatedYawDrift = Scalar(0);
+    accumulatedYawDrift_ = Scalar(0);
 }
 
-void IMU::setRange(Vector3 angularVelocityMax, Vector3 linearAccelerationMax)
+void IMU::SetRange(Vector3 angularVelocityMax, Vector3 linearAccelerationMax)
 {
-    channels[3].rangeMin = -btClamped(angularVelocityMax.x(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[4].rangeMin = -btClamped(angularVelocityMax.y(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[5].rangeMin = -btClamped(angularVelocityMax.z(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[3].rangeMax = btClamped(angularVelocityMax.x(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[4].rangeMax = btClamped(angularVelocityMax.y(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[5].rangeMax = btClamped(angularVelocityMax.z(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[6].rangeMin = -btClamped(linearAccelerationMax.x(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[7].rangeMin = -btClamped(linearAccelerationMax.y(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[8].rangeMin = -btClamped(linearAccelerationMax.z(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[6].rangeMax = btClamped(linearAccelerationMax.x(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[7].rangeMax = btClamped(linearAccelerationMax.y(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[8].rangeMax = btClamped(linearAccelerationMax.z(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[3].rangeMin = -btClamped(angularVelocityMax.x(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[4].rangeMin = -btClamped(angularVelocityMax.y(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[5].rangeMin = -btClamped(angularVelocityMax.z(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[3].rangeMax = btClamped(angularVelocityMax.x(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[4].rangeMax = btClamped(angularVelocityMax.y(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[5].rangeMax = btClamped(angularVelocityMax.z(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[6].rangeMin = -btClamped(linearAccelerationMax.x(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[7].rangeMin = -btClamped(linearAccelerationMax.y(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[8].rangeMin = -btClamped(linearAccelerationMax.z(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[6].rangeMax = btClamped(linearAccelerationMax.x(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[7].rangeMax = btClamped(linearAccelerationMax.y(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[8].rangeMax = btClamped(linearAccelerationMax.z(), Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
     
-void IMU::setNoise(Vector3 angleStdDev, Vector3 angularVelocityStdDev, Scalar yawAngleDrift, Vector3 linearAccelerationStdDev)
+void IMU::SetNoise(Vector3 angleStdDev, Vector3 angularVelocityStdDev, Scalar yawAngleDrift, Vector3 linearAccelerationStdDev)
 {
-    channels[0].setStdDev(btClamped(angleStdDev.x(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels[1].setStdDev(btClamped(angleStdDev.y(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels[2].setStdDev(btClamped(angleStdDev.z(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels[3].setStdDev(btClamped(angularVelocityStdDev.x(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels[4].setStdDev(btClamped(angularVelocityStdDev.y(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels[5].setStdDev(btClamped(angularVelocityStdDev.z(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels[6].setStdDev(btClamped(linearAccelerationStdDev.x(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels[7].setStdDev(btClamped(linearAccelerationStdDev.y(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels[8].setStdDev(btClamped(linearAccelerationStdDev.z(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    yawDriftRate = yawAngleDrift;
+    channels_[0].SetStdDev(btClamped(angleStdDev.x(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[1].SetStdDev(btClamped(angleStdDev.y(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[2].SetStdDev(btClamped(angleStdDev.z(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[3].SetStdDev(btClamped(angularVelocityStdDev.x(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[4].SetStdDev(btClamped(angularVelocityStdDev.y(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[5].SetStdDev(btClamped(angularVelocityStdDev.z(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[6].SetStdDev(btClamped(linearAccelerationStdDev.x(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[7].SetStdDev(btClamped(linearAccelerationStdDev.y(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[8].SetStdDev(btClamped(linearAccelerationStdDev.z(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    yawDriftRate_ = yawAngleDrift;
 }
 
-ScalarSensorType IMU::getScalarSensorType() const
+ScalarSensorType IMU::GetScalarSensorType() const
 {
     return ScalarSensorType::IMU;
 }
+
+// Statics
+
+ConstructInfo IMU::GetConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+    
+    // History
+    node.optional = true;
+    node.attributes.insert({"samples", {ConstructInfoValueType::INT, false}});
+    info.nodes.insert({"history", node});
+
+    // Range
+    node.attributes.clear(); // Clear temporary
+    node.optional = true;
+    node.attributes.insert({"angular_velocity", {ConstructInfoValueType::VECTOR3, true}});
+    node.attributes.insert({"linear_acceleration", {ConstructInfoValueType::VECTOR3, true}});
+    info.nodes.insert({"range", node});
+
+    // Noise
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"yaw_drift", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"angle", {ConstructInfoValueType::VECTOR3, true}});
+    node.attributes.insert({"angular_velocity", {ConstructInfoValueType::VECTOR3, true}});  
+    node.attributes.insert({"linear_acceleration", {ConstructInfoValueType::VECTOR3, true}});
+    info.nodes.insert({"noise", node});
+    
+    return info;
+}
+
+std::unique_ptr<IMU> IMU::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // History (optional)
+    int history = -1;
+    ConstructInfoValue& value = info.nodes.at("history").attributes.at("samples");
+    if (value.valid)
+        history = std::get<int>(value.value);
+    
+    // Create sensor
+    std::unique_ptr<IMU> sensor = std::make_unique<IMU>(uniqueName, frequency, history);    
+
+    // Range (optional)
+    Vector3 angularVelocity = VMAX();
+    Vector3 linearAcceleration = VMAX();
+    value = info.nodes.at("range").attributes.at("angular_velocity");
+    if (value.valid)
+        angularVelocity = std::get<Vector3>(value.value);
+    value = info.nodes.at("range").attributes.at("linear_acceleration");
+    if (value.valid)
+        linearAcceleration = std::get<Vector3>(value.value);
+    sensor->SetRange(angularVelocity, linearAcceleration);
+
+    // Noise (optional)
+    Vector3 angle = V0();
+    angularVelocity = V0();
+    linearAcceleration = V0();
+    Scalar yawDrift(0);
+
+    value = info.nodes.at("noise").attributes.at("yaw_drift");
+    if (value.valid)
+        yawDrift = std::get<Scalar>(value.value);
+    value = info.nodes.at("noise").attributes.at("angle");
+    if (value.valid)
+        angle = std::get<Vector3>(value.value);
+    value = info.nodes.at("noise").attributes.at("angular_velocity");
+    if (value.valid)
+        angularVelocity = std::get<Vector3>(value.value);
+    value = info.nodes.at("noise").attributes.at("linear_acceleration");
+    if (value.valid)
+        linearAcceleration = std::get<Vector3>(value.value);
+    sensor->SetNoise(angle, angularVelocity, yawDrift, linearAcceleration);
+
+    return sensor;
+}
+
+REGISTER_SENSOR("imu", IMU);
 
 }

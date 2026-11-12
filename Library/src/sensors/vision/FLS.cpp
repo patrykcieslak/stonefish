@@ -20,12 +20,13 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 17/02/20.
-//  Copyright (c) 2020-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/vision/FLS.h"
 
 #include "core/GraphicalSimulationApp.h"
+#include "core/DeviceFactory.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLFLS.h"
@@ -33,123 +34,128 @@
 namespace sf
 {
 
-FLS::FLS(std::string uniqueName, unsigned int numOfBeams, unsigned int numOfBins, Scalar horizontalFOVDeg, 
-    Scalar verticalFOVDeg, Scalar minRange, Scalar maxRange, ColorMap cm, SonarOutputFormat outputFormat, Scalar frequency)
+FLS::FLS(std::string_view uniqueName, unsigned int numOfBeams, unsigned int numOfBins, Scalar horizontalFOVDeg, 
+    Scalar verticalFOVDeg, Scalar minRange, Scalar maxRange, SonarOutputFormat outputFormat, Scalar frequency)
     : Camera(uniqueName, numOfBeams, numOfBins, horizontalFOVDeg, frequency)
 {
-    range.x = 0.f;
-    range.y = 0.f;
-    noise = glm::vec2(0.f);
-    setRangeMax(maxRange);
-    setRangeMin(minRange);
-    gain = Scalar(1);
-    fovV = verticalFOVDeg <= Scalar(0) ? Scalar(20) : (verticalFOVDeg > Scalar(179) ? Scalar(179) : verticalFOVDeg);
-    cMap = cm;
+    range_.x = 0.f;
+    range_.y = 0.f;
+    noise_ = glm::vec2(0.f);
+    SetRangeMax(maxRange);
+    SetRangeMin(minRange);
+    gain_ = Scalar(1);
+    fovV_ = verticalFOVDeg <= Scalar(0) ? Scalar(20) : (verticalFOVDeg > Scalar(179) ? Scalar(179) : verticalFOVDeg);
+    cMap_ = ColorMap::GREEN_BLUE;
     outputFormat_ = outputFormat;
-    sonarData = NULL;
-    displayData = NULL;
-    newDataCallback = NULL;
-    glFLS = nullptr;
+    sonarData_ = nullptr;
+    newDataCallback_ = nullptr;
+    glFLS_ = nullptr;
 }
 
-FLS::~FLS()
+void FLS::SetRangeMin(Scalar r)
 {
-    if(displayData != NULL) delete [] displayData;
-    glFLS = nullptr;
+    range_.x = r < Scalar(0.02) ? 0.02f : (r < Scalar(range_.y) ? (GLfloat)r : range_.x);
 }
 
-void FLS::setRangeMin(Scalar r)
+void FLS::SetRangeMax(Scalar r)
 {
-    range.x = r < Scalar(0.02) ? 0.02f : (r < Scalar(range.y) ? (GLfloat)r : range.x);
+    range_.y = r > Scalar(range_.x) ? (GLfloat)r : range_.x;
+    Scalar pulseTime = (Scalar(2)*range_.y/SOUND_VELOCITY_WATER) * Scalar(1.1);
+    if(freq_ <= 0.0 || freq_ > Scalar(1)/pulseTime) // Limit update frequency based on range (physical limit)
+        freq_ = Scalar(1)/pulseTime;
 }
 
-void FLS::setRangeMax(Scalar r)
+void FLS::SetGain(Scalar g)
 {
-    range.y = r > Scalar(range.x) ? (GLfloat)r : range.x;
-    Scalar pulseTime = (Scalar(2)*range.y/SOUND_VELOCITY_WATER) * Scalar(1.1);
-    if(freq <= 0.0 || freq > Scalar(1)/pulseTime) // Limit update frequency based on range (physical limit)
-        freq = Scalar(1)/pulseTime;
+    gain_ = g > Scalar(0) ? g : Scalar(1);
 }
 
-void FLS::setGain(Scalar g)
-{
-    gain = g > Scalar(0) ? g : Scalar(1);
-}
-
-void FLS::setNoise(float multiplicativeStdDev, float additiveStdDev)
+void FLS::SetNoise(float multiplicativeStdDev, float additiveStdDev)
 {
     if(multiplicativeStdDev >= 0.f)
-        noise.x = multiplicativeStdDev;
+        noise_.x = multiplicativeStdDev;
     if(additiveStdDev >= 0.f)
-        noise.y = additiveStdDev;
-    if(glFLS != nullptr)
-        glFLS->setNoise(noise);
+        noise_.y = additiveStdDev;
+    if(glFLS_ != nullptr)
+        glFLS_->SetNoise(noise_);
 }
 
-void* FLS::getImageDataPointer(unsigned int index)
+void FLS::SetDisplaySettings(ColorMap cm)
 {
-    return sonarData;
+    cMap_ = cm;
 }
 
-void FLS::getDisplayResolution(unsigned int& x, unsigned int& y) const
+void* FLS::GetImageDataPointer(unsigned int index)
 {
-    getResolution(x, y);
-    GLfloat hFactor = sinf(glm::radians((float)fovH)/2.f);
+    return sonarData_;
+}
+
+void FLS::GetDisplayResolution(unsigned int& x, unsigned int& y) const
+{
+    GetResolution(x, y);
+    GLfloat hFactor = sinf(glm::radians((float)fovH_)/2.f);
     x = (int)ceilf(2.f*hFactor*y);
 }
 
-GLubyte* FLS::getDisplayDataPointer()
+GLubyte* FLS::GetDisplayDataPointer()
 {
-    return displayData;
+    return displayData_.data();
 }
 
-Scalar FLS::getRangeMin() const
+Scalar FLS::GetRangeMin() const
 {
-    return Scalar(range.x);
+    return Scalar(range_.x);
 }
 
-Scalar FLS::getRangeMax() const
+Scalar FLS::GetRangeMax() const
 {
-    return Scalar(range.y);
+    return Scalar(range_.y);
 }
 
-Scalar FLS::getGain() const
+Scalar FLS::GetGain() const
 {
-    return gain;
+    return gain_;
 }
 
-SonarOutputFormat FLS::getOutputFormat() const
+SonarOutputFormat FLS::GetOutputFormat() const
 {
     return outputFormat_;
 }
     
-VisionSensorType FLS::getVisionSensorType() const
+VisionSensorType FLS::GetVisionSensorType() const
 {
     return VisionSensorType::FLS;
 }
 
-OpenGLView* FLS::getOpenGLView() const
+OpenGLView* FLS::GetOpenGlView() const
 {
-    return glFLS;
+    return glFLS_;
 }
 
 void FLS::InitGraphics(bool& seesParticles)
 {
     seesParticles = false;
 
-    glFLS = new OpenGLFLS(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 
-                          (GLfloat)fovH, (GLfloat)fovV, (GLint)resX, (GLint)resY, range, outputFormat_);
-    glFLS->setNoise(noise);
-    glFLS->setSonar(this);
-    glFLS->setColorMap(cMap);
+    // Create sonar
+    std::unique_ptr<OpenGLFLS> glFLS = std::make_unique<OpenGLFLS>(
+        glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 
+        (GLfloat)fovH_, (GLfloat)fovV_, (GLint)resX_, (GLint)resY_, range_, outputFormat_
+    );
+
+    // Set up sonar
+    glFLS_ = glFLS.get();
+    glFLS_->SetNoise(noise_);
+    glFLS_->SetSonar(this);
+    glFLS_->SetColorMap(cMap_);
     UpdateTransform();
-    glFLS->UpdateTransform();
+    glFLS_->UpdateTransform();
     InternalUpdate(0);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glFLS);
+
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->AddView(std::move(glFLS));
 
     unsigned int w, h;
-    getDisplayResolution(w, h);
-    displayData = new GLubyte[w*h*3];
+    GetDisplayResolution(w, h);
+    displayData_.resize(w*h*3);
 }
 
 void FLS::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
@@ -157,56 +163,56 @@ void FLS::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
     glm::vec3 eye_ = glm::vec3((GLfloat)eye.x(), (GLfloat)eye.y(), (GLfloat)eye.z());
     glm::vec3 dir_ = glm::vec3((GLfloat)dir.x(), (GLfloat)dir.y(), (GLfloat)dir.z());
     glm::vec3 up_ = glm::vec3((GLfloat)up.x(), (GLfloat)up.y(), (GLfloat)up.z());
-    glFLS->SetupSonar(eye_, dir_, up_);
+    glFLS_->SetupSonar(eye_, dir_, up_);
 }
 
 void FLS::InstallNewDataHandler(std::function<void(FLS*)> callback)
 {
-    newDataCallback = callback;
+    newDataCallback_ = callback;
 }
 
 void FLS::NewDataReady(void* data, unsigned int index)
 {
-    if(newDataCallback != NULL)
+    if(newDataCallback_ != nullptr)
     {
         if(index == 0)
         {
             unsigned int w, h;
-            getDisplayResolution(w, h);
-            memcpy(displayData, data, w*h*3);
+            GetDisplayResolution(w, h);
+            memcpy(displayData_.data(), data, w*h*3);
         }
         else
         {
-            sonarData = data;
-            newDataCallback(this);
-            sonarData = NULL;
+            sonarData_ = data;
+            newDataCallback_(this);
+            sonarData_ = nullptr;
         }
     }
 }
 
 void FLS::InternalUpdate(Scalar dt)
 {
-    if(glFLS != nullptr)
-        glFLS->Update();
+    if(glFLS_ != nullptr)
+        glFLS_->Update();
 }
 
 std::vector<Renderable> FLS::Render()
 {
     std::vector<Renderable> items = Sensor::Render();
-    if(isRenderable())
+    if(IsRenderable())
     {
         Renderable item;
-        item.model = glMatrixFromTransform(getSensorFrame());
+        item.model = glMatrixFromTransform(GetSensorFrame());
         item.type = RenderableType::SENSOR_LINES;    
         item.data = std::make_shared<std::vector<glm::vec3>>();
-        auto points = item.getDataAsPoints();
+        auto points = item.GetDataAsPoints();
         
         //Create sonar dummy
         int div = 12;
-        GLfloat fovStep = glm::radians(fovH)/(GLfloat)div;
+        GLfloat fovStep = glm::radians(fovH_)/(GLfloat)div;
         //Min Arcs
-        GLfloat cosVAngle = cosf(glm::radians(fovV)/2.f) * range.x;
-        GLfloat sinVAngle = sinf(glm::radians(fovV)/2.f) * range.x;
+        GLfloat cosVAngle = cosf(glm::radians(fovV_)/2.f) * range_.x;
+        GLfloat sinVAngle = sinf(glm::radians(fovV_)/2.f) * range_.x;
         GLfloat hAngle = -fovStep*(div/2);
         for(int i=0; i<=div; ++i)
         {
@@ -228,8 +234,8 @@ std::vector<Renderable> FLS::Render()
             hAngle += fovStep;
         }
         //Max Arcs
-        cosVAngle = cosf(glm::radians(fovV)/2.f) * range.y;
-        sinVAngle = sinf(glm::radians(fovV)/2.f) * range.y;
+        cosVAngle = cosf(glm::radians(fovV_)/2.f) * range_.y;
+        sinVAngle = sinf(glm::radians(fovV_)/2.f) * range_.y;
         hAngle = -fovStep*(div/2);
         for(int i=0; i<=div; ++i)
         {
@@ -275,5 +281,104 @@ std::vector<Renderable> FLS::Render()
     }
     return items;
 }
+
+// Statics
+
+ConstructInfo FLS::GetConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+
+    // Specs
+    node.optional = false;
+    node.attributes.insert({"beams", {ConstructInfoValueType::INT, false}});
+    node.attributes.insert({"bins", {ConstructInfoValueType::INT, false}});
+    node.attributes.insert({"horizontal_fov", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"vertical_fov", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"output_format", {ConstructInfoValueType::STRING, true}});
+    info.nodes.insert({"specs", node});
+
+    // Settings
+    node.attributes.clear();
+    node.optional = false;
+    node.attributes.insert({"range_min", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"range_max", {ConstructInfoValueType::SCALAR, false}});
+    node.attributes.insert({"gain", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"settings", node});
+
+    // Noise
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"multiplicative", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"additive", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"noise", node});
+
+    // Display
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"colormap", {ConstructInfoValueType::COLORMAP, true}});
+    info.nodes.insert({"display", node});
+
+    return info;
+}
+
+std::unique_ptr<FLS> FLS::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // Specs
+    int beams = std::get<int>(info.nodes.at("specs").attributes.at("beams").value);
+    int bins = std::get<int>(info.nodes.at("specs").attributes.at("bins").value);
+    Scalar hFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("horizontal_fov").value);
+    Scalar vFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("vertical_fov").value);
+    
+    SonarOutputFormat outputFormat {SonarOutputFormat::U8};
+    ConstructInfoValue& value = info.nodes.at("specs").attributes.at("output_format");
+    if (value.valid)
+    {
+        std::string of = std::get<std::string>(value.value);
+        if (of == "uint8")
+            outputFormat = SonarOutputFormat::U8;
+        else if (of == "uint16")
+            outputFormat = SonarOutputFormat::U16;
+        else if (of == "uint32")
+            outputFormat = SonarOutputFormat::U32;
+        else if(of == "float32")
+            outputFormat = SonarOutputFormat::F32;
+    }
+
+    // Settings
+    Scalar rangeMin = std::get<Scalar>(info.nodes.at("settings").attributes.at("range_min").value);
+    Scalar rangeMax = std::get<Scalar>(info.nodes.at("settings").attributes.at("range_max").value);
+    Scalar gain {1.};
+    value = info.nodes.at("settings").attributes.at("gain");
+    if (value.valid)
+        gain = std::get<Scalar>(value.value);
+
+    // Construct
+    std::unique_ptr<FLS> sensor = std::make_unique<FLS>(uniqueName, beams, bins, hFov, vFov, rangeMin, rangeMax, outputFormat, frequency);
+    sensor->SetGain(gain);
+
+    // Noise
+    Scalar multiplicative {0.025};
+    Scalar additive {0.035};
+    
+    value = info.nodes.at("noise").attributes.at("multiplicative");
+    if (value.valid)
+        multiplicative = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("noise").attributes.at("additive");
+    if (value.valid)
+        additive = std::get<Scalar>(value.value);
+
+    sensor->SetNoise(multiplicative, additive);
+
+    // Display
+    value = info.nodes.at("display").attributes.at("colormap");
+    if (value.valid)
+        sensor->SetDisplaySettings(std::get<ColorMap>(value.value));
+
+    return sensor;
+}
+
+REGISTER_SENSOR("fls", FLS)
 
 }

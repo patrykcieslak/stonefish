@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 24/05/2014.
-//  Copyright(c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Obstacle__
-#define __Stonefish_Obstacle__
+#pragma once
 
 #include "entities/StaticEntity.h"
 
@@ -47,10 +46,10 @@ namespace sf
          \param material the name of the material the body is made of
          \param look the name of the graphical material used for rendering
          */
-        Obstacle(std::string uniqueName,
-                 std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
-                 std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin, bool convexHull,
-                 std::string material, std::string look = "");
+        Obstacle(std::string_view uniqueName,
+                 std::string_view graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
+                 std::string_view physicsFilename, Scalar physicsScale, const Transform& physicsOrigin, bool convexHull,
+                 std::string_view material, std::string_view look = "");
         
         //! A constructor building an obstacle based on a mesh file.
         /*!
@@ -62,7 +61,7 @@ namespace sf
          \param material the name of the material the body is made of
          \param look the name of the graphical material used for rendering
          */
-        Obstacle(std::string uniqueName, std::string modelFilename, Scalar scale, const Transform& origin, bool convexHull, std::string material, std::string look = "");
+        Obstacle(std::string_view uniqueName, std::string_view modelFilename, Scalar scale, const Transform& origin, bool convexHull, std::string_view material, std::string_view look = "");
         
         //! A constructor building a spherical obstacle.
         /*!
@@ -72,7 +71,7 @@ namespace sf
          \param material the name of the material the body is made of
          \param look the name of the graphical material used for rendering
          */
-        Obstacle(std::string uniqueName, Scalar sphereRadius, const Transform& origin, std::string material, std::string look = "");
+        Obstacle(std::string_view uniqueName, Scalar sphereRadius, const Transform& origin, std::string_view material, std::string_view look = "");
     
         //! A constructor building a box obstacle.
         /*!
@@ -83,7 +82,7 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param uvMode texture coordinates generation mode (0 - texture cross, 1 - same texture on all faces)
          */
-        Obstacle(std::string uniqueName, Vector3 boxDimensions, const Transform& origin, std::string material, std::string look = "", unsigned int uvMode = 0);
+        Obstacle(std::string_view uniqueName, Vector3 boxDimensions, const Transform& origin, std::string_view material, std::string_view look = "", unsigned int uvMode = 0);
         
         //! A constructor building a cylindrical obstacle.
         /*!
@@ -94,22 +93,21 @@ namespace sf
          \param material the name of the material the body is made of
          \param look the name of the graphical material used for rendering
          */
-        Obstacle(std::string uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& origin, std::string material, std::string look = "");
+        Obstacle(std::string_view uniqueName, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& origin, std::string_view material, std::string_view look = "");
         
         //! A destructor.
-        ~Obstacle();
-        
+        virtual ~Obstacle();
+
         //! A method implementing the rendering of the entity.
         std::vector<Renderable> Render();
         
         //! A method that returns the static body type.
-        StaticEntityType getStaticType();
+        StaticEntityType GetStaticType();
         
     private:
         void BuildGraphicalObject();
-        Mesh* graMesh;
-        int graObjectId;
+
+        std::shared_ptr<Mesh> graMesh_;
+        int graObjectId_;
     };
 }
-
-#endif

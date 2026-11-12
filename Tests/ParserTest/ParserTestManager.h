@@ -16,18 +16,22 @@
 */
 
 //
-//  ConsoleTestApp.cpp
+//  ParserTestManager.h
 //  Stonefish
 //
-//  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
+//  Created by Patryk Cieslak on 20/07/2026.
+//  Copyright (c) 2026 Patryk Cieslak. All rights reserved.
 //
 
-#include "ConsoleTestApp.h"
-#include <core/Console.h>
-#include <iostream>
+#pragma once
 
-ConsoleTestApp::ConsoleTestApp(std::string dataDirPath, ConsoleTestManager* sim) 
-    : ConsoleSimulationApp("Console Test", dataDirPath, sim)
+#include <core/SimulationManager.h>
+
+class ParserTestManager : public sf::SimulationManager
 {
-}
+public:
+    ParserTestManager(sf::Scalar stepsPerSecond);
+    
+    void BuildScenario();
+    void SimulationStepCompleted(sf::Scalar timeStep);
+};

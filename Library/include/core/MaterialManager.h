@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/7/13.
-//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_MaterialManager__
-#define __Stonefish_MaterialManager__
+#pragma once
 
 #include <unordered_map>
 #include "core/NameManager.h"
@@ -95,7 +94,7 @@ namespace sf
     {
     public:
         //! A constructor.
-        MaterialManager();
+        MaterialManager() = default;
         
         //! A destructor.
         ~MaterialManager();
@@ -108,7 +107,7 @@ namespace sf
          \param magnetic a factor defining magnetic properties
          \return a name of the created material
          */
-        std::string CreateMaterial(const std::string& uniqueName, Scalar density, Scalar restitution, Scalar magnetic = Scalar(0));
+        std::string CreateMaterial(std::string_view uniqueName, Scalar density, Scalar restitution, Scalar magnetic = Scalar(0));
         
         //! A method that sets interaction between a pair of materials.
         /*!
@@ -118,7 +117,7 @@ namespace sf
          \param dynamicFricCoeff a coefficient of dynamic friction between materials
          \return was the interaction was set properly?
          */
-        bool SetMaterialsInteraction(const std::string& firstMaterialName, const std::string& secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff);
+        bool SetMaterialsInteraction(std::string_view firstMaterialName, std::string_view secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff);
         
         //! A method that returns friction information for a specified pair of materials.
         /*!
@@ -134,7 +133,7 @@ namespace sf
          \param mat2Name a name of the second material
          \return a structure containing friction coefficients
          */
-        Friction GetMaterialsInteraction(const std::string& mat1Name, const std::string& mat2Name);
+        Friction GetMaterialsInteraction(std::string_view mat1Name, std::string_view mat2Name);
         
         //! A method returning a list of materials (names).
         std::vector<std::string> GetMaterialsList();
@@ -144,14 +143,14 @@ namespace sf
          \param name a name of the material
          \return a structure containing properties of the material
          */
-        Material getMaterial(const std::string& name);
+        Material GetMaterial(std::string_view name);
         
         //! A method returning material information.
         /*!
          \param index an id of the material
          \return a structure containing properties of the material
          */
-        Material getMaterial(int index);
+        Material GetMaterial(int index);
         
         //! A method that creates a new fluid.
         /*!
@@ -161,35 +160,33 @@ namespace sf
          \param IOR index of refraction of the fluid
          \return a name of the created fluid
          */
-        std::string CreateFluid(const std::string& uniqueName, Scalar density, Scalar viscosity, Scalar IOR);
+        std::string CreateFluid(std::string_view uniqueName, Scalar density, Scalar viscosity, Scalar IOR);
         
         //! A method returning a fluid by name.
         /*!
          \param name a name of the fluid
          \return a the fluid structure
          */
-        Fluid getFluid(const std::string& name);
+        Fluid GetFluid(std::string_view name);
         
         //! A method returning a fluid by id.
         /*!
          \param index an id of the fluid
          \return a the fluid structure
          */
-        Fluid getFluid(int index);
+        Fluid GetFluid(int index);
         
         //! A method that deletes all materials and fluids from the manager.
         void ClearMaterialsAndFluids();
         
     private:
-        int getMaterialIndex(const std::string& name);
+        int GetMaterialIndex(std::string_view name);
         
-        std::vector<Material> materials;
-        std::unordered_map<MaterialPair, Friction, MaterialPairHash> interactions;
-        std::vector<Fluid> fluids;
+        std::vector<Material> materials_;
+        std::unordered_map<MaterialPair, Friction, MaterialPairHash> interactions_;
+        std::vector<Fluid> fluids_;
         
-        NameManager materialNameManager;
-        NameManager fluidNameManager;
+        NameManager materialNameManager_;
+        NameManager fluidNameManager_;
     };
 }
-
-#endif 

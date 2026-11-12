@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 02/12/2018.
-//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -29,11 +29,12 @@
 #include "core/MaterialManager.h"
 #include "entities/ForcefieldEntity.h"
 #include "graphics/OpenGLDataStructs.h"
+#include "graphics/OpenGLAtmosphere.h"
+#include "entities/forcefields/VelocityField.h"
 
 namespace sf
 {
-    class VelocityField;
-    class OpenGLAtmosphere;
+    
     struct RenderSettings;
     
     //! A class representing the atmosphere.
@@ -45,10 +46,7 @@ namespace sf
          \param uniqueName the name for the atmosphere
          \param f a pointer to the gas filling the atmosphere (normally air)
          */
-        Atmosphere(std::string uniqueName, Fluid g);
-        
-        //! A destructor.
-        ~Atmosphere();
+        Atmosphere(std::string_view uniqueName, Fluid g);
         
         //! A method implementing graphics initialization.
         /*!
@@ -83,7 +81,16 @@ namespace sf
         /*!
          \param field a pointer to a velocity field object
          */
-        void AddVelocityField(VelocityField* field);
+        void AddVelocityField(std::unique_ptr<VelocityField> field);
+
+        //! A method to enable all defined velocity fields.
+        void EnableVelocityFields();
+        
+        //! A method to disable all defined velocity fields.
+        void DisableVelocityFields();
+
+        //! A method that removes all defined velocity fields.
+        void ClearVelocityFields();
         
         //! A method running the aerodynamics computation.
         /*!
@@ -122,13 +129,13 @@ namespace sf
         bool IsInsideFluid(const Vector3& point) const;
         
         //! A method returning a pointer to the gas filling the atmosphere.
-        Fluid getGas() const;
+        Fluid GetGas() const;
         
         //! A method returning the type of the force field.
-        ForcefieldType getForcefieldType();
+        ForcefieldType GetForcefieldType();
         
         //! A method returning a pointer to the OpenGL atmosphere object.
-        OpenGLAtmosphere* getOpenGLAtmosphere();
+        OpenGLAtmosphere* GetOpenGlAtmosphere();
         
         //! A static method to compute Julian day form time.
         /*!
@@ -137,9 +144,10 @@ namespace sf
         static int JulianDay(std::tm& tm);
         
     private:
-        Fluid gas;
-        std::vector<VelocityField*> wind;
-        OpenGLAtmosphere* glAtmosphere;
+        Fluid gas_;
+        std::vector<std::unique_ptr<VelocityField>> velocityFields_;
+        std::unique_ptr<OpenGLAtmosphere> glAtmosphere_;
+        bool velocityFieldsEnabled_;
     };
 }
 

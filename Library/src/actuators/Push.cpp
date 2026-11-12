@@ -20,72 +20,70 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/07/2023.
-//  Copyright (c) 2023-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2023-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Push.h"
 
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
+#include "core/DeviceFactory.h"
 
 namespace sf
 {
 
-Push::Push(std::string uniqueName, bool inverted) : LinkActuator(uniqueName)
+Push::Push(std::string_view uniqueName, bool inverted) : LinkActuator(uniqueName)
 {
-    setpoint = Scalar(0);
-    inv = inverted;
-    setForceLimits(1, -1); // No limits
+    setpoint_ = Scalar(0);
+    inv_ = inverted;
+    SetForceLimits(BT_LARGE_FLOAT, BT_LARGE_FLOAT); // No limits
 }
 
-ActuatorType Push::getType() const
+LinkActuatorType Push::GetLinkActuatorType() const
 {
-    return ActuatorType::PUSH;
+    return LinkActuatorType::PUSH;
 }
 
-void Push::setForceLimits(Scalar lower, Scalar upper)
+void Push::SetForceLimits(Scalar positive, Scalar negative)
 {
-    limits.first = lower;
-    limits.second = upper;
+    limits_.first = btClamped(positive, Scalar(0), Scalar(BT_LARGE_FLOAT));
+    limits_.second = btClamped(btFabs(negative), Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
 
-void Push::setForce(Scalar f)
+void Push::SetForce(Scalar f)
 {
-    if(limits.second > limits.first) // Limitted
-        setpoint = f < limits.first ? limits.first : (f > limits.second ? limits.second : f);
-    else
-        setpoint = f;
+    setpoint_ = btClamped(f, -limits_.second, limits_.first);
     ResetWatchdog();
 }
 
-Scalar Push::getForce() const
+Scalar Push::GetForce() const
 {
-    return setpoint;
+    return setpoint_;
 }
 
 void Push::Update(Scalar dt)
 {    
     Actuator::Update(dt);
 
-    if(attach != nullptr)
+    if(attach_ != nullptr)
     {
         //Get transforms
-        Transform solidTrans = attach->getCGTransform();
-        Transform pushTrans = attach->getOTransform() * o2a;
+        Transform solidTrans = attach_->GetCgTransform();
+        Transform pushTrans = attach_->GetOTransform() * o2a_;
         
-        Scalar force = inv ? -setpoint : setpoint;
+        Scalar force = inv_ ? -setpoint_ : setpoint_;
         
         Vector3 forceV(force, 0, 0);
-        attach->ApplyCentralForce(pushTrans.getBasis() * forceV);
-        attach->ApplyTorque((pushTrans.getOrigin() - solidTrans.getOrigin()).cross(pushTrans.getBasis() * forceV));    
+        attach_->ApplyCentralForce(pushTrans.getBasis() * forceV);
+        attach_->ApplyTorque((pushTrans.getOrigin() - solidTrans.getOrigin()).cross(pushTrans.getBasis() * forceV));    
     }
 }
 
 std::vector<Renderable> Push::Render()
 {
     Transform pushTrans = Transform::getIdentity();
-    if(attach != nullptr)
-        pushTrans = attach->getOTransform() * o2a;
+    if(attach_ != nullptr)
+        pushTrans = attach_->GetOTransform() * o2a_;
     else
         LinkActuator::Render();
     
@@ -95,9 +93,9 @@ std::vector<Renderable> Push::Render()
     item.model = glMatrixFromTransform(pushTrans);  
     item.type = RenderableType::ACTUATOR_LINES;
     item.data = std::make_shared<std::vector<glm::vec3>>();
-    auto points = item.getDataAsPoints();
+    auto points = item.GetDataAsPoints();
     points->push_back(glm::vec3(0,0,0));
-    points->push_back(glm::vec3(0.1f*(inv ? -setpoint : setpoint),0,0));
+    points->push_back(glm::vec3(0.1f*(inv_ ? -setpoint_ : setpoint_),0,0));
     items.push_back(item);
     
     return items;
@@ -105,7 +103,53 @@ std::vector<Renderable> Push::Render()
 
 void Push::WatchdogTimeout()
 {
-    setForce(Scalar(0));
+    SetForce(Scalar(0));
 }
+
+// Statics
+
+ConstructInfo Push::GetConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+    
+    // Specs
+    node.optional = true;
+    node.attributes.insert({"inverted", {ConstructInfoValueType::BOOL, true}});
+    info.nodes.insert({"specs", node});
+
+    // Limits
+    node.optional = true;
+    node.attributes.clear();
+    node.attributes.insert({"max_positive_force", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"max_negative_force", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"limits", node});
+
+    return info;
+}
+
+std::unique_ptr<Push> Push::Construct(std::string_view uniqueName, ConstructInfo& info)
+{
+    bool inverted = false;
+    ConstructInfoValue& value = info.nodes.at("specs").attributes.at("inverted");
+    if (value.valid)
+        inverted = std::get<bool>(value.value);
+
+    Scalar maxPositiveForce (BT_LARGE_FLOAT);
+    Scalar maxNegativeForce (BT_LARGE_FLOAT);
+    value = info.nodes.at("limits").attributes.at("max_positive_force");
+    if (value.valid)
+        maxPositiveForce = std::get<Scalar>(value.value);
+    value = info.nodes.at("limits").attributes.at("max_negative_force");
+    if (value.valid)
+        maxNegativeForce = std::get<Scalar>(value.value);
+
+    std::unique_ptr<Push> actuator = std::make_unique<Push>(uniqueName, inverted);
+    actuator->SetForceLimits(maxPositiveForce, maxNegativeForce);
+
+    return actuator;
+}
+
+REGISTER_ACTUATOR("push", Push)
     
 }

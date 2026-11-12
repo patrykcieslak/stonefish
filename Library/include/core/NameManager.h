@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/03/2014.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_NameManager__
-#define __Stonefish_NameManager__
+#pragma once
 
 #include "StonefishCommon.h"
 
@@ -45,20 +44,18 @@ namespace sf
          \param proposedName a name proposed by the user
          \return a unique name
          */
-        std::string AddName(std::string proposedName);
+        std::string AddName(std::string_view proposedName);
         
         //! A method used to remove names from the pool.
         /*!
          \param name a name to remove
          */
-        void RemoveName(std::string name);
+        void RemoveName(std::string_view name);
         
         //! A method used to clear the pool of names.
         void ClearNames();
         
     private:
-        std::vector<std::string> names;
+        std::vector<std::string> names_;
     };
 }
-    
-#endif

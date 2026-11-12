@@ -20,16 +20,18 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 23/11/2018.
-//  Copyright (c) 2018-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_LinkActuator__
-#define __Stonefish_LinkActuator__
+#pragma once
 
 #include "actuators/Actuator.h"
 
 namespace sf
 {
+    //! An enum designating a type of the link actuator.
+    enum class LinkActuatorType {PROPELLER, THRUSTER, VBS, LIGHT, RUDDER, SUCTION_CUP, PUSH, SIMPLE_THRUSTER, PLUGIN};
+    
     class SolidEntity;
     
     //! An abstract class representing an actuator that can be attached to a rigid body.
@@ -40,7 +42,10 @@ namespace sf
         /*!
          \param uniqueName a name of the link actuator
          */
-        LinkActuator(std::string uniqueName);
+        LinkActuator(std::string_view uniqueName);
+
+        //! A destructor.
+        virtual ~LinkActuator() = default;
         
         //! A method used to attach the actuator to a specified rigid body.
         /*!
@@ -50,21 +55,25 @@ namespace sf
         virtual void AttachToSolid(SolidEntity* body, const Transform& origin);
         
 		//! A method implementing the rendering of the actuator.
-        virtual std::vector<Renderable> Render();
+        virtual std::vector<Renderable> Render() override;
 		
         //! A method used to set the actuator origin frame.
         /*!
          \param origin a transformation from teh body origin to the actuator origin
          */
-        void setRelativeActuatorFrame(const Transform& origin);
+        void SetRelativeActuatorFrame(const Transform& origin);
         
         //! A method returning actuator frame in the world frame.
-        virtual Transform getActuatorFrame() const;
-       
+        virtual Transform GetActuatorFrame() const;
+
+        //! A method returning the type of the actuator.
+        ActuatorType GetType() const override;
+
+        //! A method returning type of link actuator.
+        virtual LinkActuatorType GetLinkActuatorType() const = 0;
+
     protected:
-        SolidEntity* attach;
-        Transform o2a;
+        SolidEntity* attach_;
+        Transform o2a_;
     };
 }
-
-#endif

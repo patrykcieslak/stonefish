@@ -15,29 +15,12 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-/*    
-    This file is a part of Stonefish.
-
-    Stonefish is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    Stonefish is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
-
 //
 //  AnimatedEntity.h
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 15/07/2020.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -56,7 +39,7 @@ namespace sf
          \param uniqueName a name for the entity
          \param traj a pointer to the body trajectory
          */
-        AnimatedEntity(std::string uniqueName, Trajectory* traj);
+        AnimatedEntity(std::string_view uniqueName, std::unique_ptr<Trajectory> traj);
 
         //! A constructor building a spherical body.
         /*!
@@ -68,7 +51,7 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param collides a flag determining if the body can collide with other bodies
          */
-        AnimatedEntity(std::string uniqueName, Trajectory* traj, Scalar sphereRadius, const Transform& origin, std::string material, std::string look = "", bool collides = false);
+        AnimatedEntity(std::string_view uniqueName, std::unique_ptr<Trajectory> traj, Scalar sphereRadius, const Transform& origin, std::string_view material, std::string_view look = "", bool collides = false);
 
         //! A constructor building a cylindrical body.
         /*!
@@ -81,7 +64,7 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param collides a flag determining if the body can collide with other bodies
          */
-        AnimatedEntity(std::string uniqueName, Trajectory* traj, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& origin, std::string material, std::string look = "", bool collides = false);
+        AnimatedEntity(std::string_view uniqueName, std::unique_ptr<Trajectory> traj, Scalar cylinderRadius, Scalar cylinderHeight, const Transform& origin, std::string_view material, std::string_view look = "", bool collides = false);
 
         //! A constructor building a box body.
         /*!
@@ -93,7 +76,7 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param collides a flag determining if the body can collide with other bodies
          */
-        AnimatedEntity(std::string uniqueName, Trajectory* traj, Vector3 boxDimensions, const Transform& origin, std::string material, std::string look = "", bool collides = false);
+        AnimatedEntity(std::string_view uniqueName, std::unique_ptr<Trajectory> traj, Vector3 boxDimensions, const Transform& origin, std::string_view material, std::string_view look = "", bool collides = false);
         
         //! A constructor building a mesh body. 
         /*!
@@ -106,8 +89,8 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param collides a flag determining if the body can collide with other bodies
          */
-        AnimatedEntity(std::string uniqueName, Trajectory* traj, std::string modelFilename, Scalar scale, const Transform& origin,
-                       std::string material, std::string look = "", bool collides = false);
+        AnimatedEntity(std::string_view uniqueName, std::unique_ptr<Trajectory> traj, std::string_view modelFilename, Scalar scale, const Transform& origin,
+                       std::string_view material, std::string_view look = "", bool collides = false);
         
         //! A constructor building a mesh body. 
         /*!
@@ -123,11 +106,11 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param collides a flag determining if the body can collide with other bodies
          */
-        AnimatedEntity(std::string uniqueName, Trajectory* traj, std::string graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
-                       std::string physicsFilename, Scalar physicsScale, const Transform& physicsOrigin, std::string material, std::string look = "", bool collides = false);
+        AnimatedEntity(std::string_view uniqueName, std::unique_ptr<Trajectory> traj, std::string_view graphicsFilename, Scalar graphicsScale, const Transform& graphicsOrigin,
+                       std::string_view physicsFilename, Scalar physicsScale, const Transform& physicsOrigin, std::string_view material, std::string_view look = "", bool collides = false);
         
         //! A destructor.
-        virtual ~AnimatedEntity();
+        virtual ~AnimatedEntity() = default;
 
         //! A method adding the body to the simulation manager.
         /*!
@@ -152,46 +135,46 @@ namespace sf
         std::vector<Renderable> Render();
         
         //! A method returning the type of the entity.
-        EntityType getType() const;
+        EntityType GetType() const;
         
         //! A method returning the pose of the body origin in the world frame.
-        Transform getOTransform() const;
+        Transform GetOTransform() const;
     
         //! A method returning the pose of the body in the world frame.
-        Transform getCGTransform() const;
+        Transform GetCgTransform() const;
 
         //! A method returning the linear velocity of the body.
-        Vector3 getLinearVelocity() const;
+        Vector3 GetLinearVelocity() const;
         
         //! A method returning the angular velocity of the body.
-        Vector3 getAngularVelocity() const;
+        Vector3 GetAngularVelocity() const;
         
         //! A method returning the linear velocity of the body at the given point.
-        Vector3 getLinearVelocityInLocalPoint(const Vector3& relPos) const;
+        Vector3 GetLinearVelocityInLocalPoint(const Vector3& relPos) const;
 
         //! A method returning the linear acceleration of the body.
-        Vector3 getLinearAcceleration() const;
+        Vector3 GetLinearAcceleration() const;
         
         //! A method returning the angular acceleration of the body.
-        Vector3 getAngularAcceleration() const;
+        Vector3 GetAngularAcceleration() const;
 
         //! A method returning a pointer to the body trajectory.
-        Trajectory* getTrajectory();
+        Trajectory* GetTrajectory();
 
         //! A method returning the extents of the body axis alligned bounding box.
         /*!
          \param min a point located at the minimum coordinate corner
          \param max a point located at the maximum coordinate corner
          */
-        void getAABB(Vector3& min, Vector3& max);
+        void GetAabb(Vector3& min, Vector3& max);
       
     private:
-        void BuildRigidBody(btCollisionShape* shape, bool collides);
+        void BuildRigidBody(bool collides);
 
-        Transform T_CG2O;
-        Transform T_O2G;
-        Transform T_O2C;
-        Trajectory* tr;
-        int phyObjectId;
+        Transform T_CG2O_;
+        Transform T_O2G_;
+        Transform T_O2C_;
+        std::unique_ptr<Trajectory> traj_;
+        int phyObjectId_;
     };
 }

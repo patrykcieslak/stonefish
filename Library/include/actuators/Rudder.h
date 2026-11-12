@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Nils Bore on 29/01/2021.
-//  Copyright (c) 2021-2023 Nils Bore, Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2021-2026 Nils Bore, Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Rudder__
-#define __Stonefish_Rudder__
+#pragma once
 
 #include "actuators/LinkActuator.h"
 
@@ -45,53 +44,58 @@ namespace sf
          \param maxAngle the maximum angle of the rudder [rad]
          \param inverted a flag to indicate if the setpoint is inverted (positive value results in left-handed rotation)
         */
-        Rudder(std::string uniqueName, SolidEntity* rudder, Scalar area, Scalar liftCoeff, Scalar dragCoeff, Scalar stallAngle, 
+        Rudder(std::string_view uniqueName, std::unique_ptr<SolidEntity> rudder, Scalar area, Scalar liftCoeff, Scalar dragCoeff, Scalar stallAngle, 
             Scalar maxAngle, bool inverted = false, Scalar maxAngularRate = Scalar(0));
-        
-        //! A destructor.
-        ~Rudder();
         
         //! A method used to update the internal state of the rudder.
         /*!
          \param dt a time step of the simulation [s]
          */
-        void Update(Scalar dt);
+        void Update(Scalar dt) override;
         
         //! A method implementing the rendering of the rudder.
-        std::vector<Renderable> Render();
+        std::vector<Renderable> Render() override;
         
         //! A method setting the new value of the rudder angle setpoint.
         /*!
          \param s the desired angle of the rudder as an angle [rad]
          */
-        void setSetpoint(Scalar s);
+        void SetSetpoint(Scalar s);
         
         //! A method returning the current setpoint.
-        Scalar getSetpoint() const;
+        Scalar GetSetpoint() const;
 
         //! A method returning the angular position of the rudder [rad]
-        Scalar getAngle() const;
+        Scalar GetAngle() const;
         
-        //! A method returning the type of the actuator.
-        ActuatorType getType() const;
+        //! A method returning type of link actuator.
+        LinkActuatorType GetLinkActuatorType() const override;
+
+        //! A method returning the construction info for the actuator.
+        static ConstructInfo GetConstructInfo();
+
+        //! A method constructing the actuator based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<Rudder> Construct(std::string_view uniqueName, ConstructInfo& info);
         
     private:
         //Params
-        Scalar dragCoeff;
-        Scalar liftCoeff;
-        Scalar area;
-        Scalar stallAngle;
-        Scalar maxAngle;
-        Scalar maxAngularRate;
-        SolidEntity* rudder;
-        bool inv;
+        Scalar dragCoeff_;
+        Scalar liftCoeff_;
+        Scalar area_;
+        Scalar stallAngle_;
+        Scalar maxAngle_;
+        Scalar maxAngularRate_;
+        std::unique_ptr<SolidEntity> rudder_;
+        bool inv_;
         
         //States
-        Scalar theta;
-        Scalar setpoint;
-        Vector3 liftV;
-        Vector3 dragV;
+        Scalar theta_;
+        Scalar setpoint_;
+        Vector3 liftV_;
+        Vector3 dragV_;
     };
 }
 
-#endif

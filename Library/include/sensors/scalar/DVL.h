@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/10/2017.
-//  Copyright (c) 2017-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_DVL__
-#define __Stonefish_DVL__
+#pragma once
 
 #include "sensors/scalar/LinkSensor.h"
 
@@ -42,7 +41,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        DVL(std::string uniqueName, Scalar beamAngleDeg, bool beamPositiveZ, Scalar frequency = Scalar(-1), int historyLength = -1);
+        DVL(std::string_view uniqueName, Scalar beamAngleDeg, bool beamPositiveZ, Scalar frequency = Scalar(-1), int historyLength = -1);
         
         //! A method performing internal sensor state update.
         /*!
@@ -56,15 +55,15 @@ namespace sf
          \param altitudeMin the minimum measured altitude (blanking) [m]
          \param altitudeMax the maximum measured altitude [m]
          */
-        void setRange(const Vector3& velocityMax, Scalar altitudeMin, Scalar altitudeMax);
+        void SetRange(const Vector3& velocityMax, Scalar altitudeMin, Scalar altitudeMax);
         
         //! A method used to set the water mass ping parameters.
         /*!
-         \param minSize the minimum thickness of the water layer [m]
+         \param minThickness the minimum thickness of the water layer [m]
          \param nearBoundary the distance from the sensor to the near layer boundary [m]
          \param farBoundary the distance from the sensor to the far layer boundary [m]
          */
-        void setWaterLayer(Scalar minSize, Scalar nearBoundary, Scalar farBoundary);
+        void SetWaterLayer(Scalar minSize, Scalar nearBoundary, Scalar farBoundary);
 
         //! A method used to set the noise characteristics of the sensor.
         /*!
@@ -74,7 +73,7 @@ namespace sf
          \param waterVelPercent multiplicative water velocity mesurement noise factor as percent of water velocity
          \param waterVelStdDev standard deviation of the water velocity measurement noise
          */
-        void setNoise(Scalar velPercent, Scalar velStdDev, Scalar altitudeStdDev, Scalar waterVelPercent, Scalar waterVelStdDev);
+        void SetNoise(Scalar velPercent, Scalar velStdDev, Scalar altitudeStdDev, Scalar waterVelPercent, Scalar waterVelStdDev);
         
         //! A method that returns the measurement ranges of the DVL.
         /*!
@@ -82,25 +81,32 @@ namespace sf
          \param altitudeMin the output variable to store the minimum measured altitude (blanking) [m]
          \param altitudeMax the output variable to store the maximum measured altitude [m]
          */
-        void getRange(Vector3& velocityMax, Scalar& altitudeMin, Scalar& altitudeMax) const;
+        void GetRange(Vector3& velocityMax, Scalar& altitudeMin, Scalar& altitudeMax) const;
 
         //! A method that return the angle between the beams and the vertical axis.
-        Scalar getBeamAngle() const;
+        Scalar GetBeamAngle() const;
 
         //! A method rendering the sensor representation.
         std::vector<Renderable> Render();
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const override;
+        ScalarSensorType GetScalarSensorType() const override;
+
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo GetConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<DVL> Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info);
         
     private:
-        Scalar beamAngle;
-        bool beamPosZ;
-        Scalar range[4];
-        Vector3 waterLayer;
-        Scalar addNoiseStdDev[2]; //Additive noise
-        Scalar mulNoiseFactor[2]; //Noise dependent on distance
+        Scalar beamAngle_;
+        bool beamPosZ_;
+        Scalar range_[4];
+        Vector3 waterLayer_;
+        Scalar addNoiseStdDev_[2]; //Additive noise
+        Scalar mulNoiseFactor_[2]; //Noise dependent on distance
     };
 }
-
-#endif

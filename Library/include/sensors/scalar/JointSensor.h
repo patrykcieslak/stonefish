@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 20/11/2018.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_JointSensor__
-#define __Stonefish_JointSensor__
+#pragma once
 
 #include "sensors/ScalarSensor.h"
 
@@ -43,14 +42,17 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (0 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        JointSensor(std::string uniqueName, Scalar frequency, int historyLength);
+        JointSensor(std::string_view uniqueName, Scalar frequency, int historyLength);
+
+        //! A destructor.
+        virtual ~JointSensor() = default;
                 
         //! A method used to attach the sensor to a multibody joint.
         /*!
          \param multibody a pointer to a multibody
          \param jointId an index of the multibody joint
          */
-        virtual void AttachToJoint(FeatherstoneEntity* multibody, unsigned int jointId);
+        virtual void AttachToJoint(FeatherstoneEntity* multibody, size_t jointId);
         
         //! A method used to attach the sensor to a discrete joint.
         /*!
@@ -59,26 +61,25 @@ namespace sf
         virtual void AttachToJoint(Joint* joint);
         
         //! A method returning the type of the sensor.
-        SensorType getType() const;
+        SensorType GetType() const;
         
         //! A method returning the current sensor frame in world.
-        Transform getSensorFrame() const;
+        Transform GetSensorFrame() const;
 
         //! A method returning the velocity of the sensor measurement frame.
         /*!
          \param linear output of the linear velocity of the sensor measurement frame [m/s]
          \param angular output of the angular velocity of the sensor measurement frame [rad/s]
          */
-        void getSensorVelocity(Vector3& linear, Vector3& angular) const override;
+        void GetSensorVelocity(Vector3& linear, Vector3& angular) const override;
         
         //! A method returning the name of the joint that the sensor is attached to.
-        std::string getJointName() const;
+        std::string GetJointName() const;
         
     protected:
-        FeatherstoneEntity* fe;
-        unsigned int jId;
-        Joint* j;
+        FeatherstoneEntity* fe_;
+        unsigned int jId_;
+        Joint* j_;
     };
 }
 
-#endif

@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 02/05/2019.
-//  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish__FloatingTestManager__
-#define __Stonefish__FloatingTestManager__
+#pragma once
 
 #include <core/SimulationManager.h>
 
@@ -36,4 +35,3 @@ public:
     void BuildScenario();
 };
 
-#endif

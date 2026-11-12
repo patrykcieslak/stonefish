@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/05/18.
-//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLDepthCamera__
-#define __Stonefish_OpenGLDepthCamera__
+#pragma once
 
 #include "graphics/OpenGLView.h"
 #include <random>
@@ -121,23 +120,23 @@ namespace sf
         void Update();
         
         //! A method that informs if the camera needs update.
-        bool needsUpdate() override;
+        bool NeedsUpdate() override;
         
         //! A method to set a pointer to a camera sensor.
         /*!
          \param cam a pointer to a camera sensor
          \param index the id of the OpenGL depth camera
          */
-        void setCamera(Camera* cam, unsigned int index = 0);
+        void SetCamera(Camera* cam, unsigned int index = 0);
         
         //! A method to set the noise properties of the depth camera.
         /*!
          \param depthStdDev the standard deviation of the depth measurement at 1m
          */
-        void setNoise(GLfloat depthStdDev);
+        void SetNoise(GLfloat depthStdDev);
 
         //! A method returning the type of the view.
-        ViewType getType() const override;
+        ViewType GetType() const override;
         
         //! A static method to load shaders.
         static void Init();
@@ -149,31 +148,30 @@ namespace sf
         void LinearizeDepth();
         void Depth2LinearRanges();
         
-        Camera* camera;
-        unsigned int idx;
-        glm::mat4 cameraTransform;
-        glm::vec3 eye;
-        glm::vec3 dir;
-        glm::vec3 up;
-        glm::vec3 tempEye;
-        glm::vec3 tempDir;
-        glm::vec3 tempUp;
-        glm::mat4 projection;
-        glm::vec2 fov;
-        bool _needsUpdate;
-        bool newData;
-        glm::vec2 range;
-        GLfloat noiseDepth;
-        std::default_random_engine randGen;
-        std::uniform_real_distribution<float> randDist;
-        bool usesRanges;
-        GLuint renderDepthTex;
-        GLuint linearDepthTex;
-        GLuint linearDepthFBO;
-        GLuint linearDepthPBO;
-        static GLSLShader** depthCameraOutputShader;
-        static GLSLShader* depthVisualizeShader;
+        Camera* camera_;
+        unsigned int idx_;
+        glm::mat4 cameraTransform_;
+        glm::vec3 eye_;
+        glm::vec3 dir_;
+        glm::vec3 up_;
+        glm::vec3 tempEye_;
+        glm::vec3 tempDir_;
+        glm::vec3 tempUp_;
+        glm::mat4 projection_;
+        glm::vec2 fov_;
+        bool needsUpdate_;
+        bool newData_;
+        glm::vec2 range_;
+        GLfloat noiseDepth_;
+        std::default_random_engine randGen_;
+        std::uniform_real_distribution<float> randDist_;
+        bool usesRanges_;
+        GLuint renderDepthTex_;
+        GLuint linearDepthTex_;
+        GLuint linearDepthFBO_;
+        GLuint linearDepthPBO_;
+
+        static std::array<std::unique_ptr<GLSLShader>, 2> depthCameraOutputShader;
+        static std::unique_ptr<GLSLShader> depthVisualizeShader;
     };
 }
-
-#endif

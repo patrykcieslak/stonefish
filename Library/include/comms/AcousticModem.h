@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 26/02/2020.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_AcousticModem__
-#define __Stonefish_AcousticModem__
+#pragma once
 
 #include <map>
 #include "comms/Comm.h"
@@ -49,7 +48,7 @@ namespace sf
          \param maxVerticalFOVDeg the maximum vertical angle of radiation pattern [deg]
          \param operatingRange the operating range [m]
          */
-        AcousticModem(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange);
+        AcousticModem(std::string_view uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange);
         
         //! A destructor.
         virtual ~AcousticModem();
@@ -78,20 +77,29 @@ namespace sf
         /*!
          \param enabled a flag to indicate if the occusion test should be enabled
          */
-        void setOcclusionTest(bool enabled);
+        void SetOcclusionTest(bool enabled);
 
         //! A method to retrieve the position of the device in the designated reference frame.
         /*!
          \param pos a pointer to the position vector
          \param referenceFrame a pointer to the name of the reference frame
          */
-        void getPosition(Vector3& pos, std::string& referenceFrame);
+        void GetPosition(Vector3& pos, std::string& referenceFrame);
 
         //! A method informing if occlusion testing is enabled for the modem device.
-        bool getOcclusionTest() const;
+        bool GetOcclusionTest() const;
         
         //! A method returning the type of the comm.
-        virtual CommType getType() const;
+        virtual CommType GetType() const;
+
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo GetConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<AcousticModem> Construct(std::string_view uniqueName, uint64_t deviceId, ConstructInfo& info);
         
     protected:
         //! A method performing internal comm state update.
@@ -100,25 +108,24 @@ namespace sf
          */
         virtual void InternalUpdate(Scalar dt) override;
         
-        static AcousticModem* getNode(uint64_t deviceId);
+        static AcousticModem* GetNode(uint64_t deviceId);
         
     private:
-        bool isReceptionPossible(Vector3 dir, Scalar distance);
+        bool IsReceptionPossible(Vector3 dir, Scalar distance);
         
-        std::map<std::shared_ptr<AcousticDataFrame>, Vector3> propagating;
-        Scalar range;
-        Scalar minFov2, maxFov2;
-        Vector3 position;
-        std::string frame;
-        bool occlusion;
+        std::map<std::shared_ptr<AcousticDataFrame>, Vector3> propagating_;
+        Scalar range_;
+        Scalar minFov2_;
+        Scalar maxFov2_;
+        Vector3 position_;
+        std::string frame_;
+        bool occlusion_;
         
-        static void addNode(AcousticModem* node);
-        static void removeNode(uint64_t deviceId);
-        static bool mutualContact(uint64_t device1Id, uint64_t device2Id);
-        static std::vector<uint64_t> getNodeIds();
+        static void AddNode(AcousticModem* node);
+        static void RemoveNode(uint64_t deviceId);
+        static bool MutualContact(uint64_t device1Id, uint64_t device2Id);
+        static std::vector<uint64_t> GetNodeIds();
         
         static std::map<uint64_t, AcousticModem*> nodes;
     };
 }
-    
-#endif

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/SimulationApp.h"
@@ -31,9 +31,9 @@
 namespace sf
 {
 
-SimulationApp::SimulationApp(std::string title, std::string dataDirPath, SimulationManager* sim)
-    : console_{new Console()}, startTime_{0}, autostep_{true}, timeStep_{Scalar(0)}, state_{SimulationState::NOT_READY},
-      simManager_{sim}, title_{title}, dataPath_{dataDirPath}, physicsTime_{0.0}
+SimulationApp::SimulationApp(std::string_view title, std::string_view dataDirPath, std::unique_ptr<SimulationManager> sim)
+    : console_{std::make_unique<Console>()}, startTime_{0}, autostep_{true}, timeStep_{Scalar(0)}, state_{SimulationState::NOT_READY},
+      simManager_{std::move(sim)}, title_{title}, dataPath_{dataDirPath}, physicsTime_{0.0}
 {
     SimulationApp::handle = this;
 
@@ -44,7 +44,10 @@ SimulationApp::SimulationApp(std::string title, std::string dataDirPath, Simulat
         cInfo("Welcome to Stonefish %d.%d.", STONEFISH_VER_MAJOR, STONEFISH_VER_MINOR);
 
     //Get available threads
-    setMaxPhysicsThreads(GetPhysicalCores());
+    SetMaxPhysicsThreads(GetPhysicalCores());
+
+    //Plugin support
+    pluginManager_ = std::make_unique<PluginManager>();
 }
 
 SimulationApp::~SimulationApp()
@@ -53,49 +56,54 @@ SimulationApp::~SimulationApp()
         SimulationApp::handle = nullptr;
 }
 
-void SimulationApp::setMaxPhysicsThreads(unsigned int n)
+void SimulationApp::SetMaxPhysicsThreads(unsigned int n)
 {
     maxPhysicsThreads_ = n > 0 ? n : 1;
 }
 
-unsigned int SimulationApp::getMaxPhysicsThreads() const
+unsigned int SimulationApp::GetMaxPhysicsThreads() const
 {
     return maxPhysicsThreads_;
 }
 
-SimulationState SimulationApp::getState() const
+SimulationState SimulationApp::GetState() const
 {
     return state_;
 }
 
-SimulationManager* SimulationApp::getSimulationManager()
+SimulationManager* SimulationApp::GetSimulationManager()
 {
-    return simManager_;
+    return simManager_.get();
 }
 
-double SimulationApp::getPhysicsTime()
+double SimulationApp::GetPhysicsTime()
 {
     return physicsTime_;
 }
 
-const std::string& SimulationApp::getDataPath() const
+const std::string& SimulationApp::GetDataPath() const
 {
     return dataPath_;
 }
 
-const std::string& SimulationApp::getName() const
+const std::string& SimulationApp::GetName() const
 {
 	return title_;
 }
 
-Console* SimulationApp::getConsole()
+Console* SimulationApp::GetConsole()
 {
-    return console_;
+    return console_.get();
 }
 
-ThreadPool* SimulationApp::getPhysicsThreadPool()
+ThreadPool* SimulationApp::GetPhysicsThreadPool()
 {
     return physicsThreadPool_.get();
+}
+
+PluginManager* SimulationApp::GetPluginManager()
+{
+    return pluginManager_.get();
 }
 
 void SimulationApp::Init()
@@ -107,7 +115,7 @@ void SimulationApp::InitializeSimulation()
     cInfo("Building scenario...");
     simManager_->RestartScenario();
     cInfo("Synchronizing motion states...");
-    simManager_->getDynamicsWorld()->synchronizeMotionStates();
+    simManager_->GetDynamicsWorld()->synchronizeMotionStates();
     cInfo("Simulation initialized -> using Bullet Physics %d.%d.", btGetVersion()/100, btGetVersion()%100);
 }
 
@@ -131,10 +139,10 @@ void SimulationApp::Loop()
 
 void SimulationApp::StartSimulation()
 {
-    if (getMaxPhysicsThreads() > 1)
+    if (GetMaxPhysicsThreads() > 1)
     {
-        physicsThreadPool_ = std::make_unique<ThreadPool>(getMaxPhysicsThreads()); // Prepare threads for running physics
-        cInfo("Multithreading physics using %d threads.", getMaxPhysicsThreads());
+        physicsThreadPool_ = std::make_unique<ThreadPool>(GetMaxPhysicsThreads()); // Prepare threads for running physics
+        cInfo("Multithreading physics using %d threads.", GetMaxPhysicsThreads());
     }
     
     simManager_->StartSimulation();
@@ -143,10 +151,10 @@ void SimulationApp::StartSimulation()
 
 void SimulationApp::ResumeSimulation()
 {
-    if (getMaxPhysicsThreads() > 1)
+    if (GetMaxPhysicsThreads() > 1)
     {
-        physicsThreadPool_ = std::make_unique<ThreadPool>(getMaxPhysicsThreads()); // Prepare threads for running physics
-        cInfo("Multithreading physics using %d threads.", getMaxPhysicsThreads());
+        physicsThreadPool_ = std::make_unique<ThreadPool>(GetMaxPhysicsThreads()); // Prepare threads for running physics
+        cInfo("Multithreading physics using %d threads.", GetMaxPhysicsThreads());
     }
 
     simManager_->ResumeSimulation();
@@ -185,7 +193,7 @@ void SimulationApp::CleanUp()
 //Static
 SimulationApp* SimulationApp::handle = NULL;
 
-SimulationApp* SimulationApp::getApp()
+SimulationApp* SimulationApp::GetApp()
 {
     return SimulationApp::handle;
 }

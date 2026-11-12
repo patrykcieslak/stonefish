@@ -20,11 +20,12 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 05/07/2014.
-//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/RotaryEncoder.h"
 
+#include "core/DeviceFactory.h"
 #include "sensors/Sample.h"
 #include "joints/RevoluteJoint.h"
 #include "utils/UnitSystem.h"
@@ -35,51 +36,51 @@
 namespace sf
 {
 
-RotaryEncoder::RotaryEncoder(std::string uniqueName, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
+RotaryEncoder::RotaryEncoder(std::string_view uniqueName, Scalar frequency, int historyLength) : JointSensor(uniqueName, frequency, historyLength)
 {
-    angle = lastAngle = Scalar(0);
-    motor = nullptr;
-    thrust = nullptr;
-    channels.push_back(SensorChannel("Angle", QuantityType::ANGLE));
-    channels.push_back(SensorChannel("Angular velocity", QuantityType::ANGULAR_VELOCITY));
+    angle_ = lastAngle_ = Scalar(0);
+    motor_ = nullptr;
+    thrust_ = nullptr;
+    channels_.push_back(SensorChannel("Angle", QuantityType::ANGLE));
+    channels_.push_back(SensorChannel("Angular velocity", QuantityType::ANGULAR_VELOCITY));
 }
 
 void RotaryEncoder::AttachToMotor(Motor* m)
 {
     if(m != nullptr)
-        motor = m;
+        motor_ = m;
 }
 
 void RotaryEncoder::AttachToThruster(Thruster* th)
 {
     if(th != nullptr)
-        thrust = th;
+        thrust_ = th;
 }
 
 Scalar RotaryEncoder::GetRawAngle()
 {
-    if(j != nullptr && j->getType() == JointType::REVOLUTE)
+    if(j_ != nullptr && j_->GetType() == JointType::REVOLUTE)
     {
-        return ((RevoluteJoint*)j)->getAngle();
+        return ((RevoluteJoint*)j_)->GetAngle();
     }
-    else if(fe != nullptr)
+    else if(fe_ != nullptr)
     {
         Scalar mbAngle;
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
-        fe->getJointPosition(jId, mbAngle, jt);
+        fe_->GetJointPosition(jId_, mbAngle, jt);
         
         if(jt == btMultibodyLink::eRevolute)
             return mbAngle;
         else
             return Scalar(0);
     }
-    else if(motor != nullptr)
+    else if(motor_ != nullptr)
     {
-        return motor->getAngle();
+        return motor_->GetAngle();
     }
-    else if(thrust != nullptr)
+    else if(thrust_ != nullptr)
     {
-        return thrust->getAngle();
+        return thrust_->GetAngle();
     }
     else
         return Scalar(0);
@@ -87,28 +88,28 @@ Scalar RotaryEncoder::GetRawAngle()
 
 Scalar RotaryEncoder::GetRawAngularVelocity()
 {
-    if(j != nullptr && j->getType() == JointType::REVOLUTE)
+    if(j_ != nullptr && j_->GetType() == JointType::REVOLUTE)
     {
-        return ((RevoluteJoint*)j)->getAngularVelocity();
+        return ((RevoluteJoint*)j_)->GetAngularVelocity();
     }
-    else if(fe != nullptr)
+    else if(fe_ != nullptr)
     {
         Scalar mbAV;
         btMultibodyLink::eFeatherstoneJointType jt = btMultibodyLink::eInvalid;
-        fe->getJointVelocity(jId, mbAV, jt);
+        fe_->GetJointVelocity(jId_, mbAV, jt);
         
         if(jt == btMultibodyLink::eRevolute)
             return mbAV;
         else
             return Scalar(0);
     }
-    else if(motor != nullptr)
+    else if(motor_ != nullptr)
     {
-        return motor->getAngularVelocity();
+        return motor_->GetAngularVelocity();
     }
-    else if(thrust != nullptr)
+    else if(thrust_ != nullptr)
     {
-        return thrust->getOmega();
+        return thrust_->GetOmega();
     }
     else
         return Scalar(0);
@@ -120,39 +121,71 @@ void RotaryEncoder::InternalUpdate(Scalar dt)
     Scalar actualAngle = GetRawAngle();
     
     //accumulate
-    Scalar angle0 = angle;
+    Scalar angle0 = angle_;
 
-    if(lastAngle * actualAngle < Scalar(0))
+    if(lastAngle_ * actualAngle < Scalar(0))
     {
-        if(lastAngle > M_PI_4)
-            angle += ((actualAngle + 2 * M_PI) - lastAngle);
-        else if(lastAngle < -M_PI_4)
-            angle += (actualAngle - (lastAngle + 2 * M_PI));
+        if(lastAngle_ > M_PI_4)
+            angle_ += ((actualAngle + 2 * M_PI) - lastAngle_);
+        else if(lastAngle_ < -M_PI_4)
+            angle_ += (actualAngle - (lastAngle_ + 2 * M_PI));
         else
-            angle += (actualAngle - lastAngle);
+            angle_ += (actualAngle - lastAngle_);
     }
     else
-        angle += (actualAngle - lastAngle);
+        angle_ += (actualAngle - lastAngle_);
     
-    lastAngle = actualAngle;
+    lastAngle_ = actualAngle;
     
     //angular velocity
-    Scalar angularVelocity = (angle - angle0)/dt; // Less noisy than reading raw velocity
+    Scalar angularVelocity = (angle_ - angle0)/dt; // Less noisy than reading raw velocity
     
     //record sample
-    Sample s{std::vector<Scalar>({angle, angularVelocity})};
-    AddSampleToHistory(s);
+    AddSampleToHistory(std::make_unique<Sample>(
+        std::vector<Scalar>({angle_, angularVelocity})
+    ));
 }
 
 void RotaryEncoder::Reset()
 {
-    angle = lastAngle = GetRawAngle();
+    angle_ = lastAngle_ = GetRawAngle();
     ScalarSensor::Reset();
 }
 
-ScalarSensorType RotaryEncoder::getScalarSensorType() const
+ScalarSensorType RotaryEncoder::GetScalarSensorType() const
 {
     return ScalarSensorType::ENCODER;
 }
+
+// Statics
+
+ConstructInfo RotaryEncoder::GetConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+    
+    // History
+    node.optional = true;
+    node.attributes.insert({"samples", {ConstructInfoValueType::INT, false}});
+    info.nodes.insert({"history", node});
+
+    return info;
+}
+
+std::unique_ptr<RotaryEncoder> RotaryEncoder::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // History (optional)
+    int history = -1;
+    ConstructInfoValue& value = info.nodes.at("history").attributes.at("samples");
+    if (value.valid)
+        history = std::get<int>(value.value);
+    
+    // Create sensor
+    std::unique_ptr<RotaryEncoder> sensor = std::make_unique<RotaryEncoder>(uniqueName, frequency, history);   
+
+    return sensor;
+}
+
+REGISTER_SENSOR("encoder", RotaryEncoder)
 
 }

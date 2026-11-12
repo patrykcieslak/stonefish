@@ -20,16 +20,15 @@
 //  ConsoleTest
 //
 //  Created by Patryk Cieslak on 12/09/2018.
-//  Copyright(c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#include "ConsoleTestApp.h"
+#include <core/ConsoleSimulationApp.h>
 #include "ConsoleTestManager.h"
 
 int main(int argc, const char * argv[])
 {
-    ConsoleTestManager* simulationManager = new ConsoleTestManager(500.0);
-    ConsoleTestApp app(std::string(DATA_DIR_PATH), simulationManager);
+    sf::ConsoleSimulationApp app("Console Test", std::string(DATA_DIR_PATH), std::make_unique<ConsoleTestManager>(500.0));
     app.Run(true);
     
     return 0;

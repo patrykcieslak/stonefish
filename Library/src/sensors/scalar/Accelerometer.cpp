@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 18/11/2017.
-//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Accelerometer.h"
@@ -29,56 +29,104 @@
 #include "sensors/Sample.h"
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
+#include "core/DeviceFactory.h"
 
 namespace sf
 {
 
-Accelerometer::Accelerometer(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Accelerometer::Accelerometer(std::string_view uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    channels.push_back(SensorChannel("Linear Acceleration X", QuantityType::ACCELERATION));
-    channels.push_back(SensorChannel("Linear Acceleration Y", QuantityType::ACCELERATION));
-    channels.push_back(SensorChannel("Linear Acceleration Z", QuantityType::ACCELERATION));
+    channels_.push_back(SensorChannel("Linear Acceleration X", QuantityType::ACCELERATION));
+    channels_.push_back(SensorChannel("Linear Acceleration Y", QuantityType::ACCELERATION));
+    channels_.push_back(SensorChannel("Linear Acceleration Z", QuantityType::ACCELERATION));
 }
 
 void Accelerometer::InternalUpdate(Scalar dt)
 {
     // Calculate transformation from global to imu frame
-    Transform accTrans = getSensorFrame();
+    Transform accTrans = GetSensorFrame();
     
     // Get acceleration
-    Vector3 R = accTrans.getOrigin() - attach->getCGTransform().getOrigin();
+    Vector3 R = accTrans.getOrigin() - attach_->GetCgTransform().getOrigin();
     Vector3 la = accTrans.getBasis().inverse() * (
-                                                attach->getLinearAcceleration() 
-                                                + attach->getAngularAcceleration().cross(R)
-                                                + attach->getAngularVelocity().cross(attach->getAngularVelocity().cross(R))
-                                                - SimulationApp::getApp()->getSimulationManager()->getGravity()
+                                                attach_->GetLinearAcceleration() 
+                                                + attach_->GetAngularAcceleration().cross(R)
+                                                + attach_->GetAngularVelocity().cross(attach_->GetAngularVelocity().cross(R))
+                                                - SimulationApp::GetApp()->GetSimulationManager()->GetGravity()
                                                 );
     
     // Record sample
-    Sample s{std::vector<Scalar>({la.x(), la.y(), la.z()})};
-    AddSampleToHistory(s);
+    AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({la.x(), la.y(), la.z()})));
 }
 
-void Accelerometer::setRange(Vector3 linearAccelerationMax)
+void Accelerometer::SetRange(Vector3 linearAccelerationMax)
 {
-    channels[0].rangeMin = -btClamped(linearAccelerationMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[1].rangeMin = -btClamped(linearAccelerationMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[2].rangeMin = -btClamped(linearAccelerationMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[0].rangeMax = btClamped(linearAccelerationMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[1].rangeMax = btClamped(linearAccelerationMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels[2].rangeMax = btClamped(linearAccelerationMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[0].rangeMin = -btClamped(linearAccelerationMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[1].rangeMin = -btClamped(linearAccelerationMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[2].rangeMin = -btClamped(linearAccelerationMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[0].rangeMax = btClamped(linearAccelerationMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[1].rangeMax = btClamped(linearAccelerationMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[2].rangeMax = btClamped(linearAccelerationMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
     
-void Accelerometer::setNoise(Vector3 linearAccelerationStdDev)
+void Accelerometer::SetNoise(Vector3 linearAccelerationStdDev)
 {
-    channels[0].setStdDev(btClamped(linearAccelerationStdDev.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels[1].setStdDev(btClamped(linearAccelerationStdDev.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
-    channels[2].setStdDev(btClamped(linearAccelerationStdDev.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[0].SetStdDev(btClamped(linearAccelerationStdDev.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[1].SetStdDev(btClamped(linearAccelerationStdDev.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[2].SetStdDev(btClamped(linearAccelerationStdDev.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
 
-ScalarSensorType Accelerometer::getScalarSensorType() const
+ScalarSensorType Accelerometer::GetScalarSensorType() const
 {
     return ScalarSensorType::ACC;
 }
     
+// Statics
+
+ConstructInfo Accelerometer::GetConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+    
+    // History
+    node.optional = true;
+    node.attributes.insert({"samples", {ConstructInfoValueType::INT, false}});
+    info.nodes.insert({"history", node});
+
+    // Range and noise
+    node.attributes.clear(); // Clear temporary
+    node.optional = true;
+    node.attributes.insert({"linear_acceleration", {ConstructInfoValueType::VECTOR3, false}});
+    info.nodes.insert({"range", node});
+    info.nodes.insert({"noise", node});
+    
+    return info;
+}
+
+std::unique_ptr<Accelerometer> Accelerometer::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // History (optional)
+    int history = -1;
+    ConstructInfoValue& value = info.nodes.at("history").attributes.at("samples");
+    if (value.valid)
+        history = std::get<int>(value.value);
+    
+    // Create sensor
+    std::unique_ptr<Accelerometer> sensor = std::make_unique<Accelerometer>(uniqueName, frequency, history);    
+
+    // Range (optional)
+    value = info.nodes.at("range").attributes.at("linear_acceleration");
+    if (value.valid)
+        sensor->SetRange(std::get<Vector3>(value.value));
+
+    // Noise (optional)
+    value = info.nodes.at("noise").attributes.at("linear_acceleration");
+    if (value.valid)
+        sensor->SetNoise(std::get<Vector3>(value.value));
+
+    return sensor;
+}
+
+REGISTER_SENSOR("accelerometer", Accelerometer)
+
 }

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/10/17.
-//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -29,6 +29,7 @@
 #include "core/MaterialManager.h"
 #include "entities/ForcefieldEntity.h"
 #include "graphics/OpenGLOcean.h"
+#include "actuators/Actuator.h"
 
 namespace sf
 {
@@ -40,7 +41,6 @@ namespace sf
     };
     
     class VelocityField;
-    class Actuator;
     
     //! A class implementing an ocean.
     class Ocean : public ForcefieldEntity
@@ -52,10 +52,7 @@ namespace sf
          \param waves the state of the ocean (waves enabled when >0)
          \param l a pointer to the liquid that is filling the ocean (normally water)
          */
-        Ocean(std::string uniqueName, Scalar waves, Fluid l);
-        
-        //! A destructor.
-        ~Ocean();
+        Ocean(std::string_view uniqueName, Scalar waves, Fluid l);
 
         //! A method to set the environmental conditions.
         /*!
@@ -67,7 +64,7 @@ namespace sf
         /*!
          \param field a pointer to a velocity field object
          */
-        void AddVelocityField(VelocityField* field);
+        void AddVelocityField(std::unique_ptr<VelocityField> field);
         
         //! A method running the hydrodynamics computation.
         /*!
@@ -107,48 +104,51 @@ namespace sf
         Scalar GetDepth(const Vector3& point);
         GLfloat GetDepth(const glm::vec3& point);
         
-        //! A method to enable all defined currents.
-        void EnableCurrents();
+        //! A method to enable all defined velocity fields.
+        void EnableVelocityFields();
         
-        //! A method to disable all defined currents.
-        void DisableCurrents();
+        //! A method to disable all defined velocity fields.
+        void DisableVelocityFields();
 
-        //! A method updating the currents data in the OpenGL ocean.
-        void UpdateCurrentsData();
+        //! A method updating the velocity field data in the OpenGL ocean.
+        void UpdateVelocityFieldsData();
         
+        //! A method that removes all defined velocity fields.
+        void ClearVelocityFields();
+
         //! A method used to setup the properties of the water.
         /*!
          \param jerlov the type of water according to Jerlov (I-9C) <0,1>
          */
-        void setWaterType(Scalar jerlov);
+        void SetWaterType(Scalar jerlov);
 
         //! A method to enable rendering of suspended particles (underwater snow).
-        void setParticles(bool enabled);
+        void SetParticles(bool enabled);
 
         //! A method informing if the particles are enabled.
-        bool hasParticles() const;
+        bool HasParticles() const;
 
         //! A method returning the type of the water.
-        Scalar getWaterType() const;
+        Scalar GetWaterType() const;
           
         //! A method informing if the ocean waves are simulated.
-        bool hasWaves() const;
+        bool HasWaves() const;
         
         //! A method returning a pointer to the fluid filling the ocean.
-        Fluid getLiquid() const;
+        Fluid GetLiquid() const;
         
         //! A method returning a pointer to the OpenGL object implementing the ocean.
-        OpenGLOcean* getOpenGLOcean();
+        OpenGLOcean* GetOpenGlOcean();
 
         //! A method giving direct access to the defined velocity fields.
         /*!
          \param index an id of the current
          \return pointer to the current object
          */
-        VelocityField* getVelocityField(size_t index);
+        VelocityField* GetVelocityField(size_t index);
 
         //! A method returning the type of the force field.
-        ForcefieldType getForcefieldType();
+        ForcefieldType GetForcefieldType();
         
         //! A method initializing the rendering of the ocean.
         /*!
@@ -160,18 +160,18 @@ namespace sf
         std::vector<Renderable> Render();
 
         //! A method implementing the rendering of the ocean force field.
-        std::vector<Renderable> Render(const std::vector<Actuator*>& act);
+        std::vector<Renderable> Render(const std::vector<std::unique_ptr<Actuator, ActuatorDeleter>>& act);
         
     private:
-        Fluid liquid;
-        std::vector<VelocityField*> currents;
-        OpenGLOcean* glOcean;
-        OceanCurrentsUBO glOceanCurrentsUBOData;
-        Scalar depth;
-        Scalar waterType;
-        Scalar salinity;
-        Scalar oceanState;
-        bool currentsEnabled;
-        Renderable wavesDebug;
+        Fluid liquid_;
+        std::vector<std::unique_ptr<VelocityField>> velocityFields_;
+        std::unique_ptr<OpenGLOcean> glOcean_;
+        OceanCurrentsUBO glOceanCurrentsUBOData_;
+        Scalar depth_;
+        Scalar waterType_;
+        Scalar salinity_;
+        Scalar oceanState_;
+        bool velocityFieldsEnabled_;
+        Renderable wavesDebug_;
     };
 }

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/30/13.
-//  Copyright(c) 2013-2020 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/statics/Plane.h"
@@ -31,22 +31,23 @@
 namespace sf
 {
 
-Plane::Plane(std::string uniqueName, Scalar planeSize, std::string material, std::string look, float uvScale) : StaticEntity(uniqueName, material, look)
+Plane::Plane(std::string_view uniqueName, Scalar planeSize, std::string_view material, std::string_view look, float uvScale) : StaticEntity(uniqueName, material, look)
 {
-    phyMesh = OpenGLContent::BuildPlane(planeSize/2.f, uvScale > 0.f ? uvScale : 1.f);
-    btCollisionShape* shape = new btStaticPlaneShape(Vector3(0,0,-1), 0);
+    phyMesh_ = OpenGLContent::BuildPlane(planeSize/2.f, uvScale > 0.f ? uvScale : 1.f);
+    std::unique_ptr<btStaticPlaneShape> shape = std::make_unique<btStaticPlaneShape>(Vector3(0,0,-1), 0);
     shape->setMargin(COLLISION_MARGIN);
-    BuildRigidBody(shape);
+    collisionShape_ = std::move(shape);
+    BuildRigidBody();
 }
 
-void Plane::getAABB(Vector3 &min, Vector3 &max)
+void Plane::GetAabb(Vector3 &min, Vector3 &max)
 {
     //Plane shouldn't affect shadow calculation
     min.setValue(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);
     max.setValue(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);
 }
 
-StaticEntityType Plane::getStaticType()
+StaticEntityType Plane::GetStaticType()
 {
     return StaticEntityType::PLANE;
 }

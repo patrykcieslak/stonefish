@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/8/13.
-//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Actuator.h"
@@ -32,41 +32,46 @@
 namespace sf
 {
 
-Actuator::Actuator(std::string uniqueName)
+void Actuator::DefaultDeleter(Actuator* a)
 {
-    name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
-    dm = DisplayMode::GRAPHICAL;
-    setWatchdog(Scalar(-1));
+    delete a;
+}
+
+Actuator::Actuator(std::string_view uniqueName)
+{
+    name_ = SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->AddName(uniqueName);
+    dm_ = DisplayMode::GRAPHICAL;
+    SetWatchdog(Scalar(-1));
 }
 
 Actuator::~Actuator()
 {
-    if(SimulationApp::getApp() != nullptr)
-        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
+    if(SimulationApp::GetApp() != nullptr)
+        SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->RemoveName(name_);
 }
 
-void Actuator::setDisplayMode(DisplayMode m)
+void Actuator::SetDisplayMode(DisplayMode m)
 {
-    dm = m;
+    dm_ = m;
 }
 
-void Actuator::setWatchdog(Scalar timeout)
+void Actuator::SetWatchdog(Scalar timeout)
 {
-    watchdogTimeout = timeout;
-    watchdog = Scalar(0);
+    watchdogTimeout_ = timeout;
+    watchdog_ = Scalar(0);
 }
 
-std::string Actuator::getName() const
+const std::string& Actuator::GetName() const
 {
-    return name;
+    return name_;
 }
 
 void Actuator::Update(Scalar dt)
 {
-    if(watchdogTimeout > Scalar(0))
+    if(watchdogTimeout_ > Scalar(0))
     {
-        watchdog += dt;
-        if(watchdog > watchdogTimeout)
+        watchdog_ += dt;
+        if(watchdog_ > watchdogTimeout_)
             WatchdogTimeout();
     }
 }
@@ -83,7 +88,7 @@ void Actuator::WatchdogTimeout()
 
 void Actuator::ResetWatchdog()
 {
-    watchdog = Scalar(0);
+    watchdog_ = Scalar(0);
 }
 
 }

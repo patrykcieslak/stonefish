@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/6/17.
-//  Copyright (c) 2017-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/Sensor.h"
@@ -37,130 +37,134 @@ namespace sf
 std::random_device Sensor::randomDevice;
 std::mt19937 Sensor::randomGenerator(randomDevice());
 
-Sensor::Sensor(std::string uniqueName, Scalar frequency)
+void Sensor::DefaultDeleter(Sensor* s)
 {
-    name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
-    setUpdateFrequency(frequency);
-    eleapsedTime = Scalar(0);
-    enabled = true;
-    renderable = true;
-    newDataAvailable = false;
-    updateMutex = SDL_CreateMutex();
-    lookId = -1;
-    graObjectId = -1;
+    delete s;
+}
+
+Sensor::Sensor(std::string_view uniqueName, Scalar frequency)
+{
+    name_ = SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->AddName(uniqueName);
+    SetUpdateFrequency(frequency);
+    eleapsedTime_ = Scalar(0);
+    enabled_ = true;
+    renderable_ = true;
+    newDataAvailable_ = false;
+    updateMutex_ = SDL_CreateMutex();
+    lookId_ = -1;
+    graObjectId_ = -1;
 }
 
 Sensor::~Sensor()
 {
-    if(SimulationApp::getApp() != NULL)
-        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
-    SDL_DestroyMutex(updateMutex);
+    if(SimulationApp::GetApp() != NULL)
+        SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->RemoveName(name_);
+    SDL_DestroyMutex(updateMutex_);
 }
 
-std::string Sensor::getName() const
+const std::string& Sensor::GetName() const
 {
-    return name;
+    return name_;
 }
 
-Scalar Sensor::getUpdateFrequency() const
+Scalar Sensor::GetUpdateFrequency() const
 {
-    return freq;
+    return freq_;
 }
 
-bool Sensor::isNewDataAvailable() const
+bool Sensor::IsNewDataAvailable() const
 {
-    return newDataAvailable;
+    return newDataAvailable_;
 }
 
-bool Sensor::isRenderable() const
+bool Sensor::IsRenderable() const
 {
-    return renderable;
+    return renderable_;
 }
 
-bool Sensor::isEnabled() const
+bool Sensor::IsEnabled() const
 {
-    return enabled;
+    return enabled_;
 }
 
 void Sensor::MarkDataOld()
 {
-    newDataAvailable = false;
+    newDataAvailable_ = false;
 }
 
-void Sensor::setUpdateFrequency(Scalar f)
+void Sensor::SetUpdateFrequency(Scalar f)
 {
-    freq = f;
+    freq_ = f;
 }
 
-void Sensor::setEnabled(bool en)
+void Sensor::SetEnabled(bool en)
 {
-    enabled = en;
+    enabled_ = en;
 }
 
-void Sensor::setRenderable(bool render)
+void Sensor::SetRenderable(bool render)
 {
-    renderable = render;
+    renderable_ = render;
 }
 
-void Sensor::setVisual(const std::string& meshFilename, Scalar scale, const std::string& look)
+void Sensor::SetVisual(std::string_view meshFilename, Scalar scale, std::string_view look)
 {
-    if(!SimulationApp::getApp()->hasGraphics())
+    if(!SimulationApp::GetApp()->HasGraphics())
         return;
 
-    Mesh* mesh = OpenGLContent::LoadMesh(meshFilename, scale, false);
+    std::unique_ptr<Mesh> mesh = OpenGLContent::LoadMesh(meshFilename, scale, false);
     if(mesh == nullptr)
         return;
 
-    graObjectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh);
-    lookId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
-    delete mesh;
+    graObjectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BuildObject(mesh.get());
+    lookId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->GetLookId(look);
 }
 
 void Sensor::Reset()
 {
-    eleapsedTime = Scalar(0.);
+    eleapsedTime_ = Scalar(0.);
     InternalUpdate(1.); //time delta should not affect initial measurement!!!
 }
 
 void Sensor::Update(Scalar dt)
 {
-    if(!enabled)
+    if(!enabled_)
         return;
         
-    SDL_LockMutex(updateMutex);
+    SDL_LockMutex(updateMutex_);
     
-    if(freq <= Scalar(0)) // Every simulation tick
+    if(freq_ <= Scalar(0)) // Every simulation tick
     {
         InternalUpdate(dt);
-        newDataAvailable = true;
+        newDataAvailable_ = true;
     }
     else //Fixed rate
     {
-        eleapsedTime += dt;
-        Scalar invFreq = Scalar(1)/freq;
+        eleapsedTime_ += dt;
+        Scalar invFreq = Scalar(1)/freq_;
         
-        if(eleapsedTime >= invFreq)
+        if(eleapsedTime_ >= invFreq)
         {
             InternalUpdate(invFreq);
-            eleapsedTime -= invFreq;
-            newDataAvailable = true;
+            eleapsedTime_ -= invFreq;
+            newDataAvailable_ = true;
         }
     }
     
-    SDL_UnlockMutex(updateMutex);
+    SDL_UnlockMutex(updateMutex_);
 }
 
 std::vector<Renderable> Sensor::Render()
 {
     std::vector<Renderable> items(0);
-    if(renderable && graObjectId > 0)
+    if(renderable_ && graObjectId_ > 0)
     {
         Renderable item;
         item.type = RenderableType::SOLID;
         item.materialName = "";
-        item.objectId = graObjectId;
-        item.lookId = lookId;
-        item.model = glMatrixFromTransform(getSensorFrame());
+        item.objectId = graObjectId_;
+        item.lookId = lookId_;
+        item.model = glMatrixFromTransform(GetSensorFrame());
         items.push_back(item);
     }
     return items;

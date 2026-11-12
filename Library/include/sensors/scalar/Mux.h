@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 24/05/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Mux__
-#define __Stonefish_Mux__
+#pragma once
 
 #include "StonefishCommon.h"
 
@@ -36,7 +35,7 @@ namespace sf
     struct MuxComponent
     {
         ScalarSensor* sensor;
-        unsigned short channel;
+        size_t channel;
     };
    
     //! A class implementing a multiplexer.
@@ -44,10 +43,7 @@ namespace sf
     {
     public:
         //! A constructor.
-        Mux();
-        
-        //! A destructor.
-        ~Mux();
+        Mux() = default;
         
         //! A method to add a sensor channel to the mux.
         /*!
@@ -55,24 +51,23 @@ namespace sf
          \param channel an index of the sensor channel
          \return if channel successfully added
          */
-        bool AddComponent(ScalarSensor* s, unsigned short channel);
+        bool AddComponent(ScalarSensor* s, size_t channel);
         
         //! A method returning a pointer to a mux channel.
         /*!
          \param index an index of the mux channel
          \return a pointer to a mux component
          */
-        MuxComponent* getComponent(unsigned int index);
+        MuxComponent* GetComponent(size_t index);
         
         //! A method returning the last sample.
-        Scalar* getLastSample();
+        std::vector<Scalar> GetLastSample();
         
         //! A method returning a number of channels of the mux.
-        unsigned int getNumOfComponents() const;
+        size_t GetNumOfComponents() const;
         
     private:
-        std::vector<MuxComponent> components;
+        std::vector<MuxComponent> components_;
     };
 }
 
-#endif

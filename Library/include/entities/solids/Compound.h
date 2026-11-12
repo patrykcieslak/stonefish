@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 19/09/17.
-//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Compound__
-#define __Stonefish_Compound__
+#pragma once
 
 #include "entities/SolidEntity.h"
 
@@ -33,7 +32,7 @@ namespace sf
     //! A structure representing one part of the compound body.
     typedef struct
     {
-        SolidEntity* solid;
+        std::unique_ptr<SolidEntity> solid;
         Transform origin;
         bool isExternal;
         bool alwaysVisible;
@@ -50,10 +49,7 @@ namespace sf
          \param firstExternalPart a pointer to the first external rigid body
          \param origin a transformation from the compound body origin to the first part origin
          */
-        Compound(std::string uniqueName, PhysicsSettings phy, SolidEntity* firstExternalPart, const Transform& origin);
-        
-        //! A destructor.
-        ~Compound();
+        Compound(std::string_view uniqueName, PhysicsSettings phy, std::unique_ptr<SolidEntity> firstExternalPart, const Transform& origin);
         
         //! A method adding new internal rigid body to the compound body.
         /*!
@@ -61,14 +57,14 @@ namespace sf
          \param origin a tranformation from the compound body origin to the part origin
          \param alwaysVisible the part is always rendered although it is an internal part
          */
-        void AddInternalPart(SolidEntity* solid, const Transform& origin, bool alwaysVisible = false);
+        void AddInternalPart(std::unique_ptr<SolidEntity> solid, const Transform& origin, bool alwaysVisible = false);
         
         //! A method adding new external rigid body to the compound body.
         /*!
          \param solid a pointer to the rigid part
          \param origin a tranformation from the compound body origin to the part origin
          */
-        void AddExternalPart(SolidEntity* solid, const Transform& origin);
+        void AddExternalPart(std::unique_ptr<SolidEntity> solid, const Transform& origin);
         
         //! A method which computes hydrodynamic forces acting on the compound body.
         /*!
@@ -87,34 +83,34 @@ namespace sf
         /*!
          \param enabled a flag that informs if the internal parts should be displayed
          */
-        void setDisplayInternalParts(bool enabled);
+        void SetDisplayInternalParts(bool enabled);
         
         //! A method returning the mass or the sum of mass and added mass (depending on type of body).
-        Scalar getAugmentedMass() const;
+        Scalar GetAugmentedMass() const;
         
         //! A method returning the inertia or the sum of inertia and added mass (depending on type of body).
-        Vector3 getAugmentedInertia() const;
+        Vector3 GetAugmentedInertia() const;
         
         //! A method returning the material of the body.
         Material getMaterial(size_t partId) const;
         
         //! A method returning the part id for the collision shape id.
-        size_t getPartId(size_t collisionShapeId) const;
+        size_t GetPartId(size_t collisionShapeId) const;
 
         //! A method returning a pointer to one part of the compound body.
-        const CompoundPart getPart(size_t partId) const;
+        const CompoundPart& GetPart(size_t partId) const;
 
         //! A method that returns the type of solid.
-        SolidType getSolidType();
+        SolidType GetSolidType() const;
         
         //! A method that returns a copy of all physics mesh vertices in body origin frame.
-        std::vector<Vector3>* getMeshVertices() const;
+        std::vector<Vector3> GetMeshVertices() const;
         
         //! A method that informs if the internal parts of the body are displayed.
-        bool isDisplayingInternalParts();
+        bool IsDisplayingInternalParts();
         
         //! A method that constructs a collision shape for the body.
-        btCollisionShape* BuildCollisionShape();
+        std::unique_ptr<btCollisionShape> BuildCollisionShape();
         
         //! A method that builds a graphical object for the body.
         void BuildGraphicalObject();
@@ -126,13 +122,11 @@ namespace sf
         std::vector<Renderable> Render(size_t partId);
         
     private:
-        std::vector<CompoundPart> parts; //Parts of the compound solid
-        std::vector<size_t> collisionPartId;
-        bool displayInternals;
+        std::vector<CompoundPart> parts_; //Parts of the compound solid
+        std::vector<size_t> collisionPartId_;
+        bool displayInternals_;
         
         void RecalculatePhysicalProperties();
     };
 
 }
-
-#endif

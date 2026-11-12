@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 05/07/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_RotaryEncoder__
-#define __Stonefish_RotaryEncoder__
+#pragma once
 
 #include "sensors/scalar/JointSensor.h"
 
@@ -43,7 +42,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        RotaryEncoder(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
+        RotaryEncoder(std::string_view uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
         
         //! A method used to attach the encoder to a motor.
         /*!
@@ -67,17 +66,24 @@ namespace sf
         virtual void Reset();
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const override;
+        ScalarSensorType GetScalarSensorType() const override;
+
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo GetConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<RotaryEncoder> Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info);
         
     protected:
         Scalar GetRawAngle();
         Scalar GetRawAngularVelocity();
         
-        Motor* motor;
-        Thruster* thrust;
-        Scalar angle;
-        Scalar lastAngle;
+        Motor* motor_;
+        Thruster* thrust_;
+        Scalar angle_;
+        Scalar lastAngle_;
     };
 }
-
-#endif

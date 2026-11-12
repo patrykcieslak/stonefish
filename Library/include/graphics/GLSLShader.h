@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 18/05/2014.
-//  Copyright (c) 2014-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_GLSLShader__
-#define __Stonefish_GLSLShader__
+#pragma once
 
 #include <utility>
 #include "graphics/OpenGLDataStructs.h"
@@ -57,7 +56,7 @@ namespace sf
         std::string header;
         std::string filename;
 
-        GLSLSource(GLenum type, const std::string& filename, const std::string& header = "")
+        GLSLSource(GLenum type, std::string_view filename, std::string_view header = "")
         : type(type), header(header), filename(filename) 
         {};
     };
@@ -84,7 +83,7 @@ namespace sf
          \param fragment path to the fragment shader
          \param vertex path to the vertex shader
          */
-        GLSLShader(std::string fragment, std::string vertex = "");
+        GLSLShader(std::string_view fragment, std::string_view vertex = "");
         
         //! A destructor.
         ~GLSLShader();
@@ -98,7 +97,7 @@ namespace sf
          \param type the type of the attribute
          \return success
          */
-        bool AddAttribute(std::string name, ParameterType type);
+        bool AddAttribute(std::string_view name, ParameterType type);
         
         //! A method to define a GLSL uniform.
         /*!
@@ -106,7 +105,7 @@ namespace sf
          \param type the type of the uniform
          \return success
          */
-        bool AddUniform(std::string name, ParameterType type);
+        bool AddUniform(std::string_view name, ParameterType type);
         
         //! A method used to set a GLSL attribute.
         /*!
@@ -114,7 +113,7 @@ namespace sf
          \param x the value of the attribute
          \return success
          */
-        bool SetAttribute(std::string name, GLfloat x);
+        bool SetAttribute(std::string_view name, GLfloat x);
         
         //! A method used to set a GLSL uniform.
         /*!
@@ -122,7 +121,7 @@ namespace sf
          \param x the value of the uniform
          \return success
          */
-        bool SetUniform(std::string name, bool x);
+        bool SetUniform(std::string_view name, bool x);
         
         //! A method used to set a GLSL uniform.
         /*!
@@ -130,7 +129,7 @@ namespace sf
          \param x the value of the uniform
          \return success
          */
-        bool SetUniform(std::string name, GLfloat x);
+        bool SetUniform(std::string_view name, GLfloat x);
         
         //! A method used to set a GLSL uniform.
         /*!
@@ -138,7 +137,7 @@ namespace sf
          \param x the value of the uniform
          \return success
          */
-        bool SetUniform(std::string name, glm::vec2 x);
+        bool SetUniform(std::string_view name, glm::vec2 x);
         
         //! A method used to set a GLSL uniform.
         /*!
@@ -146,7 +145,7 @@ namespace sf
          \param x the value of the uniform
          \return success
          */
-        bool SetUniform(std::string name, glm::vec3 x);
+        bool SetUniform(std::string_view name, glm::vec3 x);
         
         //! A method used to set a GLSL uniform.
         /*!
@@ -154,7 +153,7 @@ namespace sf
          \param x the value of the uniform
          \return success
          */
-        bool SetUniform(std::string name, glm::vec4 x);
+        bool SetUniform(std::string_view name, glm::vec4 x);
         
         //! A method used to set a GLSL uniform.
         /*!
@@ -162,7 +161,7 @@ namespace sf
          \param x the value of the uniform
          \return success
          */
-        bool SetUniform(std::string name, GLuint x);
+        bool SetUniform(std::string_view name, GLuint x);
 
         //! A method used to set a GLSL uniform.
         /*!
@@ -170,7 +169,7 @@ namespace sf
          \param x the value of the uniform
          \return success
          */
-        bool SetUniform(std::string name, GLint x);
+        bool SetUniform(std::string_view name, GLint x);
         
         //! A method used to set a GLSL uniform.
         /*!
@@ -178,7 +177,7 @@ namespace sf
          \param x the value of the uniform
          \return success
          */
-        bool SetUniform(std::string name, glm::ivec2 x);
+        bool SetUniform(std::string_view name, glm::ivec2 x);
         
         //! A method used to set a GLSL uniform.
         /*!
@@ -186,7 +185,7 @@ namespace sf
          \param x the value of the uniform
          \return success
          */
-        bool SetUniform(std::string name, glm::ivec3 x);
+        bool SetUniform(std::string_view name, glm::ivec3 x);
         
         //! A method used to set a GLSL uniform.
         /*!
@@ -194,7 +193,7 @@ namespace sf
          \param x the value of the uniform
          \return success
          */
-        bool SetUniform(std::string name, glm::ivec4 x);
+        bool SetUniform(std::string_view name, glm::ivec4 x);
 
         //! A method used to set a GLSL uniform.
         /*!
@@ -202,7 +201,7 @@ namespace sf
          \param x the value of the uniform
          \return success
          */
-        bool SetUniform(std::string name, glm::uvec2 x);
+        bool SetUniform(std::string_view name, glm::uvec2 x);
         
         //! A method used to set a GLSL uniform.
         /*!
@@ -210,7 +209,7 @@ namespace sf
          \param x the value of the uniform
          \return success
          */
-        bool SetUniform(std::string name, glm::uvec3 x);
+        bool SetUniform(std::string_view name, glm::uvec3 x);
         
         //! A method used to set a GLSL uniform.
         /*!
@@ -218,7 +217,7 @@ namespace sf
          \param x the value of the uniform
          \return success
          */
-        bool SetUniform(std::string name, glm::uvec4 x);
+        bool SetUniform(std::string_view name, glm::uvec4 x);
         
         //! A method used to set a GLSL uniform.
         /*!
@@ -226,7 +225,7 @@ namespace sf
          \param x the value of the uniform
          \return success
          */
-        bool SetUniform(std::string name, glm::mat3 x);
+        bool SetUniform(std::string_view name, glm::mat3 x);
         
         //! A method used to set a GLSL uniform.
         /*!
@@ -234,27 +233,27 @@ namespace sf
          \param x the value of the uniform
          \return success
          */
-        bool SetUniform(std::string name, glm::mat4 x);
+        bool SetUniform(std::string_view name, glm::mat4 x);
 
         //! A method used to bind a GLSL uniform block.
         /*!
          \param name the name of the uniform block
          \param bindingPoint the index of the binding point
          */
-        bool BindUniformBlock(std::string name, GLuint bindingPoint);
+        bool BindUniformBlock(std::string_view name, GLuint bindingPoint);
 
         //! A method used to bind a GLSL shader storage block.
         /*!
          \param name the name of the shader storage block
          \param bindingPoint the index of the binding point
          */
-        bool BindShaderStorageBlock(std::string name, GLuint bindingPoint);
+        bool BindShaderStorageBlock(std::string_view name, GLuint bindingPoint);
 
         //! A method to check if the shader is valid.
-        bool isValid();
+        bool IsValid();
         
         //! A method used to get the OpenGL program handle
-        GLuint getProgramHandle();
+        GLuint GetProgramHandle();
         
         //! A static method to init shader environment.
         static bool Init();
@@ -276,21 +275,19 @@ namespace sf
          \param shaderCompiled a pointer to a variable that will hold the shader compilation output code
          \return an id of the new compiled shader
          */
-        static GLuint LoadShader(GLenum shaderType, const std::string& filename, const std::string& header, GLint* shaderCompiled);
+        static GLuint LoadShader(GLenum shaderType, std::string_view filename, std::string_view header, GLint* shaderCompiled);
         
     private:
-        bool GetAttribute(std::string name, ParameterType type, GLint& index);
-        bool GetUniform(std::string name, ParameterType type, GLint& location);
+        bool GetAttribute(std::string_view name, ParameterType type, GLint& index);
+        bool GetUniform(std::string_view name, ParameterType type, GLint& location);
         
-        std::vector<GLSLAttribute> attributes;
-        std::vector<GLSLUniform> uniforms;
-        GLuint program;
-        bool valid;
+        std::vector<GLSLAttribute> attributes_;
+        std::vector<GLSLUniform> uniforms_;
+        GLuint program_;
+        bool valid_;
         
         static GLuint saqVertexShader;
         static bool verbose;
         static GLuint CreateProgram(const std::vector<GLuint>& compiledShaders, unsigned int doNotDeleteNFirstShaders = 0);
     };
 }
-
-#endif

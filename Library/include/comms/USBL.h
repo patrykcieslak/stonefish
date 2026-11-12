@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 25/02/2020.
-//  Copyright (c) 2020-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_USBL__
-#define __Stonefish_USBL__
+#pragma once
 
 #include "comms/AcousticModem.h"
 #include <random>
@@ -54,7 +53,7 @@ namespace sf
          \param maxVerticalFOVDeg the maximum vertical angle of radiation pattern [deg]
          \param operatingRange the operating range [m]
          */
-        USBL(std::string uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange);
+        USBL(std::string_view uniqueName, uint64_t deviceId, Scalar minVerticalFOVDeg, Scalar maxVerticalFOVDeg, Scalar operatingRange);
         
         //! A method used to enable the auto pinging of connected transponder to monitor its position.
         /*!
@@ -66,10 +65,10 @@ namespace sf
         void DisableAutoPing();
            
         //! A method to get the current information about the acoustic beacons.
-        std::map<uint64_t, BeaconInfo>& getBeaconInfo(); 
+        std::map<uint64_t, BeaconInfo>& GetBeaconInfo(); 
 
         //! A method returning the type of the comm.
-        CommType getType() const;
+        CommType GetType() const;
        
     protected:
         //! A method performing internal comm state update.
@@ -78,15 +77,13 @@ namespace sf
          */
         void InternalUpdate(Scalar dt) override;
         
-        bool ping;
-        Scalar pingRate;
-        Scalar pingTime;
-        std::map<uint64_t, BeaconInfo> beacons;
-        bool noise;
+        bool ping_;
+        Scalar pingRate_;
+        Scalar pingTime_;
+        std::map<uint64_t, BeaconInfo> beacons_;
+        bool noise_;
         
         static std::random_device randomDevice;
         static std::mt19937 randomGenerator;
     };
 }
-    
-#endif

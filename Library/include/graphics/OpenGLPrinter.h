@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/06/2017.
-//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLPrinter__
-#define __Stonefish_OpenGLPrinter__
+#pragma once
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -57,7 +56,7 @@ namespace sf
          \param fontPath a path to the font file
          \param size the native size of the font
          */
-        OpenGLPrinter(const std::string& fontPath, GLuint size);
+        OpenGLPrinter(std::string_view fontPath, GLuint size);
         
         //! A destructor.
         ~OpenGLPrinter();
@@ -71,21 +70,21 @@ namespace sf
          \param size the height of the font
          \param raw flag indicating if raw OpenGL calls should be used
          */
-        void Print(const std::string& text, glm::vec4 color, GLuint x, GLuint y, GLfloat size, bool raw = false);
+        void Print(std::string_view text, glm::vec4 color, GLuint x, GLuint y, GLfloat size, bool raw = false);
         
         //! A method used to measure the length of a string in pixels.
         /*!
          \param text the string to be measured
          \return the length of the string in pixels
          */
-        GLuint TextLength(const std::string& text);
+        GLuint TextLength(std::string_view text);
         
         //! A method used to measure the sise of the string in pixels.
         /*!
          \param text the string to be measured
          \return a 2D vector containing width and height of the text in pixels
          */
-        glm::ivec2 TextDimensions(const std::string& text);
+        glm::ivec2 TextDimensions(std::string_view text);
         
         //! A static method used to set the widow size for the printers.
         /*!
@@ -93,19 +92,24 @@ namespace sf
          \param height the height of hte window [pix]
          */
         static void SetWindowSize(GLuint width, GLuint height);
+
+        //! A static method that loads the necessary resources.
+        static void Init();
+
+        //! A static method used to clean the allocated resources.
+        static void Destroy();
         
     private:
-        bool initialized;
-        GLuint fontVBO;
-        GLuint nativeFontSize;
-        GLuint fontTexture;
-        GLfloat texWidth;
-        GLfloat texHeight;
-        Character chars[128-32];
+        bool initialized_;
+        GLuint fontVBO_;
+        GLuint nativeFontSize_;
+        GLuint fontTexture_;
+        GLfloat texWidth_;
+        GLfloat texHeight_;
+        Character chars_[128-32];
         
-        static GLSLShader* printShader;
+        static std::unique_ptr<GLSLShader> printShader;
         static GLuint windowW, windowH;
     };
 }
 
-#endif

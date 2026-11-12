@@ -34,26 +34,26 @@
 namespace sf
 {
 
-Mesh* LoadGeometryFromFile(const std::string& path, GLfloat scale)
+std::unique_ptr<Mesh> LoadGeometryFromFile(std::string_view path, GLfloat scale)
 {
-    std::string extension = path.substr(path.length()-3,3);
-    Mesh* mesh = nullptr;
+    std::string extension{path.substr(path.length()-3,3)}; // Get file extension
     
     if(extension == "stl" || extension == "STL")
-        mesh = LoadSTL(path, scale);
+        return LoadSTL(path, scale);
     else if(extension == "obj" || extension == "OBJ")
-        mesh = LoadOBJ(path, scale);
-    else
+        return LoadOBJ(path, scale);
+    else // Unsupported file type
+    {
         cError("Unsupported geometry file type: %s!", extension.c_str());
-    
-    return mesh;
+        return nullptr;
+    }
 }
 
-Mesh* LoadOBJ(const std::string& path, GLfloat scale)
+std::unique_ptr<Mesh> LoadOBJ(std::string_view path, GLfloat scale)
 {
-    Mesh* mesh = nullptr;
+    std::unique_ptr<Mesh> mesh {};
 
-    cInfo("Loading geometry from: %s", path.c_str());
+    cInfo("Loading geometry from: %s", std::string(path).c_str());
     
     int64_t start = GetTimeInMicroseconds();
     rapidobj::Result objData = rapidobj::ParseFile(path);
@@ -67,7 +67,7 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
     bool success = rapidobj::Triangulate(objData);
     if (!success)
     {
-        cCritical("Failed to triangulate geometry!", path.c_str());
+        cCritical("Failed to triangulate geometry!", std::string(path).c_str());
         return nullptr;
     }
 
@@ -81,9 +81,8 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
 
     if(hasUVs && hasNormals)
     {
-        TexturableMesh* tmesh = new TexturableMesh;
-        mesh = tmesh;
-
+        std::unique_ptr<TexturableMesh> tmesh = std::make_unique<TexturableMesh>();
+        
         // Initialize positions (there will be at least one new vertex per each new position)
         tmesh->vertices.resize(objData.attributes.positions.size()/3);
         for (size_t i=0; i<tmesh->vertices.size(); ++i)
@@ -168,12 +167,13 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
         tmesh->vertices.resize(tmesh->vertices.size() + sortedGeneratedVertices.size());
         for (size_t i=0; i<sortedGeneratedVertices.size(); ++i)
             tmesh->vertices[genVStart + i] = sortedGeneratedVertices[i].vertex;
+
+        mesh = std::move(tmesh);
     }
     else
     {
-        PlainMesh* pmesh = new PlainMesh;
-        mesh = pmesh;
-        
+        std::unique_ptr<PlainMesh> pmesh = std::make_unique<PlainMesh>();
+
         // Initialize positions
         pmesh->vertices.resize(objData.attributes.positions.size()/3);
         for (size_t i=0; i<pmesh->vertices.size(); ++i)
@@ -269,34 +269,36 @@ Mesh* LoadOBJ(const std::string& path, GLfloat scale)
                 }
             }
         }
+        mesh = std::move(pmesh);
     }
     
     int64_t end = GetTimeInMicroseconds();
     
 #ifdef DEBUG
-    printf("Loaded: %ld Generated: %ld\n", genVStart, mesh->getNumOfVertices()-genVStart);
+    printf("Loaded: %ld Generated: %ld\n", genVStart, mesh->GetNumOfVertices()-genVStart);
     printf("Total time: %ld\n", (long int)(end-start));
 #endif
     cInfo("Loaded mesh with %ld faces in %ld ms.", mesh->faces.size(), (end-start)/1000);
     return mesh;
 }
 
-Mesh* LoadSTL(const std::string& path, GLfloat scale)
+std::unique_ptr<Mesh> LoadSTL(std::string_view path, GLfloat scale)
 {
     //Read STL data
-    FILE* file = fopen(path.c_str(), "rb");   
+    FILE* file = fopen(std::string(path).c_str(), "rb");   
     
     if(file == NULL)
     {
-        cCritical("Failed to open geometry file: %s", path.c_str());
+        cCritical("Failed to open geometry file: %s", std::string(path).c_str());
         return nullptr;
     }
     
-    cInfo("Loading geometry from: %s", path.c_str());
+    cInfo("Loading geometry from: %s", std::string(path).c_str());
     
+    std::unique_ptr<PlainMesh> mesh = std::make_unique<PlainMesh>();
+
     char line[128];
     char keyword[10];
-    PlainMesh* mesh = new PlainMesh;
     Vertex v;
     
     while(fgets(line, 128, file))
@@ -327,7 +329,7 @@ Mesh* LoadSTL(const std::string& path, GLfloat scale)
     
     fclose(file);
     
-    //Remove duplicates (so that it becomes equivalent to OBJ file representation)
+    //TODO: Remove duplicates (so that it becomes equivalent to OBJ file representation)
     
     return mesh;
 }
@@ -344,9 +346,9 @@ void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar densit
         for(size_t i=0; i<mesh->faces.size(); ++i)
         {
             //Get triangle, convert from OpenGL to physics
-            glm::vec3 v1gl = mesh->getVertexPos(i, 0);
-            glm::vec3 v2gl = mesh->getVertexPos(i, 1);
-            glm::vec3 v3gl = mesh->getVertexPos(i, 2);
+            glm::vec3 v1gl = mesh->GetVertexPos(i, 0);
+            glm::vec3 v2gl = mesh->GetVertexPos(i, 1);
+            glm::vec3 v3gl = mesh->GetVertexPos(i, 2);
             Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
             Vector3 v2(v2gl.x,v2gl.y,v2gl.z);
             Vector3 v3(v3gl.x,v3gl.y,v3gl.z);
@@ -371,9 +373,9 @@ void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar densit
         for(size_t i=0; i<mesh->faces.size(); ++i)
         {
             //Get triangle, convert from OpenGL to physics
-            glm::vec3 v1gl = mesh->getVertexPos(i, 0);
-            glm::vec3 v2gl = mesh->getVertexPos(i, 1);
-            glm::vec3 v3gl = mesh->getVertexPos(i, 2);
+            glm::vec3 v1gl = mesh->GetVertexPos(i, 0);
+            glm::vec3 v2gl = mesh->GetVertexPos(i, 1);
+            glm::vec3 v3gl = mesh->GetVertexPos(i, 2);
             Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
             Vector3 v2(v2gl.x,v2gl.y,v2gl.z);
             Vector3 v3(v3gl.x,v3gl.y,v3gl.z);
@@ -417,9 +419,9 @@ void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar densit
         for(size_t i=0; i<mesh->faces.size(); ++i)
         {
             //Triangle verticies with respect to CG
-            glm::vec3 v1gl = mesh->getVertexPos(i, 0);
-            glm::vec3 v2gl = mesh->getVertexPos(i, 1);
-            glm::vec3 v3gl = mesh->getVertexPos(i, 2);
+            glm::vec3 v1gl = mesh->GetVertexPos(i, 0);
+            glm::vec3 v2gl = mesh->GetVertexPos(i, 1);
+            glm::vec3 v3gl = mesh->GetVertexPos(i, 2);
             
             Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
             Vector3 v2(v2gl.x,v2gl.y,v2gl.z);
@@ -459,9 +461,9 @@ void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar densit
         for(unsigned int i=0; i<mesh->faces.size(); ++i)
         {
             //Triangle verticies with respect to CG
-            glm::vec3 v1gl = mesh->getVertexPos(i, 0);
-            glm::vec3 v2gl = mesh->getVertexPos(i, 1);
-            glm::vec3 v3gl = mesh->getVertexPos(i, 2);
+            glm::vec3 v1gl = mesh->GetVertexPos(i, 0);
+            glm::vec3 v2gl = mesh->GetVertexPos(i, 1);
+            glm::vec3 v3gl = mesh->GetVertexPos(i, 2);
             
             Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
             Vector3 v2(v2gl.x,v2gl.y,v2gl.z);
@@ -502,9 +504,9 @@ void ComputePhysicalProperties(const Mesh* mesh, Scalar thickness, Scalar densit
         for(size_t i=0; i<mesh->faces.size(); ++i)
         {
             //Triangle verticies with respect to CG
-            glm::vec3 v1gl = mesh->getVertexPos(i, 0);
-            glm::vec3 v2gl = mesh->getVertexPos(i, 1);
-            glm::vec3 v3gl = mesh->getVertexPos(i, 2);
+            glm::vec3 v1gl = mesh->GetVertexPos(i, 0);
+            glm::vec3 v2gl = mesh->GetVertexPos(i, 1);
+            glm::vec3 v3gl = mesh->GetVertexPos(i, 2);
             
             Vector3 v1(v1gl.x,v1gl.y,v1gl.z);
             Vector3 v2(v2gl.x,v2gl.y,v2gl.z);

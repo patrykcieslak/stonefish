@@ -20,19 +20,20 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 20/11/2018.
-//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_ScalarSensor__
-#define __Stonefish_ScalarSensor__
+#pragma once
 
 #include <deque>
 #include "sensors/Sensor.h"
+#include "sensors/Sample.h"
 
 namespace sf
 {
     //! An enum defining types of scalar sensors.
-    enum class ScalarSensorType {ACC, CURRENT, DVL, COMPASS, FT, GPS, GYRO, IMU, INS, MULTIBEAM, ODOM, PRESSURE, PROFILER, ENCODER, TORQUE, POSE};
+    enum class ScalarSensorType {ACC, CURRENT, DVL, COMPASS, FT, GPS, GYRO, IMU, INS, MULTIBEAM, 
+        ODOM, PRESSURE, PROFILER, ENCODER, TORQUE, POSE, PLUGIN};
     
     //! An enum defining the type of quantity represented by the measurement.
     enum class QuantityType
@@ -65,13 +66,13 @@ namespace sf
          \param name_ a name for the channel
          \param type_ a type of quantity represented by channel data
          */
-        SensorChannel(std::string name_, QuantityType type_) : name(name_), type(type_), stdDev(0), rangeMin(-BT_LARGE_FLOAT), rangeMax(BT_LARGE_FLOAT) {}
+        SensorChannel(std::string_view name_, QuantityType type_) : name(name_), type(type_), stdDev(0), rangeMin(-BT_LARGE_FLOAT), rangeMax(BT_LARGE_FLOAT) {}
         
         //! A method used to set standard deviation of the measurement
         /*!
          \param sd the value of the standard deviation
          */
-        void setStdDev(Scalar sd)
+        void SetStdDev(Scalar sd)
         {
             if(sd > Scalar(0))
             {
@@ -80,8 +81,6 @@ namespace sf
             }
         }
     };
-    
-    class Sample;
     
     //! An abstract class representing a scalar sensor.
     class ScalarSensor : public Sensor
@@ -93,10 +92,10 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (0 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        ScalarSensor(std::string uniqueName, Scalar frequency, int historyLength);
+        ScalarSensor(std::string_view uniqueName, Scalar frequency, long int historyLength);
         
         //! A destructor.
-        virtual ~ScalarSensor();
+        virtual ~ScalarSensor() = default;
             
         //! A method resetting the sensor.
         virtual void Reset();
@@ -110,24 +109,16 @@ namespace sf
          \param includeTime a flag specifying if the timestamp should be written
          \param fixedPrecision number of decimal places to write
          */
-        void SaveMeasurementsToTextFile(const std::string& path, bool includeTime = true, unsigned int fixedPrecision = 6);
-        
-        //! A method used to save the measurements to an Octave file.
-        /*!
-         \param path a path to the output file
-         \param includeTime a flag specifying if the timestamp should be written
-         \param separateChannels
-         */
-        void SaveMeasurementsToOctaveFile(const std::string& path, bool includeTime = true, bool separateChannels = false);
+        void SaveMeasurementsToTextFile(std::string_view path, bool includeTime = true, size_t fixedPrecision = 6);
         
         //! A method returning the number of channels of the sensor.
-        unsigned short getNumOfChannels() const;
+        size_t GetNumOfChannels() const;
         
         //! A method returning the last sample.
-        Sample getLastSample() const;
+        const Sample& GetLastSample() const;
         
         //! A method returing a pointer to a copy of the history of sensor measurements.
-        const std::vector<Sample>* getHistory();
+        std::unique_ptr<std::vector<Sample>> GetHistory();
         
         //! A method returning the value of the measurement.
         /*!
@@ -135,34 +126,33 @@ namespace sf
          \param channel the index of the channel
          \return value of the measurement
          */
-        Scalar getValue(unsigned long int index, unsigned int channel) const;
+        Scalar GetValue(size_t index, size_t channel) const;
         
         //! A method returning the last value of the measurement.
         /*!
          \param channel the index of the channel
          \return last value of the measurement
          */
-        Scalar getLastValue(unsigned int channel) const;
+        Scalar GetLastValue(size_t channel) const;
         
         //! A method returning the description of a specified channel.
         /*!
          \param channel the infdex of the channel
          \return a structure discribing the channel
          */
-        SensorChannel getSensorChannelDescription(unsigned int channel) const;
+        SensorChannel GetSensorChannelDescription(size_t channel) const;
         
         //! A method returning the type of scalar sensor.
-        virtual ScalarSensorType getScalarSensorType() const = 0;
+        virtual ScalarSensorType GetScalarSensorType() const = 0;
         
     protected:
-        void AddSampleToHistory(const Sample& s);
-        std::deque<Sample*> history;
-        std::vector<SensorChannel> channels;
-        uint64_t sampleCount;
+        void AddSampleToHistory(std::unique_ptr<Sample> s);
+        std::deque<std::unique_ptr<Sample>> history_;
+        std::vector<SensorChannel> channels_;
+        size_t sampleCount_;
         
     private:
-        int historyLen;
+        long int historyLen_;
     };
 }
-    
-#endif
+

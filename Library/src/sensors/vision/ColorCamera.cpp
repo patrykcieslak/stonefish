@@ -20,12 +20,13 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 4/5/18.
-//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/vision/ColorCamera.h"
 
 #include "core/GraphicalSimulationApp.h"
+#include "core/DeviceFactory.h"
 #include "graphics/OpenGLRealCamera.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
@@ -33,58 +34,60 @@
 namespace sf
 {
 
-ColorCamera::ColorCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency, 
-    Scalar minDistance, Scalar maxDistance) : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
+ColorCamera::ColorCamera(std::string_view uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency, 
+    Scalar near, Scalar far) : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
 {
-    depthRange = glm::vec2((GLfloat)minDistance, (GLfloat)maxDistance);
-    newDataCallback = nullptr;
-    imageData = nullptr;
-}
-
-ColorCamera::~ColorCamera()
-{
-    glCamera = nullptr;
+    depthRange_ = glm::vec2((GLfloat)near, (GLfloat)far);
+    newDataCallback_ = nullptr;
+    imageData_ = nullptr;
+    glCamera_ = nullptr;
 }
     
-void ColorCamera::setExposureCompensation(Scalar comp)
+void ColorCamera::SetExposureCompensation(Scalar comp)
 {
-    if(glCamera != nullptr)
-        glCamera->setExposureCompensation((GLfloat)comp);
+    if(glCamera_ != nullptr)
+        glCamera_->SetExposureCompensation((GLfloat)comp);
 }
     
-Scalar ColorCamera::getExposureCompensation() const
+Scalar ColorCamera::GetExposureCompensation() const
 {
-    if(glCamera != nullptr)
-        return (Scalar)glCamera->getExposureCompensation();
+    if(glCamera_ != nullptr)
+        return (Scalar)glCamera_->GetExposureCompensation();
     else
         return Scalar(0);
 }
 
-void* ColorCamera::getImageDataPointer(unsigned int index)
+void* ColorCamera::GetImageDataPointer(unsigned int index)
 {
-    return imageData;
+    return imageData_;
 }
 
-VisionSensorType ColorCamera::getVisionSensorType() const
+VisionSensorType ColorCamera::GetVisionSensorType() const
 {
     return VisionSensorType::COLOR_CAMERA;
 }
 
-OpenGLView* ColorCamera::getOpenGLView() const
+OpenGLView* ColorCamera::GetOpenGlView() const
 {
-    return glCamera;
+    return glCamera_;
 }
 
 void ColorCamera::InitGraphics(bool& seesParticles)
 {
     seesParticles = true;
     
-    glCamera = new OpenGLRealCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, depthRange, freq < Scalar(0));
-    glCamera->setCamera(this);
+    // Create camera
+    std::unique_ptr<OpenGLRealCamera> glCamera = 
+        std::make_unique<OpenGLRealCamera>(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX_, resY_, (GLfloat)fovH_, depthRange_, freq_ < Scalar(0));
+    
+    // Set up camera
+    glCamera_ = glCamera.get();
+    glCamera_->SetCamera(this);
     UpdateTransform();
-    glCamera->UpdateTransform();
+    glCamera_->UpdateTransform();
     InternalUpdate(0);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera);
+    
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->AddView(std::move(glCamera));
 }
 
 void ColorCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
@@ -92,27 +95,75 @@ void ColorCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vect
     glm::vec3 eye_ = glm::vec3((GLfloat)eye.x(), (GLfloat)eye.y(), (GLfloat)eye.z());
     glm::vec3 dir_ = glm::vec3((GLfloat)dir.x(), (GLfloat)dir.y(), (GLfloat)dir.z());
     glm::vec3 up_ = glm::vec3((GLfloat)up.x(), (GLfloat)up.y(), (GLfloat)up.z());
-    glCamera->SetupCamera(eye_, dir_, up_);
+    glCamera_->SetupCamera(eye_, dir_, up_);
 }
 
 void ColorCamera::InstallNewDataHandler(std::function<void(ColorCamera*)> callback)
 {
-    newDataCallback = callback;
+    newDataCallback_ = callback;
 }
 
 void ColorCamera::NewDataReady(void* data, unsigned int index)
 {
-    if(newDataCallback != nullptr)
+    if(newDataCallback_ != nullptr)
     {
-        imageData = (GLubyte*)data;
-        newDataCallback(this);
-        imageData = nullptr;
+        imageData_ = (GLubyte*)data;
+        newDataCallback_(this);
+        imageData_ = nullptr;
     }
 }
 
 void ColorCamera::InternalUpdate(Scalar dt)
 {
-    glCamera->Update();
+    glCamera_->Update();
 }
+
+// Statics
+
+ConstructInfo ColorCamera::GetConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+
+    // Specs
+    node.optional = false;
+    node.attributes.insert({"resolution_x", {ConstructInfoValueType::INT, false}});
+    node.attributes.insert({"resolution_y", {ConstructInfoValueType::INT, false}});
+    node.attributes.insert({"horizontal_fov", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"specs", node});
+
+    // Rendering
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"minimum_distance", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"maximum_distance", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"rendering", node});
+
+    return info;
+}
+
+std::unique_ptr<ColorCamera> ColorCamera::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // Specs
+    int resolutionX = std::get<int>(info.nodes.at("specs").attributes.at("resolution_x").value);
+    int resolutionY = std::get<int>(info.nodes.at("specs").attributes.at("resolution_y").value);
+    Scalar hFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("horizontal_fov").value);
+
+    // Rendering (optional)
+    Scalar near (STD_NEAR_PLANE_DISTANCE);
+    Scalar far (STD_FAR_PLANE_DISTANCE);
+
+    ConstructInfoValue& value = info.nodes.at("rendering").attributes.at("near");
+    if (value.valid)
+        near = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("rendering").attributes.at("far");
+    if (value.valid)
+        far = std::get<Scalar>(value.value);
+
+    return std::make_unique<ColorCamera>(uniqueName, resolutionX, resolutionY, hFov, frequency, near, far);
+}
+
+REGISTER_SENSOR("camera", ColorCamera)
 
 }

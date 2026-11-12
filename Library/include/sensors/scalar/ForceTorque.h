@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/10/2017.
-//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_ForceTorque__
-#define __Stonefish_ForceTorque__
+#pragma once
 
 #include "sensors/scalar/JointSensor.h"
 
@@ -44,7 +43,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        ForceTorque(std::string uniqueName, SolidEntity* attachment, const Transform& origin, Scalar frequency = Scalar(-1), int historyLength = -1);
+        ForceTorque(std::string_view uniqueName, SolidEntity* attachment, const Transform& origin, Scalar frequency = Scalar(-1), int historyLength = -1);
         
         //! A constructor.
         /*!
@@ -53,7 +52,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        ForceTorque(std::string uniqueName, const Transform& origin, Scalar frequency = Scalar(-1), int historyLength = -1);
+        ForceTorque(std::string_view uniqueName, const Transform& origin, Scalar frequency = Scalar(-1), int historyLength = -1);
         
         //! A method performing internal sensor state update.
         /*!
@@ -66,29 +65,36 @@ namespace sf
          \param forceMax a vector representing the maximum measured forces [N]
          \param torqueMax a vector representing the maximum mesured torque [Nm]
          */
-        void setRange(const Vector3& forceMax, const Vector3& torqueMax);
+        void SetRange(const Vector3& forceMax, const Vector3& torqueMax);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
          \param forceStdDev standard deviation of force measurement noise
          \param toqueStdDev standard deviation of torque measurement noise
          */
-        void setNoise(Scalar forceStdDev, Scalar torqueStdDev);
+        void SetNoise(Scalar forceStdDev, Scalar torqueStdDev);
         
         //! A method that implements rendering of the sensor.
         std::vector<Renderable> Render();
         
         //! A method returning the current sensor frame in world.
-        Transform getSensorFrame() const;
+        Transform GetSensorFrame() const;
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const override;
+        ScalarSensorType GetScalarSensorType() const override;
+
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo GetConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<ForceTorque> Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info);
         
     private:
-        SolidEntity* attach;
-        Transform o2s;
-        Transform lastFrame;
+        SolidEntity* attach_;
+        Transform o2s_;
+        Transform lastFrame_;
     };
 }
-
-#endif

@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/15/14.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_TorusShape__
-#define __Stonefish_TorusShape__
+#pragma once
 
 #include "BulletCollision/CollisionShapes/btConvexInternalShape.h"
 #include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
@@ -48,12 +47,12 @@ namespace sf
         
         virtual void getAabb(const Transform& t,Vector3& aabbMin,Vector3& aabbMax) const;
         
-        Scalar getMajorRadius() const { return m_majorRadius; }
-        Scalar getMinorRadius() const { return m_minorRadius; }
-        Scalar getRadius() const { return getMajorRadius(); }
+        Scalar GetMajorRadius() const { return majorRadius_; }
+        Scalar GetMinorRadius() const { return minorRadius_; }
+        Scalar GetRadius() const { return GetMajorRadius(); }
         
-        Vector3 getHalfExtentsWithMargin() const;
-        const Vector3& getHalfExtentsWithoutMargin() const;
+        Vector3 GetHalfExtentsWithMargin() const;
+        const Vector3& GetHalfExtentsWithoutMargin() const;
         virtual void setLocalScaling(const Vector3& scaling);
         
         virtual const char*	getName()const { return "TORUS"; }
@@ -61,9 +60,7 @@ namespace sf
         virtual Vector3 getAnisotropicRollingFrictionDirection() const { return Vector3(0,1,0); }
         
     protected:
-        Scalar m_majorRadius;
-        Scalar m_minorRadius;
+        Scalar majorRadius_;
+        Scalar minorRadius_;
     };
 }
-    
-#endif

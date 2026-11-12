@@ -20,13 +20,13 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/29/13.
-//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLTrackball__
-#define __Stonefish_OpenGLTrackball__
+#pragma once
 
 #include "graphics/OpenGLCamera.h"
+#include <array>
 
 namespace sf
 {
@@ -51,9 +51,6 @@ namespace sf
         OpenGLTrackball(glm::vec3 centerPosition, GLfloat orbitRadius, glm::vec3 up,
                         GLint originX, GLint originY, GLint width, GLint height,
                         GLfloat horizontalFovDeg, glm::vec2 range);
-
-        //! A destructor.
-        ~OpenGLTrackball();
         
         //! A method to apply a rotation to the trackball.
         /*!
@@ -122,33 +119,32 @@ namespace sf
         glm::vec3 GetUpDirection() const override;
         
         //! A method returning the type of the view.
-        ViewType getType() const override;
+        ViewType GetType() const override;
         
         //! A method that informs if the camera needs update.
-        bool needsUpdate() override;
+        bool NeedsUpdate() override;
         
     private:
-        GLfloat calculateZ(GLfloat x, GLfloat y);
+        GLfloat CalculateZ(GLfloat x, GLfloat y);
         
-        MovingEntity* holdingEntity;
+        MovingEntity* holdingEntity_;
         
-        glm::vec3 tempCenter;
-        glm::mat4 trackballTransform;
-        glm::quat rotation;
-        glm::vec3 center;
-        glm::vec3 up;
-        GLfloat radius;
+        glm::vec3 tempCenter_;
+        glm::mat4 trackballTransform_;
+        glm::quat rotation_;
+        glm::vec3 center_;
+        glm::vec3 up_;
+        GLfloat radius_;
         
         //Mouse interaction
-        GLfloat x_start, y_start, z_start;
-        glm::quat rotation_start;
-        glm::vec3 translation_start;
-        bool dragging;
-        bool transMode;
+        GLfloat xStart_, yStart_, zStart_;
+        glm::quat rotationStart_;
+        glm::vec3 translationStart_;
+        bool dragging_;
+        bool transMode_;
 
         //Shaders
-        GLSLShader* outlineShader[2];
+        std::array<std::unique_ptr<GLSLShader>, 2> outlineShader_;
     };
 }
 
-#endif

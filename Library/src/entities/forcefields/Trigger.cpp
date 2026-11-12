@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/04/18.
-//  Copyright(c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/forcefields/Trigger.h"
@@ -32,83 +32,84 @@
 namespace sf
 {
 
-Trigger::Trigger(std::string uniqueName, Scalar radius, const Transform& worldTransform, std::string look) : ForcefieldEntity(uniqueName)
+Trigger::Trigger(std::string_view uniqueName, Scalar radius, const Transform& worldTransform, std::string_view look) : ForcefieldEntity(uniqueName)
 {
-    ghost->setCollisionFlags(ghost->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
-    ghost->setWorldTransform(worldTransform);
-    ghost->setCollisionShape(new btSphereShape(radius));
-    active = false;
+    ghost_->setCollisionFlags(ghost_->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
+    ghost_->setWorldTransform(worldTransform);
+    collisionShape_ = std::make_unique<btSphereShape>(radius);
+    ghost_->setCollisionShape(collisionShape_.get());
+    active_ = false;
     
-    Mesh* mesh = OpenGLContent::BuildSphere((GLfloat)radius);
+    std::unique_ptr<Mesh> mesh = OpenGLContent::BuildSphere((GLfloat)radius);
     
-    if(SimulationApp::getApp()->hasGraphics())
+    if(SimulationApp::GetApp()->HasGraphics())
     {
-        objectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh);
-        lookId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+        objectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BuildObject(mesh.get());
+        lookId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->GetLookId(look);
     }
     else
     {
-        objectId = 0;
-        lookId = -1;
+        objectId_ = 0;
+        lookId_ = -1;
     }
 }
 
-Trigger::Trigger(std::string uniqueName, Scalar radius, Scalar length, const Transform& worldTransform, std::string look) : ForcefieldEntity(uniqueName)
+Trigger::Trigger(std::string_view uniqueName, Scalar radius, Scalar length, const Transform& worldTransform, std::string_view look) : ForcefieldEntity(uniqueName)
 {
-    ghost->setCollisionFlags(ghost->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
-    ghost->setWorldTransform(worldTransform);
-    ghost->setCollisionShape(new btCylinderShape(Vector3(radius, length/Scalar(2), radius)));
-    active = false;
+    ghost_->setCollisionFlags(ghost_->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
+    ghost_->setWorldTransform(worldTransform);
+    ghost_->setCollisionShape(new btCylinderShape(Vector3(radius, length/Scalar(2), radius)));
+    active_ = false;
     
-    Mesh* mesh = OpenGLContent::BuildCylinder((GLfloat)radius, (GLfloat)length);
+    std::unique_ptr<Mesh> mesh = OpenGLContent::BuildCylinder((GLfloat)radius, (GLfloat)length);
     
-    if(SimulationApp::getApp()->hasGraphics())
+    if(SimulationApp::GetApp()->HasGraphics())
     {
-        objectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh);
-        lookId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+        objectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BuildObject(mesh.get());
+        lookId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->GetLookId(look);
     }
     else
     {
-        objectId = 0;
-        lookId = -1;
+        objectId_ = 0;
+        lookId_ = -1;
     }
 }
 
-Trigger::Trigger(std::string uniqueName, const Vector3& dimensions, const Transform& worldTransform, std::string look) : ForcefieldEntity(uniqueName)
+Trigger::Trigger(std::string_view uniqueName, const Vector3& dimensions, const Transform& worldTransform, std::string_view look) : ForcefieldEntity(uniqueName)
 {
-    ghost->setCollisionFlags(ghost->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
-    ghost->setWorldTransform(worldTransform);
-    ghost->setCollisionShape(new btBoxShape(dimensions/Scalar(2)));
-    active = false;
+    ghost_->setCollisionFlags(ghost_->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
+    ghost_->setWorldTransform(worldTransform);
+    ghost_->setCollisionShape(new btBoxShape(dimensions/Scalar(2)));
+    active_ = false;
     
     glm::vec3 halfExt((GLfloat)(dimensions.x()/Scalar(2)), (GLfloat)(dimensions.y()/Scalar(2)), (GLfloat)(dimensions.z()/Scalar(2)));
-    Mesh* mesh = OpenGLContent::BuildBox(halfExt);
+    std::unique_ptr<Mesh> mesh = OpenGLContent::BuildBox(halfExt);
     
-    if(SimulationApp::getApp()->hasGraphics())
+    if(SimulationApp::GetApp()->HasGraphics())
     {
-        objectId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->BuildObject(mesh);
-        lookId = ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->getLookId(look);
+        objectId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->BuildObject(mesh.get());
+        lookId_ = static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->GetLookId(look);
     }
     else
     {
-        objectId = 0;
-        lookId = -1;
+        objectId_ = 0;
+        lookId_ = -1;
     }
 }
 
-ForcefieldType Trigger::getForcefieldType()
+ForcefieldType Trigger::GetForcefieldType()
 {
     return ForcefieldType::TRIGGER;
 }
 
 void Trigger::AddActiveSolid(SolidEntity* solid)
 {
-    solids.push_back(solid);
+    solids_.push_back(solid);
 }
 
 void Trigger::Activate(btCollisionObject* co)
 {
-    if(solids.size() == 0)
+    if(solids_.size() == 0)
         return;
     
     Entity* ent;
@@ -132,13 +133,13 @@ void Trigger::Activate(btCollisionObject* co)
     else
         return;
     
-    if(ent->getType() == EntityType::SOLID)
+    if(ent->GetType() == EntityType::SOLID)
     {
         SolidEntity* solid = (SolidEntity*)ent;
-        for(unsigned int i=0; i<solids.size(); ++i)
-            if(solids[i] == solid)
+        for(unsigned int i=0; i<solids_.size(); ++i)
+            if(solids_[i] == solid)
             {
-                active = true;
+                active_ = true;
                 return;
             }
     }
@@ -146,25 +147,25 @@ void Trigger::Activate(btCollisionObject* co)
 
 void Trigger::Clear()
 {
-    active = false;
+    active_ = false;
 }
 
-bool Trigger::isActive()
+bool Trigger::IsActive()
 {
-    return active;
+    return active_;
 }
 
 std::vector<Renderable> Trigger::Render()
 {
     std::vector<Renderable> items(0);
     
-    if(objectId >= 0 && isRenderable())
+    if(objectId_ >= 0 && IsRenderable())
     {
-        Transform trans = ghost->getWorldTransform();
+        Transform trans = ghost_->getWorldTransform();
         Renderable item;
         item.type = RenderableType::SOLID;
-        item.objectId = objectId;
-        item.lookId = lookId;
+        item.objectId = objectId_;
+        item.lookId = lookId_;
         item.model = glMatrixFromTransform(trans);
         items.push_back(item);
     }

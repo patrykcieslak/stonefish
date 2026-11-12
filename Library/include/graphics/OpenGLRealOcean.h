@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 10/05/2020.
-//  Copyright (c) 2020-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLRealOcean__
-#define __Stonefish_OpenGLRealOcean__
+#pragma once
 
 #include "graphics/OpenGLOcean.h"
 #include <SDL2/SDL_mutex.h>
@@ -110,23 +109,21 @@ namespace sf
         /*!
          \param enabled a flag to indicating if wireframe should be enabled
          */
-        void setWireframe(bool enabled);
+        void SetWireframe(bool enabled);
         
     private:
         void InitializeSimulation() override;
         GLfloat ComputeInterpolatedWaveData(GLfloat x, GLfloat y, GLuint channel);
 
-        GLuint vao;
-        GLuint oceanBuffers[2];
-        GLuint fftPBO;
-        std::map<OpenGLView*, OceanQT> oceanTrees; 
-        SDL_mutex* hydroMutex;
-        GLfloat* fftData;
-        GLint qtGridTessFactor;
-        GLint qtGPUTessFactor;
-        GLint qtPatchIndexCount;
-        bool wireframe;
+        GLuint vao_;
+        GLuint oceanBuffers_[2];
+        GLuint fftPBO_;
+        std::map<OpenGLView*, OceanQT> oceanTrees_; 
+        SDL_mutex* hydroMutex_;
+        std::vector<GLfloat> fftData_;
+        GLint qtGridTessFactor_;
+        GLint qtGPUTessFactor_;
+        GLint qtPatchIndexCount_;
+        bool wireframe_;
     };
 }
-
-#endif

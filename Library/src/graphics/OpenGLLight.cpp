@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/12/12.
-//  Copyright (c) 2012-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "graphics/OpenGLLight.h"
@@ -44,69 +44,65 @@ OpenGLCamera* OpenGLLight::activeView = nullptr;
 
 OpenGLLight::OpenGLLight(glm::vec3 position, GLfloat radius, glm::vec3 c, GLfloat lum)
 {
-    pos = tempPos = position;
-	R = glm::max(0.01f, radius);
-    active = true;
-    sourceObject = -1;
+    pos_ = tempPos_ = position;
+	R_ = glm::max(0.01f, radius);
+    active_ = true;
+    sourceObject_ = -1;
 }
 
-OpenGLLight::~OpenGLLight()
+bool OpenGLLight::IsActive()
 {
+    return active_;
 }
 
-bool OpenGLLight::isActive()
+glm::vec4 OpenGLLight::GetColorLi()
 {
-    return active;
+    return colorLi_;
 }
 
-glm::vec4 OpenGLLight::getColorLi()
+glm::vec3 OpenGLLight::GetPosition()
 {
-    return colorLi;
+    return pos_;
 }
 
-glm::vec3 OpenGLLight::getPosition()
+GLfloat OpenGLLight::GetSourceRadius()
 {
-    return pos;
+	return R_;
 }
 
-GLfloat OpenGLLight::getSourceRadius()
+int OpenGLLight::GetSourceObject()
 {
-	return R;
+    return sourceObject_;
 }
 
-int OpenGLLight::getSourceObject()
+glm::mat4 OpenGLLight::GetTransform()
 {
-    return sourceObject;
-}
-
-glm::mat4 OpenGLLight::getTransform()
-{
-    return glm::translate(pos);
+    return glm::translate(pos_);
 }
 
 bool OpenGLLight::operator<(const OpenGLLight& l)
 {
-    return (int)getType() < (int)l.getType();
+    return (int)GetType() < (int)l.GetType();
 }
 
 void OpenGLLight::UpdatePosition(glm::vec3 p)
 {
-    tempPos = p;
+    tempPos_ = p;
 }
 
 void OpenGLLight::UpdateTransform()
 {
-    pos = tempPos;
+    pos_ = tempPos_;
 }
 
 void OpenGLLight::SwitchOn()
 {
-    active = true;
+    active_ = true;
 }
 
 void OpenGLLight::SwitchOff()
 {
-    active = false;
+    active_ = false;
 }
 
 void OpenGLLight::InitShadowmap(GLint shadowmapLayer)
@@ -122,7 +118,7 @@ void OpenGLLight::ShowShadowMap(glm::vec4 rect)
 }
 
 //////////////////static//////////////////////////////
-void OpenGLLight::Init(std::vector<OpenGLLight*>& lights)
+void OpenGLLight::Init(const std::vector<std::unique_ptr<OpenGLLight>>& lights)
 {
     if(lights.size() == 0)
         return;
@@ -130,7 +126,7 @@ void OpenGLLight::Init(std::vector<OpenGLLight*>& lights)
     //Count spotlights
     unsigned int numOfSpotLights = 0;
     for(unsigned int i=0; i < lights.size(); ++i)
-        if(lights[i]->getType() == LightType::SPOT) ++numOfSpotLights;
+        if(lights[i]->GetType() == LightType::SPOT) ++numOfSpotLights;
         
     //Generate shadowmap array
     glGenTextures(1, &spotShadowArrayTex);
@@ -156,7 +152,7 @@ void OpenGLLight::Init(std::vector<OpenGLLight*>& lights)
     //Initialize lights shadow FBOs
     numOfSpotLights = 0;
     for(unsigned int i=0; i < lights.size(); ++i)
-        if(lights[i]->getType() == LightType::SPOT) lights[i]->InitShadowmap(numOfSpotLights++);		
+        if(lights[i]->GetType() == LightType::SPOT) lights[i]->InitShadowmap(numOfSpotLights++);		
         
     //Bind textures and samplers
     OpenGLState::BindTexture(TEX_SPOT_SHADOW, GL_TEXTURE_2D_ARRAY, spotShadowArrayTex);

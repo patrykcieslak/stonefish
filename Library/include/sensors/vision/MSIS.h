@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/07/20.
-//  Copyright (c) 2020-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_MSIS__
-#define __Stonefish_MSIS__
+#pragma once
 
 #include <functional>
 #include "sensors/vision/Camera.h"
@@ -49,16 +48,12 @@ namespace sf
          \param maxRotationDeg the maximum rotation of the sonar head [deg]
          \param minRange the minimum measured range [m]
          \param maxRange the maximum measured range [m]
-         \param cm the color map used to display sonar data
          \param outputFormat the output format of the sensor data
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated based on maximum range)
          */
-        MSIS(std::string uniqueName, Scalar stepAngleDeg, unsigned int numOfBins, Scalar horizontalBeamWidthDeg, Scalar verticalBeamWidthDeg,
-             Scalar minRotationDeg, Scalar maxRotationDeg, Scalar minRange, Scalar maxRange, ColorMap cm, 
+        MSIS(std::string_view uniqueName, Scalar stepAngleDeg, unsigned int numOfBins, Scalar horizontalBeamWidthDeg, Scalar verticalBeamWidthDeg,
+             Scalar minRotationDeg, Scalar maxRotationDeg, Scalar minRange, Scalar maxRange,
              SonarOutputFormat outputFormat = SonarOutputFormat::U8, Scalar frequency = Scalar(-1));
-       
-        //! A destructor.
-        ~MSIS();
         
         //! A method performing internal sensor state update.
         /*!
@@ -94,103 +89,116 @@ namespace sf
          \param l1Deg first limit of rotation angle [deg]
          \param l2Deg second limit of rotation angle [deg]
          */
-        void setRotationLimits(Scalar l1Deg, Scalar l2Deg);
+        void SetRotationLimits(Scalar l1Deg, Scalar l2Deg);
         
         //! A method setting the minimum range of the sonar.
         /*!
          \param r range [m]
          */
-        void setRangeMin(Scalar r);
+        void SetRangeMin(Scalar r);
 
         //! A method setting the minimum range of the sonar.
         /*!
          \param r range [m]
          */
-        void setRangeMax(Scalar r);
+        void SetRangeMax(Scalar r);
 
         //! A method setting the gain of the sonar.
         /*!
          \param g gain factor [1]
          */
-        void setGain(Scalar g);
+        void SetGain(Scalar g);
 
         //! A method setting the noise characteristics of the sensor.
         /*!
          \param multiplicativeStdDev the standard deviation of the multiplicative noise
          \param additiveStdDev the standard deviation of the additive noise
          */
-        void setNoise(float multiplicativeStdDev, float additiveStdDev);
+        void SetNoise(float multiplicativeStdDev, float additiveStdDev);
+
+        //! A method used to set the display settings of the sensor.
+        /*!
+         \param cm the color map used to display the image
+         */
+        void SetDisplaySettings(ColorMap cm);
 
         //! A method returning the rotation limits.
         /*!
          \param l1Deg first limit of rotation angle [deg]
          \param l2Deg second limit of rotation angle [deg]
          */
-        void getRotationLimits(Scalar& l1Deg, Scalar& l2Deg) const;
+        void GetRotationLimits(Scalar& l1Deg, Scalar& l2Deg) const;
 
         //! A method returning the minimum range of the sonar.
-        Scalar getRangeMin() const;
+        Scalar GetRangeMin() const;
         
         //! A method returning the maximum range of the sonar.
-        Scalar getRangeMax() const;
+        Scalar GetRangeMax() const;
 
         //! A method returning the gain of the sonar.
-        Scalar getGain() const;
+        Scalar GetGain() const;
 
         //! A method returning the step size in degrees.
-        Scalar getRotationStepAngle() const;
+        Scalar GetRotationStepAngle() const;
 
         //! A method returning the current rotation step.
-        int getCurrentRotationStep() const;
+        int GetCurrentRotationStep() const;
 
         //! A method returning the current bean index in the sonar image.
-        GLuint getCurrentBeamIndex() const;
+        GLuint GetCurrentBeamIndex() const;
 
         //! A method returning the output format of the sonar data.
-        SonarOutputFormat getOutputFormat() const;
+        SonarOutputFormat GetOutputFormat() const;
 
         //! A method returning a pointer to the sonar data.
         /*!
          \param index the id of the OpenGL camera (here sonar) for which the data pointer is requested
          \return pointer to the image data buffer
          */
-        void* getImageDataPointer(unsigned int index = 0) override;
+        void* GetImageDataPointer(unsigned int index = 0) override;
         
         //! A method returning the resolution of the simulated display image.
         /*!
          \param x a reference to a variable that will store the horizontal resolution [pix]
          \param y a reference to a variable that will store the vertical resolution [pix]
          */
-        void getDisplayResolution(unsigned int& x, unsigned int& y) const;
+        void GetDisplayResolution(unsigned int& x, unsigned int& y) const;
         
         //! A method returning a pointer to the visualisation image data.
-        GLubyte* getDisplayDataPointer();
+        GLubyte* GetDisplayDataPointer();
         
         //! A method returning the type of the vision sensor.
-        VisionSensorType getVisionSensorType() const override;
+        VisionSensorType GetVisionSensorType() const override;
 
         //! A method returning a pointer to the underlaying OpenGLView object.
-        OpenGLView* getOpenGLView() const override;
+        OpenGLView* GetOpenGlView() const override;
+
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo GetConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<MSIS> Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info);
         
     private:
         void InitGraphics(bool& seesParticles);
         
-        OpenGLMSIS* glMSIS;
-        void* sonarData;
-        GLubyte* displayData;
-        int currentStep;
-        bool cw;
-        glm::ivec2 roi;
-        bool fullRotation;
-        glm::vec2 range;
-        glm::vec2 noise;
-        Scalar gain;
-        Scalar fovV;
-        Scalar stepSize;
-        ColorMap cMap;
+        OpenGLMSIS* glMSIS_;
+        void* sonarData_;
+        std::vector<GLubyte> displayData_;
+        int currentStep_;
+        bool cw_;
+        glm::ivec2 roi_;
+        bool fullRotation_;
+        glm::vec2 range_;
+        glm::vec2 noise_;
+        Scalar gain_;
+        Scalar fovV_;
+        Scalar stepSize_;
+        ColorMap cMap_;
         SonarOutputFormat outputFormat_;
-        std::function<void(MSIS*)> newDataCallback;
+        std::function<void(MSIS*)> newDataCallback_;
     };
 }
-
-#endif

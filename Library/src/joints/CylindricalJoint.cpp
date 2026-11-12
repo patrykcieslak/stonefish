@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 28/03/2014.
-//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/CylindricalJoint.h"
@@ -30,10 +30,10 @@
 namespace sf
 {
 
-CylindricalJoint::CylindricalJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, const Vector3& axis, bool collideLinked) : Joint(uniqueName, collideLinked)
+CylindricalJoint::CylindricalJoint(std::string_view uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Vector3& pivot, const Vector3& axis, bool collideLinked) : Joint(uniqueName, collideLinked)
 {
-    btRigidBody* bodyA = solidA->rigidBody;
-    btRigidBody* bodyB = solidB->rigidBody;
+    btRigidBody* bodyA = solidA->GetRigidBody();
+    btRigidBody* bodyB = solidB->GetRigidBody();
     
     Vector3 sliderAxis = axis.normalized();
     Vector3 v2;
@@ -47,58 +47,58 @@ CylindricalJoint::CylindricalJoint(std::string uniqueName, SolidEntity* solidA, 
     
     Transform frameInA = bodyA->getCenterOfMassTransform().inverse() * sliderFrame;
     Transform frameInB = bodyB->getCenterOfMassTransform().inverse() * sliderFrame;
-    axisInA = frameInA.getBasis().getColumn(0).normalized();
-    pivotInA = frameInA.getOrigin();
+    axisInA_ = frameInA.getBasis().getColumn(0).normalized();
+    pivotInA_ = frameInA.getOrigin();
     
-    btSliderConstraint* slider = new btSliderConstraint(*bodyA, *bodyB, frameInA, frameInB, true);
+    std::unique_ptr<btSliderConstraint> slider = std::make_unique<btSliderConstraint>(*bodyA, *bodyB, frameInA, frameInB, true);
     slider->setLowerLinLimit(1.);
     slider->setUpperLinLimit(-1.);
     slider->setLowerAngLimit(1.);
     slider->setUpperAngLimit(-1.);
-    setConstraint(slider);
+    constraint_ = std::move(slider);
     
-    linSigDamping = Scalar(0.);
-    linVelDamping = Scalar(0.);
-    angSigDamping = Scalar(0.);
-    angVelDamping = Scalar(0.);
+    linSigDamping_ = Scalar(0.);
+    linVelDamping_ = Scalar(0.);
+    angSigDamping_ = Scalar(0.);
+    angVelDamping_ = Scalar(0.);
     
-    displacementIC = Scalar(0.);
-    angleIC = Scalar(0.);
+    displacementIC_ = Scalar(0.);
+    angleIC_ = Scalar(0.);
 }
 
-void CylindricalJoint::setDamping(Scalar linearConstantFactor, Scalar linearViscousFactor, Scalar angularConstantFactor, Scalar angularViscousFactor)
+void CylindricalJoint::SetDamping(Scalar linearConstantFactor, Scalar linearViscousFactor, Scalar angularConstantFactor, Scalar angularViscousFactor)
 {
-    linSigDamping = linearConstantFactor > Scalar(0) ? linearConstantFactor : Scalar(0);
-    linVelDamping = linearViscousFactor > Scalar(0) ? linearViscousFactor : Scalar(0);
-    angSigDamping = angularConstantFactor > Scalar(0) ? angularConstantFactor : Scalar(0);
-    angVelDamping = angularViscousFactor > Scalar(0) ? angularViscousFactor : Scalar(0);
+    linSigDamping_ = linearConstantFactor > Scalar(0) ? linearConstantFactor : Scalar(0);
+    linVelDamping_ = linearViscousFactor > Scalar(0) ? linearViscousFactor : Scalar(0);
+    angSigDamping_ = angularConstantFactor > Scalar(0) ? angularConstantFactor : Scalar(0);
+    angVelDamping_ = angularViscousFactor > Scalar(0) ? angularViscousFactor : Scalar(0);
 }
 
-void CylindricalJoint::setLimits(Scalar linearMin, Scalar linearMax, Scalar angularMin, Scalar angularMax)
+void CylindricalJoint::SetLimits(Scalar linearMin, Scalar linearMax, Scalar angularMin, Scalar angularMax)
 {
-    btSliderConstraint* slider = (btSliderConstraint*)getConstraint();
+    btSliderConstraint* slider = static_cast<btSliderConstraint*>(constraint_.get());
     slider->setLowerLinLimit(linearMin);
     slider->setUpperLinLimit(linearMax);
     slider->setLowerAngLimit(angularMin);
     slider->setUpperAngLimit(angularMax);
 }
 
-void CylindricalJoint::setIC(Scalar displacement, Scalar angle)
+void CylindricalJoint::SetIc(Scalar displacement, Scalar angle)
 {
-    displacementIC = displacement;
-    angleIC = angle;
+    displacementIC_ = displacement;
+    angleIC_ = angle;
 }
 
-JointType CylindricalJoint::getType() const
+JointType CylindricalJoint::GetType() const
 {
     return JointType::CYLINDRICAL;
 }
 
 void CylindricalJoint::ApplyForce(Scalar F)
 {
-    btRigidBody& bodyA = getConstraint()->getRigidBodyA();
-    btRigidBody& bodyB = getConstraint()->getRigidBodyB();
-    Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
+    btRigidBody& bodyA = constraint_->getRigidBodyA();
+    btRigidBody& bodyB = constraint_->getRigidBodyB();
+    Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA_).normalized();
     Vector3 force = axis * F;
     bodyA.applyCentralForce(force);
     bodyB.applyCentralForce(-force);
@@ -106,9 +106,9 @@ void CylindricalJoint::ApplyForce(Scalar F)
 
 void CylindricalJoint::ApplyTorque(Scalar T)
 {
-    btRigidBody& bodyA = getConstraint()->getRigidBodyA();
-    btRigidBody& bodyB = getConstraint()->getRigidBodyB();
-    Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
+    btRigidBody& bodyA = constraint_->getRigidBodyA();
+    btRigidBody& bodyB = constraint_->getRigidBodyB();
+    Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA_).normalized();
     Vector3 torque = axis * T;
     bodyA.applyTorque(torque);
     bodyB.applyTorque(-torque);
@@ -116,11 +116,11 @@ void CylindricalJoint::ApplyTorque(Scalar T)
 
 void CylindricalJoint::ApplyDamping()
 {
-    if(linSigDamping > Scalar(0.) || linVelDamping > Scalar(0.) || angSigDamping > Scalar(0.) || angVelDamping > Scalar(0.))
+    if(linSigDamping_ > Scalar(0.) || linVelDamping_ > Scalar(0.) || angSigDamping_ > Scalar(0.) || angVelDamping_ > Scalar(0.))
     {
-        btRigidBody& bodyA = getConstraint()->getRigidBodyA();
-        btRigidBody& bodyB = getConstraint()->getRigidBodyB();
-        Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA).normalized();
+        btRigidBody& bodyA = constraint_->getRigidBodyA();
+        btRigidBody& bodyB = constraint_->getRigidBodyB();
+        Vector3 axis = (bodyA.getCenterOfMassTransform().getBasis() * axisInA_).normalized();
         Vector3 relativeV = bodyA.getLinearVelocity() - bodyB.getLinearVelocity();
         Scalar v = relativeV.dot(axis);
         Vector3 relativeAV = bodyA.getAngularVelocity() - bodyB.getAngularVelocity();
@@ -128,7 +128,7 @@ void CylindricalJoint::ApplyDamping()
         
         if(v != Scalar(0.))
         {
-            Scalar F = linSigDamping * v/fabs(v) + linVelDamping * v;
+            Scalar F = linSigDamping_ * v/fabs(v) + linVelDamping_ * v;
             Vector3 force = axis * -F;
             
             bodyA.applyCentralForce(force);
@@ -137,7 +137,7 @@ void CylindricalJoint::ApplyDamping()
         
         if(av != Scalar(0.))
         {
-            Scalar T = angSigDamping * av/fabs(av) + angVelDamping * av;
+            Scalar T = angSigDamping_ * av/fabs(av) + angVelDamping_ * av;
             Vector3 torque = axis * -T;
             
             bodyA.applyTorque(torque);
@@ -153,13 +153,12 @@ std::vector<Renderable> CylindricalJoint::Render()
     item.model = glm::mat4(1.f);
     item.type = RenderableType::JOINT_LINES;
     item.data = std::make_shared<std::vector<glm::vec3>>();
-    auto points = item.getDataAsPoints();
+    auto points = item.GetDataAsPoints();
     
-    btTypedConstraint* cyli = getConstraint();
-    Vector3 A = cyli->getRigidBodyA().getCenterOfMassPosition();
-    Vector3 B = cyli->getRigidBodyB().getCenterOfMassPosition();
-    Vector3 pivot = cyli->getRigidBodyA().getCenterOfMassTransform()(pivotInA);
-    Vector3 axis = (cyli->getRigidBodyA().getCenterOfMassTransform().getBasis() * axisInA).normalized();
+    Vector3 A = constraint_->getRigidBodyA().getCenterOfMassPosition();
+    Vector3 B = constraint_->getRigidBodyB().getCenterOfMassPosition();
+    Vector3 pivot = constraint_->getRigidBodyA().getCenterOfMassTransform()(pivotInA_);
+    Vector3 axis = (constraint_->getRigidBodyA().getCenterOfMassTransform().getBasis() * axisInA_).normalized();
     
     //calculate axis ends
     Scalar e1 = (A-pivot).dot(axis);

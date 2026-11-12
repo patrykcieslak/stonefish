@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 7/03/2020.
-//  Copyright (c) 2020-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLState__
-#define __Stonefish_OpenGLState__
+#pragma once
 
 #include "graphics/OpenGLDataStructs.h"
 
@@ -72,4 +71,3 @@ namespace sf
     };
 }
 
-#endif

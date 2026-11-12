@@ -20,16 +20,19 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 17/07/19.
-//  Copyright (c) 2019-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_ScenarioParser__
-#define __Stonefish_ScenarioParser__
+#pragma once
 
 #include "StonefishCommon.h"
 #include "core/Console.h"
+#include "core/ConstructInfo.h"
 #include "tinyxml2.h"
 #include <map>
+#include "actuators/Actuator.h"
+#include "sensors/Sensor.h"
+#include "comms/Comm.h"
 
 using namespace tinyxml2;
 
@@ -39,10 +42,7 @@ namespace sf
     class Robot;
     class Entity;
     class SolidEntity;
-    class Sensor;
-    class Actuator;
     class Light;
-    class Comm;
     class VelocityField;
     class FixedJoint;
     struct Color;
@@ -73,10 +73,10 @@ namespace sf
         bool SaveLog(std::string filename);
 
         //! A method returning a copy of the log.
-        std::vector<ConsoleMessage> getLog();
+        std::vector<ConsoleMessage> GetLog();
 
         //! A method used to get the pointer to the associated simulation manager.
-        SimulationManager* getSimulationManager();
+        SimulationManager* GetSimulationManager();
 
     protected:
         Console log;
@@ -145,7 +145,7 @@ namespace sf
          \param element a pointer to the XML node
          \return a pointer to the new velocity field object
          */
-        virtual VelocityField* ParseVelocityField(XMLElement* element);
+        virtual std::unique_ptr<VelocityField> ParseVelocityField(XMLElement* element);
 
         //! A method used to parse a static object description.
         /*!
@@ -178,13 +178,11 @@ namespace sf
         //! A method used to parse a dynamic object description.
         /*!
          \param element a pointer to the XML node
-         \param solid a reference to the loaded solid entity
          \param ns an optional namespace
          \param compoundPart is this solid a part of a compound body?
-         \return success
+         \return pointer to the new solid entity object
          */
-        virtual bool ParseSolid(XMLElement* element, SolidEntity*& solid, 
-                                        std::string ns = "", bool compoundPart = false);
+        virtual std::unique_ptr<SolidEntity> ParseSolid(XMLElement* element, std::string ns = "", bool compoundPart = false);
 
         //! A method used to parse a robot description.
         /*!
@@ -197,10 +195,9 @@ namespace sf
         /*!
          \param element a pointer to the XML node
          \param robot a pointer to the robot object
-         \param link a reference to the loaded robot link
-         \return success
+         \return pointer to the new solid entity object
          */
-        virtual bool ParseLink(XMLElement* element, Robot* robot, SolidEntity*& link);
+        virtual std::unique_ptr<SolidEntity> ParseLink(XMLElement* element, Robot* robot);
         
         //! A method used to parse a single robot joint description.
         /*!
@@ -240,7 +237,7 @@ namespace sf
          \param namePrefix a string added at the beginning of the actuator name
          \return pointer to actuator
          */
-        virtual Actuator* ParseActuator(XMLElement* element, const std::string& namePrefix);
+        virtual std::unique_ptr<Actuator, ActuatorDeleter> ParseActuator(XMLElement* element, std::string_view namePrefix);
 
         //! A method used to parse a description of a sensor.
         /*!
@@ -248,7 +245,7 @@ namespace sf
          \param namePrefix a string added at the beginning of the sensor name
          \return pointer to sensor
          */
-        virtual Sensor* ParseSensor(XMLElement* element, const std::string& namePrefix);
+        virtual std::unique_ptr<Sensor, SensorDeleter> ParseSensor(XMLElement* element, std::string_view namePrefix);
         
         //! A method used to parse a description of a light source.
         /*!
@@ -256,7 +253,7 @@ namespace sf
          \param namePrefix a string added at the beginning of the light name
          \return pointer to light
          */
-        virtual Light* ParseLight(XMLElement* element, const std::string& namePrefix);
+        virtual std::unique_ptr<Light> ParseLight(XMLElement* element, std::string_view namePrefix);
 
         //! A method used to parse a communication device description.
         /*!
@@ -264,7 +261,7 @@ namespace sf
          \param namePrefix a string added at the beginning of the comm name
          \return pointer to the communication device
          */
-        virtual Comm* ParseComm(XMLElement* element, const std::string& namePrefix);
+        virtual std::unique_ptr<Comm, CommDeleter> ParseComm(XMLElement* element, std::string_view namePrefix);
         
         //! A method used to parse a single contact description.
         /*!
@@ -279,16 +276,9 @@ namespace sf
          \return pointer to the fixed joint
         */
         virtual FixedJoint* ParseGlue(XMLElement* element);
-        
-        //! A method to get the full file path depending on the format of the passed string.
-        /*!
-         \param path a file path candidate
-         \return full file path
-         */
-        std::string GetFullPath(const std::string& path);
 
         //! A method informing if the simulation is working in graphical mode.
-        bool isGraphicalSim();
+        bool IsGraphicalSim();
 
     private:
         bool CopyNode(XMLNode* destParent, const XMLNode* src);
@@ -296,11 +286,11 @@ namespace sf
         bool ParseTransform(XMLElement* element, Transform& T);
         bool ParseColor(XMLElement* element, Color& c);
         bool ParseColorMap(XMLElement* element, ColorMap& cm);
+        bool ParseConstructInfo(XMLElement* element, ConstructInfo& info);
     
-        XMLDocument doc;
-        SimulationManager* sm;
-        bool graphical;
+        XMLDocument doc_;
+        SimulationManager* sm_;
+        bool graphical_;
     };
 }
 
-#endif

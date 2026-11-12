@@ -20,11 +20,12 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 09/01/2013.
-//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/statics/Terrain.h"
 
+#include <algorithm>
 #include "stb_image.h"
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
@@ -33,80 +34,74 @@
 namespace sf
 {
 
-Terrain::Terrain(std::string uniqueName, std::string pathToHeightmap, Scalar scaleX, Scalar scaleY, Scalar height, std::string material, std::string look, float uvScale) 
+Terrain::Terrain(std::string_view uniqueName, std::string_view pathToHeightmap, Scalar scaleX, Scalar scaleY, Scalar height, std::string_view material, std::string_view look, float uvScale) 
     : StaticEntity(uniqueName, material, look)
 {
     //Load heightmap data
     int w, h, ch;
-    GLfloat* heightmap;
-
-    if(stbi_is_16_bit(pathToHeightmap.c_str())) //16 bit image
+    
+    if(stbi_is_16_bit(std::string(pathToHeightmap).c_str())) //16 bit image
     {
-        stbi_us* data = stbi_load_16(pathToHeightmap.c_str(), &w, &h, &ch, 1);
-        if(data == NULL) cCritical("Failed to load heightmap from file '%s'!", pathToHeightmap.c_str());
-        heightmap = new GLfloat[w*h];
-        for(int i=0; i<h; ++i)
-            for(int j=0; j<w; ++j)
-                heightmap[i*w+j] = (1.f - data[i*w+j]/(GLfloat)(__UINT16_MAX__)) * height;
+        stbi_us* data = stbi_load_16(std::string(pathToHeightmap).c_str(), &w, &h, &ch, 1);
+        if(data == nullptr) 
+            cCritical("Failed to load heightmap from file '%s'!", std::string(pathToHeightmap).c_str());
+
+        heightfield_.resize(w*h);
+        for(size_t i=0; i<(size_t)h; ++i)
+            for(size_t j=0; j<(size_t)w; ++j)
+                heightfield_[i*w+j] = (Scalar(1) - data[i*w+j]/(Scalar)(__UINT16_MAX__)) * height;
+        
         stbi_image_free(data);
     }
     else //8 bit image
     {
-        stbi_uc* data = stbi_load(pathToHeightmap.c_str(), &w, &h, &ch, 1);
-        if(data == NULL) cCritical("Failed to load heightmap from file '%s'!", pathToHeightmap.c_str());
-        heightmap = new GLfloat[w*h];
-        for(int i=0; i<h; ++i)
-            for(int j=0; j<w; ++j)
-                heightmap[i*w+j] = (1.f - data[i*w+j]/(GLfloat)(__UINT8_MAX__)) * height;
+        stbi_uc* data = stbi_load(std::string(pathToHeightmap).c_str(), &w, &h, &ch, 1);
+        if(data == nullptr) 
+            cCritical("Failed to load heightmap from file '%s'!", std::string(pathToHeightmap).c_str());
+        
+        heightfield_.resize(w*h);
+        for(size_t i=0; i<(size_t)h; ++i)
+            for(size_t j=0; j<(size_t)w; ++j)
+                heightfield_[i*w+j] = (Scalar(1) - data[i*w+j]/(Scalar)(__UINT8_MAX__)) * height;
+
         stbi_image_free(data);
     }
     
-    //Calculate max height
-    maxHeight = Scalar(0);
-    heightfield = new Scalar[w*h];
-    for(int i=0; i<h; ++i)
-        for(int j=0; j<w; ++j)
-        {
-            heightfield[i*w+j] = Scalar(heightmap[i*w+j]);
-            maxHeight = heightfield[i*w+j] > maxHeight ? heightfield[i*w+j] : maxHeight;
-        }
+    //Calculate maximum height
+    auto it = std::max_element(heightfield_.begin(), heightfield_.end());
+    maxHeight_ = *it;
 
     //Generate graphical mesh
-    phyMesh = OpenGLContent::BuildTerrain(heightmap, w, h, scaleX, scaleY, (GLfloat)maxHeight, uvScale);
-    delete [] heightmap;
-
+    phyMesh_ = OpenGLContent::BuildTerrain(heightfield_, w, h, scaleX, scaleY, (GLfloat)maxHeight_, uvScale);
+    
     //Generate collision mesh
-    btHeightfieldTerrainShape* shape = new btHeightfieldTerrainShape(w, h, heightfield, Scalar(1), Scalar(0), maxHeight, 2, PHY_FLOAT, false);
+    std::unique_ptr<btHeightfieldTerrainShape> shape = std::make_unique<btHeightfieldTerrainShape>(w, h, heightfield_.data(), Scalar(1), Scalar(0), maxHeight_, 2, PHY_FLOAT, false);
     shape->setLocalScaling(Vector3(scaleX, scaleY, 1.0));
     shape->setUseDiamondSubdivision(true);
     shape->setMargin(0);
-    BuildRigidBody(shape);
+    collisionShape_ = std::move(shape);
+    BuildRigidBody();
 }
 
-Terrain::~Terrain()
-{
-    delete [] heightfield;
-}
-
-StaticEntityType Terrain::getStaticType()
+StaticEntityType Terrain::GetStaticType()
 {
     return StaticEntityType::TERRAIN;
 }
     
-void Terrain::getAABB(Vector3 &min, Vector3 &max)
+void Terrain::GetAabb(Vector3 &min, Vector3 &max)
 {
-        //Terrain shouldn't affect shadow calculation
-        min.setValue(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);
-        max.setValue(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);
+    //Terrain shouldn't affect shadow calculation
+    min.setValue(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);
+    max.setValue(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);
 }
 
 void Terrain::AddToSimulation(SimulationManager* sm, const Transform& origin)
 {
-    if(rigidBody != NULL)
+    if(rigidBody_ != nullptr)
     {
-        btDefaultMotionState* motionState = new btDefaultMotionState(origin*Transform(IQ(), Vector3(0,0,-maxHeight/Scalar(2))));
-        rigidBody->setMotionState(motionState);
-        sm->getDynamicsWorld()->addRigidBody(rigidBody, MASK_STATIC, MASK_DYNAMIC);
+        motionState_ = std::make_unique<btDefaultMotionState>(origin*Transform(IQ(), Vector3(0,0,-maxHeight_/Scalar(2))));
+        rigidBody_->setMotionState(motionState_.get());
+        sm->GetDynamicsWorld()->addRigidBody(rigidBody_.get(), MASK_STATIC, MASK_DYNAMIC);
     }
 }
 

@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 07/05/18.
-//  Copyright (c) 2018-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_DepthCamera__
-#define __Stonefish_DepthCamera__
+#pragma once
 
 #include <functional>
 #include "sensors/vision/Camera.h"
@@ -48,11 +47,8 @@ namespace sf
          \param maxDepth the maximum measured depth [m]
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          */
-        DepthCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg,
+        DepthCamera(std::string_view uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg,
                     Scalar minDepth, Scalar maxDepth, Scalar frequency = Scalar(-1));
-       
-        //! A destructor.
-        ~DepthCamera();
         
         //! A method performing internal sensor state update.
         /*!
@@ -84,33 +80,41 @@ namespace sf
         /*!
          \param depthStdDev standard deviation of the depth measurement at 1m distance
          */
-        void setNoise(float depthStdDev);
+        void SetNoise(float depthStdDev);
 
         //! A method returning the depth range of the camera.
-        glm::vec2 getDepthRange() const;
+        glm::vec2 GetDepthRange() const;
         
         //! A method returning the pointer to the image data.
         /*!
          \param index the id of the OpenGL camera for which the data pointer is requested
          \return pointer to the image data buffer
          */
-        void* getImageDataPointer(unsigned int index = 0);
+        void* GetImageDataPointer(unsigned int index = 0);
         
         //! A method returning the type of the vision sensor.
-        VisionSensorType getVisionSensorType() const override;
+        VisionSensorType GetVisionSensorType() const override;
 
         //! A method returning a pointer to the underlaying OpenGLView object.
-        OpenGLView* getOpenGLView() const override;
+        OpenGLView* GetOpenGlView() const override;
+
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo GetConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<DepthCamera> Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info);
         
     private:
         void InitGraphics(bool& seesParticles);
         
-        OpenGLDepthCamera* glCamera;
-        GLfloat* imageData;
-        glm::vec2 depthRange;
-        GLfloat noiseStdDev;
-        std::function<void(DepthCamera*)> newDataCallback;
+        OpenGLDepthCamera* glCamera_;
+        GLfloat* imageData_;
+        glm::vec2 depthRange_;
+        GLfloat noiseStdDev_;
+        std::function<void(DepthCamera*)> newDataCallback_;
     };
 }
 
-#endif

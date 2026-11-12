@@ -4,8 +4,9 @@
 Robots
 ======
 
-In the *Stonefish* library every kinematic tree is called a robot. The robots can thus represent vehicles, stationary manipulators, as well as other structures with moving parts.
-The kinematic tree is built of links (rigid bodies) connected by joints. When this mechanical structure is defined, then it is possible to attach :ref:`actuators <actuators>`, :ref:`sensors <sensors>` and :ref:`communication devices <comms>` to its joints and links. The dynamics of the tree are solved using the Featherstone's multi-body algorithm. Robots are defined using the ``<robot>`` tag. The base link of a robot can either be fixed to the world frame or floating. Robot definitions have to be placed in the root node of the XML file or after the definition of materials and looks in the C++ code.
+In the *Stonefish* library every kinematic tree is called a robot. The robots can thus represent vehicles, stationary manipulators, as well as, other structures with moving parts.
+The kinematic tree is built of links (rigid bodies) connected by joints. When this mechanical structure is defined, then it is possible to attach :ref:`actuators <actuators>`, :ref:`sensors <sensors>` and :ref:`communication devices <comms>` to its joints and links. The dynamics of the tree can be solved using one of two algorithms: the Roy Featherstone's multi-body algorithm or a general sequential impulse algorithm. The former is highly preferred for its precision, stability, and performance. The latter can be used when support for kinematic loops is necessary.
+Robots are defined using the ``<robot>`` tag. The base link of a robot can either be fixed to the world frame or floating. Robot definitions have to be placed in the root node of the XML file or after the definition of materials and looks in the C++ code.
 
 .. _robot-links:
 
@@ -38,7 +39,7 @@ Below, an example of defining a complete robot is presented, first using the XML
 
 .. code-block:: xml
 
-    <robot name="Robot" fixed="false" self_collisions="false">
+    <robot name="Robot" fixed="false" self_collisions="false" algorithm="featherstone">
         <base_link name="Base" type="sphere" physics="surface">
             <dimensions radius="0.2"/>
             <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
@@ -85,31 +86,32 @@ Below, an example of defining a complete robot is presented, first using the XML
     </robot>
 
 .. code-block:: cpp
+    
+    #include <Stonefish/core/FeatherstoneRobot.h>
+    #include <Stonefish/entities/solids/Sphere.h>
+    #include <Stonefish/entities/solids/Box.h>
+    #include <Stonefish/actuators/Servo.h>
+    #include <Stonefish/sensors/scalar/RotaryEncoder.h>
+    #include <Stonefish/sensors/scalar/IMU.h>
 
     //1. Defining links
-    sf::Sphere* base = new sf::Sphere("Base", 0.2, sf::I4(), "Steel", sf::BodyPhysicsType::SURFACE, "Green");
-    sf::Box* link1 = new sf::Box("Link1", sf::Vector3(0.1, 0.02, 0.5), sf::Transform(sf::Quaternion(M_PI_2, 0.0, 0.0), sf::Vector3(0.0, 0.0, -0.2)), "Steel", sf::BodyPhysicsType::SURFACE, "Green");
-    sf::Box* link2 = new sf::Box("Link2", sf::Vector3(0.1, 0.02, 0.5), sf::Transform(sf::Quaternion(M_PI_2, 0.0, 0.0), sf::Vector3(0.0, 0.0, -0.2)), "Steel", sf::BodyPhysicsType::SURFACE, "Green");
+    std::unique_ptr<sf::Sphere> base = std::make_unique<sf::Sphere>("Base", 0.2, sf::I4(), "Steel", sf::BodyPhysicsType::SURFACE, "Green");
 
-    std::vector<sf::SolidEntity*> links;
-    links.push_back(link1);
-    links.push_back(link2);
+    std::vector<std::unique_ptr<sf::SolidEntity>> links;
+    links.push_back(std::make_unique<sf::Box>("Link1", sf::Vector3(0.1, 0.02, 0.5), sf::Transform(sf::Quaternion(M_PI_2, 0.0, 0.0), sf::Vector3(0.0, 0.0, -0.2)), "Steel", sf::BodyPhysicsType::SURFACE, "Green"));
+    links.push_back(std::make_unique<sf::Box>("Link2", sf::Vector3(0.1, 0.02, 0.5), sf::Transform(sf::Quaternion(M_PI_2, 0.0, 0.0), sf::Vector3(0.0, 0.0, -0.2)), "Steel", sf::BodyPhysicsType::SURFACE, "Green"));
 
     //2. Building the structure
-    sf::Robot* robot = new sf::Robot("Robot", false);
-    robot->DefineLinks(base, links);
+    std::unique_ptr<sf::FeatherstoneRobot> robot = std::make_unique<sf::FeatherstoneRobot>("Robot", false);
+    robot->DefineLinks(std::move(base), std::move(links));
     robot->DefineRevoluteJoint("Joint1", "Base", "Link1", sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.25, -0.2)), sf::Vector3(0.0, 1.0, 0.0), std::make_pair(1.0, -1.0));
     robot->DefineRevoluteJoint("Joint2", "Base", "Link2", sf::Transform(sf::IQ(), sf::Vector3(0.0, -0.25, -0.2)), sf::Vector3(0.0, 1.0, 0.0), std::make_pair(1.0, -1.0));
+    robot->BuildKinematicStructure();
 
-    //3. Creating actuators and sensors
-    sf::ServoMotor* srv = new sf::ServoMotor("Servo", 1.0, 1.0, 10.0);
-    sf::IMU* imu = new sf::IMU("IMU", 10.0);
-    sf::RotaryEncoder* enc = new sf::RotaryEncoder("Encoder", -1.0, 1000);
+    //3. Creating and attaching actuators and sensors
+    robot->AddJointActuator(std::make_unique<sf::Servo>("Servo", 1.0, 1.0, 10.0), "Joint1");
+    robot->AddJointSensor(std::make_unique<sf::RotaryEncoder>("Encoder", -1.0, 1000), "Joint2");
+    robot->AddLinkSensor(std::make_unique<sf::IMU>("IMU", 10.0), "Link2", sf::I4());
     
-    //4. Attaching actuators and sensors
-    robot->AddJointActuator(srv, "Joint1");
-    robot->AddJointSensor(enc, "Joint2");
-    robot->AddLinkSensor(imu, "Link2", sf::I4());
-    
-    //5. Adding robot to the simulation scenario
-    AddRobot(robot, sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, -2.0)));
+    //4. Adding robot to the simulation scenario
+    AddRobot(std::move(robot), sf::Transform(sf::IQ(), sf::Vector3(0.0, 0.0, -2.0)));

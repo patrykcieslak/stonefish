@@ -20,50 +20,98 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 02/11/2017.
-//  Copyright (c) 2017-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Pressure.h"
 
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
+#include "core/DeviceFactory.h"
 #include "sensors/Sample.h"
 
 namespace sf
 {
 
-Pressure::Pressure(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Pressure::Pressure(std::string_view uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    channels.push_back(SensorChannel("Pressure", QuantityType::PRESSURE));
+    channels_.push_back(SensorChannel("Pressure", QuantityType::PRESSURE));
 }
 
 void Pressure::InternalUpdate(Scalar dt)
 {
     Scalar data(0.); //Gauge pressure //data(101325.); //Pa (1 atm)
     
-    Ocean* liq = SimulationApp::getApp()->getSimulationManager()->getOcean();
-    if(liq != NULL)
-        data += liq->GetPressure(getSensorFrame().getOrigin());
+    Ocean* liq = SimulationApp::GetApp()->GetSimulationManager()->GetOcean();
+    if(liq != nullptr)
+        data += liq->GetPressure(GetSensorFrame().getOrigin());
     
     //Record sample
-    Sample s{std::vector<Scalar>({data})};
-    AddSampleToHistory(s);
+    AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({data})));
 }
 
-void Pressure::setRange(Scalar max)
+void Pressure::SetRange(Scalar max)
 {
-    channels[0].rangeMin = Scalar(0);
-    channels[0].rangeMax = btClamped(max, Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[0].rangeMin = Scalar(0);
+    channels_[0].rangeMax = btClamped(max, Scalar(0), Scalar(BT_LARGE_FLOAT));
 }
     
-void Pressure::setNoise(Scalar pressureStdDev)
+void Pressure::SetNoise(Scalar pressureStdDev)
 {
-    channels[0].setStdDev(btClamped(pressureStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[0].SetStdDev(btClamped(pressureStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
 
-ScalarSensorType Pressure::getScalarSensorType() const
+ScalarSensorType Pressure::GetScalarSensorType() const
 {
     return ScalarSensorType::PRESSURE;
 }
+
+// Statics
+
+ConstructInfo Pressure::GetConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+    
+    // History
+    node.optional = true;
+    node.attributes.insert({"samples", {ConstructInfoValueType::INT, false}});
+    info.nodes.insert({"history", node});
+
+    // Range and noise
+    node.attributes.clear(); // Clear temporary
+    node.optional = true;
+    node.attributes.insert({"pressure", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"range", node});
+    info.nodes.insert({"noise", node});
+    
+    return info;
+}
+
+std::unique_ptr<Pressure> Pressure::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // History (optional)
+    int history = -1;
+    ConstructInfoValue& value = info.nodes.at("history").attributes.at("samples");
+    if (value.valid)
+        history = std::get<int>(value.value);
+    
+    // Create sensor
+    std::unique_ptr<Pressure> sensor = std::make_unique<Pressure>(uniqueName, frequency, history);    
+
+    // Range (optional)
+    value = info.nodes.at("range").attributes.at("pressure");
+    if (value.valid)
+        sensor->SetRange(std::get<Scalar>(value.value));
+
+    // Noise (optional)
+    value = info.nodes.at("noise").attributes.at("pressure");
+    if (value.valid)
+        sensor->SetNoise(std::get<Scalar>(value.value));
+
+    return sensor;
+}
+
+REGISTER_SENSOR("pressure", Pressure)
 
 }

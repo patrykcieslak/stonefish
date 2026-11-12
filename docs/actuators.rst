@@ -26,14 +26,27 @@ Optionally, the user can enable a watchdog timer that will reset the actuator if
 
 .. code-block:: cpp
 
-    sf::Thruster* th = new sf::Thruster(...);  
-    th->setWatchdog(Scalar(1));
+    std::unique_ptr<sf::Thruster> th = std::make_unique<sf::Thruster>(...);  
+    th->SetWatchdog(Scalar(1));
 
 Not all of the actuators are going to use the watchdog as it is limited to the ones that have a clear zero state.
 
 .. note::
 
     In the following sections, description of each specific actuator implementation is accompanied with an example of actuator instantiation through the XML syntax and the C++ code. It is assumed that the XML snippets are located inside the definition of a robot. In case of C++ code, it is assumed that an object ``sf::Robot* robot = new sf::Robot(...);`` was created before the actuator definition. 
+
+Plugins
+=======
+
+Available actuators can be extended by creating a plugin (see :ref:`Plugin interface <plugin_interface>`). When loading these plugins using the XML syntax, the type of the actuator has to be defined as ``plugin`` and a path to the plugin library has to be provided, through a ``plugin`` attribute.
+
+.. code-block:: xml
+
+    <actuator name="ActuatorPlugin" type="plugin" plugin="path/to/plugin/library">
+        <!-- specific definitions here -->
+    </actuator>
+
+When developing plugins you are required to specify the ``sf::ConstructInfo`` structure which will be used to automatically load the required and optional parameters from the XML file. Moreover, as the plugin has to be defined as a subclass of one of the actuator types, it will automatically behave like a joint or a link actuator, and will requires the same parameters, as described in the following sections. The plugin can be loaded using the C++ code as well.
 
 .. _joint-actuators:
 
@@ -69,9 +82,10 @@ A motor is a simple actuator that applies desired torque to the joint.
 .. code-block:: cpp
 
     #include <Stonefish/actuators/Motor.h>
-    sf::Motor* motor = new sf::Motor("Motor");
-    motor->setCommand(1.0);
-    robot->AddJointActuator(motor, "Joint1");
+
+    std::unique_ptr<sf::Motor> motor = std::make_unique<sf::Motor>("Motor");
+    motor->SetTorque(1.0);
+    robot->AddJointActuator(std::move(motor), "Joint1");
 
 Servomotor
 ----------
@@ -90,11 +104,12 @@ It is possible to define an initial position of the joint that will be achieved 
 .. code-block:: cpp
 
     #include <Stonefish/actuators/Servo.h>
-    sf::Servo* srv = new sf::Servo("Servo", 1.0, 0.5, 10.0);
-    srv->setControlMode(sf::ServoControlMode::POSITION_CTRL);
-    srv->setMaxVelocity(0.1);
-    srv->setDesiredPosition(0.5);
-    robot->AddJointActuator(srv, "Joint1");
+
+    std::unique_ptr<sf::Servo> srv = std::make_unique<sf::Servo>("Servo", 1.0, 0.5, 10.0);
+    srv->SetControlMode(sf::ServoControlMode::POSITION_CTRL);
+    srv->SetMaxVelocity(0.1);
+    srv->SetDesiredPosition(0.5);
+    robot->AddJointActuator(std::move(srv), "Joint1");
 
 Link actuators
 ==============
@@ -133,9 +148,10 @@ A push actuator is a virtual actuator that applies a given force to the attached
 .. code-block:: cpp
 
     #include <Stonefish/actuators/Push.h>
-    sf::Push* push = new sf::Push("Push", false, false);
-    push->setForceLimits(-10.0, 10.0);
-    robot->AddLinkActuator(push, "Link1", sf::I4()); 
+
+    std::unique_ptr<sf::Push> push = std::make_unique<sf::Push>("Push", false, false);
+    push->SetForceLimits(-10.0, 10.0);
+    robot->AddLinkActuator(std::move(push), "Link1", sf::I4()); 
 
 Propeller
 ---------
@@ -158,9 +174,17 @@ A propeller is an actuator working in atmosphere, representing an airplane prope
 .. code-block:: cpp
 
     #include <Stonefish/actuators/Propeller.h>
-    sf::Polyhedron* propMesh = new sf::Polyhedron("PropMesh", sf::BodyPhysicsType::AERODYNAMIC, sf::GetDataPath() + "propeller.obj", 1.0, sf::I4(), "Steel", "Red");
-    sf::Propeller* propeller = new sf::Propeller("Prop", propMesh, 0.5, 0.45, 0.02, 1000, true, false);
-    robot->AddLinkActuator(propeller, "Link1", sf::I4()); 
+
+    sf::PhysicsSettings phy;
+    phy.mode = sf::PhysicsMode::AERODYNAMIC;
+    phy.collisions = false;
+    phy.buoyancy = false;
+
+    std::unique_ptr<sf::Propeller> propeller = std::make_unique<sf::Propeller>(
+        "Prop", std::make_unique<sf::Polyhedron>("PropMesh", phy, sf::GetDataPath() + "propeller.obj", 1.0, sf::I4(), "Steel", "Red"),
+        0.5, 0.45, 0.02, 1000, true, false
+    );
+    robot->AddLinkActuator(std::move(propeller), "Link1", sf::I4()); 
 
 Simple thruster
 ---------------
@@ -183,9 +207,16 @@ A simple thruster is an extension of the *push* actuator that functions only und
 .. code-block:: cpp
 
     #include <Stonefish/actuators/SimpleThruster.h>
-    sf::Polyhedron* propMesh = new sf::Polyhedron("PropMesh", sf::BodyPhysicsType::SUBMERGED, sf::GetDataPath() + "propeller.obj", 1.0, sf::I4(), "Steel", "Red");
-    sf::SimpleThruster* thruster = new sf::SimpleThruster("SimpleThruster", propMesh, true, false);
-    robot->AddLinkActuator(thruster, "Link1", sf::I4()); 
+
+    sf::PhysicsSettings phy;
+    phy.mode = sf::PhysicsMode::SUBMERGED;
+    phy.collisions = false;
+    phy.buoyancy = false;
+
+    std::unique_ptr<sf::SimpleThruster> thruster = std::make_unique<sf::SimpleThruster>(
+        "SimpleThruster", std::make_unique<sf::Polyhedron>("PropMesh", phy, sf::GetDataPath() + "propeller.obj", 1.0, sf::I4(), "Steel", "Red"),
+        true, false);
+    robot->AddLinkActuator(std::move(thruster), "Link1", sf::I4()); 
 
 Thruster
 --------
@@ -351,13 +382,17 @@ An example of a full thruster definition utilising the XML syntax and the C++ co
 .. code-block:: cpp
 
     #include <Stonefish/actuators/Thruster.h>
-    sf::Polyhedron* prop = new sf::Polyhedron("PropMesh", sf::BodyPhysicsType::SUBMERGED, sf::GetDataPath() + "propeller.obj", 1.0, sf::I4(), "Steel", "Red");
-    std::shared_ptr<sf::MechanicalPI> rotorDynamics;
-    rotorDynamics = std::make_shared<sf::MechanicalPI>(1.0, 10.0, 5.0, 5.0);
-    std::shared_ptr<sf::FDThrust> thrustModel;
-    thrustModel = std::make_shared<sf::FDThrust>(0.18, 0.88, 0.48, 0.05, true, 1000.0);
-    sf::Thruster* th = new sf::Thruster("Thruster", prop, rotorDynamics, thrustModel, 0.18, true, 400.0, false, true);
-    robot->AddLinkActuator(thruster, "Link1", sf::I4()); 
+
+    sf::PhysicsSettings phy;
+    phy.mode = sf::PhysicsMode::SUBMERGED;
+    phy.collisions = false;
+    phy.buoyancy = false;
+    
+    std::unique_ptr<sf::Polyhedron> prop = std::make_unique<sf::Polyhedron>("PropMesh", phy, sf::GetDataPath() + "propeller.obj", 1.0, sf::I4(), "Steel", "Red");
+    std::unique_ptr<sf::MechanicalPI> rotorDynamics = std::make_unique<sf::MechanicalPI>(1.0, 10.0, 5.0, 5.0);
+    std::unique_ptr<sf::FDThrust> thrustModel = std::make_unique<sf::FDThrust>(0.18, 0.88, 0.48, 0.05, true, 1000.0);
+    std::unique_ptr<sf::Thruster> thruster = std::make_unique<sf::Thruster>("Thruster", std::move(prop), std::move(rotorDynamics), std::move(thrustModel), 0.18, true, 400.0, false, true);
+    robot->AddLinkActuator(std::move(thruster), "Link1", sf::I4()); 
 
 Variable buoyancy system (VBS)
 ------------------------------
@@ -379,12 +414,12 @@ A variable buoyancy system (VBS) is a container with an elastic wall, which can 
 .. code-block:: cpp
 
     #include <Stonefish/actuators/VariableBuoyancy.h>
+
     std::vector<std::string> meshes;
     meshes.push_back(sf::GetDataPath() + "empty.obj");
     meshes.push_back(sf::GetDataPath() + "half.obj");
     meshes.push_back(sf::GetDataPath() + "full.obj");
-    sf::VariableBuoyancy* vbs = new sf::VariableBuoyancy("VBS", meshes, 0.5);
-    robot->AddLinkActuator(vbs, "Link1", sf::I4());
+    robot->AddLinkActuator(std::make_unique<sf::VariableBuoyancy>("VBS", meshes, 0.5), "Link1", sf::I4());
 
 Rudder (control surface)
 ------------------------
@@ -409,13 +444,15 @@ The forces generated by this actuator include hydrodynamic lift and drag. The mo
 .. code-block:: cpp
 
     #include <Stonefish/actuators/Rudder.h>
+
     sf::PhysicsSettings phy;
     phy.mode = sf::PhysicsMode::SUBMERGED;
     phy.collisions = false;
     phy.buoyancy = false;
-    sf::Polyhedron* rudderMesh = new sf::Polyhedron("RudderMesh", phy, sf::GetDataPath() + "rudder.obj", 1.0, sf::I4(), "Steel", "Red");
-    sf::Rudder* rudder = new sf::Rudder("Rudder", rudderMesh, 0.05, 0.5, 0.1, 0.9, 1.0, false, 0.2);        
-    robot->AddLinkActuator(rudder, "Link1", sf::I4());
+
+    std::unique_ptr<sf::Polyhedron> rudderMesh = std::make_unique<sf::Polyhedron>("RudderMesh", phy, sf::GetDataPath() + "rudder.obj", 1.0, sf::I4(), "Steel", "Red");
+    std::unique_ptr<sf::Rudder> rudder = std::make_unique<sf::Rudder>("Rudder", std::move(rudderMesh), 0.05, 0.5, 0.1, 0.9, 1.0, false, 0.2);        
+    robot->AddLinkActuator(std::move(rudder), "Link1", sf::I4());
 
 Lights
 ======
@@ -439,7 +476,8 @@ The *Stonefish* library delivers high quality, physically based rendering, to en
 .. code-block:: cpp
 
     #include <Stonefish/actuators/Light.h>
-    sf::Light* l1 = new sf::Light("Omni", 0.2, sf::Color::RGB(0.2, 0.3, 1.0), 10000.0);
-    AddActuator(l1, sf::Transform(sf::IQ(), sf::Vector3(1.0, 5.0, 2.0)));
-    sf::Light* l2 = new sf::Light("Spot", 0.1, 30.0, sf::Color::BlackBody(5600.0), 2000.0);
-    robot->AddLinkActuator(l2, "Link1", sf::Transform(sf::IQ(), sf::Vector3(1.0, 0.0, 0.0)));
+
+    AddActuator(std::make_unique<sf::Light>("Omni", 0.2, sf::Color::RGB(0.2, 0.3, 1.0), 10000.0),
+        sf::Transform(sf::IQ(), sf::Vector3(1.0, 5.0, 2.0)));
+    robot->AddLinkActuator(std::make_unique<sf::Light>("Spot", 0.1, 30.0, sf::Color::BlackBody(5600.0), 2000.0),
+        "Link1", sf::Transform(sf::IQ(), sf::Vector3(1.0, 0.0, 0.0)));

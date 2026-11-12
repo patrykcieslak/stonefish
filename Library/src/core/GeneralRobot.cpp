@@ -20,11 +20,12 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 27/01/2023.
-//  Copyright(c) 2023-2025 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2023-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "core/GeneralRobot.h"
 
+#include <algorithm>
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
 #include "entities/SolidEntity.h"
@@ -38,85 +39,111 @@
 namespace sf
 {
 
-GeneralRobot::GeneralRobot(std::string uniqueName, bool fixedBase) : Robot(uniqueName, fixedBase)
-{
-}       
-
-GeneralRobot::~GeneralRobot()
+GeneralRobot::GeneralRobot(std::string_view uniqueName, bool fixedBase) : Robot(uniqueName, fixedBase)
 {
 }
 
-RobotType GeneralRobot::getType() const
+RobotType GeneralRobot::GetType() const
 {
     return RobotType::GENERAL;
 }
 
-Joint* GeneralRobot::getJoint(const std::string& name)
+Joint* GeneralRobot::GetJoint(std::string_view name)
 {
-    for(size_t i=0; i<joints.size(); ++i)
-        if(joints[i]->getName() == name) return joints[i];
- 
-    return nullptr;
+    auto it = std::find_if(joints_.begin(), joints_.end(), [&name](Joint* joint) { return joint->GetName() == name; });
+    if(it != joints_.end())
+        return *it;
+    else
+        return nullptr;
 }
 
-Transform GeneralRobot::getTransform() const
+Transform GeneralRobot::GetTransform() const
 {
     if(links_.size() > 0)
-        return links_[0]->getOTransform();
+        return links_[0]->GetOTransform();
     else
         return Transform::getIdentity();
 }
 
-void GeneralRobot::DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLinks, bool selfCollision)
+void GeneralRobot::DefineLinks(std::unique_ptr<SolidEntity> baseLink, std::vector<std::unique_ptr<SolidEntity>> otherLinks, bool selfCollision)
 {
-    links_.push_back(baseLink);
-    links_.insert(links_.end(), otherLinks.begin(), otherLinks.end());
+    detachedLinks_.push_back(std::move(baseLink));
+    detachedLinks_.insert(detachedLinks_.end(), std::make_move_iterator(otherLinks.begin()), std::make_move_iterator(otherLinks.end()));
+
+    // Save pointers to links only referencing the memory managed originals
+    for (size_t i = 0; i < detachedLinks_.size(); ++i)
+        links_.push_back(detachedLinks_[i].get());
 }
         
 void GeneralRobot::BuildKinematicStructure()
 {   
 }
         
-void GeneralRobot::AddJointSensor(JointSensor* s, const std::string& monitoredJointName)
+JointSensor* GeneralRobot::AddJointSensor(std::unique_ptr<Sensor, SensorDeleter> s, std::string_view monitoredJointName)
 {
+    if (s == nullptr || s->GetType() != SensorType::JOINT)
+    {
+        cCritical("Sensor does not exist or is not a joint sensor!");
+        return nullptr;
+    }
+
     for(size_t i = 0; i < jointsData_.size(); ++i)
         if(jointsData_[i].name == monitoredJointName)
         {
-            jsAttachments.push_back(std::make_pair(s, monitoredJointName));
-            sensors_.push_back(s);    
-            break;
+            jsAttachments_.push_back(std::make_pair(static_cast<JointSensor*>(s.get()), std::string(monitoredJointName)));
+            detachedSensors_.push_back(std::move(s));
+            sensors_.push_back(detachedSensors_.back().get());
+            return static_cast<JointSensor*>(sensors_.back());
         }
+    return nullptr;
 }
 
-void GeneralRobot::AddJointActuator(JointActuator* a, const std::string& actuatedJointName)
+JointSensor* GeneralRobot::AddJointSensor(std::unique_ptr<Sensor> s, std::string_view monitoredJointName)
 {
+    return AddJointSensor(std::unique_ptr<Sensor, SensorDeleter>(s.release(), Sensor::DefaultDeleter), monitoredJointName);
+}
+
+JointActuator* GeneralRobot::AddJointActuator(std::unique_ptr<Actuator, ActuatorDeleter> a, std::string_view actuatedJointName)
+{
+    if (a == nullptr || a->GetType() != ActuatorType::JOINT)
+    {
+        cCritical("Actuator does not exist or is not a joint actuator!");
+        return nullptr;
+    }
+
     for(size_t i = 0; i < jointsData_.size(); ++i)
         if(jointsData_[i].name == actuatedJointName)
         {
-            jaAttachments.push_back(std::make_pair(a, actuatedJointName));
-            actuators_.push_back(a);    
-            break;
+            jaAttachments_.push_back(std::make_pair(static_cast<JointActuator*>(a.get()), std::string(actuatedJointName)));
+            detachedActuators_.push_back(std::move(a));
+            actuators_.push_back(detachedActuators_.back().get());    
+            return static_cast<JointActuator*>(actuators_.back());
         }
+    return nullptr;
+}
+
+JointActuator* GeneralRobot::AddJointActuator(std::unique_ptr<Actuator> a, std::string_view actuatedJointName)
+{
+    return AddJointActuator(std::unique_ptr<Actuator, ActuatorDeleter>(a.release(), Actuator::DefaultDeleter), actuatedJointName);
 }
 
 void GeneralRobot::AddToSimulation(SimulationManager* sm, const Transform& origin)
 {
     Robot::AddToSimulation(sm, origin);   
     
-    // Base link
-    sm->AddSolidEntity(links_[0], origin);
+    // All links
+    for(size_t i = 0; i < detachedLinks_.size(); ++i)
+        sm->AddSolidEntity(std::move(detachedLinks_[i]), origin);
+    detachedLinks_.clear();
+
+    // Base link joint    
     if(fixed_)
     {
         FixedJoint* fix = new FixedJoint(name_ + "_fix", links_[0]);
-        joints.push_back(fix);
+        joints_.push_back(fix);
     }
 
     // Rest of the links and joints
-    for(size_t i = 1; i < links_.size(); ++i)
-    {
-        sm->AddSolidEntity(links_[i], origin);       
-    }
-
     for(size_t i = 0; i < jointsData_.size(); ++i)
     {
         size_t parentId;
@@ -124,9 +151,9 @@ void GeneralRobot::AddToSimulation(SimulationManager* sm, const Transform& origi
         
         for(size_t h = 0; h < links_.size(); ++h)
         {            
-            if(links_[h]->getName() == jointsData_[i].parent)
+            if(links_[h]->GetName() == jointsData_[i].parent)
                 parentId = h;
-            else if(links_[h]->getName() == jointsData_[i].child)
+            else if(links_[h]->GetName() == jointsData_[i].child)
                 childId = h;
         }
         if(parentId >= links_.size())
@@ -141,7 +168,7 @@ void GeneralRobot::AddToSimulation(SimulationManager* sm, const Transform& origi
                 FixedJoint* fix = new FixedJoint(jointsData_[i].name, 
                                                     links_[parentId], 
                                                     links_[childId]);
-                joints.push_back(fix);
+                joints_.push_back(fix);
             }
                 break;
 
@@ -152,8 +179,8 @@ void GeneralRobot::AddToSimulation(SimulationManager* sm, const Transform& origi
                                                         links_[childId], 
                                                         (origin * jointsData_[i].origin).getOrigin(),
                                                         (origin * jointsData_[i].origin).getBasis() * jointsData_[i].axis, false);
-                rev->setLimits(jointsData_[i].posLim.first, jointsData_[i].posLim.second);
-                joints.push_back(rev);
+                rev->SetLimits(jointsData_[i].posLim.first, jointsData_[i].posLim.second);
+                joints_.push_back(rev);
             }
                 break;
 
@@ -163,8 +190,8 @@ void GeneralRobot::AddToSimulation(SimulationManager* sm, const Transform& origi
                                                             links_[parentId],
                                                             links_[childId],
                                                             (origin * jointsData_[i].origin).getBasis() * jointsData_[i].axis, false);
-                prism->setLimits(jointsData_[i].posLim.first, jointsData_[i].posLim.second);
-                joints.push_back(prism);
+                prism->SetLimits(jointsData_[i].posLim.first, jointsData_[i].posLim.second);
+                joints_.push_back(prism);
             }
                 break;
 
@@ -173,31 +200,32 @@ void GeneralRobot::AddToSimulation(SimulationManager* sm, const Transform& origi
         }
     }
 
-    for(size_t i = 0; i < joints.size(); ++i)
-        sm->AddJoint(joints[i]);
+    // Memory managed by simulation manager, robot only keeps raw pointers
+    for(size_t i = 0; i < joints_.size(); ++i)
+        sm->AddJoint(std::unique_ptr<Joint>(joints_[i]));
 
     // Attach joint sensors
-    for(size_t i = 0; i < jsAttachments.size(); ++i)
+    for(size_t i = 0; i < jsAttachments_.size(); ++i)
     {
-        Joint* j = getJoint(jsAttachments[i].second);
+        Joint* j = GetJoint(jsAttachments_[i].second);
         if(j != nullptr)
-            jsAttachments[i].first->AttachToJoint(j);
+            jsAttachments_[i].first->AttachToJoint(j);
         else
             cCritical("Joint '%s' doesn't exist. Sensor '%s' cannot be attached!", 
-                        jsAttachments[i].second.c_str(), 
-                        jsAttachments[i].first->getName().c_str());
+                        jsAttachments_[i].second.c_str(), 
+                        jsAttachments_[i].first->GetName().c_str());
     }    
 
     // Attach joint actuators
-    for(size_t i = 0; i < jaAttachments.size(); ++i)
+    for(size_t i = 0; i < jaAttachments_.size(); ++i)
     {
-        Joint* j = getJoint(jaAttachments[i].second);
+        Joint* j = GetJoint(jaAttachments_[i].second);
         if(j != nullptr)
-            jaAttachments[i].first->AttachToJoint(j);
+            jaAttachments_[i].first->AttachToJoint(j);
         else
             cCritical("Joint '%s' doesn't exist. Actuator '%s' cannot be attached!", 
-                        jaAttachments[i].second.c_str(), 
-                        jaAttachments[i].first->getName().c_str());
+                        jaAttachments_[i].second.c_str(), 
+                        jaAttachments_[i].first->GetName().c_str());
     }
 }
 

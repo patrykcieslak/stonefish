@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 14/03/2025.
-//  Copyright (c) 2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2025-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLSegmentationCamera__
-#define __Stonefish_OpenGLSegmentationCamera__
+#pragma once
 
 #include "graphics/OpenGLView.h"
 #include <random>
@@ -119,17 +118,17 @@ namespace sf
         void Update();
         
         //! A method that informs if the camera needs update.
-        bool needsUpdate();
+        bool NeedsUpdate();
         
         //! A method to set a pointer to a camera sensor.
         /*!
          \param cam a pointer to a camera sensor
          \param index the id of the OpenGL depth camera
          */
-        void setCamera(Camera* cam, unsigned int index = 0);
+        void SetCamera(Camera* cam, unsigned int index = 0);
         
         //! A method returning the type of the view.
-        ViewType getType() const override;
+        ViewType GetType() const override;
         
         //! A static method to load shaders.
         static void Init();
@@ -138,32 +137,30 @@ namespace sf
         static void Destroy();
         
     protected:
-        Camera* camera;
-        glm::mat4 cameraTransform;
-        glm::vec3 eye;
-        glm::vec3 dir;
-        glm::vec3 up;
-        glm::vec3 tempEye;
-        glm::vec3 tempDir;
-        glm::vec3 tempUp;
-        glm::mat4 projection;
-        glm::vec2 fov;
-        GLfloat focalLength;
-        bool _needsUpdate;
-        bool newData;
-        glm::vec2 range;
-        GLuint renderDepthTex;
-        GLuint renderSegTex[2];
-        GLuint displaySegTex;
-        GLuint outputPBO;
-        GLuint displayPBO;
-        GLuint displayFBO;
-        GLuint displayVAO;
-        GLuint displayVBO;
-        static GLSLShader* segmentationCameraOutputShader;
-        static GLSLShader* segmentationVisualizeShader;
-        static GLSLShader* flipShader;
+        Camera* camera_;
+        glm::mat4 cameraTransform_;
+        glm::vec3 eye_;
+        glm::vec3 dir_;
+        glm::vec3 up_;
+        glm::vec3 tempEye_;
+        glm::vec3 tempDir_;
+        glm::vec3 tempUp_;
+        glm::mat4 projection_;
+        glm::vec2 fov_;
+        GLfloat focalLength_;
+        bool needsUpdate_;
+        bool newData_;
+        glm::vec2 range_;
+        GLuint renderDepthTex_;
+        GLuint renderSegTex_[2];
+        GLuint displaySegTex_;
+        GLuint outputPBO_;
+        GLuint displayPBO_;
+        GLuint displayFBO_;
+        GLuint displayVAO_;
+        GLuint displayVBO_;
+        static std::unique_ptr<GLSLShader> segmentationCameraOutputShader;
+        static std::unique_ptr<GLSLShader> segmentationVisualizeShader;
+        static std::unique_ptr<GLSLShader> flipShader;
     };
 }
-
-#endif

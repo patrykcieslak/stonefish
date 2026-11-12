@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 24/05/2014.
-//  Copyright (c) 2014-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -45,10 +45,10 @@ namespace sf
          \param material the name of the material the entity is made of
          \param look the name of the graphical material used for rendering
          */
-        StaticEntity(std::string uniqueName, std::string material, std::string look);
+        StaticEntity(std::string_view uniqueName, std::string_view material, std::string_view look);
         
         //! A destructor.
-        virtual ~StaticEntity();
+        virtual ~StaticEntity() = default;
         
         //! A method implementing the rendering of the entity.
         virtual std::vector<Renderable> Render();
@@ -71,34 +71,34 @@ namespace sf
          \param min a point located at the minimum coordinate corner
          \param max a point located at the maximum coordinate corner
          */
-        virtual void getAABB(Vector3& min, Vector3& max);
+        virtual void GetAabb(Vector3& min, Vector3& max);
         
         //! A method used to set new origin of the entity in the world frame.
         /*!
          \param trans a transformation of the entity origin in the world frame
          */
-        void setTransform(const Transform& trans);
+        void SetTransform(const Transform& trans);
         
         //! A method returning the transformation of the entity origin in the world frame.
-        Transform getTransform();
+        Transform GetTransform();
         
         //! A method returning the material of the entity.
-        Material getMaterial() const;
+        Material GetMaterial() const;
         
         //! A method returning the rigid body associated with the entity.
-        btRigidBody* getRigidBody();
+        btRigidBody* GetRigidBody();
         
         //! A method returning the type of the entity.
-        EntityType getType() const;
+        EntityType GetType() const;
         
         //! A method returninf the type of the static entity.
-        virtual StaticEntityType getStaticType() = 0;
+        virtual StaticEntityType GetStaticType() = 0;
         
         //! A method used to set display mode used for the body.
         /*!
          \param m flag defining the display mode
          */
-        void setDisplayMode(DisplayMode m);
+        void SetDisplayMode(DisplayMode m);
         
         //! A static method used to transform a group of static entities together (useful to change the position of multiple linked objects).
         /*!
@@ -109,15 +109,17 @@ namespace sf
         static void GroupTransform(std::vector<StaticEntity*>& objects, const Transform& centre, const Transform& transform);
         
     protected:
-        void BuildRigidBody(btCollisionShape* shape);
+        void BuildRigidBody();
         virtual void BuildGraphicalObject();
         
-        btRigidBody* rigidBody;
-        Material mat;
-        Mesh* phyMesh;
+        std::unique_ptr<btRigidBody> rigidBody_;
+        std::unique_ptr<btCollisionShape> collisionShape_;
+        std::unique_ptr<btDefaultMotionState> motionState_;
+        Material mat_;
+        std::shared_ptr<Mesh> phyMesh_;
         
-        int lookId;
-        int phyObjectId;
-        DisplayMode dm;
+        int lookId_;
+        int phyObjectId_;
+        DisplayMode dm_;
     };
 }

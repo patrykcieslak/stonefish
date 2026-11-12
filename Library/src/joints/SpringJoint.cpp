@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 15/02/13.
-//  Copyright (c) 2023-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2023-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "joints/SpringJoint.h"
@@ -32,14 +32,14 @@
 namespace sf
 {
 
-SpringJoint::SpringJoint(std::string uniqueName, SolidEntity* solid, const Transform& attachment,
+SpringJoint::SpringJoint(std::string_view uniqueName, SolidEntity* solid, const Transform& attachment,
                         const Vector3& linearStiffness, const Vector3& angularStiffness,
                         const Vector3& linearDamping, const Vector3& angularDamping) : Joint(uniqueName, false)
 {
-    btRigidBody* bodyA = solid->rigidBody;
-    Transform frameInA = solid->getCGTransform().inverse() * attachment;
+    btRigidBody* bodyA = solid->GetRigidBody();
+    Transform frameInA = solid->GetCgTransform().inverse() * attachment;
 
-    btGeneric6DofSpring2Constraint* spring = new btGeneric6DofSpring2Constraint(*bodyA, frameInA, RO_ZYX);
+    std::unique_ptr<btGeneric6DofSpring2Constraint> spring = std::make_unique<btGeneric6DofSpring2Constraint>(*bodyA, frameInA, RO_ZYX);
     spring->enableSpring(0, true);
     spring->enableSpring(1, true);
     spring->enableSpring(2, true);
@@ -58,19 +58,19 @@ SpringJoint::SpringJoint(std::string uniqueName, SolidEntity* solid, const Trans
     spring->setDamping(3, angularDamping.getX());
     spring->setDamping(4, angularDamping.getY());
     spring->setDamping(5, angularDamping.getZ());
-    setConstraint(spring);
+    constraint_ = std::move(spring);
 }
 
-SpringJoint::SpringJoint(std::string uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Transform& attachment,
+SpringJoint::SpringJoint(std::string_view uniqueName, SolidEntity* solidA, SolidEntity* solidB, const Transform& attachment,
                         const Vector3& linearStiffness, const Vector3& angularStiffness,
                         const Vector3& linearDamping, const Vector3& angularDamping) : Joint(uniqueName, false)
 {
-    btRigidBody* bodyA = solidA->rigidBody;
-    btRigidBody* bodyB = solidB->rigidBody;
+    btRigidBody* bodyA = solidA->GetRigidBody();
+    btRigidBody* bodyB = solidB->GetRigidBody();
     Transform frameInA = bodyA->getCenterOfMassTransform().inverse() * attachment;
     Transform frameInB = bodyB->getCenterOfMassTransform().inverse() * attachment;
     
-    btGeneric6DofSpring2Constraint* spring = new btGeneric6DofSpring2Constraint(*bodyA, *bodyB, frameInA, frameInB, RO_ZYX);
+    std::unique_ptr<btGeneric6DofSpring2Constraint> spring = std::make_unique<btGeneric6DofSpring2Constraint>(*bodyA, *bodyB, frameInA, frameInB, RO_ZYX);
     spring->enableSpring(0, true);
     spring->enableSpring(1, true);
     spring->enableSpring(2, true);
@@ -89,10 +89,10 @@ SpringJoint::SpringJoint(std::string uniqueName, SolidEntity* solidA, SolidEntit
     spring->setDamping(3, angularDamping.getX());
     spring->setDamping(4, angularDamping.getY());
     spring->setDamping(5, angularDamping.getZ());
-    setConstraint(spring);
+    constraint_ = std::move(spring);
 }
 
-JointType SpringJoint::getType() const
+JointType SpringJoint::GetType() const
 {
     return JointType::SPRING;
 }
@@ -100,14 +100,14 @@ JointType SpringJoint::getType() const
 std::vector<Renderable> SpringJoint::Render()
 {
     std::vector<Renderable> items(0);
-    btGeneric6DofSpring2Constraint* c = (btGeneric6DofSpring2Constraint*)getConstraint();
+    btGeneric6DofSpring2Constraint* c = static_cast<btGeneric6DofSpring2Constraint*>(constraint_.get());
     if(c != nullptr)
     {
         Renderable item;
         item.model = glm::mat4(1.f);
         item.type = RenderableType::JOINT_LINES;
         item.data = std::make_shared<std::vector<glm::vec3>>();
-        auto points = item.getDataAsPoints();
+        auto points = item.GetDataAsPoints();
         Vector3 A = (c->getRigidBodyA().getCenterOfMassTransform() * c->getFrameOffsetA()).getOrigin();
         Vector3 B = (c->getRigidBodyB().getCenterOfMassTransform() * c->getFrameOffsetB()).getOrigin();   
         points->push_back(glm::vec3(A.getX(), A.getY(), A.getZ()));

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2023 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/Entity.h"
@@ -32,31 +32,31 @@
 namespace sf
 {
 
-Entity::Entity(std::string uniqueName)
+Entity::Entity(std::string_view uniqueName)
 {
-    name = SimulationApp::getApp()->getSimulationManager()->getNameManager()->AddName(uniqueName);
-    renderable = true;
+    name_ = SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->AddName(uniqueName);
+    renderable_ = true;
 }
 
-Entity::~Entity(void)
+Entity::~Entity()
 {
-    if(SimulationApp::getApp() != nullptr)
-        SimulationApp::getApp()->getSimulationManager()->getNameManager()->RemoveName(name);
+    if(SimulationApp::GetApp() != nullptr)
+        SimulationApp::GetApp()->GetSimulationManager()->GetNameManager()->RemoveName(name_);
 }
 
-void Entity::setRenderable(bool render)
+void Entity::SetRenderable(bool render)
 {
-    renderable = render;
+    renderable_ = render;
 }
 
-bool Entity::isRenderable() const
+bool Entity::IsRenderable() const
 {
-    return renderable;
+    return renderable_;
 }
 
-std::string Entity::getName() const
+const std::string& Entity::GetName() const
 {
-    return name;
+    return name_;
 }
         
 }

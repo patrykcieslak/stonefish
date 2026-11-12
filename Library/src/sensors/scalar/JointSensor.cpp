@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 21/11/2018.
-//  Copyright (c) 2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/JointSensor.h"
@@ -31,52 +31,52 @@
 namespace sf
 {
 
-JointSensor::JointSensor(std::string uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
+JointSensor::JointSensor(std::string_view uniqueName, Scalar frequency, int historyLength) : ScalarSensor(uniqueName, frequency, historyLength)
 {
-    fe = NULL;
-    jId = 0;
-    j = NULL;
+    fe_ = nullptr;
+    jId_ = 0;
+    j_ = nullptr;
 }
 
-SensorType JointSensor::getType() const
+SensorType JointSensor::GetType() const
 {
     return SensorType::JOINT;
 }
 
-Transform JointSensor::getSensorFrame() const
+Transform JointSensor::GetSensorFrame() const
 {
     return I4();
 }
 
-void JointSensor::getSensorVelocity(Vector3& linear, Vector3& angular) const
+void JointSensor::GetSensorVelocity(Vector3& linear, Vector3& angular) const
 {
     linear = V0();
     angular = V0();
 }
 
-std::string JointSensor::getJointName() const
+std::string JointSensor::GetJointName() const
 {
-    if(j != NULL)
-        return j->getName();
-    else if(fe != NULL)
-        return fe->getJointName(jId);
+    if(j_ != nullptr)
+        return j_->GetName();
+    else if(fe_ != nullptr)
+        return fe_->GetJointName(jId_);
     else
         return std::string("");
 }
 
-void JointSensor::AttachToJoint(FeatherstoneEntity* multibody, unsigned int jointId)
+void JointSensor::AttachToJoint(FeatherstoneEntity* multibody, size_t jointId)
 {
-    if(multibody != NULL && jointId < multibody->getNumOfJoints())
+    if(multibody != nullptr && jointId < multibody->GetNumOfJoints())
     {
-        fe = multibody;
-        jId = jointId;
+        fe_ = multibody;
+        jId_ = jointId;
     }
 }
 
 void JointSensor::AttachToJoint(Joint* joint)
 {
-    if(joint != NULL)
-        j = joint;
+    if(joint != nullptr)
+        j_ = joint;
 }
 
 }

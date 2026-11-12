@@ -20,23 +20,23 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_GraphicalSimulationApp__
-#define __Stonefish_GraphicalSimulationApp__
+#pragma once
 
-#include "graphics/OpenGLDataStructs.h"
-#include <SDL2/SDL.h>
 #include "core/SimulationApp.h"
+#include <SDL2/SDL.h>
+#include "graphics/OpenGLDataStructs.h"
+#include "graphics/OpenGLConsole.h"
+#include "graphics/IMGUI.h"
+#include "graphics/OpenGLPipeline.h"
 
 namespace sf
 {
-    class OpenGLConsole;
-    class IMGUI;
-    class OpenGLPipeline;
     class Entity;
     class MovingEntity;
+    class OpenGLTrackball;
     
     //! A class that implements an interface of a graphical application.
     class GraphicalSimulationApp : public SimulationApp
@@ -50,10 +50,10 @@ namespace sf
          \param h a structure containing the helper objects display settings
          \param sim a pointer to the simulation manager
          */
-        GraphicalSimulationApp(std::string title, std::string dataDirPath, RenderSettings s, HelperSettings h, SimulationManager* sim);
-        
+        GraphicalSimulationApp(std::string_view title, std::string_view dataDirPath, RenderSettings s, HelperSettings h, std::unique_ptr<SimulationManager> sim);
+
         //! A destructor.
-        virtual ~GraphicalSimulationApp();
+        virtual ~GraphicalSimulationApp() = default;
 
         //! A method that starts the simulation on demand.
         void StartSimulation() override;
@@ -138,46 +138,55 @@ namespace sf
          \param event a pointer to the event info structure
          */
         virtual void JoystickUp(SDL_Event* event);
+
+        //! A method that creates trackball view for the simulation.
+        /*!
+         \param center a pointer to the entity that will be the center of the trackball view
+            */
+        void CreateTrackball();
         
         //! A method returning a pointer to the OpenGL pipeline.
-        OpenGLPipeline* getGLPipeline();
+        OpenGLPipeline* GetGlPipeline();
         
         //! A method returning a pointer to the GUI.
-        IMGUI* getGUI();
+        IMGUI* GetGui();
+
+        //! A method returning a pointer to the trackball.
+        OpenGLTrackball* GetTrackball();
 
         //! A method returning a pointer to the selected entity.
-        std::pair<Entity*, int> getSelectedEntity();
+        std::pair<Entity*, int> GetSelectedEntity();
         
         //! A method informing if the application is graphical.
-        bool hasGraphics();
+        bool HasGraphics();
         
         //! A method returning a pointer to the joystick info structure.
-        SDL_Joystick* getJoystick();
+        SDL_Joystick* GetJoystick();
         
         //! A method returning the graphics rendering time in seconds.
         /*!
           \param max return maximum drawing time?
           \return moving average drawing time or maximum drawing time [ms]
         */
-        double getDrawingTime(bool max = false);
+        double GetDrawingTime(bool max = false);
         
         //! A method returning the width of the window.
-        int getWindowWidth();
+        int GetWindowWidth();
         
         //! A method returning the height of the window.
-        int getWindowHeight();
+        int GetWindowHeight();
         
         //! A method informing if the simulation is in the loading stage.
-        bool isLoading();
+        bool IsLoading();
         
         //! A method returning the path to the shader directory.
-        std::string getShaderPath();
+        std::string GetShaderPath();
         
         //! A method returning the current rendering settings.
-        RenderSettings getRenderSettings() const;
+        RenderSettings GetRenderSettings() const;
         
         //! A method returning a mutable reference to the helper object rendering settings.
-        HelperSettings& getHelperSettings();
+        HelperSettings& GetHelperSettings();
         
     protected:
         void Init();
@@ -190,38 +199,40 @@ namespace sf
         void InitializeSDL();
         void RenderLoop();
         
-        SDL_GLContext glMainContext;
-        SDL_GLContext glLoadingContext;
-        SDL_Thread* loadingThread;
-        SDL_Thread* simulationThread;
-        SDL_Window* window;
-        SDL_Joystick* joystick;
-        bool* joystickButtons;
-        int16_t* joystickAxes;
-        uint8_t* joystickHats;
-        SDL_Event mouseWasDown;
+        SDL_GLContext glMainContext_;
+        SDL_GLContext glLoadingContext_;
+        SDL_Thread* loadingThread_;
+        SDL_Thread* simulationThread_;
+        SDL_Window* window_;
+        SDL_Event mouseWasDown_;
+        SDL_Joystick* joystick_;
+        std::vector<bool> joystickButtons_;
+        std::vector<int16_t> joystickAxes_;
+        std::vector<uint8_t> joystickHats_;
         
-        IMGUI* gui;
-        OpenGLPipeline* glPipeline;
+        std::unique_ptr<IMGUI> gui_;
+        std::unique_ptr<OpenGLPipeline> glPipeline_;
         
-        MovingEntity* trackballCenter;
-        std::pair<Entity*, int> selectedEntity;
-        bool displayHUD;
-        bool displayKeymap;
-        bool displayConsole;
-        bool displayPerformance;
-        std::string shaderPath;
-        bool loading;
-        double drawingTime;
-        double maxDrawingTime;
+        OpenGLTrackball* trackball_;
+        MovingEntity* trackballCenter_;
+        std::pair<Entity*, int> selectedEntity_;
+        
+        bool displayHUD_;
+        bool displayKeymap_;
+        bool displayConsole_;
+        bool displayPerformance_;
+        std::string shaderPath_;
+        bool loading_;
+        double drawingTime_;
+        double maxDrawingTime_;
         double fps_;
-        int maxCounter;
-        int windowW;
-        int windowH;
-        RenderSettings rSettings;
-        HelperSettings hSettings;
-        GLuint timeQuery[2];
-        GLint timeQueryPingpong;
+        int maxCounter_;
+        int windowW_;
+        int windowH_;
+        RenderSettings rSettings_;
+        HelperSettings hSettings_;
+        std::array<GLuint, 2> timeQuery_;
+        GLint timeQueryPingpong_;
         
         static int RenderLoadingScreen(void* data);
         static int RunSimulation(void* data);
@@ -233,4 +244,3 @@ namespace sf
         GraphicalSimulationApp& app;
     };
 }
-#endif

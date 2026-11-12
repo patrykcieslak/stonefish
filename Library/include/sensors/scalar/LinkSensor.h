@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 20/11/2018.
-//  Copyright (c) 2018-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_LinkSensor__
-#define __Stonefish_LinkSensor__
+#pragma once
 
 #include "sensors/ScalarSensor.h"
 
@@ -43,10 +42,10 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (0 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        LinkSensor(std::string uniqueName, Scalar frequency, int historyLength);
+        LinkSensor(std::string_view uniqueName, Scalar frequency, int historyLength);
         
         //! A destructor.
-        virtual ~LinkSensor();
+        virtual ~LinkSensor() = default;
           
         //! A method implementing the rendering of the sensor.
         virtual std::vector<Renderable> Render();
@@ -62,28 +61,27 @@ namespace sf
         /*!
          \param origin a tranformation from the body frame to the sensor frame
          */
-        void setRelativeSensorFrame(const Transform& origin);
+        void SetRelativeSensorFrame(const Transform& origin);
 
         //! A method returning the type of the sensor.
-        SensorType getType() const override;
+        SensorType GetType() const override;
 
         //! A method returning the current sensor frame in world.
-        Transform getSensorFrame() const override;
+        Transform GetSensorFrame() const override;
 
         //! A method returning the velocity of the sensor measurement frame.
         /*!
          \param linear output of the linear velocity of the sensor measurement frame [m/s]
          \param angular output of the angular velocity of the sensor measurement frame [rad/s]
          */
-        void getSensorVelocity(Vector3& linear, Vector3& angular) const override;
+        void GetSensorVelocity(Vector3& linear, Vector3& angular) const override;
         
         //! A method returning the name of the link that the sensor is attached to.
-        std::string getLinkName() const;
+        std::string GetLinkName() const;
         
     protected:
-        MovingEntity* attach;
-        Transform o2s;
+        MovingEntity* attach_;
+        Transform o2s_;
     };
 }
 
-#endif

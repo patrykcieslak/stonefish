@@ -84,7 +84,7 @@ namespace sf
 
         //! A method used to add tasks to the queue.
         template <class F, class... Args>
-        auto enqueue(F &&f, Args &&...args)
+        auto Enqueue(F &&f, Args &&...args)
             -> std::future<std::invoke_result_t<F, Args...>>
         {
 
@@ -111,13 +111,13 @@ namespace sf
         }
 
         //! A non-blocking method that returns true if no tasks are queued or running.
-        bool isIdle() const
+        bool IsIdle() const
         {
             return activeTasks_ == 0;
         }
 
         //! A blocking method that halts the caller thread until all current tasks are finished.
-        void waitAll()
+        void WaitAll()
         {
             std::unique_lock<std::mutex> lock(queueMutex_);
             waitCondition_.wait(lock, [this]{ return activeTasks_ == 0; });
@@ -125,14 +125,17 @@ namespace sf
 
         ~ThreadPool()
         {
-            std::unique_lock<std::mutex> lock(queueMutex_);
-            stop_ = true;
-            
+            {
+                std::lock_guard<std::mutex> lock(queueMutex_); // std::lock_guard ensures mutex is unlocked when leaving scope
+                stop_ = true;
+            }
             condition_.notify_all();
+
+            // The lock must be released before joining, otherwise workers can't wake up and join() deadlocks
             for (std::thread &worker : workers_)
             {
                 if (worker.joinable())
-                    worker.detach();
+                    worker.join();
             }
         }
 

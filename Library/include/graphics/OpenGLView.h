@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/05/18.
-//  Copyright (c) 2018-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLView__
-#define __Stonefish_OpenGLView__
+#pragma once
 
 #include "graphics/OpenGLDataStructs.h"
 
@@ -58,7 +57,7 @@ namespace sf
         OpenGLView(GLint originX, GLint originY, GLint width, GLint height);
         
         //! A destructor.
-        virtual ~OpenGLView();
+        virtual ~OpenGLView() = default;
         
         //! A method to render the low dynamic range (final) image to the screen.
         /*!
@@ -101,34 +100,34 @@ namespace sf
         GLfloat GetLogDepthConstant() const;
         
         //! A method that checks if the view needs to be updated.
-        virtual bool needsUpdate() = 0;
+        virtual bool NeedsUpdate() = 0;
         
         //! A method returning the type of the view.
-        virtual ViewType getType() const = 0;
+        virtual ViewType GetType() const = 0;
         
         //! A method that sets the current viewport.
         void SetViewport();
         
         //! A method that returns the viewport origin and size.
-        GLint* GetViewport() const;
+        std::vector<GLint> GetViewport() const;
         
         //! A method returning the rendering framebuffer of the view.
-        GLuint getRenderFBO() const;
+        GLuint GetRenderFbo() const;
         
         //! A method returning a pointer to the view UBO data.
-        const ViewUBO* getViewUBOData() const;
+        const ViewUBO* GetViewUboData() const;
         
         //! A method to set if the view is enabled.
         /*!
          \param en a flag that says if the view should be enabled
          */
-        void setEnabled(bool en);
+        void SetEnabled(bool en);
         
         //! A method returning a flag saying if the view is enabled.
-        bool isEnabled();
+        bool IsEnabled();
 
         //! A method saying if the view works in continuous update mode.
-        bool isContinuous();
+        bool IsContinuous();
 
         //! A method extracting frustium planes from the view-projection matrix.
         /*!
@@ -138,15 +137,14 @@ namespace sf
         static void ExtractFrustumFromVP(glm::vec4 frustum[6], const glm::mat4& VP);
         
     protected:
-        GLint originX;
-        GLint originY;
-        GLint viewportWidth;
-        GLint viewportHeight;
-        GLuint renderFBO;
-        bool enabled;
-        bool continuous;
-        ViewUBO viewUBOData;
+        GLint originX_;
+        GLint originY_;
+        GLint viewportWidth_;
+        GLint viewportHeight_;
+        GLuint renderFBO_;
+        bool enabled_;
+        bool continuous_;
+        ViewUBO viewUBOData_;
     };
 }
-    
-#endif
+

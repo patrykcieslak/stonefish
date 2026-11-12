@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 4/7/17.
-//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Light__
-#define __Stonefish_Light__
+#pragma once
 
 #include "actuators/LinkActuator.h"
 #include "graphics/OpenGLDataStructs.h"
@@ -46,7 +45,7 @@ namespace sf
          \param color a color of the light
          \param lum the luminous power of the light [lm]
          */
-        Light(std::string uniqueName, Scalar radius, Color color, Scalar lum);
+        Light(std::string_view uniqueName, Scalar radius, Color color, Scalar lum);
         
         //! A constructor of a spot light.
         /*!
@@ -56,7 +55,7 @@ namespace sf
          \param color a color of the light
          \param lum the luminous power of the light [lm]
          */
-        Light(std::string uniqueName, Scalar radius, Scalar coneAngleDeg, Color color, Scalar lum);
+        Light(std::string_view uniqueName, Scalar radius, Scalar coneAngleDeg, Color color, Scalar lum);
         
 		//! A method used to attach the comm device to the world origin.
         /*!
@@ -89,13 +88,13 @@ namespace sf
         /*!
          \param dt a time step of the simulation
          */
-        void Update(Scalar dt);
+        void Update(Scalar dt) override;
         
         //! A method that updates light position.
         void UpdateTransform();
         
         //! A method implementing the rendering of the light dummy.
-        std::vector<Renderable> Render();
+        std::vector<Renderable> Render() override;
 
         //! A method to switch on/off the light.
         /*!
@@ -104,23 +103,20 @@ namespace sf
         void Switch(bool on);
 
 		//! A method returning actuator frame in the world frame.
-		Transform getActuatorFrame() const;
+		Transform GetActuatorFrame() const;
 		
-        //! A method returning the type of the actuator.
-        ActuatorType getType() const;
+        //! A method returning type of link actuator.
+        LinkActuatorType GetLinkActuatorType() const override;
         
     private:
         void InitGraphics();
         
-        //attach -> SolidEntity
-		StaticEntity* attach2;
-        AnimatedEntity* attach3;
-        Color c;
-		Scalar R;
-        Scalar Fi;
-        Scalar coneAngle;
-        OpenGLLight* glLight;
+		StaticEntity* attach2_;
+        AnimatedEntity* attach3_;
+        Color c_;
+		Scalar R_;
+        Scalar Fi_;
+        Scalar coneAngle_;
+        OpenGLLight* glLight_;
     };
 }
-
-#endif

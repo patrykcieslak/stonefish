@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/30/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Cylinder__
-#define __Stonefish_Cylinder__
+#pragma once
 
 #include "entities/SolidEntity.h"
 
@@ -45,18 +44,16 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the cylinder walls, if positive the cylinder is treated as shell
          */
-        Cylinder(std::string uniqueName, PhysicsSettings phy, Scalar radius, Scalar height, const Transform& origin, std::string material, std::string look, Scalar thickness = Scalar(-1));
+        Cylinder(std::string_view uniqueName, PhysicsSettings phy, Scalar radius, Scalar height, const Transform& origin, std::string_view material, std::string_view look, Scalar thickness = Scalar(-1));
         
         //! A method that returns the type of body.
-        SolidType getSolidType();
+        SolidType GetSolidType() const;
         
         //! A method that returns the collision shape for the cylinder.
-        btCollisionShape* BuildCollisionShape();
+        std::unique_ptr<btCollisionShape> BuildCollisionShape();
         
     private:
-        Scalar r;
-        Scalar halfHeight;
+        Scalar r_;
+        Scalar halfHeight_;
     };
 }
-
-#endif

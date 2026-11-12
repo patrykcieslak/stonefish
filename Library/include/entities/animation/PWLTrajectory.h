@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/10/20.
-//  Copyright(c) 2020-2023 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_PWLTrajectory__
-#define __Stonefish_PWLTrajectory__
+#pragma once
 
 #include "entities/animation/Trajectory.h"
 
@@ -58,18 +57,16 @@ namespace sf
         virtual void AddKeyPoint(Scalar keyTime, Transform keyTransform);
 
         //! A method updating the interpolated transform and velocities.
-        virtual void Interpolate();
+        virtual void Interpolate() override;
 
         //! A method that builds a graphical representation of the trajectory.
         virtual void BuildGraphicalPath();
 
         //! A method returning the elements that should be rendered.
-        std::vector<Renderable> Render();
+        std::vector<Renderable> Render() override;
 
     protected:
-        std::vector<KeyPoint> points;
-        std::vector<Renderable> vis;
+        std::vector<KeyPoint> points_;
+        std::vector<Renderable> vis_;
     };
 }
-
-#endif

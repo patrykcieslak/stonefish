@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 06/05/2014.
-//  Copyright (c) 2014-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_IMU__
-#define __Stonefish_IMU__
+#pragma once
 
 #include "sensors/scalar/LinkSensor.h"
 
@@ -40,7 +39,7 @@ namespace sf
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
          */
-        IMU(std::string uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
+        IMU(std::string_view uniqueName, Scalar frequency = Scalar(-1), int historyLength = -1);
         
         //! A method performing internal sensor state update.
         /*!
@@ -56,7 +55,7 @@ namespace sf
          \param angularVelocityMax the maximum measured angular velocity for each axis [rad s^-1]
          \param linearAccelerationMax the maximum measured linear acceleration for each axis [m s^-2]
          */
-        void setRange(Vector3 angularVelocityMax, Vector3 linearAccelerationMax);
+        void SetRange(Vector3 angularVelocityMax, Vector3 linearAccelerationMax);
         
         //! A method used to set the noise characteristics of the sensor.
         /*!
@@ -65,15 +64,22 @@ namespace sf
          \param yawAngleDrift drift of the yaw angle measurement due to gyroscope bias [rad s^-1]
          \param linearAccelerationStdDev the standard deviation of the acceleration measurement for each axis
          */
-        void setNoise(Vector3 angleStdDev, Vector3 angularVelocityStdDev, Scalar yawAngleDrift, Vector3 linearAccelerationStdDev);
+        void SetNoise(Vector3 angleStdDev, Vector3 angularVelocityStdDev, Scalar yawAngleDrift, Vector3 linearAccelerationStdDev);
         
         //! A method returning the type of the scalar sensor.
-        ScalarSensorType getScalarSensorType() const override;
+        ScalarSensorType GetScalarSensorType() const override;
+
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo GetConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<IMU> Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info);
 
         private:
-            Scalar yawDriftRate;
-            Scalar accumulatedYawDrift;
+            Scalar yawDriftRate_;
+            Scalar accumulatedYawDrift_;
     };
 }
-
-#endif

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 12/11/25.
-//  Copyright(c) 2025 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2025-2026 Patryk Cieslak. All rights reserved.
 //
 
 #pragma once
@@ -46,7 +46,7 @@ namespace sf
         Vector3 Fdq; // Form drag force
         Vector3 Fdf; // Skin friction force
 
-        void clearForces()
+        void ClearForces()
         {
             Fb.setZero();
             Fdq.setZero();
@@ -71,8 +71,8 @@ namespace sf
          \param stretching the allowed stretching factor of the cable (0.0 means inextensible)
          \param uvScale a scaling factor for texture coordinates
          */
-        CableEntity(std::string uniqueName, PhysicsSettings phy, Vector3 firstEnd, Vector3 secondEnd, size_t numSegments, 
-            Scalar diameter, std::string material, std::string look, Scalar stretching = 0.0, float uvScale = 1.0f);
+        CableEntity(std::string_view uniqueName, PhysicsSettings phy, Vector3 firstEnd, Vector3 secondEnd, size_t numSegments, 
+            Scalar diameter, std::string_view material, std::string_view look, Scalar stretching = 0.0, float uvScale = 1.0f);
 
         //! A mrethod attaching the cable ends to the world.
         /*! 
@@ -116,31 +116,31 @@ namespace sf
         /*!
          \param m flag defining the display mode
          */
-        void setDisplayMode(DisplayMode m);
+        void SetDisplayMode(DisplayMode m);
 
         //! A method returning the type of the entity.
-        EntityType getType() const override;
+        EntityType GetType() const override;
 
         //! A method returning the rest length of the cable.
-        Scalar getRestLength() const;
+        Scalar GetRestLength() const;
 
         //! A method returning the current lenght of the cable.
-        Scalar getLength() const;
+        Scalar GetLength() const;
 
         //! A method returning the underlying soft body object.
-        btSoftBody* getSoftBody() const;
+        btSoftBody* GetSoftBody() const;
 
         //! A method returning the extents of the entity axis alligned bounding box.
         /*!
          \param min a point located at the minimum coordinate corner
          \param max a point located at the maximum coordinate corner
          */
-        void getAABB(Vector3& min, Vector3& max) override;
+        void GetAabb(Vector3& min, Vector3& max) override;
                 
     private:
-        Scalar circularSegmentArea(Scalar h) const;
+        Scalar CircularSegmentArea(Scalar h) const;
 
-        btSoftBody* cableBody_;
+        std::unique_ptr<btSoftBody> cableBody_;
         Scalar radius_;
         Material mat_;
         std::vector<CableNodalForces> nodalForces_;

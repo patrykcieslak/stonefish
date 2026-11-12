@@ -36,7 +36,7 @@ namespace sf
 
 FilteredCollisionDispatcher::FilteredCollisionDispatcher(btCollisionConfiguration* collisionConfiguration, bool inclusiveMode) : btCollisionDispatcher(collisionConfiguration)
 {
-    inclusive = inclusiveMode;
+    inclusive_ = inclusiveMode;
     // setNearCallback(myNearCallback);
 }
 
@@ -54,15 +54,15 @@ bool FilteredCollisionDispatcher::needsCollision(const btCollisionObject* body0,
     if(ent1 == nullptr)
         return false;
 
-    if(inclusive)
-        needs = SimulationApp::getApp()->getSimulationManager()->CheckCollision(ent0, ent1) > -1;
+    if(inclusive_)
+        needs = SimulationApp::GetApp()->GetSimulationManager()->CheckCollision(ent0, ent1) > -1;
     else //exclusive
-        needs = SimulationApp::getApp()->getSimulationManager()->CheckCollision(ent0, ent1) == -1;
+        needs = SimulationApp::GetApp()->GetSimulationManager()->CheckCollision(ent0, ent1) == -1;
     
     return needs;
 }
 
-void FilteredCollisionDispatcher::myNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)
+void FilteredCollisionDispatcher::MyNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)
 {
     btCollisionObject* colObj0 = (btCollisionObject*)collisionPair.m_pProxy0->m_clientObject;
     btCollisionObject* colObj1 = (btCollisionObject*)collisionPair.m_pProxy1->m_clientObject;

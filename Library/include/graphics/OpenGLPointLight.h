@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 8/20/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLPointLight__
-#define __Stonefish_OpenGLPointLight__
+#pragma once
 
 #include "graphics/OpenGLLight.h"
 
@@ -61,8 +60,7 @@ namespace sf
         void SetupShader(LightUBO* ubo);
         
         //! A method returning the type of the light.
-        LightType getType() const;
+        LightType GetType() const;
     };
 }
 
-#endif

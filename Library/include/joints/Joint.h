@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/13/13.
-//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Joint__
-#define __Stonefish_Joint__
+#pragma once
 
 #include "BulletDynamics/Featherstone/btMultiBodyConstraint.h"
 #include "StonefishCommon.h"
@@ -47,7 +46,7 @@ namespace sf
          \param uniqueName a name for the joint
          \param collideLinked a flag that sets if the bodies connected by the joint should coliide
          */
-        Joint(std::string uniqueName, bool collideLinked = true);
+        Joint(std::string_view uniqueName, bool collideLinked = true);
         
         //! A destructor.
         virtual ~Joint();
@@ -78,42 +77,35 @@ namespace sf
         virtual std::vector<Renderable> Render();
         
         //! A method returning the type of the joint.
-        virtual JointType getType() const = 0;
+        virtual JointType GetType() const = 0;
         
         //! A method returning the name of the joint.
-        std::string getName() const;
-        
-        //! A method returning the internal constraint.
-        btTypedConstraint* getConstraint();
-        
+        const std::string& GetName() const;
+            
         //! A method returning joint feedback in the world frame.
         /*!
          \param dof degree of freedom for which the feedback is desired
          \return value of force/torque for the specified degree of freedom
          */
-        Scalar getFeedback(unsigned int dof);
+        Scalar GetFeedback(unsigned int dof);
         
         //! A method that informs if the joint is of multibody type.
-        bool isMultibodyJoint();
+        bool IsMultibodyJoint();
 
         //! A method returning the first body affected by the joint.
-        SolidEntity* getSolidA();
+        SolidEntity* GetSolidA();
 
         //! A method returning the second body affected by the joint.
-        SolidEntity* getSolidB();
+        SolidEntity* GetSolidB();
         
     protected:
-        void setConstraint(btTypedConstraint* c);
-        void setConstraint(btMultiBodyConstraint* c);
-        SolidEntity* jSolidA;
-        SolidEntity* jSolidB;
-        btTypedConstraint* constraint;
-        btMultiBodyConstraint* mbConstraint;
+        SolidEntity* jSolidA_;
+        SolidEntity* jSolidB_;
+        std::unique_ptr<btTypedConstraint> constraint_;
+        std::unique_ptr<btMultiBodyConstraint> mbConstraint_;
 
     private:
-        std::string name;
-        bool collisionEnabled;
+        std::string name_;
+        bool collisionEnabled_;
     };
 }
-
-#endif

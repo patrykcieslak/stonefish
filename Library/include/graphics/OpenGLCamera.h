@@ -20,13 +20,13 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 5/29/13.
-//  Copyright (c) 2013-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLCamera__
-#define __Stonefish_OpenGLCamera__
+#pragma once
 
 #include "graphics/OpenGLView.h"
+#include <unordered_map>
 
 #define SCENE_ATTACHMENT        GL_COLOR_ATTACHMENT1
 #define FINAL_ATTACHMENT        GL_COLOR_ATTACHMENT0
@@ -196,62 +196,62 @@ namespace sf
         /*!
          \param ec exposure compensation factor
          */
-        void setExposureCompensation(GLfloat ec);
+        void SetExposureCompensation(GLfloat ec);
 
         //! A method returning the exposure compensation factor.
-        GLfloat getExposureCompensation();
+        GLfloat GetExposureCompensation();
 
         //! A method returning the postprocessing framebuffer of the camera.
-        GLuint getPostprocessFBO();
+        GLuint GetPostprocessFbo();
 
         //! A method returning the quater resolution postprocessing framebuffer of the camera.
-        GLuint getQuaterPostprocessFBO();
+        GLuint GetQuaterPostprocessFbo();
 
         //! A method returning the id of the color texture.
         /*!
          \param index the id of the texture in the list
          \return OpenGL id of the texture
          */
-        GLuint getColorTexture(unsigned int index);
+        GLuint GetColorTexture(unsigned int index);
         
         //! A method returning the id of the final texture.
-        GLuint getFinalTexture();
+        GLuint GetFinalTexture();
         
         //! A method returning the id of the ambient occlusion texture.
-        GLuint getAOTexture();
+        GLuint GetAoTexture();
         
         //! A method returning the id of the linear depth texture.
         /*!
          \param frontFace a flag to decide if front or back face depth is requested
          \return OpenGL id of the texture
          */
-        GLuint getLinearDepthTexture(bool frontFace);
+        GLuint GetLinearDepthTexture(bool frontFace);
         
         //! A method returning the id of a postprocessing texture.
         /*!
          \param index the id of the texture in the list
          \return OpenGL id of the texture
          */
-        GLuint getPostprocessTexture(unsigned int index);
+        GLuint GetPostprocessTexture(unsigned int index);
         
         //! A method returning the id of a quater resolution postprocessing texture.
         /*!
          \param index the id of the texture in the list
          \return OpenGL id of the texture
          */
-        GLuint getQuaterPostprocessTexture(unsigned int index);
+        GLuint GetQuaterPostprocessTexture(unsigned int index);
 
         //! A method returning the id of the last used color buffer.
-        GLuint getLastActiveColorBuffer();
+        GLuint GetLastActiveColorBuffer();
 
         //! A method informing if view is using ambient occlusion.
-        bool hasAO();
+        bool HasAo();
 		
 		//! A method informing if HDR tone mapping is enabled.
-		bool usingToneMapping();
+		bool UsingToneMapping();
 		
 		//! A method informing if auto exposure function is enabled.
-        bool usingAutoExposure();
+        bool UsingAutoExposure();
 		
         //! A static method to load shaders.
         static void Init(const RenderSettings& rSettings);
@@ -261,59 +261,47 @@ namespace sf
         
     protected:
         //Buffers
-        GLuint renderColorTex[2];
-        GLuint renderViewNormalTex;
-        GLuint renderDepthStencilTex;
-        GLuint histogramSSBO;
-        GLuint histogramBins;
-        glm::vec2 histogramRange;
-        GLuint exposureTex;
-        GLfloat exposureComp;
-        bool autoExposure;
-		bool toneMapping;
-        bool antiAliasing;
-        GLuint lastActiveRenderColorBuffer;
+        GLuint renderColorTex_[2];
+        GLuint renderViewNormalTex_;
+        GLuint renderDepthStencilTex_;
+        GLuint histogramSSBO_;
+        GLuint histogramBins_;
+        glm::vec2 histogramRange_;
+        GLuint exposureTex_;
+        GLfloat exposureComp_;
+        bool autoExposure_;
+		bool toneMapping_;
+        bool antiAliasing_;
+        GLuint lastActiveRenderColorBuffer_;
         
         //Postprocessing
-        GLuint linearDepthFBO;
-        GLuint linearDepthTex[2];
-        GLuint postprocessFBO;
-        GLuint postprocessTex[2];
-        GLuint postprocessStencilTex;
-        GLuint quaterPostprocessFBO;
-        GLuint quaterPostprocessTex[2];
+        GLuint linearDepthFBO_;
+        GLuint linearDepthTex_[2];
+        GLuint postprocessFBO_;
+        GLuint postprocessTex_[2];
+        GLuint postprocessStencilTex_;
+        GLuint quaterPostprocessFBO_;
+        GLuint quaterPostprocessTex_[2];
         
         //HBAO Cache-aware (NVIDIA designworks)
-        GLuint aoBlurTex;
-        GLuint aoResultTex;
-        GLuint aoDepthArrayTex;
-        GLuint aoResultArrayTex;
-        GLuint aoFinalFBO;
-        GLuint aoDeinterleaveFBO;
-        GLuint aoCalcFBO;
-        GLuint aoDataUBO;
-        AOData aoData;
+        GLuint aoBlurTex_;
+        GLuint aoResultTex_;
+        GLuint aoDepthArrayTex_;
+        GLuint aoResultArrayTex_;
+        GLuint aoFinalFBO_;
+        GLuint aoDeinterleaveFBO_;
+        GLuint aoCalcFBO_;
+        GLuint aoDataUBO_;
+        AOData aoData_;
         
         //Data
-        GLuint aoFactor;
-        GLfloat fovx;
-        GLfloat near;
-        GLfloat far;
-        glm::mat4 projection;
+        GLuint aoFactor_;
+        GLfloat fovx_;
+        GLfloat near_;
+        GLfloat far_;
+        glm::mat4 projection_;
         
         //Shaders
-        static GLSLShader** tonemappingShaders;
-        static GLSLShader* depthLinearizeShader;
-        static GLSLShader* aoDeinterleaveShader;
-        static GLSLShader* aoCalcShader;
-        static GLSLShader* aoReinterleaveShader;
-        static GLSLShader** aoBlurShader;		  //Two shaders -> first and second pass
-        static GLSLShader* ssrShader;
-        static GLSLShader* fxaaShader;
-        static GLSLShader* flipShader;
-        static GLSLShader* ssrBlur;
-        static GLSLShader* bloomBlur;
+        static std::unordered_map<std::string, std::unique_ptr<GLSLShader>> shaders;
     };
 }
-
-#endif

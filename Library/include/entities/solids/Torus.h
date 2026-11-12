@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 30/01/13.
-//  Copyright (c) 2013-2021 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Torus__
-#define __Stonefish_Torus__
+#pragma once
 
 #include "entities/SolidEntity.h"
 
@@ -45,19 +44,17 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param thickness defines the thickness of the torus walls, if positive the torus is treated as shell
          */
-        Torus(std::string uniqueName, PhysicsSettings phy, Scalar majorRadius, Scalar minorRadius, const Transform& origin,
-              std::string material, std::string look, Scalar thickness = Scalar(-1));
+        Torus(std::string_view uniqueName, PhysicsSettings phy, Scalar majorRadius, Scalar minorRadius, const Transform& origin,
+              std::string_view material, std::string_view look, Scalar thickness = Scalar(-1));
         
         //! A method that returns the type of body.
-        SolidType getSolidType();
+        SolidType GetSolidType() const;
         
         //! A method that returns the collision shape for the torus.
-        btCollisionShape* BuildCollisionShape();
+        std::unique_ptr<btCollisionShape> BuildCollisionShape();
         
     private:
-        Scalar mR;
-        Scalar MR;
+        Scalar minorRadius_;
+        Scalar majorRadius_;
     };
 }
-
-#endif

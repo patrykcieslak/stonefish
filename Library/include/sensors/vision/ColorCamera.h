@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 4/5/18.
-//  Copyright (c) 2018-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2018-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_ColorCamera__
-#define __Stonefish_ColorCamera__
+#pragma once
 
 #include <functional>
 #include "sensors/vision/Camera.h"
@@ -45,15 +44,12 @@ namespace sf
          \param resolutionY the vertical resolution[pix]
          \param hFOVDeg the horizontal field of view [deg]
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
-         \param minDistance the minimum drawing distance [m]
-         \param maxDistance the maximum drawing distance [m]
+         \param near the minimum drawing distance [m]
+         \param far the maximum drawing distance [m]
          */
-        ColorCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency = Scalar(-1),
-           Scalar minDistance = Scalar(STD_NEAR_PLANE_DISTANCE), Scalar maxDistance = Scalar(STD_FAR_PLANE_DISTANCE)); //Rendering options
-        
-        //! A destructor.
-        ~ColorCamera();
-        
+        ColorCamera(std::string_view uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency = Scalar(-1),
+           Scalar near = Scalar(STD_NEAR_PLANE_DISTANCE), Scalar far = Scalar(STD_FAR_PLANE_DISTANCE)); //Rendering options
+                
         //! A method performing internal sensor state update.
         /*!
          \param dt the step time of the simulation [s]
@@ -84,32 +80,39 @@ namespace sf
         /*!
          \param comp the exposure compensation value [EV]
          */
-        void setExposureCompensation(Scalar comp);
+        void SetExposureCompensation(Scalar comp);
         
         //! A method returning the exposure compensation factor [EV].
-        Scalar getExposureCompensation() const;
+        Scalar GetExposureCompensation() const;
     
         //! A method returning the pointer to the image data.
         /*!
          \param index the id of the OpenGL camera for which the data pointer is requested
          \return pointer to the image data buffer
          */
-        void* getImageDataPointer(unsigned int index = 0);
+        void* GetImageDataPointer(unsigned int index = 0);
         
         //! A method returning the type of the vision sensor.
-        VisionSensorType getVisionSensorType() const override;
+        VisionSensorType GetVisionSensorType() const override;
         
         //! A method returning a pointer to the underlaying OpenGLView object.
-        OpenGLView* getOpenGLView() const override;
+        OpenGLView* GetOpenGlView() const override;
+
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo GetConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<ColorCamera> Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info);
 
     private:
         void InitGraphics(bool& seesParticles);
         
-        OpenGLRealCamera* glCamera;
-        glm::vec2 depthRange;
-        GLubyte* imageData;
-        std::function<void(ColorCamera*)> newDataCallback;
+        OpenGLRealCamera* glCamera_;
+        glm::vec2 depthRange_;
+        GLubyte* imageData_;
+        std::function<void(ColorCamera*)> newDataCallback_;
     };
 }
-
-#endif

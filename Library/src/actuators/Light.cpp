@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 4/7/17.
-//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/Light.h"
@@ -37,46 +37,46 @@
 namespace sf
 {
 
-Light::Light(std::string uniqueName, Scalar radius, Color color, Scalar lum) 
-	: LinkActuator(uniqueName), attach2(nullptr), attach3(nullptr), c(color), coneAngle(0), glLight(nullptr)
+Light::Light(std::string_view uniqueName, Scalar radius, Color color, Scalar lum) 
+	: LinkActuator(uniqueName), attach2_(nullptr), attach3_(nullptr), c_(color), coneAngle_(0), glLight_(nullptr)
 {
-    if(!SimulationApp::getApp()->hasGraphics())
+    if(!SimulationApp::GetApp()->HasGraphics())
         cCritical("Not possible to use lights in console simulation! Use graphical simulation if possible.");
     
-	R = radius < Scalar(0.01) ? Scalar(0.01) : radius;
-    Fi = lum < Scalar(0) ? Scalar(0) : lum;
+	R_ = radius < Scalar(0.01) ? Scalar(0.01) : radius;
+    Fi_ = lum < Scalar(0) ? Scalar(0) : lum;
 }
 
-Light::Light(std::string uniqueName, Scalar radius, Scalar coneAngleDeg, Color color, Scalar lum) 
+Light::Light(std::string_view uniqueName, Scalar radius, Scalar coneAngleDeg, Color color, Scalar lum) 
 	: Light(uniqueName, radius, color, lum)
 {
-    coneAngle = coneAngleDeg > Scalar(0) ? coneAngleDeg : Scalar(45);
+    coneAngle_ = coneAngleDeg > Scalar(0) ? coneAngleDeg : Scalar(45);
 }
     
-ActuatorType Light::getType() const
+LinkActuatorType Light::GetLinkActuatorType() const
 {
-    return ActuatorType::LIGHT;
+    return LinkActuatorType::LIGHT;
 }
 
-Transform Light::getActuatorFrame() const
+Transform Light::GetActuatorFrame() const
 {
-	if(attach != nullptr)
-        return attach->getOTransform() * o2a; //Solid
-    else if(attach2 != nullptr)
-		return attach2->getTransform() * o2a; //Static
-	else if(attach3 != nullptr)
-        return attach3->getOTransform() * o2a; //Animated
+	if(attach_ != nullptr)
+        return attach_->GetOTransform() * o2a_; //Solid
+    else if(attach2_ != nullptr)
+		return attach2_->GetTransform() * o2a_; //Static
+	else if(attach3_ != nullptr)
+        return attach3_->GetOTransform() * o2a_; //Animated
     else
-        return o2a;
+        return o2a_;
 }
 
 void Light::AttachToWorld(const Transform& origin)
 {
-	o2a = origin;
-    attach = nullptr;
-    attach2 = nullptr;
-    attach3 = nullptr;
-    if(glLight == nullptr)
+	o2a_ = origin;
+    attach_ = nullptr;
+    attach2_ = nullptr;
+    attach3_ = nullptr;
+    if(glLight_ == nullptr)
 	    InitGraphics();
 }
         
@@ -84,11 +84,11 @@ void Light::AttachToStatic(StaticEntity* body, const Transform& origin)
 {
 	if(body != nullptr)
 	{
-		o2a = origin;
-		attach = nullptr;
-        attach2 = body;
-        attach3 = nullptr;
-        if(glLight == nullptr)
+		o2a_ = origin;
+		attach_ = nullptr;
+        attach2_ = body;
+        attach3_ = nullptr;
+        if(glLight_ == nullptr)
 		    InitGraphics();
 	}
 }
@@ -97,11 +97,11 @@ void Light::AttachToAnimated(AnimatedEntity* body, const Transform& origin)
 {
     if(body != nullptr)
     {
-        o2a = origin;
-        attach = nullptr;
-        attach2 = nullptr;
-        attach3 = body;
-        if(glLight == nullptr)
+        o2a_ = origin;
+        attach_ = nullptr;
+        attach2_ = nullptr;
+        attach3_ = body;
+        if(glLight_ == nullptr)
             InitGraphics();
     }
 }
@@ -111,24 +111,27 @@ void Light::AttachToSolid(SolidEntity* body, const Transform& origin)
     LinkActuator::AttachToSolid(body, origin);
     if(body != nullptr)
     {
-        attach2 = nullptr;
-        attach3 = nullptr;
-        if(glLight == nullptr)
+        attach2_ = nullptr;
+        attach3_ = nullptr;
+        if(glLight_ == nullptr)
             InitGraphics();
     }
 }
 
 void Light::InitGraphics()
 {
-    if(coneAngle > Scalar(0)) //Spot light
-        glLight = new OpenGLSpotLight(glm::vec3(0.f), glm::vec3(0.f,0.f,-1.f), (GLfloat)R, (GLfloat)coneAngle, c.rgb, (GLfloat)Fi);
+    std::unique_ptr<OpenGLLight> light {};
+    if(coneAngle_ > Scalar(0)) //Spot light
+        light = std::make_unique<OpenGLSpotLight>(glm::vec3(0.f), glm::vec3(0.f,0.f,-1.f), (GLfloat)R_, (GLfloat)coneAngle_, c_.rgb, (GLfloat)Fi_);
     else //Omnidirectional light
-        glLight = new OpenGLPointLight(glm::vec3(0.f), (GLfloat)R, c.rgb, (GLfloat)Fi);
+        light = std::make_unique<OpenGLPointLight>(glm::vec3(0.f), (GLfloat)R_, c_.rgb, (GLfloat)Fi_);
     
+    glLight_ = light.get();
     UpdateTransform();
-    glLight->UpdateTransform();
-    glLight->SwitchOn();
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddLight(glLight);
+    glLight_->UpdateTransform();
+    glLight_->SwitchOn();
+
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->AddLight(std::move(light));
 }
     
 void Light::Update(Scalar dt)
@@ -137,16 +140,16 @@ void Light::Update(Scalar dt)
 
 void Light::UpdateTransform()
 {
-    Transform lightTransform = getActuatorFrame();
+    Transform lightTransform = GetActuatorFrame();
     Vector3 pos = lightTransform.getOrigin();
     glm::vec3 glPos((GLfloat)pos.x(), (GLfloat)pos.y(), (GLfloat)pos.z());
-    glLight->UpdatePosition(glPos);
+    glLight_->UpdatePosition(glPos);
     
-    if(coneAngle > Scalar(0))
+    if(coneAngle_ > Scalar(0))
     {
         Vector3 dir = lightTransform.getBasis().getColumn(2);
         glm::vec3 glDir((GLfloat)dir.x(), (GLfloat)dir.y(), (GLfloat)dir.z());
-        ((OpenGLSpotLight*)glLight)->UpdateDirection(glDir);
+        ((OpenGLSpotLight*)glLight_)->UpdateDirection(glDir);
     }
 }
     
@@ -155,19 +158,19 @@ std::vector<Renderable> Light::Render()
     std::vector<Renderable> items(0);
     
     Renderable item;
-    item.model = glMatrixFromTransform(getActuatorFrame());
+    item.model = glMatrixFromTransform(GetActuatorFrame());
     item.type = RenderableType::ACTUATOR_LINES;
     item.data = std::make_shared<std::vector<glm::vec3>>();
-    auto points = item.getDataAsPoints();
+    auto points = item.GetDataAsPoints();
         
     GLfloat iconSize = 1.f;
     unsigned int div = 24;
     
-    if(coneAngle > Scalar(0))
+    if(coneAngle_ > Scalar(0))
     {
         points->reserve(div * 2 + 8);
 
-        GLfloat r = iconSize * tanf((GLfloat)coneAngle/360.f*M_PI);
+        GLfloat r = iconSize * tanf((GLfloat)coneAngle_/360.f*M_PI);
         for(unsigned int i=0; i<div; ++i)
         {
             GLfloat angle1 = (GLfloat)i/(GLfloat)div * 2.f * M_PI;
@@ -209,12 +212,12 @@ std::vector<Renderable> Light::Render()
 
 void Light::Switch(bool on)
 {
-    if(glLight != nullptr)
+    if(glLight_ != nullptr)
     {
         if(on)
-            glLight->SwitchOn();
+            glLight_->SwitchOn();
         else
-            glLight->SwitchOff();
+            glLight_->SwitchOff();
     }
 }
 

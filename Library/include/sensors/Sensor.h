@@ -20,21 +20,22 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/4/13.
-//  Copyright (c) 2013-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Sensor__
-#define __Stonefish_Sensor__
+#pragma once
 
 #include <random>
 #include <SDL2/SDL_mutex.h>
 #include "StonefishCommon.h"
+#include "core/ConstructInfo.h"
 
 namespace sf
 {
     //! An enum defining types of sensors.
     enum class SensorType {JOINT, LINK, VISION, OTHER};
     
+    //! Required structures.
     struct Renderable;
     
     //! An abstract class representing a sensor.
@@ -46,7 +47,7 @@ namespace sf
          \param uniqueName a name for the sensor
          \param frequency the sampling frequency of the sensor [Hz] (0 if updated every simulation step)
          */
-        Sensor(std::string uniqueName, Scalar frequency);
+        Sensor(std::string_view uniqueName, Scalar frequency);
         
         //! A destructor.
         virtual ~Sensor();
@@ -67,34 +68,34 @@ namespace sf
         void MarkDataOld();
 
         //! A method to check if new data is available.
-        bool isNewDataAvailable() const;
+        bool IsNewDataAvailable() const;
         
         //! A method to set the sampling rate of the sensor.
         /*!
          \param f the sampling frequency of the sensor [Hz]
          */
-        void setUpdateFrequency(Scalar f);
+        void SetUpdateFrequency(Scalar f);
 
         //! A method returning the sensor's name.
-        std::string getName() const;
+        const std::string& GetName() const;
 
         //! A method returning the sampling rate of the sensor.
-        Scalar getUpdateFrequency() const;
+        Scalar GetUpdateFrequency() const;
         
         //! A method informing if the sensor is enabled.
-        bool isEnabled() const;
+        bool IsEnabled() const;
 
         //! A method informing if the sensor is renderable.
-        bool isRenderable() const;
+        bool IsRenderable() const;
         
         //! A method to set if the sensor is enabled.
-        void setEnabled(bool en);
+        void SetEnabled(bool en);
 
         //! A method to set if the sensor is renderable.
-        void setRenderable(bool render);
+        void SetRenderable(bool render);
 
         //! A method to set the visual representation of the sensor.
-        void setVisual(const std::string& meshFilename, Scalar scale, const std::string& look);
+        void SetVisual(std::string_view meshFilename, Scalar scale, std::string_view look);
                 
         //! A method performing an internal update of the sensor state.
         /*!
@@ -103,34 +104,41 @@ namespace sf
         virtual void InternalUpdate(Scalar dt) = 0;
         
         //! A method returning the type of the sensor.
-        virtual SensorType getType() const = 0;
+        virtual SensorType GetType() const = 0;
 
         //! A method returning the sensor measurement frame.
-        virtual Transform getSensorFrame() const = 0;
+        virtual Transform GetSensorFrame() const = 0;
 
         //! A method returning the velocity of the sensor measurement frame.
         /*!
          \param linear output of the linear velocity of the sensor measurement frame [m/s]
          \param angular output of the angular velocity of the sensor measurement frame [rad/s]
          */
-        virtual void getSensorVelocity(Vector3& linear, Vector3& angular) const = 0;
+        virtual void GetSensorVelocity(Vector3& linear, Vector3& angular) const = 0;
+
+        //! A deleter method required for the plugin architecture.
+        static void DefaultDeleter(Sensor* s);
         
     protected:
-        Scalar freq;
-        SDL_mutex* updateMutex;
+        Scalar freq_;
+        SDL_mutex* updateMutex_;
         
         static std::random_device randomDevice;
         static std::mt19937 randomGenerator;
         
     private:
-        std::string name;
-        Scalar eleapsedTime;
-        bool newDataAvailable;
-        bool renderable;
-        bool enabled;
-        int lookId;
-        int graObjectId;
+        std::string name_;
+        Scalar eleapsedTime_;
+        bool newDataAvailable_;
+        bool renderable_;
+        bool enabled_;
+        int lookId_;
+        int graObjectId_;
     };
-}
 
-#endif
+    // Plugin architecture types
+    using SensorDeleter = void(*)(Sensor*);
+    typedef Sensor* (*CreateSensorFunc)(const char*, Scalar, ConstructInfo*);
+    typedef void (*DestroySensorFunc)(Sensor*);
+    typedef ConstructInfo (*GetSensorConstructInfoFunc)();
+}

@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 04/03/2014.
-//  Copyright(c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish__UnderwaterTestManager__
-#define __Stonefish__UnderwaterTestManager__
+#pragma once
 
 #include <core/SimulationManager.h>
 #include <iostream>
@@ -58,5 +57,3 @@ private:
             std::cout << std::to_string(((T*)data)[i]) << ", ";
     }
 };
-
-#endif

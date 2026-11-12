@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 26/05/2024.
-//  Copyright (c) 2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_OpenGLThermalCamera__
-#define __Stonefish_OpenGLThermalCamera__
+#pragma once
 
 #include "graphics/OpenGLView.h"
 #include <random>
@@ -115,35 +114,35 @@ namespace sf
         void Update();
         
         //! A method that informs if the camera needs update.
-        bool needsUpdate() override;
+        bool NeedsUpdate() override;
         
         //! A method to set a pointer to a camera sensor.
         /*!
          \param cam a pointer to a camera sensor
          \param index the id of the OpenGL thermal camera
          */
-        void setCamera(Camera* cam, unsigned int index = 0);
+        void SetCamera(Camera* cam, unsigned int index = 0);
         
         //! A method to set the noise properties of the thermal camera.
         /*!
          \param tempStdDev the standard deviation of the temperature measurement
          */
-        void setNoise(GLfloat tempStdDev);
+        void SetNoise(GLfloat tempStdDev);
 
         //! A method to set the range of temperatures represented by the color mapped image.
         /*!
          \param range the range of the temperatures in deg C
         */
-        void setDisplayRange(glm::vec2 tempRange);
+        void SetDisplayRange(glm::vec2 tempRange);
 
         //! A method to set the color map used during temperature data visulization.
         /*!
          \param cm the color map to be used
          */
-        void setColorMap(ColorMap cm);
+        void SetColorMap(ColorMap cm);
 
         //! A method returning the type of the view.
-        ViewType getType() const override;
+        ViewType GetType() const override;
         
         //! A static method to load shaders.
         static void Init();
@@ -152,37 +151,36 @@ namespace sf
         static void Destroy();
         
     protected:
-        Camera* camera;
-        glm::mat4 cameraTransform;
-        glm::vec3 eye;
-        glm::vec3 dir;
-        glm::vec3 up;
-        glm::vec3 tempEye;
-        glm::vec3 tempDir;
-        glm::vec3 tempUp;
-        glm::mat4 projection;
-        glm::vec2 fov;
-        bool _needsUpdate;
-        bool newData;
-        glm::vec2 depthRange;
-        glm::vec2 temperatureRange;
-        GLfloat temperatureNoise;
-        std::default_random_engine randGen;
-        std::uniform_real_distribution<float> randDist;
-        glm::vec2 displayRange;
-        ColorMap colorMap;
+        Camera* camera_;
+        glm::mat4 cameraTransform_;
+        glm::vec3 eye_;
+        glm::vec3 dir_;
+        glm::vec3 up_;
+        glm::vec3 tempEye_;
+        glm::vec3 tempDir_;
+        glm::vec3 tempUp_;
+        glm::mat4 projection_;
+        glm::vec2 fov_;
+        bool needsUpdate_;
+        bool newData_;
+        glm::vec2 depthRange_;
+        glm::vec2 temperatureRange_;
+        GLfloat temperatureNoise_;
+        std::default_random_engine randGen_;
+        std::uniform_real_distribution<float> randDist_;
+        glm::vec2 displayRange_;
+        ColorMap colorMap_;
 
-        GLuint renderDepthTex;
-        GLuint renderTex[3];
-        GLuint displayTex;
-        GLuint outputPBO;
-        GLuint displayPBO;
-        GLuint displayFBO;
-        GLuint displayVAO;
-        GLuint displayVBO;
-        static GLSLShader* thermalVisualizeShader;
-        static GLSLShader* thermalOutputShader;
+        GLuint renderDepthTex_;
+        GLuint renderTex_[3];
+        GLuint displayTex_;
+        GLuint outputPBO_;
+        GLuint displayPBO_;
+        GLuint displayFBO_;
+        GLuint displayVAO_;
+        GLuint displayVBO_;
+        static std::unique_ptr<GLSLShader> thermalVisualizeShader;
+        static std::unique_ptr<GLSLShader> thermalOutputShader;
     };
 }
 
-#endif

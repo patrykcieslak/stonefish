@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 26/05/24.
-//  Copyright (c) 2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2024-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_ThermalCamera__
-#define __Stonefish_ThermalCamera__
+#pragma once
 
 #include <functional>
 #include "sensors/vision/Camera.h"
@@ -47,14 +46,11 @@ namespace sf
          \param minTemp minimum temperature that the sensor can measure [degC]
          \param maxTemp maximum temperature that the sensor can measure [degC]
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
-         \param minDistance the minimum drawing distance [m]
-         \param maxDistance the maximum drawing distance [m]
+         \param near the minimum drawing distance [m]
+         \param far the maximum drawing distance [m]
          */
-        ThermalCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar minTemp, Scalar maxTemp, 
-            Scalar frequency = Scalar(-1), Scalar minDistance = Scalar(STD_NEAR_PLANE_DISTANCE), Scalar maxDistance = Scalar(STD_FAR_PLANE_DISTANCE));
-        
-        //! A destructor.
-        ~ThermalCamera();
+        ThermalCamera(std::string_view uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar minTemp, Scalar maxTemp, 
+            Scalar frequency = Scalar(-1), Scalar near = Scalar(STD_NEAR_PLANE_DISTANCE), Scalar far = Scalar(STD_FAR_PLANE_DISTANCE));
         
         //! A method performing internal sensor state update.
         /*!
@@ -86,7 +82,7 @@ namespace sf
         /*!
          \param tempStdDev standard deviation of the temperature measurement [degC]
          */
-        void setNoise(float tempStdDev);
+        void SetNoise(float tempStdDev);
 
         //! A method used to set the display settings of the sensor.
         /*!
@@ -94,37 +90,44 @@ namespace sf
          \param minTemp the minimum temperature displayed [degC]
          \param maxTemp the maximum temperature displayed [degC]
          */
-        void setDisplaySettings(ColorMap cm, Scalar minTemp, Scalar maxTemp);
+        void SetDisplaySettings(ColorMap cm, Scalar minTemp, Scalar maxTemp);
 
         //! A method returning the pointer to the image data.
         /*!
          \param index the id of the OpenGL camera for which the data pointer is requested
          \return pointer to the image data buffer
          */
-        void* getImageDataPointer(unsigned int index = 0);
+        void* GetImageDataPointer(unsigned int index = 0);
 
         //! A method returning a pointer to the visualisation image data.
-        GLubyte* getDisplayDataPointer();
+        GLubyte* GetDisplayDataPointer();
         
         //! A method returning the type of the vision sensor.
-        VisionSensorType getVisionSensorType() const override;
+        VisionSensorType GetVisionSensorType() const override;
         
         //! A method returning a pointer to the underlaying OpenGLView object.
-        OpenGLView* getOpenGLView() const override;
+        OpenGLView* GetOpenGlView() const override;
+
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo GetConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<ThermalCamera> Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info);
 
     private:
         void InitGraphics(bool& seesParticles);
         
-        OpenGLThermalCamera* glCamera;
-        GLfloat* temperatureData;
-        GLubyte* displayData;
-        glm::vec2 depthRange;
-        GLfloat noiseStdDev;
-        glm::vec2 measurementRange;
-        ColorMap colorMap;
-        glm::vec2 displayRange;
-        std::function<void(ThermalCamera*)> newDataCallback;
+        OpenGLThermalCamera* glCamera_;
+        GLfloat* temperatureData_;
+        std::vector<GLubyte> displayData_;
+        glm::vec2 depthRange_;
+        GLfloat noiseStdDev_;
+        glm::vec2 measurementRange_;
+        ColorMap colorMap_;
+        glm::vec2 displayRange_;
+        std::function<void(ThermalCamera*)> newDataCallback_;
     };
 }
-
-#endif

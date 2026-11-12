@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/10/2020.
-//  Copyright (c) 2020-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/animation/PWLTrajectory.h"
@@ -41,10 +41,10 @@ PWLTrajectory::PWLTrajectory(PlaybackMode playback) : Trajectory(playback)
     pathLine.model = glm::mat4(1.f);
     pathLine.data = std::make_shared<std::vector<glm::vec3>>();
 
-    vis.push_back(pathPoints);
-    vis.push_back(pathLine);
+    vis_.push_back(pathPoints);
+    vis_.push_back(pathLine);
     
-    interpAcc = V0();
+    interpAcc_ = V0();
     AddKeyPoint(Scalar(0), I4());
 }
 
@@ -59,72 +59,72 @@ void PWLTrajectory::AddKeyPoint(Scalar keyTime, Transform keyTransform)
     k.T = keyTransform;
 
     //Add to the list
-    auto it = std::find(points.begin(), points.end(), k);
-    if(it != points.end())
+    auto it = std::find(points_.begin(), points_.end(), k);
+    if(it != points_.end())
         *it = k;
     else
-        points.push_back(k);
+        points_.push_back(k);
     
     //Sort key points by time
-    std::sort(points.begin(), points.end());
+    std::sort(points_.begin(), points_.end());
 
     //Reset
-    playTime = Scalar(0);
-    endTime = points.back().t;
-    forward = true;
+    playTime_ = Scalar(0);
+    endTime_ = points_.back().t;
+    forward_ = true;
     BuildGraphicalPath();
     Interpolate();
 }
 
 void PWLTrajectory::Interpolate()
 {
-    if(points.size() == 1)
+    if(points_.size() == 1)
     {
-        interpTrans = points[0].T;
-        interpVel = V0();
-        interpAngVel = V0();
+        interpTrans_ = points_[0].T;
+        interpVel_ = V0();
+        interpAngVel_ = V0();
         return;
     }
 
     //Find current path segment
-    auto it = std::find_if(points.begin(), points.end(),
-                           [&](const auto& key){ return key.t >= playTime; });
+    auto it = std::find_if(points_.begin(), points_.end(),
+                           [&](const auto& key){ return key.t >= playTime_; });
 
-    if(it->t == playTime) //No interpolation needed
+    if(it->t == playTime_) //No interpolation needed
     {
-        interpTrans = it->T;
-        if(it == points.begin()) //Time = 0
-            calculateVelocityShortestPath(it->T, (it+1)->T, (it+1)->t, interpVel, interpAngVel);
+        interpTrans_ = it->T;
+        if(it == points_.begin()) //Time = 0
+            CalculateVelocityShortestPath(it->T, (it+1)->T, (it+1)->t, interpVel_, interpAngVel_);
         else
-            calculateVelocityShortestPath((it-1)->T, it->T, it->t-(it-1)->t, interpVel, interpAngVel);
+            CalculateVelocityShortestPath((it-1)->T, it->T, it->t-(it-1)->t, interpVel_, interpAngVel_);
     }
     else
     {
-        Scalar alpha = (playTime - (it-1)->t)/(it->t - (it-1)->t);
-        interpTrans.setOrigin(lerp((it-1)->T.getOrigin(), it->T.getOrigin(), alpha));
-        interpTrans.setRotation(slerp((it-1)->T.getRotation(), it->T.getRotation(), alpha));
-        calculateVelocityShortestPath((it-1)->T, it->T, it->t-(it-1)->t, interpVel, interpAngVel);
+        Scalar alpha = (playTime_ - (it-1)->t)/(it->t - (it-1)->t);
+        interpTrans_.setOrigin(lerp((it-1)->T.getOrigin(), it->T.getOrigin(), alpha));
+        interpTrans_.setRotation(slerp((it-1)->T.getRotation(), it->T.getRotation(), alpha));
+        CalculateVelocityShortestPath((it-1)->T, it->T, it->t-(it-1)->t, interpVel_, interpAngVel_);
     }
 
-    if(!forward)
+    if(!forward_)
     {
-        interpVel = -interpVel;
-        interpAngVel = -interpAngVel;
+        interpVel_ = -interpVel_;
+        interpAngVel_ = -interpAngVel_;
     }
 }
 
 void PWLTrajectory::BuildGraphicalPath()
 {
-    vis[0].getDataAsPoints()->clear();
-    vis[1].getDataAsPoints()->clear();
-    for(size_t i=0; i<points.size(); ++i)
-        vis[0].getDataAsPoints()->push_back(glVectorFromVector(points[i].T.getOrigin()));
-    *vis[1].getDataAsPoints() = *vis[0].getDataAsPoints();
+    vis_[0].GetDataAsPoints()->clear();
+    vis_[1].GetDataAsPoints()->clear();
+    for(size_t i=0; i<points_.size(); ++i)
+        vis_[0].GetDataAsPoints()->push_back(glVectorFromVector(points_[i].T.getOrigin()));
+    *vis_[1].GetDataAsPoints() = *vis_[0].GetDataAsPoints();
 }
 
 std::vector<Renderable> PWLTrajectory::Render()
 {
-    return vis;
+    return vis_;
 }
 
 }

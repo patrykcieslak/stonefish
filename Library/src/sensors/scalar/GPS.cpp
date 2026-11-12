@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 02/11/2017.
-//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/GPS.h"
@@ -28,70 +28,111 @@
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
 #include "core/NED.h"
+#include "core/DeviceFactory.h"
 #include "entities/forcefields/Ocean.h"
 #include "sensors/Sample.h"
 
 namespace sf
 {
 
-GPS::GPS(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+GPS::GPS(std::string_view uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    channels.push_back(SensorChannel("Latitude", QuantityType::ANGLE));
-    channels.push_back(SensorChannel("Longitude", QuantityType::ANGLE));
-    channels.push_back(SensorChannel("North", QuantityType::LENGTH));
-    channels.push_back(SensorChannel("East", QuantityType::LENGTH));
-    setNoise(Scalar(0));
+    channels_.push_back(SensorChannel("Latitude", QuantityType::ANGLE));
+    channels_.push_back(SensorChannel("Longitude", QuantityType::ANGLE));
+    channels_.push_back(SensorChannel("North", QuantityType::LENGTH));
+    channels_.push_back(SensorChannel("East", QuantityType::LENGTH));
+    SetNoise(Scalar(0));
 }
 
 void GPS::InternalUpdate(Scalar dt)
 {
     //get sensor frame in world
-    Transform gpsTrans = getSensorFrame();
+    Transform gpsTrans = GetSensorFrame();
     
     //GPS not updating underwater
-    Ocean* liq = SimulationApp::getApp()->getSimulationManager()->getOcean();
+    Ocean* liq = SimulationApp::GetApp()->GetSimulationManager()->GetOcean();
     if(liq != nullptr && liq->IsInsideFluid(gpsTrans.getOrigin()))
     {
-        Sample s{std::vector<Scalar>({BT_LARGE_FLOAT, BT_LARGE_FLOAT, Scalar(0), Scalar(0)})};
-        AddSampleToHistory(s);
+        AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({BT_LARGE_FLOAT, BT_LARGE_FLOAT, Scalar(0), Scalar(0)})));
     }
     else
     {
         Vector3 gpsPos = gpsTrans.getOrigin();
 		
         //add noise
-        if(!btFuzzyZero(nedStdDev))
+        if(!btFuzzyZero(nedStdDev_))
         {
-            gpsPos.setX(gpsPos.x() + noise(randomGenerator));
-            gpsPos.setY(gpsPos.y() + noise(randomGenerator));
+            gpsPos.setX(gpsPos.x() + noise_(randomGenerator));
+            gpsPos.setY(gpsPos.y() + noise_(randomGenerator));
         }
         
         //convert NED to geodetic coordinates
         double latitude;
         double longitude;
         double height;
-        SimulationApp::getApp()->getSimulationManager()->getNED()->Ned2Geodetic(gpsPos.x(), gpsPos.y(), 0.0, latitude, longitude, height);
+        SimulationApp::GetApp()->GetSimulationManager()->GetNed()->Ned2Geodetic(gpsPos.x(), gpsPos.y(), 0.0, latitude, longitude, height);
         
         //record sample
-        Sample s{std::vector<Scalar>({latitude, longitude, gpsPos.x(), gpsPos.y()})};
-        AddSampleToHistory(s);
+        AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({latitude, longitude, gpsPos.x(), gpsPos.y()})));
     }
 }
 
-void GPS::setNoise(Scalar nedDev)
+void GPS::SetNoise(Scalar nedDev)
 {
-    nedStdDev = btClamped(nedDev, Scalar(0), Scalar(BT_LARGE_FLOAT));
-    noise = std::normal_distribution<Scalar>(Scalar(0), nedStdDev);
+    nedStdDev_ = btClamped(nedDev, Scalar(0), Scalar(BT_LARGE_FLOAT));
+    noise_ = std::normal_distribution<Scalar>(Scalar(0), nedStdDev_);
 }
 
-Scalar GPS::getNoise() const
+Scalar GPS::GetNoise() const
 {
-    return nedStdDev;
+    return nedStdDev_;
 }
 
-ScalarSensorType GPS::getScalarSensorType() const
+ScalarSensorType GPS::GetScalarSensorType() const
 {
     return ScalarSensorType::GPS;
 }
+
+// Statics
+
+ConstructInfo GPS::GetConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+    
+    // History
+    node.optional = true;
+    node.attributes.insert({"samples", {ConstructInfoValueType::INT, false}});
+    info.nodes.insert({"history", node});
+
+    // Noise
+    node.attributes.clear(); // Clear temporary
+    node.optional = true;
+    node.attributes.insert({"ned_position", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"noise", node});
+    
+    return info;
+}
+
+std::unique_ptr<GPS> GPS::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // History (optional)
+    int history = -1;
+    ConstructInfoValue& value = info.nodes.at("history").attributes.at("samples");
+    if (value.valid)
+        history = std::get<int>(value.value);
+    
+    // Create sensor
+    std::unique_ptr<GPS> sensor = std::make_unique<GPS>(uniqueName, frequency, history);    
+
+    // Noise (optional)
+    value = info.nodes.at("noise").attributes.at("ned_position");
+    if (value.valid)
+        sensor->SetNoise(std::get<Scalar>(value.value));
+
+    return sensor;
+}
+
+REGISTER_SENSOR("gps", GPS)
 
 }

@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 23/03/2014.
-//  Copyright (c) 2014-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Sample__
-#define __Stonefish_Sample__
+#pragma once
 
 #include "StonefishCommon.h"
 
@@ -40,42 +39,37 @@ namespace sf
          \param invalid a flag to mark if it is and invalid output
          \param index a number specifying the id of the sample
          */
-        Sample(const std::vector<Scalar>& data, bool invalid = false, uint64_t index = 0);
-        
-        //! A copy constructor.
-        /*!
-         \param other a reference to a sample object
-         \param index a number specifying the id of the sample
-         */
-        Sample(const Sample& other, uint64_t index = 0);
+        Sample(const std::vector<Scalar>& data, bool invalid = false, size_t index = 0);
         
         //! A method returning the timestamp of the sample.
-        Scalar getTimestamp() const;
+        Scalar GetTimestamp() const;
         
         //! A method returning a value of the single dimension of the measurement.
         /*!
          \param dimension the index of the dimension
          \return the value of the measurement for the dimension
          */
-        Scalar getValue(size_t dimension) const;
+        Scalar GetValue(size_t dimension) const;
         
         //! A method returning the full data of the measurement.
-        std::vector<Scalar> getData() const;
+        std::vector<Scalar> GetData() const;
         
         //! A method returning the number of dimensions of the measurement.
-        size_t getNumOfDimensions() const;
+        size_t GetNumOfDimensions() const;
         
         //! A method returning a pointer to the sample data.
-        Scalar* getDataPointer();
+        Scalar* GetDataPointer();
 
         //! A method returning the id of the sample.
-        uint64_t getId() const;
+        size_t GetId() const;
+
+        //! A method to set the id of the sample.
+        void SetId(size_t id);
         
     private:
-        Scalar timestamp;
-        std::vector<Scalar> data;
-        uint64_t id;
+        Scalar timestamp_;
+        std::vector<Scalar> data_;
+        size_t id_;
     };
 }
 
-#endif

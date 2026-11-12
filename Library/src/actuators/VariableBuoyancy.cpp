@@ -20,133 +20,135 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 07/11/2019.
-//  Copyright (c) 2019-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/VariableBuoyancy.h"
 
 #include "core/SimulationApp.h"
 #include "core/SimulationManager.h"
+#include "core/DeviceFactory.h"
 #include <algorithm>
+
+#define PARSED_MESHES_COUNT 10
 
 namespace sf 
 {
     
-VariableBuoyancy::VariableBuoyancy(std::string uniqueName, const std::vector<std::string>& volumeMeshPaths, Scalar initialVolume) : LinkActuator(uniqueName)
+VariableBuoyancy::VariableBuoyancy(std::string_view uniqueName, const std::vector<std::string>& volumeMeshPaths, Scalar initialVolume) : LinkActuator(uniqueName)
 {
     if(volumeMeshPaths.size() < 2)
         cCritical("VBS volume definition requires loading at least two meshes - for the full/empty states!");
     
-    density = Scalar(1000.0);
+    density_ = Scalar(1000.0);
     Ocean* ocn;
-    if((ocn = SimulationApp::getApp()->getSimulationManager()->getOcean()) != nullptr)
-        density = ocn->getLiquid().density;
-    gravity = SimulationApp::getApp()->getSimulationManager()->getGravity();
+    if((ocn = SimulationApp::GetApp()->GetSimulationManager()->GetOcean()) != nullptr)
+        density_ = ocn->GetLiquid().density;
+    gravity_ = SimulationApp::GetApp()->GetSimulationManager()->GetGravity();
     
     for(size_t i=0; i<volumeMeshPaths.size(); ++i)
     {
-        Mesh* mesh = LoadGeometryFromFile(volumeMeshPaths[i], 1.f);
-        if(mesh == NULL)
-            abort();
-        Vprops.push_back(ComputePhysicalProperties(mesh, Scalar(0), density));
-        delete mesh;
+        std::unique_ptr<Mesh> mesh = LoadGeometryFromFile(volumeMeshPaths[i], 1.f);
+        if(mesh == nullptr)
+            cCritical("Cannot load volume mesh from file: %s", volumeMeshPaths[i].c_str());
+        Vprops_.push_back(ComputePhysicalProperties(mesh.get(), Scalar(0), density_));
     }
     auto volumeCompare = [](MeshProperties& mp1, MeshProperties& mp2) { return mp1.volume < mp2.volume; };
-    std::sort(Vprops.begin(), Vprops.end(), volumeCompare);
+    std::sort(Vprops_.begin(), Vprops_.end(), volumeCompare);
     
-    flowRate = Scalar(0);
-    force = V0();
-    Vmin = Vprops.front().volume;
-    Vmax = Vprops.back().volume;
+    flowRate_ = Scalar(0);
+    force_ = V0();
+    Vmin_ = Vprops_.front().volume;
+    Vmax_ = Vprops_.back().volume;
     
-    cInfo("VBS created with Vmin: %1.3lf Vmax: %1.3lf", Vmin, Vmax);
+    cInfo("VBS created with Vmin: %1.3lf Vmax: %1.3lf", Vmin_, Vmax_);
     
-    V = initialVolume > Vmax ? Vmax : (initialVolume < Vmin ? Vmin : initialVolume);
+    V_ = initialVolume > Vmax_ ? Vmax_ : (initialVolume < Vmin_ ? Vmin_ : initialVolume);
     
     Scalar mass;
-    InterpolateVProps(V, mass, CG);
+    InterpolateVProps(V_, mass, CG_);
 }    
 
-ActuatorType VariableBuoyancy::getType() const
+LinkActuatorType VariableBuoyancy::GetLinkActuatorType() const
 {
-    return ActuatorType::VBS;
+    return LinkActuatorType::VBS;
 }
         
-void VariableBuoyancy::setFlowRate(Scalar rate)
+void VariableBuoyancy::SetFlowRate(Scalar rate)
 {
-    flowRate = rate;
+    flowRate_ = rate;
 }
     
-Scalar VariableBuoyancy::getFlowRate() const
+Scalar VariableBuoyancy::GetFlowRate() const
 {
-    return flowRate;
+    return flowRate_;
 }
     
-Scalar VariableBuoyancy::getLiquidVolume() const
+Scalar VariableBuoyancy::GetLiquidVolume() const
 {
-    return V;
+    return V_;
 }
 
-Scalar VariableBuoyancy::getForce() const
+Scalar VariableBuoyancy::GetForce() const
 {
-    return force.safeNorm();
+    return force_.safeNorm();
 }
 
 void VariableBuoyancy::InterpolateVProps(Scalar volume, Scalar& m, Vector3& cg)
 {
-    if(volume <= Vmin)
+    if(volume <= Vmin_)
     {
-        m = Vprops.front().mass;
-        cg = Vprops.front().CG;
+        m = Vprops_.front().mass;
+        cg = Vprops_.front().CG;
     }
-    else if(volume >= Vmax)
+    else if(volume >= Vmax_)
     {
-        m = Vprops.back().mass;
-        cg = Vprops.back().CG;
+        m = Vprops_.back().mass;
+        cg = Vprops_.back().CG;
     }
     else 
     {
-        m = volume*density; 
+        m = volume*density_; 
         
         //Find interpolation pair
         size_t i;
-        for(i=0; i<Vprops.size(); ++i)
-            if(Vprops[i].volume > volume) 
+        for(i=0; i<Vprops_.size(); ++i)
+            if(Vprops_[i].volume > volume) 
                 break;
 
         //Linear interpolation
-        cg = Vprops[i-1].CG + (Vprops[i].CG - Vprops[i-1].CG)/(Vprops[i].volume - Vprops[i-1].volume) * (volume - Vprops[i-1].volume); 
+        cg = Vprops_[i-1].CG + (Vprops_[i].CG - Vprops_[i-1].CG)/(Vprops_[i].volume - Vprops_[i-1].volume) * (volume - Vprops_[i-1].volume); 
     }
 }
     
 void VariableBuoyancy::Update(Scalar dt)
 {
-    Ocean* ocn = SimulationApp::getApp()->getSimulationManager()->getOcean();
-    if(ocn != nullptr && attach != NULL)
+    Ocean* ocn = SimulationApp::GetApp()->GetSimulationManager()->GetOcean();
+    if(ocn != nullptr && attach_ != NULL)
     {
         //Update volume
-        V += flowRate*dt;
-        V = V < Vmin ? Vmin : (V > Vmax ? Vmax : V);
+        V_ += flowRate_*dt;
+        V_ = V_ < Vmin_ ? Vmin_ : (V_ > Vmax_ ? Vmax_ : V_);
         Vector3 cg;
         Scalar m;
-        InterpolateVProps(V, m, CG);
+        InterpolateVProps(V_, m, CG_);
         
         //Compute forces
-        force = m*gravity;
+        force_ = m*gravity_;
 
         //Apply forces and torques
-        Vector3 solidCG = attach->getCGTransform().getOrigin();
-        Vector3 vbsCG = attach->getOTransform() * o2a * CG;
-        attach->ApplyCentralForce(force);
-        attach->ApplyTorque((vbsCG - solidCG).cross(force));
+        Vector3 solidCG = attach_->GetCgTransform().getOrigin();
+        Vector3 vbsCG = attach_->GetOTransform() * o2a_ * CG_;
+        attach_->ApplyCentralForce(force_);
+        attach_->ApplyTorque((vbsCG - solidCG).cross(force_));
     }
 }
 
 std::vector<Renderable> VariableBuoyancy::Render()
 {
     Transform vbsTrans = Transform::getIdentity();
-    if(attach != NULL)
-        vbsTrans.setOrigin(attach->getOTransform() * o2a * CG);
+    if(attach_ != NULL)
+        vbsTrans.setOrigin(attach_->GetOTransform() * o2a_ * CG_);
     else
         LinkActuator::Render();
     
@@ -156,13 +158,64 @@ std::vector<Renderable> VariableBuoyancy::Render()
     item.type = RenderableType::ACTUATOR_LINES;
     item.model = glMatrixFromTransform(vbsTrans);
     item.data = std::make_shared<std::vector<glm::vec3>>();
-    auto points = item.getDataAsPoints();
+    auto points = item.GetDataAsPoints();
     points->push_back(glm::vec3(0,0,0));
-    points->push_back(0.1f * glm::vec3((GLfloat)force.x(), (GLfloat)force.y(), (GLfloat)force.z()));
+    points->push_back(0.1f * glm::vec3((GLfloat)force_.x(), (GLfloat)force_.y(), (GLfloat)force_.z()));
     items.push_back(item);
     
     return items;
 }
     
+// Statics
+
+ConstructInfo VariableBuoyancy::GetConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
     
+    // Volume (required)
+    node.optional = false;
+    node.attributes.insert({"initial", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"volume", node});
+
+    // Mesh1 (required)
+    node.attributes.clear();
+    node.attributes.insert({"filename", {ConstructInfoValueType::STRING, false}});
+    info.nodes.insert({"mesh1", node});
+
+    // Mesh2 (required)
+    info.nodes.insert({"mesh2", node});
+
+    // Additional meshes (optional)
+    node.optional = true;
+    for (int i=3; i<=PARSED_MESHES_COUNT; ++i)
+        info.nodes.insert({"mesh" + std::to_string(i), node});
+    
+    return info;
+}
+
+std::unique_ptr<VariableBuoyancy> VariableBuoyancy::Construct(std::string_view uniqueName, ConstructInfo& info)
+{
+    // Required
+    Scalar initialVolume = std::get<Scalar>(info.nodes.at("volume").attributes.at("initial").value);
+    std::vector<std::string> meshes;
+    meshes.push_back(std::get<std::string>(info.nodes.at("mesh1").attributes.at("filename").value));
+    meshes.push_back(std::get<std::string>(info.nodes.at("mesh2").attributes.at("filename").value));
+
+    // Optional
+    for (int i=3; i<=PARSED_MESHES_COUNT; ++i)
+    {
+        ConstructInfoValue& value = info.nodes.at("mesh" + std::to_string(i)).attributes.at("filename");
+        if (value.valid)
+            meshes.push_back(std::get<std::string>(value.value));
+        else 
+            break; // The list of meshes cannot have skipped entries
+    }
+
+    // Construct
+    return std::make_unique<VariableBuoyancy>(uniqueName, meshes, initialVolume);
+}
+
+REGISTER_ACTUATOR("vbs", VariableBuoyancy)
+
 }

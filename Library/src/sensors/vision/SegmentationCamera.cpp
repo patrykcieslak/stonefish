@@ -20,12 +20,13 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 14/03/25.
-//  Copyright (c) 2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2025-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/vision/SegmentationCamera.h"
 
 #include "core/GraphicalSimulationApp.h"
+#include "core/DeviceFactory.h"
 #include "graphics/OpenGLPipeline.h"
 #include "graphics/OpenGLContent.h"
 #include "graphics/OpenGLSegmentationCamera.h"
@@ -33,55 +34,56 @@
 namespace sf
 {
 
-SegmentationCamera::SegmentationCamera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency, 
-    Scalar minDistance, Scalar maxDistance) : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
+SegmentationCamera::SegmentationCamera(std::string_view uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar hFOVDeg, Scalar frequency, 
+    Scalar near, Scalar far) : Camera(uniqueName, resolutionX, resolutionY, hFOVDeg, frequency)
 {
-    depthRange = glm::vec2((GLfloat)minDistance, (GLfloat)maxDistance);
-    newDataCallback = nullptr;
-    segmentationData= nullptr;
-    displayData = nullptr;
-    glCamera = nullptr;
+    depthRange_ = glm::vec2((GLfloat)near, (GLfloat)far);
+    newDataCallback_ = nullptr;
+    segmentationData_= nullptr;
+    glCamera_ = nullptr;
 }
 
-SegmentationCamera::~SegmentationCamera()
+void* SegmentationCamera::GetImageDataPointer(unsigned int index)
 {
-    glCamera = nullptr;
+    return segmentationData_;
 }
 
-void* SegmentationCamera::getImageDataPointer(unsigned int index)
+GLubyte* SegmentationCamera::GetDisplayDataPointer()
 {
-    return segmentationData;
+    return displayData_.data();
 }
 
-GLubyte* SegmentationCamera::getDisplayDataPointer()
-{
-    return displayData;
-}
-
-VisionSensorType SegmentationCamera::getVisionSensorType() const
+VisionSensorType SegmentationCamera::GetVisionSensorType() const
 {
     return VisionSensorType::SEGMENTATION_CAMERA;
 }
 
-OpenGLView* SegmentationCamera::getOpenGLView() const
+OpenGLView* SegmentationCamera::GetOpenGlView() const
 {
-    return glCamera;
+    return glCamera_;
 }
 
 void SegmentationCamera::InitGraphics(bool& seesParticles)
 {
     seesParticles = true;
 
-    glCamera = new OpenGLSegmentationCamera(glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX, resY, (GLfloat)fovH, depthRange, freq < Scalar(0));
-    glCamera->setCamera(this);
+    // Create camera
+    std::unique_ptr<OpenGLSegmentationCamera> glCamera = std::make_unique<OpenGLSegmentationCamera>(
+        glm::vec3(0,0,0), glm::vec3(0,0,1.f), glm::vec3(0,-1.f,0), 0, 0, resX_, resY_, (GLfloat)fovH_, depthRange_, freq_ < Scalar(0)
+    );
+
+    // Set up camera
+    glCamera_ = glCamera.get();
+    glCamera_->SetCamera(this);
     UpdateTransform();
-    glCamera->UpdateTransform();
+    glCamera_->UpdateTransform();
     InternalUpdate(0);
-    ((GraphicalSimulationApp*)SimulationApp::getApp())->getGLPipeline()->getContent()->AddView(glCamera);
+
+    static_cast<GraphicalSimulationApp*>(SimulationApp::GetApp())->GetGlPipeline()->GetContent()->AddView(std::move(glCamera));
 
     unsigned int w, h;
-    getResolution(w, h);
-    displayData = new GLubyte[w*h*3];
+    GetResolution(w, h);
+    displayData_.resize(w*h*3);
 }
 
 void SegmentationCamera::SetupCamera(const Vector3& eye, const Vector3& dir, const Vector3& up)
@@ -89,36 +91,84 @@ void SegmentationCamera::SetupCamera(const Vector3& eye, const Vector3& dir, con
     glm::vec3 eye_ = glm::vec3((GLfloat)eye.x(), (GLfloat)eye.y(), (GLfloat)eye.z());
     glm::vec3 dir_ = glm::vec3((GLfloat)dir.x(), (GLfloat)dir.y(), (GLfloat)dir.z());
     glm::vec3 up_ = glm::vec3((GLfloat)up.x(), (GLfloat)up.y(), (GLfloat)up.z());
-    glCamera->SetupCamera(eye_, dir_, up_);
+    glCamera_->SetupCamera(eye_, dir_, up_);
 }
 
 void SegmentationCamera::InstallNewDataHandler(std::function<void(SegmentationCamera*)> callback)
 {
-    newDataCallback = callback;
+    newDataCallback_ = callback;
 }
 
 void SegmentationCamera::NewDataReady(void* data, unsigned int index)
 {
-    if(newDataCallback != nullptr)
+    if(newDataCallback_ != nullptr)
     {
         if(index == 0)
         {
             unsigned int w, h;
-            getResolution(w, h);
-            memcpy(displayData, data, w*h*3);
+            GetResolution(w, h);
+            memcpy(displayData_.data(), data, w*h*3);
         }
         else
         {
-            segmentationData = (GLushort*)data;
-            newDataCallback(this);
-            segmentationData = nullptr;
+            segmentationData_ = (GLushort*)data;
+            newDataCallback_(this);
+            segmentationData_ = nullptr;
         }
     }
 }
 
 void SegmentationCamera::InternalUpdate(Scalar dt)
 {
-    glCamera->Update();
+    glCamera_->Update();
 }
+
+// Statics
+
+ConstructInfo SegmentationCamera::GetConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+
+    // Specs
+    node.optional = false;
+    node.attributes.insert({"resolution_x", {ConstructInfoValueType::INT, false}});
+    node.attributes.insert({"resolution_y", {ConstructInfoValueType::INT, false}});
+    node.attributes.insert({"horizontal_fov", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"specs", node});
+
+    // Rendering
+    node.attributes.clear();
+    node.optional = true;
+    node.attributes.insert({"minimum_distance", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"maximum_distance", {ConstructInfoValueType::SCALAR, true}});
+    info.nodes.insert({"rendering", node});
+
+    return info;
+}
+
+std::unique_ptr<SegmentationCamera> SegmentationCamera::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // Specs
+    int resolutionX = std::get<int>(info.nodes.at("specs").attributes.at("resolution_x").value);
+    int resolutionY = std::get<int>(info.nodes.at("specs").attributes.at("resolution_y").value);
+    Scalar hFov = std::get<Scalar>(info.nodes.at("specs").attributes.at("horizontal_fov").value);
+
+    // Rendering (optional)
+    Scalar near {STD_NEAR_PLANE_DISTANCE};
+    Scalar far {STD_FAR_PLANE_DISTANCE};
+
+    ConstructInfoValue& value = info.nodes.at("rendering").attributes.at("near");
+    if (value.valid)
+        near = std::get<Scalar>(value.value);
+
+    value = info.nodes.at("rendering").attributes.at("far");
+    if (value.valid)
+        far = std::get<Scalar>(value.value);
+
+    return std::make_unique<SegmentationCamera>(uniqueName, resolutionX, resolutionY, hFov, frequency, near, far);
+}
+
+REGISTER_SENSOR("segmentation", SegmentationCamera)
 
 }

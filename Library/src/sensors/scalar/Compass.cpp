@@ -20,40 +20,81 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 02/11/2017.
-//  Copyright (c) 2017-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Compass.h"
 
 #include "sensors/Sample.h"
+#include "core/DeviceFactory.h"
 
 namespace sf
 {
 
-Compass::Compass(std::string uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
+Compass::Compass(std::string_view uniqueName, Scalar frequency, int historyLength) : LinkSensor(uniqueName, frequency, historyLength)
 {
-    channels.push_back(SensorChannel("Heading", QuantityType::ANGLE));
+    channels_.push_back(SensorChannel("Heading", QuantityType::ANGLE));
 }
 
 void Compass::InternalUpdate(Scalar dt)
 {
-    //get angles
+    // Get angles
     Scalar yaw, pitch, roll;
-    getSensorFrame().getBasis().getEulerYPR(yaw, pitch, roll);
+    GetSensorFrame().getBasis().getEulerYPR(yaw, pitch, roll);
     
-    //record sample
-    Sample s{std::vector<Scalar>({yaw})};
-    AddSampleToHistory(s);
+    // Record sample
+    AddSampleToHistory(std::make_unique<Sample>(std::vector<Scalar>({yaw})));
 }
 
-void Compass::setNoise(Scalar headingStdDev)
+void Compass::SetNoise(Scalar headingStdDev)
 {
-    channels[0].setStdDev(btClamped(headingStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
+    channels_[0].SetStdDev(btClamped(headingStdDev, Scalar(0), Scalar(BT_LARGE_FLOAT)));
 }
 
-ScalarSensorType Compass::getScalarSensorType() const
+ScalarSensorType Compass::GetScalarSensorType() const
 {
     return ScalarSensorType::COMPASS;
 }
+
+
+ConstructInfo Compass::GetConstructInfo()
+{
+    ConstructInfo info;
+    ConstructInfoNode node;
+    
+    // History
+    node.optional = true;
+    node.attributes.insert({"samples", {ConstructInfoValueType::INT, false}});
+    info.nodes.insert({"history", node});
+
+    // Noise
+    node.attributes.clear(); // Clear temporary
+    node.optional = true;
+    node.attributes.insert({"heading", {ConstructInfoValueType::SCALAR, false}});
+    info.nodes.insert({"noise", node});
+    
+    return info;
+}
+
+std::unique_ptr<Compass> Compass::Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info)
+{
+    // History (optional)
+    int history = -1;
+    ConstructInfoValue& value = info.nodes.at("history").attributes.at("samples");
+    if (value.valid)
+        history = std::get<int>(value.value);
+    
+    // Create sensor
+    std::unique_ptr<Compass> sensor = std::make_unique<Compass>(uniqueName, frequency, history);    
+
+    // Noise (optional)
+    value = info.nodes.at("noise").attributes.at("heading");
+    if (value.valid)
+        sensor->SetNoise(std::get<Scalar>(value.value));
+
+    return sensor;
+}
+
+REGISTER_SENSOR("compass", Compass)
 
 }

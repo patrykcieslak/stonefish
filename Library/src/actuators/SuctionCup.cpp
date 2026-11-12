@@ -20,12 +20,13 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 13/02/2023.
-//  Copyright (c) 2023-2024 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2023-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "actuators/SuctionCup.h"
 
 #include "core/SimulationManager.h"
+#include "core/DeviceFactory.h"
 #include "entities/FeatherstoneEntity.h"
 #include "joints/SpringJoint.h"
 #include "joints/SphericalJoint.h"
@@ -33,31 +34,27 @@
 namespace sf
 {
 
-SuctionCup::SuctionCup(std::string uniqueName) : LinkActuator(uniqueName)
+SuctionCup::SuctionCup(std::string_view uniqueName) : LinkActuator(uniqueName)
 {
-    pump = false;
-    joint = nullptr;
-    attachFe = nullptr;
-    attachLinkId = 0;
+    pump_ = false;
+    joint_ = nullptr;
+    attachFE_ = nullptr;
+    attachLinkId_ = 0;
 }
 
-SuctionCup::~SuctionCup()
+LinkActuatorType SuctionCup::GetLinkActuatorType() const
 {
+    return LinkActuatorType::SUCTION_CUP;
 }
 
-ActuatorType SuctionCup::getType() const
+void SuctionCup::SetPump(bool enabled)
 {
-    return ActuatorType::SUCTION_CUP;
+    pump_ = enabled;
 }
 
-void SuctionCup::setPump(bool enabled)
+bool SuctionCup::GetPump() const
 {
-    pump = enabled;
-}
-
-bool SuctionCup::getPump() const
-{
-    return pump;
+    return pump_;
 }
 
 void SuctionCup::AttachToSolid(SolidEntity* body, const Transform& origin)
@@ -67,9 +64,9 @@ void SuctionCup::AttachToSolid(SolidEntity* body, const Transform& origin)
 
 void SuctionCup::AttachToLink(FeatherstoneEntity* multibody, unsigned int linkId)
 {
-    LinkActuator::AttachToSolid(multibody->getLink(linkId+1).solid, I4());
-    attachFe = multibody;
-    attachLinkId = linkId;
+    LinkActuator::AttachToSolid(multibody->GetLink(linkId+1).solid.get(), I4());
+    attachFE_ = multibody;
+    attachLinkId_ = linkId;
 }
 
 void SuctionCup::Update(Scalar dt)
@@ -78,9 +75,9 @@ void SuctionCup::Update(Scalar dt)
 
 void SuctionCup::Engage(SimulationManager* sm)
 {
-    if(attach != nullptr && joint == nullptr && pump)
+    if(attach_ != nullptr && joint_ == nullptr && pump_)
     {
-        btDispatcher* dispatcher = sm->getDynamicsWorld()->getDispatcher();
+        btDispatcher* dispatcher = sm->GetDynamicsWorld()->getDispatcher();
         int numManifolds = dispatcher->getNumManifolds();
         for(int i=0; i<numManifolds; ++i)
         {
@@ -92,34 +89,35 @@ void SuctionCup::Engage(SimulationManager* sm)
             btCollisionObject* coB = (btCollisionObject*)contactManifold->getBody1();
             Entity* entA = (Entity*)coA->getUserPointer();
             Entity* entB = (Entity*)coB->getUserPointer();
+            std::unique_ptr<Joint> joint;
             
-            if(entA == attach && entB->getType() == EntityType::SOLID)
+            if(entA == attach_ && entB->GetType() == EntityType::SOLID)
             {
-                Transform jointFrame = ((SolidEntity*)entA)->getCG2CTransform();
+                Transform jointFrame = ((SolidEntity*)entA)->GetCG2CTransform();
                 jointFrame.setOrigin(contactManifold->getContactPoint(0).getPositionWorldOnA());
-                if(attachFe != nullptr)
+                if(attachFE_ != nullptr)
                 {
-                    joint = new SphericalJoint(getName() + "/P2P", (SolidEntity*)entB, attachFe, attachLinkId, jointFrame.getOrigin(), false);
-                    joint->getSolidB()->getRigidBody()->setDamping(0.0, 0.5);
+                    joint = std::make_unique<SphericalJoint>(GetName() + "/P2P", (SolidEntity*)entB, attachFE_, attachLinkId_, jointFrame.getOrigin(), false);
+                    joint->GetSolidB()->GetRigidBody()->setDamping(0.0, 0.5);
                 }
                 else
                 {
-                    joint = new SpringJoint(getName() + "/Spring", (SolidEntity*)entA, (SolidEntity*)entB, jointFrame, 
+                    joint = std::make_unique<SpringJoint>(GetName() + "/Spring", (SolidEntity*)entA, (SolidEntity*)entB, jointFrame, 
                                             Vector3(10,10,10), Vector3(10,10,10), Vector3(0.5,0.5,0.5), Vector3(0.5,0.5,0.5));
                 }
             }
-            else if(entB == attach && entA->getType() == EntityType::SOLID)
+            else if(entB == attach_ && entA->GetType() == EntityType::SOLID)
             {
-                Transform jointFrame = ((SolidEntity*)entB)->getCG2CTransform();
+                Transform jointFrame = ((SolidEntity*)entB)->GetCG2CTransform();
                 jointFrame.setOrigin(contactManifold->getContactPoint(0).getPositionWorldOnB());
-                if(attachFe != nullptr)
+                if(attachFE_ != nullptr)
                 {
-                    joint = new SphericalJoint(getName() + "/P2P", (SolidEntity*)entA, attachFe, attachLinkId, jointFrame.getOrigin(), false);
-                    joint->getSolidB()->getRigidBody()->setDamping(0.0, 0.5);
+                    joint = std::make_unique<SphericalJoint>(GetName() + "/P2P", (SolidEntity*)entA, attachFE_, attachLinkId_, jointFrame.getOrigin(), false);
+                    joint->GetSolidB()->GetRigidBody()->setDamping(0.0, 0.5);
                 }
                 else
                 {
-                    joint = new SpringJoint(getName() + "/Spring", (SolidEntity*)entB, (SolidEntity*)entA, jointFrame,
+                    joint = std::make_unique<SpringJoint>(GetName() + "/Spring", (SolidEntity*)entB, (SolidEntity*)entA, jointFrame,
                                             Vector3(10,10,10), Vector3(10,10,10), Vector3(0.5,0.5,0.5), Vector3(0.5,0.5,0.5));
                 }
             }
@@ -127,18 +125,33 @@ void SuctionCup::Engage(SimulationManager* sm)
             if(joint != nullptr)
             {
                 contactManifold->clearManifold();
-                sm->AddJoint(joint);
+                joint_ = joint.get(); // Save pointer to the joint without owning it
+                sm->AddJoint(std::move(joint));
                 break;
             }
         }
     }
-    else if(joint != nullptr && !pump)
+    else if(joint_ != nullptr && !pump_)
     {
-        if(joint->isMultibodyJoint())
-            joint->getSolidB()->getRigidBody()->setDamping(0.0, 0.0);
-        sm->RemoveJoint(joint);
-        joint = nullptr;
+        if(joint_->IsMultibodyJoint())
+            joint_->GetSolidB()->GetRigidBody()->setDamping(0.0, 0.0);
+        sm->RemoveJoint(joint_);
+        joint_ = nullptr;
     }
 }
-    
+
+// Statics
+
+ConstructInfo SuctionCup::GetConstructInfo()
+{
+    return ConstructInfo();
+}
+
+std::unique_ptr<SuctionCup> SuctionCup::Construct(std::string_view uniqueName, ConstructInfo& info)
+{
+    return std::make_unique<SuctionCup>(uniqueName);
+}
+
+REGISTER_ACTUATOR("suction_cup", SuctionCup)
+
 }

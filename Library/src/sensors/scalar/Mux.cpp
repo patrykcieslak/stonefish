@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 24/05/2014.
-//  Copyright (c) 2014-2018 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2014-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/scalar/Mux.h"
@@ -31,49 +31,42 @@
 namespace sf
 {
 
-Mux::Mux()
+bool Mux::AddComponent(ScalarSensor* s, size_t channel)
 {
-}
-
-Mux::~Mux()
-{
-    components.clear();
-}
-
-bool Mux::AddComponent(ScalarSensor* s, unsigned short channel)
-{
-    if(s == NULL)
+    if(s == nullptr)
         return false;
     
-    if(channel >= s->getNumOfChannels())
+    if(channel >= s->GetNumOfChannels())
         return false;
     
     MuxComponent cmp;
     cmp.sensor = s;
     cmp.channel = channel;
-    components.push_back(cmp);
+    components_.push_back(cmp);
+
     return true;
 }
 
-MuxComponent* Mux::getComponent(unsigned int index)
+MuxComponent* Mux::GetComponent(size_t index)
 {
-    if(index < components.size())
-        return &components[index];
+    if(index < components_.size())
+        return &components_[index];
     
-    return NULL;
+    return nullptr;
 }
 
-Scalar* Mux::getLastSample()
+std::vector<Scalar> Mux::GetLastSample()
 {
-    Scalar* sample = new Scalar[components.size()];
-    for(unsigned int i = 0; i < components.size(); ++i)
-        sample[i] = components[i].sensor->getLastSample().getValue(components[i].channel);
+    std::vector<Scalar> sample(components_.size());
+    for(size_t i = 0; i < components_.size(); ++i)
+        sample[i] = components_[i].sensor->GetLastSample().GetValue(components_[i].channel);
+
     return sample;
 }
 
-unsigned int Mux::getNumOfComponents() const
+size_t Mux::GetNumOfComponents() const
 {
-    return (unsigned int)components.size();
+    return components_.size();
 }
     
 }

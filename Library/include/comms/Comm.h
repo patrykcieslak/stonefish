@@ -20,20 +20,20 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 25/02/20.
-//  Copyright (c) 2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Comm__
-#define __Stonefish_Comm__
+#pragma once
 
 #include <SDL2/SDL_mutex.h>
 #include <deque>
 #include "StonefishCommon.h"
+#include "core/ConstructInfo.h"
 
 namespace sf
 {
     //! An enum defining types of comms.
-    enum class CommType {RADIO, ACOUSTIC, USBL, OPTICAL};
+    enum class CommType {RADIO, ACOUSTIC, USBL, OPTICAL, PLUGIN};
     
     struct Renderable;
     class Entity;
@@ -58,7 +58,7 @@ namespace sf
          \param uniqueName a name for the comm device
          \param deviceId an identification code of the device
          */
-        Comm(std::string uniqueName, uint64_t deviceId);
+        Comm(std::string_view uniqueName, uint64_t deviceId);
         
         //! A destructor.
         virtual ~Comm();
@@ -73,7 +73,7 @@ namespace sf
         /*!
          \param data the data to be sent
          */
-        virtual void SendMessage(const std::string& data);
+        virtual void SendMessage(std::string_view data);
         virtual void SendMessage(const std::vector<uint8_t>& data);
         
         //! A method to read received data frames. 
@@ -118,34 +118,37 @@ namespace sf
         void MarkDataOld();
         
         //! A method to check if new data is available.
-        bool isNewDataAvailable();
+        bool IsNewDataAvailable();
         
         //! A method informing if the comm is renderable.
-        bool isRenderable();
+        bool IsRenderable();
         
         //! A method to set if the comm is renderable.
-        void setRenderable(bool render);
+        void SetRenderable(bool render);
 
         //! A method returning the number of messages in the rx buffer.
-        size_t getRxBufferCount() const;
+        size_t GetRxBufferCount() const;
 
         //! A method returning the number of messages in the tx buffer.
-        size_t getTxBufferCount() const;
+        size_t GetTxBufferCount() const;
         
         //! A method returning the current comm device frame in world.
-        Transform getDeviceFrame();
+        Transform GetDeviceFrame();
         
         //! A method returning the device node id.
-        uint64_t getDeviceId();
+        uint64_t GetDeviceId();
         
         //! A method returning the conneted device node id.
-        uint64_t getConnectedId();
+        uint64_t GetConnectedId();
         
         //! A method returning the comm name.
-        std::string getName();
+        const std::string& GetName() const;
         
         //! A method returning the type of the comm.
-        virtual CommType getType() const = 0;
+        virtual CommType GetType() const = 0;
+
+        //! A deleter method required for the plugin architecture.
+        static void DefaultDeleter(Comm* c);
         
     protected:
         //! A method performing an internal update of the comm state.
@@ -157,20 +160,24 @@ namespace sf
         //! A method used for data reception.
         virtual void MessageReceived(std::shared_ptr<CommDataFrame> message);
         
-        bool newDataAvailable;
-        std::deque<std::shared_ptr<CommDataFrame>> txBuffer;
-        std::deque<std::shared_ptr<CommDataFrame>> rxBuffer;
-        uint64_t txSeq;
+        bool newDataAvailable_;
+        std::deque<std::shared_ptr<CommDataFrame>> txBuffer_;
+        std::deque<std::shared_ptr<CommDataFrame>> rxBuffer_;
+        uint64_t txSeq_;
         
     private:
-        std::string name;
-        uint64_t id;
-        int64_t cId;
-        SDL_mutex* updateMutex;
-        Entity* attach;
-        Transform o2c;
-        bool renderable;
+        std::string name_;
+        uint64_t id_;
+        int64_t cId_;
+        SDL_mutex* updateMutex_;
+        Entity* attach_;
+        Transform o2c_;
+        bool renderable_;
     };
-}
 
-#endif
+    // Plugin architecture types
+    using CommDeleter = void(*)(Comm*);
+    typedef Comm* (*CreateCommFunc)(const char*, uint64_t, ConstructInfo*);
+    typedef void (*DestroyCommFunc)(Comm*);
+    typedef ConstructInfo (*GetCommConstructInfoFunc)();
+}

@@ -20,7 +20,7 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 4/7/17.
-//  Copyright (c) 2017-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "sensors/vision/Camera.h"
@@ -30,69 +30,65 @@
 namespace sf
 {
 
-Camera::Camera(std::string uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, Scalar frequency) : VisionSensor(uniqueName, frequency)
+Camera::Camera(std::string_view uniqueName, unsigned int resolutionX, unsigned int resolutionY, Scalar horizFOVDeg, Scalar frequency) : VisionSensor(uniqueName, frequency)
 {
-    fovH = horizFOVDeg <= Scalar(0) ? Scalar(90) : (horizFOVDeg > Scalar(360) ? Scalar(360) : horizFOVDeg);
-    resX = resolutionX > 0 ? (resolutionX + resolutionX % 2) : 2;
-    resY = resolutionY > 0 ? (resolutionY + resolutionY % 2) : 2;
-    setDisplayOnScreen(false, 0, 0, 1.f);
-}
-    
-Camera::~Camera()
-{
+    fovH_ = horizFOVDeg <= Scalar(0) ? Scalar(90) : (horizFOVDeg > Scalar(360) ? Scalar(360) : horizFOVDeg);
+    resX_ = resolutionX > 0 ? (resolutionX + resolutionX % 2) : 2;
+    resY_ = resolutionY > 0 ? (resolutionY + resolutionY % 2) : 2;
+    SetDisplayOnScreen(false, 0, 0, 1.f);
 }
 
-Scalar Camera::getHorizontalFOV() const
+Scalar Camera::GetHorizontalFov() const
 {
-    return fovH;
+    return fovH_;
 }
 
-void Camera::getResolution(unsigned int& x, unsigned int& y) const
+void Camera::GetResolution(unsigned int& x, unsigned int& y) const
 {
-    x = resX;
-    y = resY;
+    x = resX_;
+    y = resY_;
 }
 
-void Camera::setDisplayOnScreen(bool display, unsigned int x, unsigned int y, float scale)
+void Camera::SetDisplayOnScreen(bool display, unsigned int x, unsigned int y, float scale)
 {
-    screen = display;
-    screenX = x;
-    screenY = y;
-    screenScale = scale;
+    screen_ = display;
+    screenX_ = x;
+    screenY_ = y;
+    screenScale_ = scale;
 }
 
-bool Camera::getDisplayOnScreen(unsigned int& x, unsigned int& y, float& scale) const
+bool Camera::GetDisplayOnScreen(unsigned int& x, unsigned int& y, float& scale) const
 {
-    x = screenX;
-    y = screenY;
-    scale = screenScale;
-    return screen;
+    x = screenX_;
+    y = screenY_;
+    scale = screenScale_;
+    return screen_;
 }
 
 void Camera::UpdateTransform()
 {
-    Transform cameraTransform = getSensorFrame();
-    Vector3 eyePosition = cameraTransform.getOrigin(); //O
-    Vector3 direction = cameraTransform.getBasis().getColumn(2); //Z
-    Vector3 cameraUp = -cameraTransform.getBasis().getColumn(1); //-Y
+    Transform cameraTransform_ = GetSensorFrame();
+    Vector3 eyePosition = cameraTransform_.getOrigin(); //O
+    Vector3 direction = cameraTransform_.getBasis().getColumn(2); //Z
+    Vector3 cameraUp = -cameraTransform_.getBasis().getColumn(1); //-Y
     SetupCamera(eyePosition, direction, cameraUp);
 }
 
 std::vector<Renderable> Camera::Render()
 {
     std::vector<Renderable> items = Sensor::Render();
-    if(isRenderable())
+    if(IsRenderable())
     {
         Renderable item;
-        item.model = glMatrixFromTransform(getSensorFrame());
+        item.model = glMatrixFromTransform(GetSensorFrame());
         item.type = RenderableType::SENSOR_LINES;
         item.data = std::make_shared<std::vector<glm::vec3>>();
-        auto points = item.getDataAsPoints();
+        auto points = item.GetDataAsPoints();
         
         //Create camera dummy
         GLfloat iconSize = 0.5f;
-        GLfloat x = iconSize*tanf(fovH/360.f*M_PI);
-        GLfloat aspect = (GLfloat)resX/(GLfloat)resY;
+        GLfloat x = iconSize*tanf(fovH_/360.f*M_PI);
+        GLfloat aspect = (GLfloat)resX_/(GLfloat)resY_;
         GLfloat y = x/aspect;
         
         points->push_back(glm::vec3(0,0,0));

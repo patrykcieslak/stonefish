@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 1/30/13.
-//  Copyright (c) 2013-2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2013-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Plane__
-#define __Stonefish_Plane__
+#pragma once
 
 #include "entities/StaticEntity.h"
 
@@ -42,18 +41,16 @@ namespace sf
          \param look the name of the graphical material used for rendering
          \param uvScale scaling of the texture coordinates
          */
-        Plane(std::string uniqueName, Scalar size, std::string material, std::string look = "", float uvScale = 1.f);
+        Plane(std::string_view uniqueName, Scalar size, std::string_view material, std::string_view look = "", float uvScale = 1.f);
         
         //! A method returning the extents of the plane axis alligned bounding box.
         /*!
          \param min a point located at the minimum coordinate corner
          \param max a point located at the maximum coordinate corner
          */
-        void getAABB(Vector3& min, Vector3& max);
+        void GetAabb(Vector3& min, Vector3& max);
         
         //! A method returning the type of the static entity.
-        StaticEntityType getStaticType();
+        StaticEntityType GetStaticType();
     };
 }
-
-#endif

@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 21/10/20.
-//  Copyright(c) 2020-2023 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2020-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Trajectory__
-#define __Stonefish_Trajectory__
+#pragma once
 
 #include "StonefishCommon.h"
 #include "graphics/OpenGLDataStructs.h"
@@ -45,7 +44,7 @@ namespace sf
         Trajectory(PlaybackMode playback);
 
         //! A destructor.
-        virtual ~Trajectory();
+        virtual ~Trajectory() = default;
 
         //! A method updating the trajectory position.
         /*!
@@ -60,36 +59,34 @@ namespace sf
         virtual std::vector<Renderable> Render() = 0;
 
         //! A method returning the current interpolated transform.
-        Transform getInterpolatedTransform() const;
+        Transform GetInterpolatedTransform() const;
 
         //! A method returning the current interpolated linear velocity.
-        Vector3 getInterpolatedLinearVelocity() const;
+        Vector3 GetInterpolatedLinearVelocity() const;
 
         //! A method returning the current interpolated angular velocity.
-        Vector3 getInterpolatedAngularVelocity() const;
+        Vector3 GetInterpolatedAngularVelocity() const;
 
         //! A method returning the current interpolated linear acceleration.
-        Vector3 getInterpolatedLinearAcceleration() const;
+        Vector3 GetInterpolatedLinearAcceleration() const;
 
         //! A method returning the current playback time.
-        Scalar getPlaybackTime() const;
+        Scalar GetPlaybackTime() const;
 
         //! A method returning the current playback iteration.
-        unsigned int getPlaybackIteration() const;
+        unsigned int GetPlaybackIteration() const;
 
-        static void calculateVelocityShortestPath(const Transform &transform0, const Transform &transform1, Scalar timeStep, Vector3 &linVel, Vector3 &angVel);
+        static void CalculateVelocityShortestPath(const Transform &transform0, const Transform &transform1, Scalar timeStep, Vector3 &linVel, Vector3 &angVel);
     
     protected:
-        PlaybackMode playMode;
-        Scalar playTime;
-        Scalar endTime;
-        unsigned int iteration;
-        bool forward;
-        Transform interpTrans;
-        Vector3 interpVel;
-        Vector3 interpAngVel;
-        Vector3 interpAcc;
+        PlaybackMode playMode_;
+        Scalar playTime_;
+        Scalar endTime_;
+        unsigned int iteration_;
+        bool forward_;
+        Transform interpTrans_;
+        Vector3 interpVel_;
+        Vector3 interpAngVel_;
+        Vector3 interpAcc_;
     };
 }
-
-#endif

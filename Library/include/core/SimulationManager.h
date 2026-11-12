@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 11/28/12.
-//  Copyright (c) 2012-2025 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2012-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_SimulationManager__
-#define __Stonefish_SimulationManager__
+#pragma once
 
 #include "StonefishCommon.h"
 #include "entities/forcefields/Ocean.h"
@@ -32,6 +31,9 @@
 #include "entities/SolidEntity.h"
 #include "utils/PerformanceMonitor.h"
 #include "BulletSoftBody/btSoftMultiBodyDynamicsWorld.h"
+#include "sensors/Sensor.h"
+#include "actuators/Actuator.h"
+#include "comms/Comm.h"
 
 namespace sf
 {
@@ -45,9 +47,6 @@ namespace sf
     class AnimatedEntity;
     class FeatherstoneEntity;
     class Joint;
-    class Actuator;
-    class Sensor;
-    class Comm;
     class Contact;
     class OpenGLTrackball;
     class OpenGLDebugDrawer;
@@ -93,7 +92,7 @@ namespace sf
         virtual void SimulationStepCompleted(Scalar timeStep);
 
         //! A method returning the current simulation clock time in us (overriding allows for external time source).
-        virtual uint64_t getSimulationClock() const;
+        virtual uint64_t GetSimulationClock() const;
 
         //! A method sleeping for a given simulation clock time (overriding allows for external time source).
         /*!
@@ -131,35 +130,40 @@ namespace sf
         //! A method that adds any type of entity to the simulation world.
         /*!
          \param ent a pointer to the entity
+         \return pointer to the added entity
          */
-        void AddEntity(Entity* ent);
+        Entity* AddEntity(std::unique_ptr<Entity> ent);
         
         //! A method that adds a robotic system to the simulation world.
         /*!
          \param robot a pointer to the robot object
          \param origin a pose of the robot in the world frame
+         \return pointer to the added robot
          */
-        void AddRobot(Robot* robot, const Transform& origin);
+        Robot* AddRobot(std::unique_ptr<Robot> robot, const Transform& origin);
         
         //! A method that adds a static body to the simulation world.
         /*!
          \param ent a pointer to the static body object
          \param origin a pose of the body in the world frame
+         \return pointer to the added static entity
          */
-        void AddStaticEntity(StaticEntity* ent, const Transform& origin);
+        StaticEntity* AddStaticEntity(std::unique_ptr<StaticEntity> ent, const Transform& origin);
         
         //! A method that adds an animated rigid body to the simulation world.
         /*!
          \param ent a pointer to the animated object
+         \return pointer to the added animated entity
          */
-        void AddAnimatedEntity(AnimatedEntity* ent);
+        AnimatedEntity* AddAnimatedEntity(std::unique_ptr<AnimatedEntity> ent);
         
         //! A method that adds a dynamic rigid body to the simulation world.
         /*!
          \param ent a pointer to the dynamic body object
          \param origin a pose of the body in the world frame
+         \return pointer to the added body (useful for adding joints)
          */
-        void AddSolidEntity(SolidEntity* ent, const Transform& origin);
+        SolidEntity* AddSolidEntity(std::unique_ptr<SolidEntity> ent, const Transform& origin);
 
         //! A method that removes a dynamic rigid body from the simulation world.
         /*!
@@ -171,8 +175,9 @@ namespace sf
         /*!
          \param ent a pointer to the multibody object
          \param origin a pose of the multibody base link in the world frame
+         \return pointer to the added multibody object
          */
-        void AddFeatherstoneEntity(FeatherstoneEntity* ent, const Transform& origin);
+        FeatherstoneEntity* AddFeatherstoneEntity(std::unique_ptr<FeatherstoneEntity> ent, const Transform& origin);
 
         //! A method that removes a rigid multibody from the simulation world.
         /*!
@@ -183,8 +188,9 @@ namespace sf
         //! A method that adds a discrete joint to the simulation world.
         /*!
          \param jnt a pointer to the joint object
+         \return pointer to the added joint
          */
-        void AddJoint(Joint* jnt);
+        Joint* AddJoint(std::unique_ptr<Joint> jnt);
 
         //! A method that removes a discrete joint from the simulation world.
         /*!
@@ -195,26 +201,33 @@ namespace sf
         //! A method that adds an actuator to the simulation world.
         /*!
          \param act a pointer to the actuator object
+         \return pointer to the added actuator
          */
-        void AddActuator(Actuator* act);
+        Actuator* AddActuator(std::unique_ptr<Actuator> act);
+        Actuator* AddActuator(std::unique_ptr<Actuator, ActuatorDeleter> act);
         
         //! A method that adds a sensor to the simulation world.
         /*!
          \param sens a pointer to the sensor object
+         \return pointer to the add sensor
          */
-        void AddSensor(Sensor* sens);
+        Sensor* AddSensor(std::unique_ptr<Sensor> sens);
+        Sensor* AddSensor(std::unique_ptr<Sensor, SensorDeleter> sens);
         
         //! A method that adds a communication device to the simulation world.
         /*!
          \param comm a pointer to the comm object
+         \return pointer to the add comm
          */
-        void AddComm(Comm* comm);
+        Comm* AddComm(std::unique_ptr<Comm> comm);
+        Comm* AddComm(std::unique_ptr<Comm, CommDeleter> comm);
         
         //! A method that adds contact monitoring between two entities.
         /*!
           \param a pointer to the contact object
+          \return pointer to hte add contact
          */
-        void AddContact(Contact* cnt);
+        Contact* AddContact(std::unique_ptr<Contact> cnt);
         
         //! A method that enables collision between specified entities.
         /*!
@@ -260,22 +273,22 @@ namespace sf
         /*!
          \param steps number steps of simulation per second
          */
-        void setStepsPerSecond(Scalar steps);
+        void SetStepsPerSecond(Scalar steps);
 
         //! A method to set a flag that enables automatic calling of the SimulationStepCompleted method.
-        void setCallSimulationStepCompleted(bool call);
+        void SetCallSimulationStepCompleted(bool call);
 
         //! A method that directly sets the fluid dynamics prescaler.
         /*!
          \param presc a prescaler used to compute the update frequency of fluid dynamics computations
          */
-        void setFluidDynamicsPrescaler(unsigned int presc);
+        void SetFluidDynamicsPrescaler(unsigned int presc);
 
         //! A method that sets how simulation time relates to real time.
         /*!
          \param f a multiple of real time (1.0 = real time)
          */
-        void setRealtimeFactor(Scalar f);
+        void SetRealtimeFactor(Scalar f);
         
         //! A method used to setup the initial conditions solver.
         /*!
@@ -286,7 +299,7 @@ namespace sf
          \param linearTolerance a tolerance of change of position between two steps
          \param angularTolerance a tolerance of change of angles between two steps
          */
-        void setICSolverParams(bool useGravity, Scalar timeStep = Scalar(0.001), unsigned int maxIterations = 100000,
+        void SetIcSolverParams(bool useGravity, Scalar timeStep = Scalar(0.001), unsigned int maxIterations = 100000,
                                Scalar maxTime = BT_LARGE_FLOAT, Scalar linearTolerance = Scalar(1e-6), Scalar angularTolerance = Scalar(1e-6));
         
         //! A method used to change some global solver params for stability tuning.
@@ -299,101 +312,101 @@ namespace sf
          \param linearSleepingThreshold a linear velocity below which the dynamic bodies will sleep [m/s]
          \param angularSleepingThreshold an angular velocity below which the dynamic bodies will sleep [rad/s]
         */
-        void setSolverParams(Scalar erp, Scalar stopErp, Scalar erp2, Scalar globalDamping, Scalar globalFriction, 
+        void SetSolverParams(Scalar erp, Scalar stopErp, Scalar erp2, Scalar globalDamping, Scalar globalFriction, 
                                 Scalar linearSleepingThreshold, Scalar angularSleepingThreshold);
 
         //! A method that sets the display mode of dynamical rigid bodies.
         /*!
          \param m a flag that defines the display style of dynamical bodies
          */
-        void setSolidDisplayMode(DisplayMode m);
+        void SetSolidDisplayMode(DisplayMode m);
         
         //! A method that returns the display style of dynamical podies.
         /*!
          \return flag defining the display style
          */
-        DisplayMode getSolidDisplayMode() const;
+        DisplayMode GetSolidDisplayMode() const;
         
         //! A method returning the usage of the CPU by the physics computation in percent.
-        Scalar getCpuUsage() const;
+        Scalar GetCpuUsage() const;
         
         //! A method returning the current number of steps per second used.
-        Scalar getStepsPerSecond() const;
+        Scalar GetStepsPerSecond() const;
 
         //! A method returning the flag that enables automatic calling of the SimulationStepCompleted method.
-        bool getCallSimulationStepCompleted() const;
+        bool GetCallSimulationStepCompleted() const;
         
         //! A method returning the axis-aligned bounding box of the simulation world.
         /*!
          \param min a position of the minimum corner
          \param max a position of the maximum corner
          */
-        void getWorldAABB(Vector3& min, Vector3& max);
+        void GetWorldAabb(Vector3& min, Vector3& max);
         
         //! A method returning the collision filtering used in simulation.
-        CollisionFilter getCollisionFilter() const;
+        CollisionFilter GetCollisionFilter() const;
         
         //! A method returning the type of solver used.
-        Solver getSolver() const;
+        Solver GetSolver() const;
 
         //! A method returning soft body world information.
-        btSoftBodyWorldInfo& getSoftBodyWorldInfo();
+        btSoftBodyWorldInfo& GetSoftBodyWorldInfo();
         
         //! A method returning a robot by index
         /*!
          \param index an id of the robot
          \return a pointer to a robot object
          */
-        Robot* getRobot(unsigned int index);
+        Robot* GetRobot(unsigned int index);
         
         //! A method returning a robot by name.
         /*!
          \param name a name of the robot
          \return a pointer to a robot object
          */
-        Robot* getRobot(const std::string& name);
+        Robot* GetRobot(std::string_view name);
         
         //! A method returning an entity by index.
         /*!
          \param index an id of the entity
          \return a pointer to an entity object
          */
-        Entity* getEntity(unsigned int index);
+        Entity* GetEntity(unsigned int index);
         
         //! A method returning an entity by name.
         /*!
          \param name a name of the entity
          \return a pointer to an entity object
          */
-        Entity* getEntity(const std::string& name);
+        Entity* GetEntity(std::string_view name);
         
         //! A method returning a joint by index.
         /*!
          \param index an id of the joint
          \return a pointer to an joint object
          */
-        Joint* getJoint(unsigned int index);
+        Joint* GetJoint(unsigned int index);
         
         //! A method returning a joint by name.
         /*!
          \param name a name of the joint
          \return a pointer to a joint object
          */
-        Joint* getJoint(const std::string& name);
+        Joint* GetJoint(std::string_view name);
         
         //! A method returning a contact by index.
         /*!
          \param index an id of the contact
          \return a pointer to a contact object
          */
-        Contact* getContact(unsigned int index);
+        Contact* GetContact(unsigned int index);
         
         //! A method returning a contact by name.
         /*!
          \param name a name of the contact
          \return a pointer to a contact object
          */
-        Contact* getContact(const std::string& name);
+        Contact* GetContact(std::string_view name);
         
         //! A method returning a contavt by entity pair.
         /*!
@@ -401,101 +414,98 @@ namespace sf
          \param entB a pointer to the sencond entity
          \return a pointer to a contact object
          */
-        Contact* getContact(Entity* entA, Entity* entB);
+        Contact* GetContact(Entity* entA, Entity* entB);
         
         //! A method returning an actuator by index.
         /*!
          \param index an id of the actuator
          \return a pointer to an actuator object
          */
-        Actuator* getActuator(unsigned int index);
+        Actuator* GetActuator(unsigned int index);
         
         //! A method returning an actuator by name.
         /*!
          \param name a name of the actuator
          \return a pointer to an actuator object
          */
-        Actuator* getActuator(const std::string& name);
+        Actuator* GetActuator(std::string_view name);
         
         //! A method returning a sensor by index.
         /*!
          \param index an id of the sensor
          \return a pointer to a sensor object
          */
-        Sensor* getSensor(unsigned int index);
+        Sensor* GetSensor(unsigned int index);
         
         //! A method returning a sensor by name.
         /*!
          \param name a name of the sensor
          \return a pointer to a sensor object
          */
-        Sensor* getSensor(const std::string& name);
+        Sensor* GetSensor(std::string_view name);
         
         //! A method returning a communication device by index.
         /*!
          \param index an id of the communication device
          \return a pointer to a comm object
          */
-        Comm* getComm(unsigned int index);
+        Comm* GetComm(unsigned int index);
         
         //! A method returning a communication device by name.
         /*!
          \param name a name of the communication device
          \return a pointer to a comm object
          */
-        Comm* getComm(const std::string& name);
+        Comm* GetComm(std::string_view name);
         
         //! A method returning a pointer to the NED object.
-        NED* getNED();
+        NED* GetNed();
         
         //! A method returning a pointer to the ocean object.
-        Ocean* getOcean();
+        Ocean* GetOcean();
         
         //! A method returning a pointer to the atmosphere object.
-        Atmosphere* getAtmosphere();
+        Atmosphere* GetAtmosphere();
         
         //! A method setting the gravity constant used in the simulation.
-        void setGravity(Scalar gravityConstant);
+        void SetGravity(Scalar gravityConstant);
         
         //! A method returning the gravity vector.
-        Vector3 getGravity() const;
+        Vector3 GetGravity() const;
         
         //! A method returning the simulation time in seconds.
         /*! 
          \param applyOffset a flag deciding if the offset between simulation time and real time should be applied
          \return the time of simulation in seconds
          */
-        Scalar getSimulationTime(bool applyOffset = false) const;
+        Scalar GetSimulationTime(bool applyOffset = false) const;
         
         //! A method informing about the relation between the simulated time and real time.
-        Scalar getRealtimeFactor() const;
+        Scalar GetRealtimeFactor() const;
         
         //! A method returning a pointer to the material manager.
-        MaterialManager* getMaterialManager();
+        MaterialManager* GetMaterialManager();
         
         //! A method returning a pointer to the name manager.
-        NameManager* getNameManager();
+        NameManager* GetNameManager();
         
         //! A method returning a reference to the performance monitor.
-        PerformanceMonitor& getPerformanceMonitor();
-
-        //! A method returning a pointer to the trackball view.
-        OpenGLTrackball* getTrackball();
+        PerformanceMonitor& GetPerformanceMonitor();
         
         //! A method informing if the simulation is freshly started.
-        bool isSimulationFresh() const;
+        bool IsSimulationFresh() const;
         
         //! A method informing if the ocean is enabled in the simulation.
-        bool isOceanEnabled() const;
+        bool IsOceanEnabled() const;
         
         //! A method returning a pointer to the Bullet dynamics world.
-        btSoftMultiBodyDynamicsWorld* getDynamicsWorld();
+        btSoftMultiBodyDynamicsWorld* GetDynamicsWorld();
 
         //! A method returning the simulation sleeping settings.
-        void getSleepingThresholds(Scalar& linear, Scalar& angular) const;
+        void GetSleepingThresholds(Scalar& linear, Scalar& angular) const;
 
         //! A method returning the simulation setup related to joint constraints.
-        void getJointErp(Scalar& erp, Scalar& stopErp) const;
+        void GetJointErp(Scalar& erp, Scalar& stopErp) const;
         
         //------ Aliases created to shorten the code needed to build the scenario ------
         
@@ -506,7 +516,7 @@ namespace sf
          \param restitution a restitution factor <0,1>
          \return a name of the created material
          */
-        std::string CreateMaterial(const std::string& uniqueName, Scalar density, Scalar restitution);
+        std::string CreateMaterial(std::string_view uniqueName, Scalar density, Scalar restitution);
         
         //! A method that sets interaction between a pair of materials.
         /*!
@@ -516,7 +526,7 @@ namespace sf
          \param dynamicFricCoeff a coefficient of dynamic friction between materials
          \return was the interaction was set properly?
          */
-        bool SetMaterialsInteraction(const std::string& firstMaterialName, const std::string& secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff);
+        bool SetMaterialsInteraction(std::string_view firstMaterialName, std::string_view secondMaterialName, Scalar staticFricCoeff, Scalar dynamicFricCoeff);
         
         //! A method used to create a rendering look.
         /*!
@@ -531,9 +541,9 @@ namespace sf
          \param temperatureRange a range of temperatures represented by the texture values
          \return the actual name of the created look
          */
-        std::string CreateLook(const std::string& name, Color color, float roughness, float metalness = 0.f, float reflectivity = 0.f, 
-                               const std::string& albedoTexturePath = "", const std::string& normalTexturePath = "", 
-                               const std::string& temperatureTexturePath = "", const std::pair<float, float>& temperatureRange = std::make_pair(20.f, 20.f));
+        std::string CreateLook(std::string_view name, Color color, float roughness, float metalness = 0.f, float reflectivity = 0.f, 
+                               std::string_view albedoTexturePath = "", std::string_view normalTexturePath = "", 
+                               std::string_view temperatureTexturePath = "", const std::pair<float, float>& temperatureRange = std::make_pair(20.f, 20.f));
         
     protected:
         static void SolveICTickCallback(btDynamicsWorld* world, Scalar timeStep);
@@ -543,15 +553,16 @@ namespace sf
         static bool ContactInfoUpdateCallback(btManifoldPoint& cp, void* body0, void* body1);
         static bool ContactInfoDestroyCallback(void* userPersistentData);
 
-        btSoftMultiBodyDynamicsWorld* dynamicsWorld;
-        btMultiBodyConstraintSolver* mbSolver;
-        btSoftBodySolver* sbSolver;
+        std::unique_ptr<btSoftMultiBodyDynamicsWorld> dynamicsWorld_;
+        std::unique_ptr<btMultiBodyConstraintSolver> mbSolver_;
+        std::unique_ptr<btSoftBodySolver> sbSolver_;
         btSoftBodyWorldInfo sbInfo;
-        btCollisionDispatcher* dwDispatcher;
-        btBroadphaseInterface* dwBroadphase;
-        btDefaultCollisionConfiguration* dwCollisionConfig;
+        std::unique_ptr<btCollisionDispatcher> dwDispatcher_;
+        std::unique_ptr<btBroadphaseInterface> dwBroadphase_;
+        std::unique_ptr<btDefaultCollisionConfiguration> dwCollisionConfig_;
+        std::unique_ptr<btGhostPairCallback> dwGhostPairCallback_;
         
-        MaterialManager* materialManager;
+        std::unique_ptr<MaterialManager> materialManager_;
         
     private:
         void RenderBulletDebug();
@@ -559,64 +570,65 @@ namespace sf
         void InitializeScenario();
         
         // State
-        Scalar simulationTime; // Time of simulation run in seconds
-        uint64_t currentTime;  // Current system time in us
-        uint64_t timeOffset;   // Offset between simulation time and system time in us
-        uint64_t ssus;         // Simulation step time in us
-        bool simulationFresh;
-        bool callSimulationStepCompleted;
+        Scalar simulationTime_; // Time of simulation run in seconds
+        uint64_t currentTime_;  // Current system time in us
+        uint64_t timeOffset_;   // Offset between simulation time and system time in us
+        uint64_t ssus_;         // Simulation step time in us
+        bool simulationFresh_;
+        bool callSimulationStepCompleted_;
 
         // Performance
-        PerformanceMonitor perfMon;
-        Scalar realtimeFactor;
-        Scalar cpuUsage;
-        unsigned int fdPrescaler;
-        unsigned int fdCounter;
+        PerformanceMonitor perfMon_;
+        Scalar realtimeFactor_;
+        Scalar cpuUsage_;
+        unsigned int fdPrescaler_;
+        unsigned int fdCounter_;
         
         // Threading
-        SDL_mutex* simSettingsMutex;
-        SDL_mutex* simInfoMutex;
-        SDL_mutex* simHydroMutex;
+        SDL_mutex* simSettingsMutex_;
+        SDL_mutex* simInfoMutex_;
+        SDL_mutex* simHydroMutex_;
         
         // IC solver settings
-        bool icUseGravity;
-        Scalar icTimeStep;
-        unsigned int icMaxIter;
-        Scalar icMaxTime;
-        Scalar icLinTolerance;
-        Scalar icAngTolerance;
-        unsigned int mlcpFallbacks;
-        bool icProblemSolved;
+        bool icUseGravity_;
+        Scalar icTimeStep_;
+        unsigned int icMaxIter_;
+        Scalar icMaxTime_;
+        Scalar icLinTolerance_;
+        Scalar icAngTolerance_;
+        unsigned int mlcpFallbacks_;
+        bool icProblemSolved_;
 
         // Sover settings
-        Solver solver;
-        CollisionFilter collisionFilter;
-        Scalar sps;
-        Scalar linSleepThreshold;
-        Scalar angSleepThreshold;
-        Scalar jointErp;
-        Scalar jointLimitErp;
-
+        Solver solver_;
+        CollisionFilter collisionFilter_;
+        Scalar sps_;
+        Scalar linSleepThreshold_;
+        Scalar angSleepThreshold_;
+        Scalar jointErp_;
+        Scalar jointLimitErp_;
+    
         // Scenario
-        NameManager* nameManager;
-        std::vector<Robot*> robots;
-        std::vector<Entity*> entities;
-        std::vector<Joint*> joints;
-        std::vector<Sensor*> sensors;
-        std::vector<Actuator*> actuators;
-        std::vector<Comm*> comms;
-        std::vector<Contact*> contacts;
-        std::vector<Collision> collisions;
-        NED* ned;
-        Ocean* ocean;
-        Atmosphere* atmosphere;
-        Scalar g;
-        DisplayMode sdm;
+        std::unique_ptr<NameManager> nameManager_;
+        std::vector<std::unique_ptr<Robot>> robots_;
+        std::vector<std::unique_ptr<Entity>> entities_;
+        std::vector<std::unique_ptr<Joint>> joints_;
+        std::vector<std::unique_ptr<Sensor, SensorDeleter>> sensors_;
+        std::vector<std::unique_ptr<Actuator, ActuatorDeleter>> actuators_;
+        std::vector<std::unique_ptr<Comm, CommDeleter>> comms_;
+        std::vector<std::unique_ptr<Contact>> contacts_;
         
-        // Graphics
-        OpenGLTrackball* trackball;
-        OpenGLDebugDrawer* debugDrawer;
+        // Collision pairs
+        std::vector<Collision> collisions_;
+        
+        // Environment
+        std::unique_ptr<NED> ned_;
+        std::unique_ptr<Ocean> ocean_;
+        std::unique_ptr<Atmosphere> atmosphere_;
+        Scalar g_;
+        DisplayMode sdm_;
+        
+        // Debugging
+        std::unique_ptr<OpenGLDebugDrawer> debugDrawer_;
     };
 }
-
-#endif

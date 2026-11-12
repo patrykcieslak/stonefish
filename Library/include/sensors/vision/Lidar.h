@@ -16,21 +16,20 @@
 */
 
 //
-//  Multibeam2.h
+//  Lidar.h
 //  Stonefish
 //
 //  Created by Patryk Cieślak on 21/01/2019.
-//  Copyright (c) 2019 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2019-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_Multibeam2__
-#define __Stonefish_Multibeam2__
+#pragma once
 
 #include <functional>
 #include "sensors/vision/Camera.h"
 #include "graphics/OpenGLDataStructs.h"
 
-#define MULTIBEAM_MAX_SINGLE_FOV 30.0
+#define LIDAR_MAX_SINGLE_FOV 30.0
 
 namespace sf
 {
@@ -46,7 +45,7 @@ namespace sf
     };
     
     //! A class representing a multibeam sonar (simulated with a number of depth cameras).
-    class Multibeam2 : public Camera
+    class Lidar : public Camera
     {
     public:
         //! A constructor.
@@ -60,11 +59,8 @@ namespace sf
          \param maxRange the maximum measured range [m]
          \param frequency the sampling frequency of the sensor [Hz] (-1 if updated every simulation step)
          */
-        Multibeam2(std::string uniqueName, unsigned int horizontalRes, unsigned int verticalRes, Scalar horizontalFOVDeg, Scalar verticalFOVDeg,
+        Lidar(std::string_view uniqueName, unsigned int horizontalRes, unsigned int verticalRes, Scalar horizontalFOVDeg, Scalar verticalFOVDeg,
                     Scalar minRange, Scalar maxRange, Scalar frequency = Scalar(-1));
-        
-        //! A destructor.
-        ~Multibeam2();
         
         //! A method performing internal sensor state update.
         /*!
@@ -102,48 +98,51 @@ namespace sf
         /*!
          \param callback a function to be called
          */
-        void InstallNewDataHandler(std::function<void(Multibeam2*)> callback);
+        void InstallNewDataHandler(std::function<void(Lidar*)> callback);
         
         //! A method implementing the rendering of the multibeam dummy.
         std::vector<Renderable> Render();
         
         //! A method that returns the limits of measured range.
-        glm::vec2 getRangeLimits() const;
+        glm::vec2 GetRangeLimits() const;
         
         //! A method that returns the vertical field of view of the sensor.
-        Scalar getVerticalFOV() const;
+        Scalar GetVerticalFov() const;
         
         //! A method returning a pointer to the image data.
         /*!
          \param index the id of the OpenGL camera for which the data pointer is requested
          \return pointer to the image data buffer
          */
-        void* getImageDataPointer(unsigned int index = 0);
+        void* GetImageDataPointer(unsigned int index = 0);
         
         //! A method returning a pointer to range data.
-        float* getRangeDataPointer();
+        float* GetRangeDataPointer();
         
         //! A method returning the type of the vision sensor.
-        VisionSensorType getVisionSensorType() const override;
+        VisionSensorType GetVisionSensorType() const override;
 
         //! A method returning a pointer to the underlaying OpenGLView object.
-        OpenGLView* getOpenGLView() const override;
+        OpenGLView* GetOpenGlView() const override;
+        
+        //! A method returning the construction info for the sensor.
+        static ConstructInfo GetConstructInfo();
+
+        //! A method constructing the sensor based on info structure.
+        /*!
+         \param info a construction info structure
+        */
+        static std::unique_ptr<Lidar> Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo& info);
         
     private:
         void InitGraphics(bool& seesParticles);
         
-        std::vector<CamData> cameras;
-        GLfloat* imageData;
-        GLfloat* rangeData;
-        Scalar fovV;
-        glm::vec2 range;
-        std::function<void(Multibeam2*)> newDataCallback;
-        int dataCounter;
+        std::vector<CamData> cameras_;
+        std::vector<GLfloat> imageData_;
+        std::vector<GLfloat> rangeData_;
+        Scalar fovV_;
+        glm::vec2 range_;
+        std::function<void(Lidar*)> newDataCallback_;
+        int dataCounter_;
     };
-
-
-
-
 }
-
-#endif

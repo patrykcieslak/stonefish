@@ -20,11 +20,10 @@
 //  Stonefish
 //
 //  Created by Patryk Cieslak on 27/01/2023.
-//  Copyright(c) 2023 Patryk Cieslak. All rights reserved.
+//  Copyright(c) 2023-2026 Patryk Cieslak. All rights reserved.
 //
 
-#ifndef __Stonefish_GeneralRobot__
-#define __Stonefish_GeneralRobot__
+#pragma once
 
 #include "core/Robot.h"
 
@@ -41,10 +40,7 @@ namespace sf
          \param uniqueName a name for the robot
          \param fixedBase is the robot fixed to the world?
          */
-        GeneralRobot(std::string uniqueName, bool fixedBase = false);
-        
-        //! A destructor.
-        virtual ~GeneralRobot();
+        GeneralRobot(std::string_view uniqueName, bool fixedBase = false);
 
         //! A method used to define a list of rigid bodies constituting the mechanical part of the robot (dynamic tree).
         /*!
@@ -52,7 +48,7 @@ namespace sf
          \param otherLinks a vector of subsequent links
          \param selfCollision a flag determining if self collision between multibody links should be enabled (subsequent links never collide)
          */
-        void DefineLinks(SolidEntity* baseLink, std::vector<SolidEntity*> otherLinks = std::vector<SolidEntity*>(0), bool selfCollision = false);
+        void DefineLinks(std::unique_ptr<SolidEntity> baseLink, std::vector<std::unique_ptr<SolidEntity>> otherLinks = std::vector<std::unique_ptr<SolidEntity>>(0), bool selfCollision = false);
         
         //! A method which uses links and joints definitions to build the kinematic structure of the robot.
         void BuildKinematicStructure();
@@ -62,14 +58,16 @@ namespace sf
          \param s a pointer to a joint sensor object
          \param monitoredJointName a name of the joint at which the sensor is attached
          */
-        void AddJointSensor(JointSensor* s, const std::string& monitoredJointName);
+        JointSensor* AddJointSensor(std::unique_ptr<Sensor> s, std::string_view monitoredJointName) override;
+        JointSensor* AddJointSensor(std::unique_ptr<Sensor, SensorDeleter> s, std::string_view monitoredJointName) override;
 
         //! A method used to attach an actuator to a specified joint of the robot.
         /*!
          \param a a pointer to a joint actuator object
          \param actuatedJointName a name of the joint which is to be driven
          */
-        void AddJointActuator(JointActuator* a, const std::string& actuatedJointName);
+        JointActuator* AddJointActuator(std::unique_ptr<Actuator> a, std::string_view actuatedJointName) override;
+        JointActuator* AddJointActuator(std::unique_ptr<Actuator, ActuatorDeleter> a, std::string_view actuatedJointName) override;
 
         //! A method adding the robot to the simulation world (includes consistency checking).
         /*!
@@ -79,17 +77,15 @@ namespace sf
         void AddToSimulation(SimulationManager* sm, const Transform& origin);
 
         //! A method returning the pose of the robot in the world frame.
-        Transform getTransform() const;
+        Transform GetTransform() const;
 
         //! A method returning type of algorithm used for the robot.
-        RobotType getType() const;
+        RobotType GetType() const;
         
     private:
-        Joint* getJoint(const std::string& name);
-        std::vector<Joint*> joints;
-        std::vector<std::pair<JointSensor*, std::string>> jsAttachments;
-        std::vector<std::pair<JointActuator*, std::string>> jaAttachments;
+        Joint* GetJoint(std::string_view name);
+        std::vector<Joint*> joints_;
+        std::vector<std::pair<JointSensor*, std::string>> jsAttachments_;
+        std::vector<std::pair<JointActuator*, std::string>> jaAttachments_;
     };
 }
-
-#endif

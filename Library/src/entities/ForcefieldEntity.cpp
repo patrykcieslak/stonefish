@@ -20,7 +20,7 @@
 //
 //
 //  Created by Patryk Cieslak on 1/3/13.
-//  Copyright (c) 2017-2020 Patryk Cieslak. All rights reserved.
+//  Copyright (c) 2017-2026 Patryk Cieslak. All rights reserved.
 //
 
 #include "entities/ForcefieldEntity.h"
@@ -31,29 +31,25 @@
 namespace sf
 {
 
-ForcefieldEntity::ForcefieldEntity(std::string uniqueName) : Entity(uniqueName)
+ForcefieldEntity::ForcefieldEntity(std::string_view uniqueName) : Entity(uniqueName)
 {
-    ghost = new btPairCachingGhostObject();
-    ghost->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
+    ghost_ = std::make_unique<btPairCachingGhostObject>();
+    ghost_->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
 }
 
-ForcefieldEntity::~ForcefieldEntity()
-{
-}
-
-EntityType ForcefieldEntity::getType() const
+EntityType ForcefieldEntity::GetType() const
 {
     return EntityType::FORCEFIELD;
 }
 
-btPairCachingGhostObject* ForcefieldEntity::getGhost()
+btPairCachingGhostObject* ForcefieldEntity::GetGhost()
 {
-    return ghost;
+    return ghost_.get();
 }
 
 void ForcefieldEntity::AddToSimulation(SimulationManager* sm)
 {
-    sm->getDynamicsWorld()->addCollisionObject(ghost, MASK_GHOST, MASK_DYNAMIC);
+    sm->GetDynamicsWorld()->addCollisionObject(ghost_.get(), MASK_GHOST, MASK_DYNAMIC);
 }
 
 std::vector<Renderable> ForcefieldEntity::Render()
@@ -61,7 +57,7 @@ std::vector<Renderable> ForcefieldEntity::Render()
     return std::vector<Renderable>(0);
 }
 
-void ForcefieldEntity::getAABB(Vector3& min, Vector3& max)
+void ForcefieldEntity::GetAabb(Vector3& min, Vector3& max)
 {
     min.setValue(BT_LARGE_FLOAT, BT_LARGE_FLOAT, BT_LARGE_FLOAT);
     max.setValue(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);
