@@ -1,3 +1,7 @@
+| :warning: WARNING |
+|:----------------------------|
+| Major refactoring was performed in version 1.6, to remove manual memory management and introduce modern C++ techniques throughout the code. The API was severely affected. If you rely on the old API please use previous versions. |
+
 ![Stonefish logo](https://github.com/patrykcieslak/stonefish/blob/master/Library/shaders/logo_64.png)
 # ***Stonefish***
 ### An advanced simulation tool developed for marine robotics.
