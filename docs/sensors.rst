@@ -358,7 +358,7 @@ The Doppler velocity log (DVL) is a classic marine craft sensor, used for measur
 
     #include <Stonefish/sensors/scalar/DVL.h>
 
-    std::unique_ptr<sf::DVL> dvl = std::make_unique<sf::DVL>("DVL", 30.0, 10.0, 1);
+    std::unique_ptr<sf::DVL> dvl = std::make_unique<sf::DVL>("DVL", 30.0, false, 10.0, 1);
     dvl->SetRange(sf::Vector3(10.0, 10.0, 5.0), 0.5, 50.0);
     dvl->SetWaterLayer(10.0, 10.0, 30.0);
     dvl->SetNoise(0.3, 0.1, 0.03, 0.1, 0.1);

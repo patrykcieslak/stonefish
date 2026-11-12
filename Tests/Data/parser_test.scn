@@ -136,7 +136,7 @@
 			<link name="L2"/>
 			<origin rpy="0 0 0" xyz="0 0 0"/>
 			<specs global_frame="false"/>
-			<!-- <noise fluid_velocity="0.1 0.1 0.1"/> -->
+			<noise fluid_velocity="0.1 0.1 0.1"/>
 		</sensor>
 
 		<actuator name="ActuatorPlugin" type="plugin" plugin="/home/pcieslak/Libs/stonefish/build/Tests/libLinkActuatorPlugin.so">

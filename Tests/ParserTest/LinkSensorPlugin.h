@@ -35,19 +35,23 @@ namespace sf
     public:
         //! A constructor.
         /*!
-        \param uniqueName a name for the sensor
-        \param globalFrame a flag indicating whether the measurements are in the global frame
-        \param frequency the sampling frequency of the sensor [Hz] (0 if updated every simulation step)
-        \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
-        */
+         \param uniqueName a name for the sensor
+         \param globalFrame a flag indicating whether the measurements are in the global frame
+         \param frequency the sampling frequency of the sensor [Hz] (0 if updated every simulation step)
+         \param historyLength defines: -1 -> no history, 0 -> unlimited history, >0 -> history with a specified length
+         */
         LinkSensorPlugin(std::string_view uniqueName, bool globalFrame, Scalar frequency = Scalar(-1), int historyLength = -1);
 
+        //! A method performing an internal update of the sensor state.
+        /*!
+         \param dt the sampling time of the simulation [s]
+         */
         void InternalUpdate(Scalar dt) override;
 
         //! A method used to set the noise characteristics of the sensor.
         /*!
-        \param fluidVelocityStdDev standard deviation of the linear acceleration measurement noise for each axis
-        */
+         \param fluidVelocityStdDev standard deviation of the linear acceleration measurement noise for each axis
+         */
         void SetNoise(Vector3 fluidVelocityStdDev);
 
         //! A method returning the type of scalar sensor.
@@ -58,8 +62,10 @@ namespace sf
 
         //! A method constructing the sensor based on info structure.
         /*!
-        \param info a construction info structure
-        */
+         \param uniqueName a name for the sensor
+         \param frequency the sampling frequency of the sensor [Hz] (0 if updated every simulation step)
+         \param info a construction info structure
+         */
         static LinkSensorPlugin* Construct(std::string_view uniqueName, Scalar frequency, ConstructInfo* info);
 
     private:

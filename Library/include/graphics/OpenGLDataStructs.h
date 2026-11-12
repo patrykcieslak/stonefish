@@ -35,8 +35,6 @@
 #include <memory>
 #include <variant>
 
-#define Max(a, b)   (((a) > (b)) ? (a) : (b))
-
 #define DUMMY_COLOR glm::vec4(1.f, 0.4f, 0.1f, 1.f)
 #define CONTACT_COLOR glm::vec4(1.f, 0, 0, 1.f)
 

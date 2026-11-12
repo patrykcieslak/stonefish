@@ -185,7 +185,7 @@ std::unique_ptr<IMU> IMU::Construct(std::string_view uniqueName, Scalar frequenc
     value = info.nodes.at("noise").attributes.at("angle");
     if (value.valid)
         angle = std::get<Vector3>(value.value);
-    value = info.nodes.at("noise").attributes.at("angular_veloicty");
+    value = info.nodes.at("noise").attributes.at("angular_velocity");
     if (value.valid)
         angularVelocity = std::get<Vector3>(value.value);
     value = info.nodes.at("noise").attributes.at("linear_acceleration");

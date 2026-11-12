@@ -350,7 +350,7 @@ ConstructInfo DVL::GetConstructInfo()
     node.attributes.clear();
     node.optional = false;
     node.attributes.insert({"beam_angle", {ConstructInfoValueType::SCALAR, false}});
-    node.attributes.insert({"beam_positive_z", {ConstructInfoValueType::BOOL, false}});
+    node.attributes.insert({"beam_positive_z", {ConstructInfoValueType::BOOL, true}});
     info.nodes.insert({"specs", node});
 
     // Water layer
@@ -392,7 +392,10 @@ std::unique_ptr<DVL> DVL::Construct(std::string_view uniqueName, Scalar frequenc
     
     // Specs
     Scalar beamAngle = std::get<Scalar>(info.nodes.at("specs").attributes.at("beam_angle").value);
-    bool beamPositiveZ = std::get<bool>(info.nodes.at("specs").attributes.at("beam_positive_z").value);
+    bool beamPositiveZ = false;
+    value = info.nodes.at("specs").attributes.at("beam_positive_z");
+    if (value.valid)
+        beamPositiveZ = std::get<bool>(value.value);
 
     // Create sensor
     std::unique_ptr<DVL> sensor = std::make_unique<DVL>(uniqueName, beamAngle, beamPositiveZ, frequency, history);    

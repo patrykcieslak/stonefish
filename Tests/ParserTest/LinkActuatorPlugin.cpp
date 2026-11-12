@@ -72,7 +72,7 @@ ConstructInfo LinkActuatorPlugin::GetConstructInfo()
     return info;
 }
 
-LinkActuatorPlugin* LinkActuatorPlugin::Construct(std::string_view uniqueName, const ConstructInfo* info)
+LinkActuatorPlugin* LinkActuatorPlugin::Construct(std::string_view uniqueName, ConstructInfo* info)
 {
     // Required
     Scalar amplitude = std::get<Scalar>(info->nodes.at("specs").attributes.at("amplitude").value);

@@ -136,7 +136,8 @@ void Color::XyzToRgb(GLfloat x, GLfloat y, GLfloat z, GLfloat& r, GLfloat& g, GL
     }
     
     /* normalize rgb */
-    GLfloat maximum = Max(r, Max(g,b));
+    GLfloat maximum = r > g ? r : g; 
+    maximum = b > maximum ? b : maximum;
     if(maximum > 1.f)
     {
         r /= maximum;
