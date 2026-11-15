@@ -192,12 +192,12 @@ void DVL::InternalUpdate(Scalar dt)
     }
     
     //Update noise characteristics
-    channels_[0].SetStdDev(mulNoiseFactor_[0] * v.x() + addNoiseStdDev_[0]);
-    channels_[1].SetStdDev(mulNoiseFactor_[0] * v.y() + addNoiseStdDev_[0]);
-    channels_[2].SetStdDev(mulNoiseFactor_[0] * v.z() + addNoiseStdDev_[0]);
-    channels_[4].SetStdDev(mulNoiseFactor_[1] * wv.x() + addNoiseStdDev_[1]);
-    channels_[5].SetStdDev(mulNoiseFactor_[1] * wv.y() + addNoiseStdDev_[1]);
-    channels_[6].SetStdDev(mulNoiseFactor_[1] * wv.z() + addNoiseStdDev_[1]);
+    channels_[0].SetStdDev(mulNoiseFactor_[0] * btFabs(v.x()) + addNoiseStdDev_[0]);
+    channels_[1].SetStdDev(mulNoiseFactor_[0] * btFabs(v.y()) + addNoiseStdDev_[0]);
+    channels_[2].SetStdDev(mulNoiseFactor_[0] * btFabs(v.z()) + addNoiseStdDev_[0]);
+    channels_[4].SetStdDev(mulNoiseFactor_[1] * btFabs(wv.x()) + addNoiseStdDev_[1]);
+    channels_[5].SetStdDev(mulNoiseFactor_[1] * btFabs(wv.y()) + addNoiseStdDev_[1]);
+    channels_[6].SetStdDev(mulNoiseFactor_[1] * btFabs(wv.z()) + addNoiseStdDev_[1]);
     
     //Save data
     AddSampleToHistory(std::make_unique<Sample>(
