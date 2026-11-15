@@ -27,6 +27,8 @@
 
 #include "core/SimulationApp.h"
 
+#include <algorithm>
+
 namespace sf
 {
 
