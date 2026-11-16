@@ -27,6 +27,7 @@
 
 #include "StonefishCommon.h"
 #include "graphics/OpenGLDataStructs.h"
+#include <map>
 #include <unordered_map>
 #include <variant>
 
@@ -59,7 +60,7 @@ struct ConstructInfoValue
 
 struct ConstructInfoNode
 {
-    std::unordered_map<std::string, ConstructInfoNode> childNodes;
+    std::map<std::string, ConstructInfoNode> childNodes;
     std::unordered_map<std::string, ConstructInfoValue> attributes;
     bool optional;
 };
