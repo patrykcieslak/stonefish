@@ -140,8 +140,8 @@ ConstructInfo SegmentationCamera::GetConstructInfo()
     // Rendering
     node.attributes.clear();
     node.optional = true;
-    node.attributes.insert({"minimum_distance", {ConstructInfoValueType::SCALAR, true}});
-    node.attributes.insert({"maximum_distance", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"near", {ConstructInfoValueType::SCALAR, true}});
+    node.attributes.insert({"far", {ConstructInfoValueType::SCALAR, true}});
     info.nodes.insert({"rendering", node});
 
     return info;
