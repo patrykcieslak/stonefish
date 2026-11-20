@@ -125,7 +125,7 @@ std::unique_ptr<Gyroscope> Gyroscope::Construct(std::string_view uniqueName, Sca
     // Noise (optional)
     Vector3 noise = V0();
     Vector3 bias = V0();
-    value = info.nodes.at("noise").attributes.at("angular_veloicty");
+    value = info.nodes.at("noise").attributes.at("angular_velocity");
     if (value.valid)
         noise = std::get<Vector3>(value.value);
     value = info.nodes.at("noise").attributes.at("bias");
