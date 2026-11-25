@@ -390,7 +390,7 @@ An example of a full thruster definition utilising the XML syntax and the C++ co
     
     std::unique_ptr<sf::Polyhedron> prop = std::make_unique<sf::Polyhedron>("PropMesh", phy, sf::GetDataPath() + "propeller.obj", 1.0, sf::I4(), "Steel", "Red");
     std::unique_ptr<sf::MechanicalPI> rotorDynamics = std::make_unique<sf::MechanicalPI>(1.0, 10.0, 5.0, 5.0);
-    std::unique_ptr<sf::FDThrust> thrustModel = std::make_unique<sf::FDThrust>(0.18, 0.88, 0.48, 0.05, true, 1000.0);
+    std::unique_ptr<sf::FDThrust> thrustModel = std::make_unique<sf::FDThrust>(0.88, 0.48, 0.05, 0.18, true, 1000.0);
     std::unique_ptr<sf::Thruster> thruster = std::make_unique<sf::Thruster>("Thruster", std::move(prop), std::move(rotorDynamics), std::move(thrustModel), 0.18, true, 400.0, false, true);
     robot->AddLinkActuator(std::move(thruster), "Link1", sf::I4()); 
 
