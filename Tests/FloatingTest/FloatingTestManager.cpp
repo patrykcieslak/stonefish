@@ -70,7 +70,7 @@ void FloatingTestManager::BuildScenario()
 
     std::unique_ptr<sf::Polyhedron> propeller = std::make_unique<sf::Polyhedron>("Propeller", phy, sf::GetDataPath() + "propeller.obj", sf::Scalar(1), sf::I4(), "Fiberglass", "propeller");
     std::unique_ptr<sf::MechanicalPI> rotorDynamics =  std::make_unique<sf::MechanicalPI>(1.0, 10.0, 5.0, 5.0);
-    std::unique_ptr<sf::FDThrust> thrustModel = std::make_unique<sf::FDThrust>(0.18, 0.48, 0.48, 0.05, true, GetOcean()->GetLiquid().density);
+    std::unique_ptr<sf::FDThrust> thrustModel = std::make_unique<sf::FDThrust>(0.48, 0.48, 0.05, 0.18, true, GetOcean()->GetLiquid().density);
     std::unique_ptr<sf::Thruster> thrust = std::make_unique<sf::Thruster>("Thruster", std::move(propeller), std::move(rotorDynamics), std::move(thrustModel), 
         0.18, true, 105.0, false, true);
 
