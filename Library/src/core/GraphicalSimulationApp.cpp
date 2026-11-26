@@ -862,7 +862,10 @@ void GraphicalSimulationApp::DoHUD()
                 SolidEntity* ent = (SolidEntity*)selectedEntity_.first;
                 
                 GLfloat infoOffset = offset;
-                gui_->DoPanel(10.f, offset, 160.f, ent->GetSolidType() == SolidType::COMPOUND ? 130.f : 122.f);
+                if (ent->GetSolidType() == SolidType::COMPOUND)
+                    gui_->DoPanel(10.f, offset, 160.f, ent->GetPhysicsMode() == PhysicsMode::SUBMERGED ? 158.f : 130.f);
+                else
+                    gui_->DoPanel(10.f, offset, 160.f, ent->GetPhysicsMode() == PhysicsMode::SUBMERGED ? 178.f : 122.f);
                 offset += 5.f;
                 gui_->DoLabel(15.f, offset, "SELECTION INFO");
                 offset += 16.f;
@@ -884,6 +887,25 @@ void GraphicalSimulationApp::DoHUD()
                 std::sprintf(buf, "%1.3lf, %1.3lf, %1.3lf", I.x(), I.y(), I.z());
                 gui_->DoLabel(23.f, offset, std::string(buf));
                 offset += 14.f;
+                if (ent->GetPhysicsMode() == PhysicsMode::SUBMERGED)
+                {
+                    gui_->DoLabel(18.f, offset, std::string("Added mass[kg]: "));
+                    offset += 14.f;
+                    Vector3 ma = ent->GetAddedMass();
+                    std::sprintf(buf, "%1.3lf, %1.3lf, %1.3lf", ma.x(), ma.y(), ma.z());
+                    gui_->DoLabel(23.f, offset, std::string(buf));
+                    offset += 14.f;
+                    
+                    if (ent->GetSolidType() != SolidType::COMPOUND)
+                    {
+                        gui_->DoLabel(18.f, offset, std::string("Added inertia[kgm2]: "));
+                        offset += 14.f;
+                        Vector3 Ia = ent->GetAddedInertia();
+                        std::sprintf(buf, "%1.3lf, %1.3lf, %1.3lf", Ia.x(), Ia.y(), Ia.z());
+                        gui_->DoLabel(23.f, offset, std::string(buf));
+                        offset += 14.f;
+                    }
+                }
                 std::sprintf(buf, "%1.3lf", ent->GetVolume()*1e3);
                 gui_->DoLabel(18.f, offset, std::string("Volume[dm3]: ") + std::string(buf));
                 offset += 11.f;
@@ -899,9 +921,9 @@ void GraphicalSimulationApp::DoHUD()
                     const CompoundPart& part = cmp->GetPart(cmp->GetPartId(selectedEntity_.second));
                     if(part.solid != nullptr)
                     {
-                        offset = infoOffset + 10.f;
+                        offset = infoOffset;
                         GLfloat hOffset = 165.f;
-                        gui_->DoPanel(hOffset + 10.f, offset, 130.f, 110.f);
+                        gui_->DoPanel(hOffset + 10.f, offset, 160.f, ent->GetPhysicsMode() == PhysicsMode::SUBMERGED ? 166.f : 110.f);
                         offset += 5.f;
                         gui_->DoLabel(hOffset + 15.f, offset, "PART INFO");
                         offset += 16.f;
@@ -920,6 +942,21 @@ void GraphicalSimulationApp::DoHUD()
                         std::sprintf(buf, "%1.3lf, %1.3lf, %1.3lf", I.x(), I.y(), I.z());
                         gui_->DoLabel(hOffset + 23.f, offset, std::string(buf));
                         offset += 14.f;
+                        if (part.solid->GetPhysicsMode() == PhysicsMode::SUBMERGED)
+                        {
+                            gui_->DoLabel(hOffset + 18.f, offset, std::string("Added mass[kg]: "));
+                            offset += 14.f;
+                            Vector3 ma = part.solid->GetAddedMass();
+                            std::sprintf(buf, "%1.3lf, %1.3lf, %1.3lf", ma.x(), ma.y(), ma.z());
+                            gui_->DoLabel(hOffset + 23.f, offset, std::string(buf));
+                            offset += 14.f;
+                            gui_->DoLabel(hOffset + 18.f, offset, std::string("Added inertia[kgm2]: "));
+                            offset += 14.f;
+                            Vector3 Ia = part.solid->GetAddedInertia();
+                            std::sprintf(buf, "%1.3lf, %1.3lf, %1.3lf", Ia.x(), Ia.y(), Ia.z());
+                            gui_->DoLabel(hOffset + 23.f, offset, std::string(buf));
+                            offset += 14.f;
+                        }
                         std::sprintf(buf, "%1.3lf", part.solid->GetVolume()*1e3);
                         gui_->DoLabel(hOffset + 18.f, offset, std::string("Volume[dm3]: ") + std::string(buf));
                     }

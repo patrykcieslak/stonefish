@@ -656,12 +656,12 @@ Vector3 SolidEntity::GetAddedInertia() const
     return aI_;
 }
 
-Scalar SolidEntity::GetAugmentedMass() const
+Vector3 SolidEntity::GetAugmentedMass() const
 {
     if(phy_.mode == PhysicsMode::SUBMERGED)
-        return mass_ + (aMass_.x() + aMass_.y() + aMass_.z())/Scalar(3);
+        return Vector3(mass_, mass_, mass_) + aMass_;
     else
-        return mass_;
+        return Vector3(mass_, mass_, mass_);
 }
 
 Vector3 SolidEntity::GetAugmentedInertia() const
@@ -715,7 +715,8 @@ void SolidEntity::ComputeFluidDynamicsApprox(GeometryApproxType t)
             break;
     }
 #ifdef DEBUG
-    cInfo("Added mass: %lf, %lf, %lf, %lf, %lf, %lf", aMass_.x(), aMass_.y(), aMass_.z(), aI_.x(), aI_.y(), aI_.z());
+    cInfo("Added mass: %1.3lf %1.3lf %1.3lf", aMass_.x(), aMass_.y(), aMass_.z());
+    cInfo("Added inertia: %1.3lf %1.3lf %1.3lf", aI_.x(), aI_.y(), aI_.z());
 #endif
 }
 
@@ -956,15 +957,15 @@ void SolidEntity::ComputeEllipsoidalApprox()
 #endif
     }
     
-    Vector3 c, d;
+    Vector3 c, r;
     if(k == 0)
     {
         c.setX((x0[0].x() + x0[1].x())/Scalar(2)); 
         c.setY((x0[2].y() + x0[3].y())/Scalar(2)); 
         c.setZ((x0[4].z() + x0[5].z())/Scalar(2));
-        d.setX(btFabs(x0[0].x()-c.x()));
-        d.setY(btFabs(x0[2].y()-c.y()));
-        d.setZ(btFabs(x0[4].z()-c.z()));
+        r.setX(btFabs(x0[0].x()-c.x()));
+        r.setY(btFabs(x0[2].y()-c.y()));
+        r.setZ(btFabs(x0[4].z()-c.z()));
     }
     else
     {
@@ -973,66 +974,108 @@ void SolidEntity::ComputeEllipsoidalApprox()
         c.setZ(v(2,x,sigma));
         for(int j=0; j<3; ++j)
         {
-            d.m_floats[j] = Scalar(1)/(Scalar(3)*(u(j,x,sigma) - v(j,x,sigma)*v(j,x,sigma)));
-            d.m_floats[j] = Scalar(1)/btSqrt(d.m_floats[j]);
+            r.m_floats[j] = Scalar(1)/(Scalar(3)*(u(j,x,sigma) - v(j,x,sigma)*v(j,x,sigma)));
+            r.m_floats[j] = Scalar(1)/btSqrt(r.m_floats[j]);
         }
     }
 #ifdef DEBUG
     cInfo("Ellipsoid center: %1.3lf %1.3lf %1.3lf", c.x(), c.y(), c.z());
-    cInfo("Ellipsoid axis: %1.3lf %1.3lf %1.3lf", d.x(), d.y(), d.z());
+    cInfo("Ellipsoid axis: %1.3lf %1.3lf %1.3lf", r.x(), r.y(), r.z());
     cInfo("Ellipsoid core points: %d", x0.size());
 #endif
     
-    fdApproxType_ =  GeometryApproxType::ELLIPSOID;
-    fdApproxParams_.resize(3);
-    fdApproxParams_[0] = d.getX();
-    fdApproxParams_[1] = d.getY();
-    fdApproxParams_[2] = d.getZ();
-    
+    Scalar volume = Scalar(4) / Scalar(3) * Scalar(M_PI) * r.x() * r.y() * r.z();
+
     //Compute added mass
     Scalar rho = Scalar(1000);
     Ocean* ocn;
     if((ocn = SimulationApp::GetApp()->GetSimulationManager()->GetOcean()) != nullptr)
         rho = ocn->GetLiquid().density;
 
-    Scalar r12 = (fdApproxParams_[1] + fdApproxParams_[2])/Scalar(2);
-    aMass_.setX(LambKFactor(fdApproxParams_[0], r12)*Scalar(4)/Scalar(3)*M_PI*rho*fdApproxParams_[0]*r12*r12);
-    aMass_.setY(Scalar(4)/Scalar(3)*M_PI*rho*fdApproxParams_[2]*fdApproxParams_[2]*fdApproxParams_[0]);
-    aMass_.setZ(Scalar(4)/Scalar(3)*M_PI*rho*fdApproxParams_[1]*fdApproxParams_[1]*fdApproxParams_[0]);
-    aI_.setX(0); //THIS SHOULD BE > 0
-    aI_.setY(Scalar(1)/Scalar(12)*M_PI*rho*fdApproxParams_[1]*fdApproxParams_[1]*btPow(fdApproxParams_[0], Scalar(3)));
-    aI_.setZ(Scalar(1)/Scalar(12)*M_PI*rho*fdApproxParams_[2]*fdApproxParams_[2]*btPow(fdApproxParams_[0], Scalar(3)));
-    
+    Scalar r12 = (r.y() + r.z())/Scalar(2); // Average of semi-axes Y and Z of the ellipsoid
+    const Scalar sphereTol(1e-2);
+
+    auto addedMass = [&rho, &volume](Scalar k)
+    {
+        return rho * volume * k / (Scalar(2) - k);
+    };
+
+    auto addedInertia = [&rho, volume](Scalar rj, Scalar rk, Scalar kj, Scalar kk)
+    {
+        Scalar num = (rj * rj - rk * rk) * (rj * rj - rk * rk) * (kk - kj);
+        Scalar denom = Scalar(2) * (rj * rj - rk * rk) + (rj * rj + rk *rk) * (kj - kk);
+        return rho * volume / Scalar(5) * num / denom;
+    };
+
+    if (btFabs(r.x() - r.y()) < sphereTol 
+        && btFabs(r.y() - r.z()) < sphereTol
+        && btFabs(r.x() - r.z()) < sphereTol) // Sphere
+    {
+#ifdef DEBUG
+        cInfo("Ellipsoid is a sphere.");
+#endif
+        Scalar ma = addedMass(Scalar(2)/Scalar(3));
+        aMass_ = Vector3(ma, ma, ma);
+        aI_ = V0();
+    }
+    else 
+    {
+        // Compute Lamb K factor
+        Scalar alpha0;
+        Vector3 k;
+
+        if (r.x() > r12) // Prolate spheroid (elongated like a submarine)
+        {
+#ifdef DEBUG
+            cInfo("Ellipsoid is a prolate spheroid (r_x > r_y, r_z).");
+#endif
+            Scalar e = btSqrt(Scalar(1) - (r12 / r.x()) * (r12 / r.x())); // Eccentricity
+            alpha0 = Scalar(2) * (Scalar(1) - e * e) / (e * e * e) * (Scalar(0.5) * btLog((Scalar(1) + e)/(Scalar(1) - e)) - e);
+        }
+        else // Oblate spheroid (flattened like a discus)
+        {
+#ifdef DEBUG
+            cInfo("Ellipsoid is an oblate spheroid (r_x < r_y, r_z).");
+#endif
+            Scalar e = btSqrt(Scalar(1) - (r.x() / r12) * (r.x() / r12)); // Eccentricity
+            alpha0 = Scalar(2) * btSqrt(Scalar(1) - e * e) / (e * e * e) * (e - btSqrt(Scalar(1) - e * e) * btAsin(e));
+        }
+        
+        k.setX(alpha0);
+        k.setY(Scalar(1) - Scalar(0.5) * alpha0);
+        k.setZ(k.y());    
+
+        // Added mass and inertia
+        aMass_ = Vector3(addedMass(k.x()), addedMass(k.y()), addedMass(k.z()));
+        aI_ = Vector3(
+            addedInertia(r.y(), r.z(), k.y(), k.z()),
+            addedInertia(r.x(), r.z(), k.x(), k.z()), 
+            addedInertia(r.x(), r.y(), k.x(), k.y())
+        );
+    }
+
     //Set transform with respect to geometry
     Transform ellipsoidTransform;
     ellipsoidTransform.getBasis().setIdentity(); //Aligned with CG frame (for now)
     ellipsoidTransform.setOrigin(P_CB_);
     T_CG2H_ = ellipsoidTransform;
 
-    Vector3 Cd(Scalar(1)/fdApproxParams_[0] , Scalar(1)/fdApproxParams_[1], Scalar(1)/fdApproxParams_[2]);
+    Vector3 Cd(Scalar(1)/r.x() , Scalar(1)/r.y(), Scalar(1)/r.z());
     Scalar maxCd = btMax(btMax(Cd.x(), Cd.y()), Cd.z());
     Cd /= maxCd;
     Cd = T_CG2O_.getBasis().inverse() * Cd; // To origin frame
-    Cd = Vector3(btFabs(Cd.getX()), btFabs(Cd.getY()), btFabs(Cd.getZ()));
+    Cd = Vector3(btFabs(Cd.x()), btFabs(Cd.y()), btFabs(Cd.z()));
     SetHydrodynamicCoefficients(Cd, Scalar(0.1)*Cd);
+
+    fdApproxType_ =  GeometryApproxType::ELLIPSOID;
+    fdApproxParams_.resize(3);
+    fdApproxParams_[0] = r.x();
+    fdApproxParams_[1] = r.y();
+    fdApproxParams_[2] = r.z();
 
 #ifdef DEBUG
     cInfo("--------------------------------------------------------------------");
 #endif
-}
-
-Scalar SolidEntity::LambKFactor(Scalar r1, Scalar r2)
-{
-    Scalar e = Scalar(1) - r2*r2/r1;
-    Scalar elog = (Scalar(1)+e)/(Scalar(1)-e);
-    
-    if(elog > Scalar(0))
-    {
-        Scalar alpha0 = Scalar(2)*(Scalar(1)-e*e)/(e*e) * (Scalar(0.5)*btLog((Scalar(1)+e)/(Scalar(1)-e)) - e);
-        return alpha0/(Scalar(2)-alpha0);
-    }
-    else 
-        return Scalar(1);
 }
 
 void SolidEntity::BuildGraphicalObject()
@@ -1071,7 +1114,7 @@ void SolidEntity::BuildRigidBody(btDynamicsWorld* world)
         collisionShape_ = std::move(shape);
         
         //Construct Bullet rigid body
-        Scalar M = GetAugmentedMass();
+        Scalar M = phy_.mode == PhysicsMode::SUBMERGED ? mass_ + (aMass_[0] + aMass_[1] + aMass_[2]) / Scalar(3) : mass_;
         Vector3 I = GetAugmentedInertia();
         
         btRigidBody::btRigidBodyConstructionInfo rigidBodyCI(M, motionState_.get(), collisionShape_.get(), I);

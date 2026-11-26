@@ -85,12 +85,6 @@ namespace sf
          */
         void SetDisplayInternalParts(bool enabled);
         
-        //! A method returning the mass or the sum of mass and added mass (depending on type of body).
-        Scalar GetAugmentedMass() const;
-        
-        //! A method returning the inertia or the sum of inertia and added mass (depending on type of body).
-        Vector3 GetAugmentedInertia() const;
-        
         //! A method returning the material of the body.
         Material getMaterial(size_t partId) const;
         

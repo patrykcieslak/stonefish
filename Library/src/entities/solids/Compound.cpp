@@ -54,16 +54,6 @@ bool Compound::IsDisplayingInternalParts()
 {
     return displayInternals_;
 }
-
-Scalar Compound::GetAugmentedMass() const
-{
-    return mass_ + aMass_.x();
-}
-        
-Vector3 Compound::GetAugmentedInertia() const
-{
-    return Ipri_;
-}
     
 Material Compound::getMaterial(size_t partId) const
 {
@@ -148,12 +138,14 @@ void Compound::RecalculatePhysicalProperties()
       4. Find primary axes of inertia
       5. Rotate frame to match primary axes and move to CG
     */
-     
+#ifdef DEBUG
+    cInfo("Compound: %s Parts: %ld", GetName().c_str(), parts_.size());
+#endif
     //1. Calculate compound mass, CG and CB
     Vector3 compoundCG(0,0,0); //In compound body origin frame
     Vector3 compoundCB(0,0,0); //In compound body origin frame
     Scalar compoundMass(0);
-    Scalar compoundAugmentedMass(0);
+    Vector3 compoundAugmentedMass(0,0,0);
     Scalar compoundVolume(0);
     Scalar compoundSurface(0);
     
@@ -164,15 +156,20 @@ void Compound::RecalculatePhysicalProperties()
     {
         //Mechanical parameters
         compoundMass += parts_[i].solid->GetMass();
-        compoundAugmentedMass += parts_[i].isExternal ? parts_[i].solid->GetAugmentedMass() : parts_[i].solid->GetMass();
+        Vector3 augmentedMass = parts_[i].isExternal ? 
+            (parts_[i].origin * parts_[i].solid->GetCG2OTransform().inverse()).getBasis() * parts_[i].solid->GetAugmentedMass() 
+            : Vector3(parts_[i].solid->GetMass(), parts_[i].solid->GetMass(), parts_[i].solid->GetMass());
+        compoundAugmentedMass += Vector3(btFabs(augmentedMass.x()), btFabs(augmentedMass.y()), btFabs(augmentedMass.z()));
+#ifdef DEBUG
+        cInfo("Part: %s Augmented mass: %1.3lf, %1.3lf, %1.3lf", parts_[i].solid->GetName().c_str(), 
+            btFabs(augmentedMass.x()), btFabs(augmentedMass.y()), btFabs(augmentedMass.z()));
+#endif
         compoundCG += (parts_[i].origin * parts_[i].solid->GetCG2OTransform().inverse()).getOrigin() * parts_[i].solid->GetMass();
-        
         if(parts_[i].solid->IsBuoyant())
         {
             compoundVolume += parts_[i].solid->GetVolume();
             compoundCB += parts_[i].origin * parts_[i].solid->GetCG2OTransform().inverse() * parts_[i].solid->GetCb() * parts_[i].solid->GetVolume();
         }
-
         if(parts_[i].isExternal)
             compoundSurface += parts_[i].solid->GetSurface();
     }
@@ -197,10 +194,11 @@ void Compound::RecalculatePhysicalProperties()
             
         //Translate inertia tensor from part CG to compound CG
         Vector3 t = compToPart.getOrigin();
-        Scalar m = parts_[i].isExternal ? parts_[i].solid->GetAugmentedMass() : parts_[i].solid->GetMass();
+        Vector3 m = parts_[i].isExternal ? 
+            parts_[i].solid->GetAugmentedMass() : Vector3(parts_[i].solid->GetMass(), parts_[i].solid->GetMass(), parts_[i].solid->GetMass());
         solidInertia += Matrix3(t.y()*t.y()+t.z()*t.z(),            -t.x()*t.y(),            -t.x()*t.z(),
                                            -t.y()*t.x(), t.x()*t.x()+t.z()*t.z(),            -t.y()*t.z(),
-                                           -t.z()*t.x(),            -t.z()*t.y(), t.x()*t.x()+t.y()*t.y()).scaled(Vector3(m, m, m));
+                                           -t.z()*t.x(),            -t.z()*t.y(), t.x()*t.x()+t.y()*t.y()).scaled(m);
             
         //Accumulate inertia tensor
         I += solidInertia;
@@ -243,9 +241,8 @@ void Compound::RecalculatePhysicalProperties()
     P_CB_ = T_CG2O_ * compoundCB;
     
     mass_ = compoundMass;
-    aMass_.setX(compoundAugmentedMass - compoundMass);
-    aMass_.setY(compoundAugmentedMass - compoundMass);
-    aMass_.setZ(compoundAugmentedMass - compoundMass);
+    aMass_ = compoundAugmentedMass - Vector3(compoundMass, compoundMass, compoundMass);
+    aI_ = V0(); // For a compound body the added inertia is integrated in the base inertia (not easy to recover)
     volume_ = compoundVolume;
     surface_ = compoundSurface;
     Ipri_ = compoundPriInertia;
@@ -489,14 +486,21 @@ std::vector<Renderable> Compound::Render(size_t partId)
             }
         }
 
+        Transform cgTrans = oCompoundTrans * parts_.at(partId).origin * parts_.at(partId).solid->GetO2HTransform(); //parts_.at(partId).solid->GetCG2OTransform().inverse();
+
+        Renderable item2;
+        item2.type = RenderableType::SOLID_CS;
+        item2.model = glm::scale(glMatrixFromTransform(cgTrans), glm::vec3(0.5f, 0.5f, 0.5f));
+        items.push_back(item2);
+        
 #ifndef DEBUG_HYDRO
         GeometryApproxType atype;
         std::vector<Scalar> aparams;
         parts_.at(partId).solid->GetGeometryApprox(atype, aparams);
 
-        Renderable item2;
-        item2.model = glMatrixFromTransform(oCompoundTrans * parts_.at(partId).origin * parts_.at(partId).solid->GetO2HTransform());
-        item2.data = std::make_shared<std::vector<glm::vec3>>();
+        Renderable item3;
+        item3.model = glMatrixFromTransform(oCompoundTrans * parts_.at(partId).origin * parts_.at(partId).solid->GetO2HTransform());
+        item3.data = std::make_shared<std::vector<glm::vec3>>();
 
         switch(atype)
         {
@@ -504,21 +508,21 @@ std::vector<Renderable> Compound::Render(size_t partId)
                 break;
             
             case  GeometryApproxType::SPHERE:
-                item2.type = RenderableType::HYDRO_ELLIPSOID;
-                item2.GetDataAsPoints()->push_back(glm::vec3((GLfloat)aparams[0], (GLfloat)aparams[0], (GLfloat)aparams[0]));
-                items.push_back(item2);
+                item3.type = RenderableType::HYDRO_ELLIPSOID;
+                item3.GetDataAsPoints()->push_back(glm::vec3((GLfloat)aparams[0], (GLfloat)aparams[0], (GLfloat)aparams[0]));
+                items.push_back(item3);
                 break;
             
             case  GeometryApproxType::CYLINDER:
-                item2.type = RenderableType::HYDRO_CYLINDER;
-                item2.GetDataAsPoints()->push_back(glm::vec3((GLfloat)aparams[0], (GLfloat)aparams[0], (GLfloat)aparams[1]));
-                items.push_back(item2);
+                item3.type = RenderableType::HYDRO_CYLINDER;
+                item3.GetDataAsPoints()->push_back(glm::vec3((GLfloat)aparams[0], (GLfloat)aparams[0], (GLfloat)aparams[1]));
+                items.push_back(item3);
                 break;
             
             case  GeometryApproxType::ELLIPSOID:
-                item2.type = RenderableType::HYDRO_ELLIPSOID;
-                item2.GetDataAsPoints()->push_back(glm::vec3((GLfloat)aparams[0], (GLfloat)aparams[1], (GLfloat)aparams[2]));
-                items.push_back(item2);
+                item3.type = RenderableType::HYDRO_ELLIPSOID;
+                item3.GetDataAsPoints()->push_back(glm::vec3((GLfloat)aparams[0], (GLfloat)aparams[1], (GLfloat)aparams[2]));
+                items.push_back(item3);
                 break;
         }   
 #endif

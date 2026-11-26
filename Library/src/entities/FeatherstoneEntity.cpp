@@ -34,7 +34,7 @@ namespace sf
 
 FeatherstoneEntity::FeatherstoneEntity(std::string_view uniqueName, size_t totalNumOfLinks, std::unique_ptr<SolidEntity> baseSolid, bool fixedBase) : Entity(uniqueName)
 {
-    Scalar M = baseSolid->GetAugmentedMass();
+    Vector3 M = baseSolid->GetAugmentedMass();
     Vector3 I = baseSolid->GetAugmentedInertia();
     multiBody_ = std::make_unique<btMultiBody>(totalNumOfLinks - 1, M, I, fixedBase, true);
     multiBody_->setBaseWorldTransform(Transform::getIdentity());
@@ -456,7 +456,7 @@ int FeatherstoneEntity::AddRevoluteJoint(std::string_view name, size_t parent, s
     Vector3 pivotToChildComOffset =  GetLinkTransform(child).getBasis().inverse() * (GetLinkTransform(child).getOrigin() - pivot);
     
     //Get mass properties (including added mass)
-    Scalar M = links_[child].solid->GetAugmentedMass();
+    Vector3 M = links_[child].solid->GetAugmentedMass();
     Vector3 I = links_[child].solid->GetAugmentedInertia();
     
     //Setup joint
@@ -492,7 +492,7 @@ int FeatherstoneEntity::AddPrismaticJoint(std::string_view name, size_t parent, 
     Vector3 pivotToChildComOffset = GetLinkTransform(child).getBasis().inverse() * (GetLinkTransform(child).getOrigin()-GetLinkTransform(parent).getOrigin());
     
     //Get mass properties (including added mass)
-    Scalar M = links_[child].solid->GetAugmentedMass();
+    Vector3 M = links_[child].solid->GetAugmentedMass();
     Vector3 I = links_[child].solid->GetAugmentedInertia();
     
     //Check if pivot offset is ok!
@@ -527,7 +527,7 @@ int FeatherstoneEntity::AddFixedJoint(std::string_view name, size_t parent, size
     Vector3 pivotToChildComOffset =  GetLinkTransform(child).getBasis().inverse() * (GetLinkTransform(child).getOrigin() - pivot);
     
     //Get mass properties (including added mass)
-    Scalar M = links_[child].solid->GetAugmentedMass();
+    Vector3 M = links_[child].solid->GetAugmentedMass();
     Vector3 I = links_[child].solid->GetAugmentedInertia();
     
     //Setup joint

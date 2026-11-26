@@ -13,6 +13,8 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
+// Modified by Patryk Cieslak 25/11/26
+
 #ifndef BT_MULTIBODY_LINK_H
 #define BT_MULTIBODY_LINK_H
 
@@ -48,7 +50,7 @@ struct btMultibodyLink
 {
 	BT_DECLARE_ALIGNED_ALLOCATOR();
 
-	btScalar m_mass;           // mass of link
+	btVector3 m_mass;           // mass of link (including optional added mass per axis)
 	btVector3 m_inertiaLocal;  // inertia of link (local frame; diagonal)
 
 	int m_parent;  // index of the parent link (assumed to be < index of this link), or -1 if parent is the base link.
@@ -153,7 +155,7 @@ struct btMultibodyLink
 
 	// ctor: set some sensible defaults
 	btMultibodyLink()
-		: m_mass(1),
+		: m_mass(1, 1, 1),
 		  m_parent(-1),
 		  m_zeroRotParentToThis(0, 0, 0, 1),
 		  m_cachedRotParentToThis(0, 0, 0, 1),

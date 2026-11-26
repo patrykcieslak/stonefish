@@ -327,7 +327,7 @@ namespace sf
         Vector3 GetInertia() const;
         
         //! A method returning the mass or the sum of mass and added mass (depending on type of body).
-        virtual Scalar GetAugmentedMass() const;
+        virtual Vector3 GetAugmentedMass() const;
         
         //! A method returning the inertia or the sum of inertia and added mass (depending on type of body).
         virtual Vector3 GetAugmentedInertia() const;
@@ -354,7 +354,7 @@ namespace sf
         //! A method returning a pointer to the physics mesh.
         const Mesh* GetPhysicsMesh();
 
-        //! A method that returns a copy of all physics mesh vertices in body origin frame.
+        //! A method that returns a copy of all physics mesh vertices in physics mesh origin frame.
         virtual std::vector<Vector3> GetMeshVertices() const;
         
         //! A method informing if the body is using buoyancy computation.
@@ -390,7 +390,6 @@ namespace sf
         void ComputeCylindricalApprox();
         void ComputeEllipsoidalApprox();
         
-        Scalar LambKFactor(Scalar r1, Scalar r2);
         virtual void BuildRigidBody(btDynamicsWorld* world);
         void BuildMultibodyLinkCollider(btMultiBody* mb, unsigned int child, btSoftMultiBodyDynamicsWorld* world);
         

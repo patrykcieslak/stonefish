@@ -49,7 +49,7 @@ DVL::DVL(std::string_view uniqueName, Scalar beamAngleDeg, bool beamPositiveZ, S
     channels_.push_back(SensorChannel("Water velocity Y", QuantityType::VELOCITY));
     channels_.push_back(SensorChannel("Water velocity Z", QuantityType::VELOCITY));
     channels_.push_back(SensorChannel("Status", QuantityType::UNITLESS));
-    channels_[3].rangeMin = Scalar(0);
+    channels_[3].rangeMin = Scalar(1e-3);
     channels_[3].rangeMax = Scalar(1000);
     addNoiseStdDev_[0] = addNoiseStdDev_[1] = Scalar(0);
     mulNoiseFactor_[0] = mulNoiseFactor_[1] = Scalar(0);
@@ -295,8 +295,8 @@ void DVL::SetRange(const Vector3& velocityMax, Scalar altitudeMin, Scalar altitu
     channels_[1].rangeMax = btClamped(velocityMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
     channels_[2].rangeMax = btClamped(velocityMax.getZ(), Scalar(0), Scalar(BT_LARGE_FLOAT));
     //Altitude
-    channels_[3].rangeMin = btClamped(altitudeMin, Scalar(0), Scalar(BT_LARGE_FLOAT));
-    channels_[3].rangeMax = btClamped(altitudeMax, Scalar(0), Scalar(BT_LARGE_FLOAT));
+    channels_[3].rangeMin = btClamped(altitudeMin, Scalar(1e-3), Scalar(BT_LARGE_FLOAT));
+    channels_[3].rangeMax = btClamped(altitudeMax, Scalar(2e-3), Scalar(BT_LARGE_FLOAT));
     //Water velocity
     channels_[4].rangeMin = -btClamped(velocityMax.getX(), Scalar(0), Scalar(BT_LARGE_FLOAT));
     channels_[5].rangeMin = -btClamped(velocityMax.getY(), Scalar(0), Scalar(BT_LARGE_FLOAT));
@@ -421,7 +421,7 @@ std::unique_ptr<DVL> DVL::Construct(std::string_view uniqueName, Scalar frequenc
 
     // Range (optional)
     Vector3 velocityMax = VMAX();
-    Scalar altitudeMin (0.);
+    Scalar altitudeMin (1e-3);
     Scalar altitudeMax (BT_LARGE_FLOAT);
     
     value = info.nodes.at("range").attributes.at("velocity");
